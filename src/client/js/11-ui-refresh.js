@@ -39,10 +39,7 @@ function updateBattleUI() {
   pIcon.classList.toggle('buddy-worried', petHp > 0 && petHp / petMax <= 0.34);     // a nervous shiver when health is low
   fw.classList.toggle('combo-hot', state.streak >= 5);                          // a fiery glow while the combo is hot
 
-  const shieldBtn = document.getElementById('shield-btn');
-  if (shieldBtn) shieldBtn.innerText = ECON.items.shield + ' 💎 Buy';
-  const candyBtn = document.getElementById('candy-btn');
-  if (candyBtn) candyBtn.innerText = getCandyCost() + ' 💎 Eat';
+  renderItemButtons();
 
   const petElemBadge = document.getElementById('pet-elem-badge');
   petElemBadge.innerText = pet.element;
@@ -81,7 +78,7 @@ function updateBattleUI() {
   document.getElementById('shield-display').innerText = state.shields;
   document.getElementById('session-count-text').innerText = sessionStats.solved;
   document.getElementById('session-goal-text').innerText = sessionStats.goal;
-  document.getElementById('session-badge').innerText = `🎁 Reward at ${sessionStats.goal}`;
+  document.getElementById('session-badge').innerText = `🎁 ${sessionStats.goal}`;       // the gem reward arrives at this many solves
 
   const cloverTag = document.getElementById('clover-status');
   if (state.cloverLeft > 0) {
@@ -93,7 +90,7 @@ function updateBattleUI() {
 }
 
 function updatePracticeRow() {
-  document.getElementById('grade-chip').innerText = '📚 ' + GRADES[state.grade].long;
+  document.getElementById('grade-chip').innerText = '📚 ' + GRADES[state.grade].label;
   const icons = getActiveOps().map(function (id) { return OP_BY_ID[id].icon; });
   document.getElementById('ops-chip').innerText = icons.slice(0, 5).join(' ') + (icons.length > 5 ? ' +' + (icons.length - 5) : '');
 }

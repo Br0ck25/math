@@ -37,7 +37,7 @@ function renderArmor() {
     card.className = 'pet-card' + (isEquipped ? ' selected' : '') + (!isUnlocked ? ' locked' : '');
     card.onclick = function () { selectOrBuyArmor(ar); };
     card.innerHTML = `
-      <div style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${ar.icon}</div>
+      <div class="card-pic" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${ar.icon}</div>
       <div class="card-name">${ar.name}</div>
       <div class="armor-hp">${ar.hp > 0 ? '+' + ar.hp + ' HP' : 'No bonus'}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
@@ -84,7 +84,7 @@ function renderAccessories() {
     card.className = `pet-card ${isEquipped ? 'selected' : ''} ${!isUnlocked ? 'locked' : ''}`;
     card.onclick = function () { selectOrBuyAccessory(acc); };
     card.innerHTML = `
-      <div style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${acc.icon}</div>
+      <div class="card-pic" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${acc.icon}</div>
       <div style="font-weight: 700; font-size: 0.78rem;">${acc.name}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
         ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : gearLockText(acc)}

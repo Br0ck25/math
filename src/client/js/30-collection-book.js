@@ -50,7 +50,7 @@ function setBookTab(t) { soundClick(); bookTab = t; renderBook(); }
 function bookCard(o) {
   return '<div class="pet-card' + (o.locked ? ' locked' : '') + '"' + (o.style ? ' style="' + o.style + '"' : '') + (o.click ? ' onclick="' + o.click + '"' : '') + '>' +
     (o.rarity ? '<div class="rar-badge" style="color:' + o.rarity.col + '; border-color:' + o.rarity.col + ';">' + o.rarity.name + '</div>' : '') +
-    '<div class="' + (o.locked ? 'silhouette' : '') + '" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">' + o.icon + '</div>' +
+    '<div class="card-pic ' + (o.locked ? 'silhouette' : '') + '" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">' + o.icon + '</div>' +
     '<div class="card-name">' + o.name + '</div>' +
     (o.elem ? '<div style="margin: 1px 0;"><span class="element-pill elem-' + o.elem + '">' + o.elem + '</span></div>' : '') +
     (o.extra || '') +
