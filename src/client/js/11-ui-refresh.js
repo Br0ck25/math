@@ -31,25 +31,9 @@ function updateBattleUI() {
   document.getElementById('pet-fighter-name').innerText = pet.name;
   document.getElementById('pet-level').innerText = pet.level;
 
-  const accOverlay = document.getElementById('pet-accessory-overlay');
-  const curAcc = accessoriesList.find(function (a) { return a.id === state.activeAccessory; }) || accessoriesList[0];
-  if (curAcc && curAcc.id !== 'none') {
-    accOverlay.innerText = curAcc.renderIcon;
-    accOverlay.className = `accessory-overlay ${curAcc.cssClass}`;
-  } else {
-    accOverlay.innerText = '';
-    accOverlay.className = 'accessory-overlay';
-  }
+  const gear = activeGear();
+  document.getElementById('pet-gear').innerHTML = gearMarkup(gear.acc, gear.armor);
 
-  const armorOv = document.getElementById('pet-armor-overlay');
-  const curArmor = getArmor(state.activeArmor);
-  if (curArmor.id !== 'none') {
-    armorOv.innerText = curArmor.renderIcon;
-    armorOv.className = 'armor-overlay t' + curArmor.tier;
-  } else {
-    armorOv.innerText = '';
-    armorOv.className = 'armor-overlay';
-  }
   const candyBtn = document.getElementById('candy-btn');
   if (candyBtn) candyBtn.innerText = getCandyCost() + ' 💎 Eat';
 

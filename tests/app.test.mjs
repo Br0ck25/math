@@ -126,6 +126,52 @@ test('first-time players get a glow on the buddy that goes away after the hub is
   assert.deepEqual(r, { before: true, after: false, seen: true });
 });
 
+// ---------------------------------------------------------------- buddy gear
+test('every accessory has a slot and every armor a tier, so gear always has a place to sit', async () => {
+  const bad = await page.evaluate(() => [
+    ...accessoriesList.filter((a) => a.id !== 'none' && !GEAR_SLOTS[a.slot]).map((a) => 'accessory ' + a.id),
+    ...armorList.filter((a) => a.id !== 'none' && !(a.tier >= 1 && a.tier <= 3 && ARMOR_TIER_COLORS[a.tier])).map((a) => 'armor ' + a.id)
+  ]);
+  assert.deepEqual(bad, []);
+});
+
+test('worn gear stays tidy on the battle screen: nothing piles on the armor badge, and the name row stays on one line', async () => {
+  for (const viewport of [{ width: 360, height: 640 }, { width: 420, height: 800 }]) {
+    const g = await openGame(browser, worker, env, { viewport });
+    const messy = await g.page.evaluate(() => {
+      const out = [];
+      const area = (r) => Math.max(0, r.width) * Math.max(0, r.height);
+      const overlap = (a, b) => area({ width: Math.min(a.right, b.right) - Math.max(a.left, b.left), height: Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) });
+      const armors = ['tunic', 'chain', 'celestial'];
+      accessoriesList.filter((a) => a.id !== 'none').forEach((acc) => armors.forEach((arm) => {
+        state.activeAccessory = acc.id; state.activeArmor = arm; updateBattleUI();
+        const wrap = document.getElementById('fighter-icon-wrapper').getBoundingClientRect();
+        const gear = document.querySelector('#pet-gear .gear').getBoundingClientRect();
+        const badge = document.querySelector('#pet-gear .armor-badge').getBoundingClientRect();
+        const slot = acc.slot;
+        if (slot !== 'back' && slot !== 'aura' && overlap(gear, badge) > 0.2 * area(gear)) out.push(acc.id + ' covers the armor badge (' + arm + ')');
+        if (gear.left > wrap.right + wrap.width || gear.right < wrap.left - wrap.width) out.push(acc.id + ' floats away from the buddy');
+        const tag = document.querySelector('.fighter-tag').getBoundingClientRect();
+        if (tag.height > 22) out.push('name row wraps with ' + acc.id);
+      }));
+      return [...new Set(out)];
+    });
+    assert.deepEqual(messy, [], 'at ' + viewport.width);
+    await g.context.close();
+  }
+});
+
+test('the trading card draws gear in every slot without errors', async () => {
+  const r = await page.evaluate(() => {
+    state.activeArmor = 'crystal';
+    const slots = {};
+    accessoriesList.filter((a) => a.id !== 'none').forEach((a) => { slots[a.slot] = a.id; });
+    Object.values(slots).forEach((accId) => { state.activeAccessory = accId; const c = document.createElement('canvas'); drawCard(c, state.activePet); });
+    return Object.keys(slots).sort();
+  });
+  assert.deepEqual(r, ['aura', 'back', 'face', 'head', 'neck', 'side']);
+});
+
 // ---------------------------------------------------------------- saves
 test('an old or damaged save is repaired, versioned and keeps working', async () => {
   await page.evaluate(() => localStorage.setItem('math_quest_save', JSON.stringify({

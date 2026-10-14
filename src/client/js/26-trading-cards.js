@@ -55,18 +55,14 @@ function drawCard(cv, id) {
   let fs = 250;
   ctx.font = fs + 'px ' + EMOJI_FONT;
   while (ctx.measureText(d.icon).width > 400 && fs > 90) { fs -= 20; ctx.font = fs + 'px ' + EMOJI_FONT; }
+  const gear = id === state.activePet ? activeGear() : { acc: null, armor: null };   // gear belongs to the active buddy
+  drawGear(ctx, gear.acc, gear.armor, W / 2, 335, fs, 'behind');
+  ctx.font = fs + 'px ' + EMOJI_FONT;
   ctx.globalAlpha = sleepy ? 0.55 : 1;
   ctx.fillText(d.icon, W / 2, 335);
   ctx.globalAlpha = 1;
+  drawGear(ctx, gear.acc, gear.armor, W / 2, 335, fs, 'front');
   if (sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
-  // gear
-  const acc = accessoriesList.find(function (a) { return a.id === state.activeAccessory; });
-  const arm = getArmor(state.activeArmor);
-  ctx.font = '56px ' + EMOJI_FONT;
-  if (id === state.activePet) {
-    if (acc && acc.renderIcon) ctx.fillText(acc.renderIcon, 110, 180);
-    if (arm.renderIcon) ctx.fillText(arm.renderIcon, 110, 500);
-  }
   // type pill + stars
   ctx.fillStyle = ec;
   rrect(ctx, 48, 575, 190, 46, 23); ctx.fill();

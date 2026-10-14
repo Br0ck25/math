@@ -65,7 +65,8 @@ function renderHub() {
   const sleepy = isSleepy(hubPet);
   const ic = document.getElementById('hub-icon');
   ic.className = 'hub-icon' + (sleepy ? ' sleepy' : '');
-  ic.innerHTML = d.icon + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
+  const gear = hubPet === state.activePet ? activeGear() : { acc: null, armor: null };
+  ic.innerHTML = '<span class="hub-avatar">' + d.icon + '<span class="gear-layer">' + gearMarkup(gear.acc, gear.armor) + '</span></span>' + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
   document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
   const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel']];

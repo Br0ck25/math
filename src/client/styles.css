@@ -227,9 +227,11 @@
     }
 
     .fighter-icon-wrapper {
+      --u: 44px;                     /* the buddy's size: gear is sized and placed from this (see 08b-buddy-gear.js) */
       position: relative;
-      width: 44px;
-      height: 44px;
+      isolation: isolate;
+      width: var(--u);
+      height: var(--u);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -244,59 +246,10 @@
       width: 42px;
       height: 42px;
       position: relative;
+      z-index: 3;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
 
-    .accessory-overlay {
-      position: absolute;
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    /* Head, Body, & Back Gear Styling */
-    .acc-shades     { top: 13px; left: 7px; font-size: 1.25rem; }
-    .acc-party      { top: -16px; left: 11px; font-size: 1.35rem; }
-    .acc-tophat     { top: -14px; left: 9px; font-size: 1.35rem; }
-    .acc-bowtie     { top: 22px; left: 14px; font-size: 1rem; }
-    .acc-scarf      { top: 17px; left: 10px; font-size: 1.15rem; }
-    .acc-pirate     { top: -12px; left: 8px; font-size: 1.35rem; }
-    .acc-flower     { top: -14px; left: 8px; font-size: 1.3rem; }
-    .acc-chef       { top: -15px; left: 9px; font-size: 1.35rem; }
-    .acc-chain      { top: 20px; left: 13px; font-size: 1rem; }
-    .acc-detective  { top: -14px; left: 8px; font-size: 1.35rem; }
-    .acc-ninja      { top: 2px; left: 7px; font-size: 1.15rem; }
-    .acc-scuba      { top: 11px; left: 9px; font-size: 1.25rem; }
-    .acc-backpack   { top: 10px; left: -13px; font-size: 1.15rem; }
-    .acc-wizard     { top: -15px; left: 9px; font-size: 1.35rem; }
-    .acc-visor      { top: 12px; left: 8px; font-size: 1.25rem; }
-    .acc-viking     { top: -14px; left: 8px; font-size: 1.3rem; }
-    .acc-gloves     { top: 16px; left: -12px; font-size: 1.15rem; }
-    .acc-headset    { top: -6px; left: 6px; font-size: 1.3rem; }
-    .acc-medal      { top: 20px; left: 14px; font-size: 1rem; }
-    .acc-armor      { top: 14px; left: 18px; font-size: 1.15rem; }
-    .acc-tiara      { top: -12px; left: 10px; font-size: 1.2rem; }
-    .acc-wand       { top: 12px; left: 22px; font-size: 1.25rem; transform: rotate(15deg); }
-    .acc-crown      { top: -14px; left: 9px; font-size: 1.3rem; }
-    .acc-halo       { top: -18px; left: 11px; font-size: 1.25rem; }
-    .acc-space      { top: -13px; left: 8px; font-size: 1.35rem; }
-    .acc-wings      { top: 6px; left: 24px; font-size: 1.35rem; }
-    .acc-sword      { top: 12px; left: -15px; font-size: 1.25rem; transform: rotate(-30deg); }
-    .acc-butterfly  { top: 6px; left: 22px; font-size: 1.35rem; }
-    .acc-cape       { top: 16px; left: -14px; font-size: 1.35rem; transform: rotate(-15deg); }
-    .acc-trophy     { top: 14px; left: -15px; font-size: 1.2rem; }
-    .acc-flame      { top: -4px; left: -10px; font-size: 1.5rem; opacity: 0.85; }
-    .acc-spark      { top: -6px; left: 22px; font-size: 1.35rem; }
-    .acc-rainbow    { top: 14px; left: -16px; font-size: 1.3rem; transform: rotate(-25deg); }
-
-    .acc-potterglass{ top: 11px; left: 6px; font-size: 1.25rem; }
-    .acc-sortinghat { top: -16px; left: 8px; font-size: 1.45rem; }
-    .acc-snitch     { top: -13px; left: 24px; font-size: 1.2rem; filter: drop-shadow(0 0 6px #facc15); }
-    .acc-broom      { top: 16px; left: -16px; font-size: 1.35rem; transform: rotate(-25deg); }
-    .acc-icecrown   { top: -12px; left: 7px; font-size: 1.15rem; filter: drop-shadow(0 0 6px #38bdf8); }
-    .acc-rose       { top: 13px; left: 20px; font-size: 1.15rem; filter: drop-shadow(0 0 5px #ef4444); }
-    .acc-slipper    { top: 18px; left: -14px; font-size: 1.15rem; filter: drop-shadow(0 0 6px #67e8f9); }
-    .acc-lei        { top: 19px; left: 8px; font-size: 1.2rem; }
-    .acc-fairywand  { top: 10px; left: 22px; font-size: 1.15rem; filter: drop-shadow(0 0 6px #a855f7); }
 
     .element-pill {
       font-size: 0.62rem;
@@ -330,6 +283,10 @@
 
     .fighter-info { text-align: left; }
     .fighter-tag {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      white-space: nowrap;
       font-size: 0.65rem;
       text-transform: uppercase;
       font-weight: 700;
@@ -652,7 +609,7 @@
       .battle-title-row { margin-bottom: 2px; }
       .boss-taunt-box { padding: 2px 4px; font-size: 0.68rem; margin-bottom: 3px; }
       .versus-row { min-height: 38px; }
-      .fighter-icon-wrapper { width: 38px; height: 38px; }
+      .fighter-icon-wrapper { --u: 38px; }
       .fighter-icon { font-size: 1.8rem; width: 36px; height: 36px; }
       .fighter-name { font-size: 0.82rem; }
       .fighter-tag { font-size: 0.6rem; }
@@ -677,50 +634,6 @@
       .bottom-bar { margin-top: 4px; gap: 4px; }
       .btn-secondary { padding: 4px 2px; font-size: 0.72rem; border-radius: 6px; }
 
-      .acc-shades     { top: 11px; left: 5px; font-size: 1.1rem; }
-      .acc-tophat     { top: -12px; left: 7px; font-size: 1.15rem; }
-      .acc-pirate     { top: -10px; left: 6px; font-size: 1.15rem; }
-      .acc-ninja      { top: 1px; left: 5px; font-size: 1rem; }
-      .acc-wizard     { top: -13px; left: 7px; font-size: 1.2rem; }
-      .acc-headset    { top: -5px; left: 4px; font-size: 1.1rem; }
-      .acc-crown      { top: -12px; left: 7px; font-size: 1.15rem; }
-      .acc-wings      { top: 4px; left: 20px; font-size: 1.15rem; }
-      .acc-cape       { top: 12px; left: -12px; font-size: 1.15rem; }
-      .acc-bowtie     { top: 18px; left: 11px; font-size: 0.85rem; }
-      .acc-armor      { top: 12px; left: 15px; font-size: 1rem; }
-      .acc-jetpack    { top: 4px; left: -12px; font-size: 1.05rem; }
-      .acc-chain      { top: 16px; left: 11px; font-size: 0.85rem; }
-      .acc-gloves     { top: 12px; left: -10px; font-size: 1rem; }
-      .acc-scarf      { top: 14px; left: 8px; font-size: 1rem; }
-      .acc-halo       { top: -15px; left: 9px; font-size: 1.1rem; }
-      .acc-backpack   { top: 8px; left: -11px; font-size: 1rem; }
-      .acc-viking     { top: -12px; left: 6px; font-size: 1.1rem; }
-      .acc-chef       { top: -13px; left: 7px; font-size: 1.15rem; }
-      .acc-party      { top: -14px; left: 9px; font-size: 1.15rem; }
-      .acc-tiara      { top: -10px; left: 8px; font-size: 1.05rem; }
-      .acc-scuba      { top: 9px; left: 7px; font-size: 1.05rem; }
-      .acc-medal      { top: 16px; left: 12px; font-size: 0.85rem; }
-      .acc-guitar     { top: 10px; left: 16px; font-size: 1.05rem; }
-      .acc-flame      { top: -3px; left: -8px; font-size: 1.25rem; }
-      .acc-spark      { top: -5px; left: 18px; font-size: 1.15rem; }
-      .acc-rainbow    { top: 12px; left: -13px; font-size: 1.1rem; }
-      .acc-visor      { top: 10px; left: 6px; font-size: 1.1rem; }
-      .acc-flower     { top: -12px; left: 6px; font-size: 1.15rem; }
-      .acc-space      { top: -11px; left: 6px; font-size: 1.2rem; }
-      .acc-sword      { top: 10px; left: -13px; font-size: 1.1rem; }
-      .acc-wand       { top: 10px; left: 18px; font-size: 1.1rem; }
-      .acc-butterfly  { top: 4px; left: 18px; font-size: 1.15rem; }
-      .acc-trophy     { top: 12px; left: -13px; font-size: 1.05rem; }
-      .acc-detective  { top: -12px; left: 6px; font-size: 1.15rem; }
-      .acc-potterglass{ top: 10px; left: 5px; font-size: 1.1rem; }
-      .acc-sortinghat { top: -14px; left: 6px; font-size: 1.25rem; }
-      .acc-snitch     { top: -10px; left: 20px; font-size: 1.05rem; }
-      .acc-broom      { top: 13px; left: -13px; font-size: 1.15rem; }
-      .acc-icecrown   { top: -12px; left: 7px; font-size: 1.15rem; }
-      .acc-rose       { top: 11px; left: 16px; font-size: 1rem; }
-      .acc-slipper    { top: 15px; left: -11px; font-size: 1rem; }
-      .acc-lei        { top: 16px; left: 7px; font-size: 1.05rem; }
-      .acc-fairywand  { top: 10px; left: 18px; font-size: 1.15rem; }
     }
 
     .modal-overlay {
@@ -1009,25 +922,7 @@
     @keyframes evoReveal { 0% { opacity: 0; transform: scale(0.3); filter: brightness(6); } 70% { opacity: 1; transform: scale(1.3); } 100% { opacity: 1; transform: scale(1); filter: brightness(1) drop-shadow(0 0 10px #facc15); } }
 
     /* ===== v3 additions: gear slots, armor, drawing pad ===== */
-    .slot-head { top: -14px; left: 9px;  font-size: 1.3rem; }
-    .slot-face { top: 12px;  left: 8px;  font-size: 1.2rem; }
-    .slot-neck { top: 20px;  left: 13px; font-size: 1rem; }
-    .slot-back { top: 8px;   left: -8px; font-size: 1.2rem; }
-    .slot-side { top: 12px;  left: 22px; font-size: 1.2rem; }
-    .slot-aura { top: -4px;  left: -4px; font-size: 1.4rem; opacity: 0.85; }
-    .armor-overlay { position: absolute; pointer-events: none; z-index: 4; top: 17px; left: 12px; font-size: 1.05rem; opacity: 0.95; }
-    .armor-overlay.t2 { filter: drop-shadow(0 0 3px #60a5fa); }
-    .armor-overlay.t3 { filter: drop-shadow(0 0 5px #facc15) drop-shadow(0 0 2px #fff); }
     .armor-hp { font-size: 0.62rem; color: #7dd3fc; font-weight: 800; }
-    @media (max-height: 720px) {
-      .slot-head { top: -12px; left: 7px;  font-size: 1.1rem; }
-      .slot-face { top: 10px;  left: 6px;  font-size: 1.05rem; }
-      .slot-neck { top: 16px;  left: 11px; font-size: 0.85rem; }
-      .slot-back { top: 6px;   left: -7px; font-size: 1.05rem; }
-      .slot-side { top: 10px;  left: 18px; font-size: 1.05rem; }
-      .slot-aura { top: -3px;  left: -3px; font-size: 1.2rem; }
-      .armor-overlay { top: 14px; left: 10px; font-size: 0.9rem; }
-    }
 
     .pad-open-btn { position: absolute; top: 2px; right: 4px; z-index: 6; background: #1e1b4b; border: 1px solid #6366f1; color: #fff; border-radius: 999px; width: 44px; height: 44px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .pad-open-btn.on { background: var(--primary); }
@@ -1184,3 +1079,12 @@
 .coach-glow { border-radius: 50%; animation: coachGlow 1.2s ease-in-out infinite alternate; }
 @keyframes coachGlow { from { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.0); } to { box-shadow: 0 0 10px 4px rgba(245, 158, 11, 0.85); } }
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+
+/* ===== buddy gear (placement comes from GEAR_SLOTS in 08b-buddy-gear.js) ===== */
+.gear-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.gear { position: absolute; line-height: 1; white-space: nowrap; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55)); }
+.armor-badge { position: absolute; right: -3px; bottom: -3px; z-index: 6; display: flex; align-items: center; justify-content: center; border-radius: 50%; line-height: 1; background: rgba(15, 23, 42, 0.92); border: 2px solid #94a3b8; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); }
+.armor-badge.t2 { border-color: #60a5fa; box-shadow: 0 0 5px #60a5fa; }
+.armor-badge.t3 { border-color: #facc15; box-shadow: 0 0 7px #facc15, 0 0 2px #fff; }
+.versus-row { margin-top: 6px; }
+.hub-avatar { --u: 56px; position: relative; display: inline-block; isolation: isolate; width: var(--u); height: var(--u); line-height: var(--u); }

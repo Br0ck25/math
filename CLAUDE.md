@@ -25,6 +25,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Rewards: `grantGems(n, message, big)` for any payout that celebrates. Costs/rewards/limits live ONLY in `ECON` (`src/shared/econ.js`).
   After changing a number there run `npm run sim`; the economy tests must pass.
 - Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (tournament, duels, vault).
+- Buddy gear: every accessory has a `slot` (head, face, neck, back, side, aura); positions come only from `GEAR_SLOTS` in `08b-buddy-gear.js` and are used by the battle screen, hub and trading card. Never add per-item pixel offsets in CSS. Armor is the corner badge. New gear needs no CSS.
 - Text safety: `escHtml()` for anything a user typed or the server sent, before it goes into `innerHTML`.
 - Saves: `saveState()` (never `localStorage` directly), `statDay()`/`recordStat()` for parent-report numbers, `addXpTo(id, n)` for buddy XP.
 - Stakes: `stakeAllowed()` / `allowedStakes()` (shared with the server). Session-goal pay: `sessionGoalReward()`.
