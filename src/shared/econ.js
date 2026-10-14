@@ -10,6 +10,7 @@ const ECON = {
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
+  items: { shield: 100 },          // dear on purpose: a shield must be a real decision, never a cheap way to skip a problem
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,

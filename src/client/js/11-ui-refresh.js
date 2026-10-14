@@ -39,6 +39,8 @@ function updateBattleUI() {
   pIcon.classList.toggle('buddy-worried', petHp > 0 && petHp / petMax <= 0.34);     // a nervous shiver when health is low
   fw.classList.toggle('combo-hot', state.streak >= 5);                          // a fiery glow while the combo is hot
 
+  const shieldBtn = document.getElementById('shield-btn');
+  if (shieldBtn) shieldBtn.innerText = ECON.items.shield + ' 💎 Buy';
   const candyBtn = document.getElementById('candy-btn');
   if (candyBtn) candyBtn.innerText = getCandyCost() + ' 💎 Eat';
 

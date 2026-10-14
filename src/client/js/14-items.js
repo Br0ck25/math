@@ -10,6 +10,7 @@ function getCandyCost() {
 
 function buyItem(type, cost) {
   if (type === 'candy') cost = getCandyCost();
+  if (type === 'shield') cost = ECON.items.shield;
   if (state.gems < cost) {
     soundWrong();
     toast(`You need ${cost - state.gems} more 💎 Gems!`);
