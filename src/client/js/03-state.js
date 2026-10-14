@@ -29,7 +29,7 @@ function freshState() {
     parentPinHash: '',
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
-    seen: { hub: false },
+    seen: { hub: false, welcome: '' },
     care: {},
     duelStat: { day: '', count: 0 },
     duelsOnline: true,

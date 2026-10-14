@@ -79,3 +79,32 @@ function renderCal() {
 }
 function openCal() { showModal('cal-modal', renderCal); }
 function closeCal() { hideModal('cal-modal', updateStatsUI); }
+
+// ----- welcome back: after a break the streak is only paused, and the game says so kindly (once a day) -----
+function welcomeBackText() {
+  const sc = state.streakCal;
+  if (!sc.last) return '';
+  const gap = daysSince(sc.last);
+  if (gap < 2) return '';
+  let t = 'Your buddies missed you! It has been ' + gap + ' days.';
+  t += sc.count > 0 ? ' Your streak is only paused at day ' + sc.count + ': solve one problem to keep it going.' : ' Solve one problem to start a new streak.';
+  const chests = calClaimable();
+  if (chests > 0) t += ' 🎁 ' + (chests === 1 ? 'A chest is' : chests + ' chests are') + ' waiting in your calendar.';
+  return t;
+}
+function maybeWelcomeBack() {
+  const text = welcomeBackText();
+  if (!text || state.seen.welcome === dayKey()) return;
+  state.seen.welcome = dayKey();
+  saveState();
+  enqueueModal(function () {
+    soundCoinChirp();
+    document.getElementById('welcome-text').innerText = text;
+    document.getElementById('welcome-modal').style.display = 'flex';
+  });
+}
+function closeWelcome() {
+  soundClick();
+  document.getElementById('welcome-modal').style.display = 'none';
+  modalDone();
+}

@@ -3,7 +3,7 @@
 //  Each math type has a level: -1 easier, 0 normal (the parent's grade), +1 challenge (one grade up).
 //  Levels follow recent accuracy and speed for THAT type, never the combo streak (a miss would otherwise punish success).
 //  Weak types are served more often, but no type takes more than half the problems. Tournaments and duels ignore all of this.
-//  Everything lives in state.adapt: on, miss (misses in a row), easy (queued warm-ups), calm (step back after a missed challenge),
+//  Everything lives in state.adapt: on, miss (misses in a row), easy (queued warm-ups: one after every miss that was not a Challenge), calm (step back after a missed challenge),
 //  recent (last results per type: '0' wrong, '1' right, '2' right and fast), tier, served (last problems: 'c' challenge, 'n' normal).
 // =====================================================================
 function easyScore(p) {
@@ -86,7 +86,7 @@ function typeShares(ops, weakOp) {
 }
 
 // Chooses what to ask next: {op, kind: 'warmup' | 'easier' | 'challenge' | 'normal', make()}.
-// 'warmup' is the one-off easy problem after two misses in a row; 'easier' and 'challenge' follow the type's level.
+// 'warmup' is the one-off easy problem right after a miss (a quick win); 'easier' and 'challenge' follow the type's level.
 function pickNextProblem(lastOp) {
   const ops = getActiveOps();
   const a = state.adapt;

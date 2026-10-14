@@ -47,6 +47,7 @@
       <div class="xp-bar-bg">
         <div id="xp-bar" class="xp-bar-fill"></div>
       </div>
+      <div class="next-goal" id="next-goal"></div>
     </div>
 
     <!-- Practice settings shortcut -->
@@ -322,6 +323,16 @@
     </div>
   </div>
 
+  <!-- Welcome back after a break -->
+  <div class="modal-overlay" id="welcome-modal" data-close="closeWelcome">
+    <div class="modal-content" style="border-color:#38bdf8;">
+      <div style="font-size:2.6rem; margin-bottom:4px;">👋</div>
+      <h2 style="color:#facc15; margin-bottom:4px; font-size:1.3rem;">Welcome back!</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.4; margin-bottom:12px;" id="welcome-text"></p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeWelcome()">Let's play!</button>
+    </div>
+  </div>
+
   <!-- Rare Companion Loot Drop Modal -->
   <div class="modal-overlay" id="loot-modal">
     <div class="modal-content" id="loot-modal-border" style="border-color: #818cf8;">
@@ -515,6 +526,7 @@
       <div class="settings-label">🎯 Accuracy by math type</div>
       <div id="par-types"></div>
       <div class="settings-label">🔍 Weak spots</div>
+      <div id="par-strong" style="font-size:0.8rem; text-align:left; margin-bottom:4px;"></div>
       <div id="par-weak" style="font-size:0.8rem; text-align:left;"></div>
       <div class="settings-label">🏆 Daily reward goal</div>
       <div class="par-goal">

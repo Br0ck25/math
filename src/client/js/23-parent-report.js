@@ -65,10 +65,22 @@ function parentClearPin() {
   toast('PIN removed');
   renderParent();
 }
+// The type with the best accuracy (at least 5 tries), or null.
+function strongestOp(byOp) {
+  let best = null, bestAcc = 0;
+  Object.keys(byOp).forEach(function (id) {
+    if (!OP_BY_ID[id] || byOp[id][0] < 5) return;
+    const acc = byOp[id][1] / byOp[id][0];
+    if (acc > bestAcc) { best = id; bestAcc = acc; }
+  });
+  return best;
+}
 function parentSummary() {
   const w = sumDays(lastDayKeys(7));
   let t = 'Math Quest weekly summary: solved ' + w.solved + ' problems at ' + w.acc + '% accuracy in ' + Math.round(w.ms / 60000) + ' minutes over ' + w.played + ' day(s).';
   const weak = Object.keys(w.byOp).filter(function (id) { return OP_BY_ID[id] && w.byOp[id][0] >= 5 && w.byOp[id][1] / w.byOp[id][0] < 0.7; });
+  const best = strongestOp(w.byOp);
+  if (best) t += ' Strongest: ' + OP_BY_ID[best].label + '.';
   t += weak.length ? ' Needs practice: ' + weak.map(function (id) { return OP_BY_ID[id].label; }).join(', ') + '.' : ' No weak spots this week!';
   return t;
 }
@@ -124,6 +136,8 @@ function renderParent() {
   }).join('') : '<div style="font-size:0.78rem; color:var(--text-muted);">No practice recorded yet this week.</div>';
 
   const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
+  const strong = strongestOp(byOp);
+  document.getElementById('par-strong').innerHTML = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
   document.getElementById('par-weak').innerHTML = weak.length
     ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')
     : (ids.length ? '✅ No weak spots this week. Great work!' : '<span style="color:var(--text-muted);">Needs at least 5 tries of a type to show.</span>');

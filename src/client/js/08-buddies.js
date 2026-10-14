@@ -100,6 +100,7 @@ function awardBuddyXp(amount) {
     const newMax = getPetMaxHp(id);
     partyHp[id] = Math.min(newMax, curHp + (newMax - oldMax));
     soundLevelUp();
+    launchConfetti('level');
     toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!');
     if (after.stage > before.stage) {
       state.gems += ECON.evolveGems;

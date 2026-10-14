@@ -1,6 +1,34 @@
 // =====================================================================
 //  BATTLE
 // =====================================================================
+// ----- feedback copy and juice -----
+const PRAISE = {
+  base: ['Incredible!', 'Super Sharp!', 'Crushing It!', 'Bullseye!', 'Math Wizard!', 'Nailed it!', 'Brilliant!'],
+  hot: ['Unstoppable!', 'On fire!', 'You cannot be stopped!', 'Legendary!', 'Math Machine!'],
+  fast: ['Lightning quick!', 'Whoa, so fast!', 'Speedy genius!']
+};
+function praiseFor(streak, fast) {
+  return pick(streak >= 5 ? PRAISE.hot : fast ? PRAISE.fast : PRAISE.base);
+}
+// A wrong answer shows what the player typed next to the right one, then a kind nudge. Never a scolding.
+const MISS_NUDGES = ['Next one is yours! 💪', 'Mistakes help brains grow! 🌱', 'You are getting closer! ⭐', 'Shake it off, you got this! 😄'];
+function missLine(said, answer) {
+  return 'You said ' + fmtAns(said) + ' — the answer is ' + fmtAns(answer) + '. ' + pick(MISS_NUDGES);
+}
+// What a boss "says" when it takes a hit, by element, so bosses feel different from each other.
+const BOSS_HIT_WORD = { fire: '🔥 SIZZLE!', water: '💦 SPLASH!', nature: '🌿 THWACK!', electric: '⚡ ZAP!', dark: '🌑 THUD!', magic: '✨ POOF!' };
+// A short screen shake for big moments (skipped when motion is reduced).
+function screenShake(strong) {
+  if (motionReduced()) return;
+  const el = document.getElementById('battle-header-arena');
+  if (!el) return;
+  const cls = strong ? 'screen-shake-big' : 'screen-shake';
+  el.classList.remove('screen-shake', 'screen-shake-big');
+  void el.offsetWidth;
+  el.classList.add(cls);
+  setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
+}
+
 function triggerMonsterDamage(extraDamage, weakHit) {
   extraDamage = extraDamage || 0;
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
@@ -48,14 +76,16 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       state.raid.phase += 1;
       monsterCurrentHp = getBossMaxHp();
       soundSuperMove();
-      launchConfetti();
+      launchConfetti('boss');
+      screenShake(true);
       showPopup('⚠️ PHASE ' + (state.raid.phase + 1) + '!');
       toast('👑 The raid boss changes! Find its new weak point!');
       updateStatsUI();
       saveState();
     } else if (monsterCurrentHp <= 0) {
       soundMonsterDefeated();
-      launchConfetti();
+      launchConfetti('boss');
+      screenShake(true);
       state.monstersDefeated += 1;
       questEvent('boss');
       if (bossMistakes === 0) questEvent('flawless');
@@ -103,7 +133,8 @@ function triggerSuperMove() {
   ultimateCharge = 0;
   questEvent('ult');
   soundSuperMove();
-  launchConfetti();
+  launchConfetti('streak');
+  screenShake(true);
   const pet = getActivePetDisplay();
   showPopup(`⚡ ${pet.superMove}!`);
   inputLocked = true;
@@ -136,6 +167,7 @@ function triggerBuddyDamage() {
     void petIconWrapper.offsetWidth;
     petIconWrapper.classList.add('hurt-flash');
     soundHitSlash();
+    screenShake(false);
 
     let incoming = boss.atk;
     const rel = getTypeRelation(boss.element, pet.element);
@@ -206,14 +238,14 @@ function checkAnswer() {
   sessionStats.attempts += 1;
 
   if (Math.abs(numVal - currentProblem.answer) < 0.0001) {
-    soundCorrect();
+    soundCorrect(state.streak + 1);
+    buddyReact('cheer');
     if (answerBox) answerBox.className = 'answer-box correct';
 
     sessionStats.solved += 1;
     const opId = currentProblem.modeTag;
     sessionStats.byOp[opId] = (sessionStats.byOp[opId] || 0) + 1;
     questEvent('solve', opId);
-    state.adapt.miss[opId] = 0;
     const wasChallenge = !!currentProblem.challenge;
     calDayEvent();
     recordStat(opId, true, solveTime, opId === getWeakOp());
@@ -233,7 +265,7 @@ function checkAnswer() {
       questEvent('fast');
       showPopup('⚡ SPEED STRIKE! +1 💎');
     } else {
-      showPopup('HIT! 💥');
+      showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
     }
 
     const cloverOn = state.cloverLeft > 0;
@@ -252,11 +284,12 @@ function checkAnswer() {
     }
     state.gems += gemsEarned;
 
-    const praises = ['Incredible!', 'Super Sharp!', 'Crushing It!', 'Unstoppable!', 'Bullseye!', 'Math Wizard!'];
-    feedback.innerText = `${pick(praises)} +${xpEarned} XP`;
+    feedback.innerText = `${praiseFor(state.streak, isFast)} +${xpEarned} XP`;
+    floatGain('+' + gemsEarned + ' 💎', 'gems-display', 0);
+    floatGain('+' + xpEarned + ' XP', 'xp-text', 160);
     if (state.streak >= 3) streakBanner.innerText = `🔥 ${state.streak} IN A ROW!`;
     if (MILESTONES[state.streak]) streakMilestone(state.streak);
-    else if (state.streak % 5 === 0) launchConfetti();
+    else if (state.streak % 5 === 0) launchConfetti('streak');
 
     if (sessionStats.solved >= sessionStats.goal && !sessionStats.goalClaimed) {
       sessionStats.goalClaimed = true;
@@ -266,7 +299,7 @@ function checkAnswer() {
       setTimeout(function () {
         enqueueModal(function () {
           soundSecretFound();
-          launchConfetti();
+          launchConfetti('level');
           document.getElementById('goal-done-num').innerText = reached;
           document.getElementById('goal-reward-num').innerText = goalReward;
           document.getElementById('goal-modal').style.display = 'flex';
@@ -276,7 +309,7 @@ function checkAnswer() {
 
     updateStatsUI();
     saveState();
-    scheduleNextProblem(650, 'Ready for the next one!');
+    scheduleNextProblem(500, 'Ready for the next one!');
 
   } else {
     soundWrong();
@@ -285,8 +318,8 @@ function checkAnswer() {
     recordStat(missOp, false, solveTime, false);
     if (currentProblem.challenge) state.adapt.calm[missOp] = true;     // after a missed challenge the next one steps back
     recordAdaptive(missOp, false, false);
-    state.adapt.miss[missOp] = (state.adapt.miss[missOp] || 0) + 1;
-    if (state.adapt.miss[missOp] >= 2) { state.adapt.easy[missOp] = true; state.adapt.miss[missOp] = 0; }
+    if (!currentProblem.challenge) state.adapt.easy[missOp] = true;     // a quick win right after a miss (a missed challenge already steps back, above)
+    buddyReact('wince');
     explainMistake();
     if (answerBox) answerBox.className = 'answer-box wrong';
 
@@ -294,12 +327,12 @@ function checkAnswer() {
       state.shields -= 1;
       soundShieldBreak();
       showPopup('🛡️ STREAK SHIELD SAVED YOU!');
-      feedback.innerText = `Shield absorbed it! The answer was ${fmtAns(currentProblem.answer)}`;
+      feedback.innerText = 'Shield absorbed it! ' + missLine(numVal, currentProblem.answer);
       updateStatsUI();
       saveState();
       scheduleNextProblem(1300, 'Shield used up — stay sharp!');
     } else {
-      feedback.innerText = `Almost! The answer was ${fmtAns(currentProblem.answer)}`;
+      feedback.innerText = missLine(numVal, currentProblem.answer);
       streakBanner.innerText = 'COMBO BROKEN!';
       triggerBuddyDamage();
       saveState();

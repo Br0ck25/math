@@ -1114,3 +1114,28 @@
 @media (max-height: 660px) { .practice-row, .session-info-row { display: none; } .weak-chip:empty { display: none; } }
 @media (max-height: 600px) { .xp-section { display: none; } .keypad { height: clamp(120px, 22vh, 140px); } .battle-header { padding: 3px 6px; margin-bottom: 3px; } }
 .modal-x-row + .hub-head { padding-top: 10px; }   /* the ‹ › arrows sit below the ✕ */
+
+/* ---- game feel: floating gains, shakes, buddy reactions, boss glows ---- */
+.next-goal { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-top: 3px; }
+.next-goal:empty { display: none; }
+.float-gain { position: fixed; z-index: 60; transform: translateX(-50%); font-weight: 900; font-size: 1rem; color: #fde047; text-shadow: 0 2px 0 #92400e, 0 0 8px #000; pointer-events: none; animation: floatGain 1s ease-out forwards; }
+@keyframes floatGain { 0% { opacity: 0; transform: translate(-50%, 6px) scale(0.7); } 20% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -34px) scale(1); } }
+@keyframes arenaShake { 0%, 100% { transform: translate(0, 0); } 20% { transform: translate(-3px, 2px); } 40% { transform: translate(3px, -2px); } 60% { transform: translate(-2px, 1px); } 80% { transform: translate(2px, -1px); } }
+@keyframes arenaShakeBig { 0%, 100% { transform: translate(0, 0); } 15% { transform: translate(-6px, 3px); } 30% { transform: translate(6px, -3px); } 45% { transform: translate(-5px, 2px); } 60% { transform: translate(5px, -2px); } 80% { transform: translate(-2px, 1px); } }
+.screen-shake { animation: arenaShake 0.3s ease-out; }
+.screen-shake-big { animation: arenaShakeBig 0.5s ease-out; }
+@keyframes buddyHop { 0%, 100% { transform: translateY(0) scale(1); } 40% { transform: translateY(-7px) scale(1.07); } }
+@keyframes buddyWince { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-4px) rotate(-7deg); } 75% { transform: translateX(4px) rotate(7deg); } }
+@keyframes buddyShiver { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-1.5px); } 75% { transform: translateX(1.5px); } }
+.buddy-hop { animation: buddyHop 0.4s ease-out; }
+.buddy-wince { animation: buddyWince 0.45s ease-in-out; }
+.buddy-worried { animation: buddyShiver 0.35s linear infinite; }
+.fighter-icon-wrapper.combo-hot { box-shadow: 0 0 12px 3px rgba(249, 115, 22, 0.65); border-radius: 14px; }
+.boss-box::before { content: ''; position: absolute; inset: -6px; border-radius: 50%; z-index: 0; pointer-events: none; opacity: 0.45; background: radial-gradient(circle, var(--bfx, transparent) 0%, transparent 68%); animation: evoPulse 2.4s ease-in-out infinite alternate; }
+.boss-box .fighter-icon { position: relative; z-index: 1; }
+.boss-box[data-element="fire"] { --bfx: #f97316; }
+.boss-box[data-element="water"] { --bfx: #38bdf8; }
+.boss-box[data-element="nature"] { --bfx: #4ade80; }
+.boss-box[data-element="electric"] { --bfx: #fde047; }
+.boss-box[data-element="dark"] { --bfx: #a855f7; }
+.boss-box[data-element="magic"] { --bfx: #f472b6; }
