@@ -92,4 +92,35 @@ test('windows are never taller than the visible screen (iPhone toolbars included
   assert.deepEqual(r, []);
 });
 
+test('with wide iPhone letters, windows stay inside the screen (book tabs too) and the arena never clips the equation', async () => {
+  const r = [];
+  for (const [w, h] of [[375, 667], [375, 548], [320, 568]]) {
+    await page.setViewportSize({ width: w, height: h });
+    await page.addStyleTag({ content: '* { letter-spacing: 0.05em !important; }' });
+    const out = await inPage(({ open, w, h }) => {
+      const o = [];
+      state.unlockedPets = ['dog', 'fox'];
+      ['shop-modal', 'settings-modal', 'book-modal', 'parent-modal', 'hub-modal'].forEach((id) => {
+        window[open[id]]();
+        if (id === 'book-modal') ['bosses', 'gear', 'buddies'].forEach((t) => { if (window.setBookTab) window.setBookTab(t); });
+        const m = document.getElementById(id), b = m.querySelector('.modal-content').getBoundingClientRect(), x = m.querySelector('.modal-x').getBoundingClientRect();
+        if (b.left < -0.5 || b.right > w + 0.5) o.push(w + 'x' + h + ' ' + id + ' box ' + Math.round(b.left) + '..' + Math.round(b.right));
+        if (x.right > w + 0.5 || x.left < 0) o.push(w + 'x' + h + ' ' + id + ' ✕ off screen');
+        m.querySelector('.modal-x').click();
+      });
+      state.enabledOps = ['add', 'sub'];
+      for (let i = 0; i < 40; i++) { generateProblem(); if (currentProblem.layout === 'vertical') break; }
+      document.getElementById('feedback-msg').innerText = 'Challenge problem: +50% XP if you get it! 💪';
+      document.getElementById('hint-box').innerText = '📘 How to: Start with the ones column: add 4 and 8.';
+      const a = document.querySelector('.arena'), ab = document.getElementById('answer-box');
+      if (a.scrollHeight > a.clientHeight + 1) o.push(w + 'x' + h + ' arena clips: ' + a.scrollHeight + ' > ' + a.clientHeight);
+      if (ab && ab.getBoundingClientRect().bottom > a.getBoundingClientRect().bottom + 1) o.push(w + 'x' + h + ' answer box hidden');
+      return o;
+    }, { open: OPEN, w, h });
+    r.push(...out);
+  }
+  await page.setViewportSize({ width: 375, height: 667 });
+  assert.deepEqual(r, []);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
