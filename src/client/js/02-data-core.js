@@ -60,7 +60,12 @@ const monstersList = [
   { name: "Gloom Owl", icon: "🦉", baseHp: 5, element: "dark", taunts: ["Who? Who got that wrong?", "The night sees every mistake!"] },
   { name: "Bone Pirate", icon: "☠️", baseHp: 6, element: "dark", taunts: ["Yo ho ho, give me your gems!", "X marks your mistake!"] },
   { name: "Potion Imp", icon: "🧪", baseHp: 4, element: "magic", taunts: ["Bubble, bubble, wrong answer!", "One drop and poof!"] },
-  { name: "Mirror Knight", icon: "🤺", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] }
+  { name: "Mirror Knight", icon: "🤺", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] },
+
+  // 3 Buddy Slayers: they fight like any other boss, but each is strong against one ultra-rare buddy (see ECON.boss.slayer)
+  { name: "Bovine Bruiser", icon: "🐄", baseHp: 6, element: "nature", slays: "secret_janie", taunts: ["Moo-ve over, math cadet!", "I will stampede right over your sums!"] },
+  { name: "Harpy Eagle", icon: "🦅", baseHp: 6, element: "electric", slays: "secret_amber", taunts: ["Slow and steady will not save you from my dive!", "Nothing escapes my talons!"] },
+  { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] }
 ];
 
 const GRADES = [

@@ -45,7 +45,7 @@ function bossCard(idx, opts) {
     stars: form + 1,
     stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', 1 + (form === 2 ? 1 : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
     line: '"' + base.taunts[0] + '"',
-    foot: weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
+    foot: base.slays ? '☠️ Strong against ' + slayerTarget(base) : weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
   };
 }
 function drawCardFromDesc(cv, c) {

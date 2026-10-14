@@ -7,12 +7,15 @@ function getBossInfo() {
   const form = getBossFormIndex(bossLevel);
   const name = form === 2 ? 'Alpha ' + base.name : (form === 1 ? 'Elder ' + base.name : base.name);
   return {
-    name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts,
+    name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts, slays: base.slays || null,
     form: form, level: bossLevel,
     maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0),
     atk: 1 + (form === 2 ? 1 : 0)
   };
 }
+// True when this boss is a slayer of that buddy (a boss from getBossInfo(), a buddy from getPetById()).
+function slaysBuddy(boss, pet) { return !!boss.slays && boss.slays === pet.id; }
+function slayerTarget(boss) { const sp = boss.slays && getSpecies(boss.slays); return sp ? sp.name : ''; }
 function getBossMaxHp() { return getBossInfo().maxHp; }
 
 const TYPE_STRONG = {

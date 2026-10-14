@@ -56,7 +56,10 @@ function triggerMonsterDamage(extraDamage, weakHit) {
 
     let damage = getPetAttack(pet.id) + extraDamage;
     const rel = getTypeRelation(battleElement(pet), boss.element);
-    if (battleElement(pet) === 'shadow') {
+    if (slaysBuddy(boss, pet)) {
+      damage = Math.max(1, Math.floor(damage * ECON.boss.slayer.yourDamage));
+      showPopup('☠️ ' + boss.name.replace(/^👑 /, '') + ' RESISTS YOU!');
+    } else if (battleElement(pet) === 'shadow') {
       damage = Math.ceil(damage * 1.25);
     } else if (rel === 1) {
       damage = Math.ceil(damage * 1.5);
@@ -118,7 +121,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
         saveState();
         if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
         const nb = getBossInfo();
-        toast(`A wild Lv ${nb.level} ${nb.name} appeared!`);
+        toast(`A wild Lv ${nb.level} ${nb.name} appeared!` + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);
@@ -174,8 +177,10 @@ function triggerBuddyDamage() {
     if (rel === 1) incoming += 1;
     else if (rel === -1) incoming = Math.max(1, incoming - 1);
     // no single hit may take more than 40% of the buddy's max HP (a fair fight, not a one-shot)
-    incoming = Math.max(1, Math.min(incoming, Math.ceil(getPetMaxHp(id) * 0.4)));
-    showPopup(rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
+    const slayer = slaysBuddy(boss, pet);
+    if (slayer) incoming += ECON.boss.slayer.extraDamage;
+    incoming = Math.max(1, Math.min(incoming, Math.ceil(getPetMaxHp(id) * (slayer ? ECON.boss.slayer.maxHpShare : 0.4))));
+    showPopup(slayer ? `☠️ STRONG AGAINST ${pet.baseName.toUpperCase()}! -${incoming} HP 💔` : rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
 
     setPetHp(id, getPetHp(id) - incoming);
     state.streak = 0;

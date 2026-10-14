@@ -5,7 +5,12 @@
 // =====================================================================
 const ECON = {
   solve: { gem: 1, speedGem: 1, streakEvery: 3, streakBonus: 2 },
-  boss: { gemBase: 8, gemPerLevels: 5 },
+  boss: {
+    gemBase: 8, gemPerLevels: 5,
+    // A "slayer" boss is strong against one buddy: it hits that buddy harder (and may take up to 60% of its max HP in one hit instead of 40%),
+    // and that buddy only deals 75% damage to it (no Shadow bonus).
+    slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 }
+  },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },

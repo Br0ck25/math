@@ -38,7 +38,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Cartoon-cast buddies carry a `show` (names and emoji only, no artwork or quotes). Only kid-friendly shows (rated for children / PG at most): never adult-rated ones. Their themed gear is bought or earned by collecting the cast (`cartoons`, `headliners` counters). Say so in the PR if a new show raises licensing questions; the owner decides about publishing.
 - Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 291 buddies, 50 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 291 buddies, 53 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.

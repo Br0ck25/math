@@ -50,7 +50,10 @@ function updateBattleUI() {
 
   const rel = getTypeRelation(battleElement(pet), boss.element);
   const hint = document.getElementById('type-match-hint');
-  if (battleElement(pet) === 'shadow') {
+  if (slaysBuddy(boss, pet)) {
+    hint.innerText = '☠️ Strong against ' + pet.baseName + '!';
+    hint.style.color = '#f87171';
+  } else if (battleElement(pet) === 'shadow') {
     hint.innerText = '🌟 Shadow: x1.25 damage';
     hint.style.color = '#d946ef';
   } else if (rel === 1) {
