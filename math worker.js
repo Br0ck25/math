@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v26';
+const CACHE_NAME = 'math-quest-v27';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1148,6 +1148,8 @@ const HTML = `<!DOCTYPE html>
     .tour-hp.foe i { background: #ef4444; }
     .tour-eq { font-size: 1.7rem; font-weight: 900; margin: 10px 0 6px; min-height: 40px; }
     .tour-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .rar-badge { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.5px; border: 1px solid; border-radius: 999px; padding: 0 5px; margin: 0 auto 2px; width: fit-content; }
+    .pet-card[onclick] { cursor: pointer; }
     .raid-chapter { font-size: 0.7rem; font-weight: 900; color: #fca5a5; letter-spacing: 1px; text-transform: uppercase; }
     .comic-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
     .comic-panel { display: flex; align-items: center; gap: 10px; background: #fef9c3; color: #1c1917; border: 3px solid #1c1917; border-radius: 6px; padding: 6px 10px; text-align: left; box-shadow: 3px 3px 0 #000; animation: fadeIn 0.4s both; }
@@ -1683,8 +1685,16 @@ const HTML = `<!DOCTYPE html>
   <div class="modal-overlay" id="parent-modal" onclick="closeParentOnOverlay(event)">
     <div class="modal-content">
       <h2 style="font-size:1.3rem;">👨‍👩‍👧 Parent Report</h2>
+      <div id="par-lock" style="display:none;">
+        <p style="font-size:0.85rem; margin:10px 0;">🔒 Grown-ups only. Enter the 4-digit PIN.</p>
+        <input id="par-pin-in" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align:center; font-size:1.4rem; letter-spacing:8px; width:140px; background:#1e293b; color:var(--text); border:1px solid var(--card-border); border-radius:8px; padding:6px;" />
+        <div><button class="key-btn submit-btn" style="padding:8px 18px; margin-top:8px; height:40px;" onclick="parentUnlock()">Unlock</button></div>
+        <div style="font-size:0.7rem; color:#f87171; min-height:16px; margin-top:4px;" id="par-lock-msg"></div>
+      </div>
+      <div id="par-content">
       <p style="font-size:0.72rem; color:var(--text-muted);">Last 7 days on this device or account.</p>
       <div class="par-tiles" id="par-tiles"></div>
+      <div style="font-size:0.74rem; font-weight:700; margin-bottom:2px;" id="par-compare"></div>
       <div class="settings-label">📅 Minutes per day</div>
       <div class="par-days" id="par-days"></div>
       <div class="settings-label">🎯 Accuracy by math type</div>
@@ -1699,6 +1709,15 @@ const HTML = `<!DOCTYPE html>
         <input id="par-reward" type="text" maxlength="60" placeholder="Reward, e.g. ice cream trip" onchange="setParentGoal()" />
         <div class="quest-bar"><div class="quest-fill" id="par-goal-fill" style="width:0%"></div></div>
         <div style="font-size:0.74rem; font-weight:700;" id="par-goal-text"></div>
+      </div>
+      <div class="settings-label">🔒 Parent PIN</div>
+      <div class="par-goal" style="flex-direction:row; align-items:center; flex-wrap:wrap;">
+        <input id="par-pin-new" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:90px;" />
+        <button class="grade-btn" style="padding:6px 10px;" onclick="parentSetPin()">Set PIN</button>
+        <button class="grade-btn" style="padding:6px 10px;" onclick="parentClearPin()" id="par-pin-clear">Remove</button>
+        <span style="font-size:0.66rem; color:var(--text-muted); flex-basis:100%;" id="par-pin-note"></span>
+      </div>
+      <button class="grade-btn" style="width:100%; margin-top:8px;" onclick="parentShare()">📋 Share weekly summary</button>
       </div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeParent()">Close</button>
     </div>
@@ -2004,6 +2023,7 @@ const HTML = `<!DOCTYPE html>
         streakCal: { count: 0, last: '', total: 0, claimed: [] },
         stats: { days: {} },
         parentGoal: { minutes: 20, reward: '', notified: '' },
+        parentPin: '',
         care: {},
         team: [],
         tour: { day: '', runs: 0, trophies: 0, wins: 0 },
@@ -3223,6 +3243,7 @@ const HTML = `<!DOCTYPE html>
       state.parentGoal.minutes = clamp(parseInt(state.parentGoal.minutes, 10) || 20, 5, 240);
       state.parentGoal.reward = String(state.parentGoal.reward || '').slice(0, 60);
       if (typeof state.parentGoal.notified !== 'string') state.parentGoal.notified = '';
+      if (typeof state.parentPin !== 'string' || !/^[0-9]{4}$/.test(state.parentPin)) state.parentPin = '';
       state.raidsCleared = Math.max(0, parseInt(state.raidsCleared, 10) || 0);
       state.lastRaidAt = Math.max(0, parseInt(state.lastRaidAt, 10) || 0);
       if (!state.care || typeof state.care !== 'object' || Array.isArray(state.care)) state.care = {};
@@ -4609,26 +4630,90 @@ const HTML = `<!DOCTYPE html>
       }
       return out;
     }
-    function renderParent() {
-      const keys = weekKeys();
-      const days = state.stats.days;
-      let solved = 0, attempts = 0, ms = 0, hints = 0, played = 0;
-      const byOp = {};
+    function sumDays(keys) {
+      const t = { solved: 0, attempts: 0, ms: 0, hints: 0, played: 0, weak: 0, byOp: {} };
       keys.forEach(function (k) {
-        const d = days[k];
+        const d = state.stats.days[k];
         if (!d) return;
-        played += d.a > 0 ? 1 : 0;
-        solved += d.s; attempts += d.a; ms += d.ms; hints += d.h;
+        t.played += d.a > 0 ? 1 : 0;
+        t.solved += d.s; t.attempts += d.a; t.ms += d.ms; t.hints += d.h; t.weak += d.w || 0;
         Object.keys(d.ops).forEach(function (op) {
-          const o = byOp[op] || (byOp[op] = [0, 0]);
+          const o = t.byOp[op] || (t.byOp[op] = [0, 0]);
           o[0] += d.ops[op][0]; o[1] += d.ops[op][1];
         });
       });
-      const acc = attempts ? Math.round((solved / attempts) * 100) : 0;
+      t.acc = t.attempts ? Math.round((t.solved / t.attempts) * 100) : 0;
+      return t;
+    }
+    function prevWeekKeys() {
+      const out = [];
+      for (let i = 13; i >= 7; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        out.push(dayKeyOf(d));
+      }
+      return out;
+    }
+    function deltaText(now, before, unit) {
+      const d = now - before;
+      return (d > 0 ? '▲ +' : (d < 0 ? '▼ ' : '＝ ')) + (d === 0 ? 'same' : d + unit);
+    }
+    let parentUnlocked = false;
+    function parentLocked() { return !!state.parentPin && !parentUnlocked; }
+    function parentUnlock() {
+      const v = document.getElementById('par-pin-in').value;
+      if (v === state.parentPin) { parentUnlocked = true; document.getElementById('par-pin-in').value = ''; renderParent(); }
+      else { document.getElementById('par-lock-msg').innerText = 'That PIN is not right.'; document.getElementById('par-pin-in').value = ''; soundWrong(); }
+    }
+    function parentSetPin() {
+      const v = document.getElementById('par-pin-new').value;
+      if (!/^[0-9]{4}$/.test(v)) { toast('PIN must be 4 digits'); return; }
+      state.parentPin = v;
+      parentUnlocked = true;
+      document.getElementById('par-pin-new').value = '';
+      saveState();
+      toast('🔒 PIN set');
+      renderParent();
+    }
+    function parentClearPin() {
+      state.parentPin = '';
+      saveState();
+      toast('PIN removed');
+      renderParent();
+    }
+    function parentSummary() {
+      const w = sumDays(weekKeys());
+      let t = 'Math Quest weekly summary: solved ' + w.solved + ' problems at ' + w.acc + '% accuracy in ' + Math.round(w.ms / 60000) + ' minutes over ' + w.played + ' day(s).';
+      const weak = Object.keys(w.byOp).filter(function (id) { return OP_BY_ID[id] && w.byOp[id][0] >= 5 && w.byOp[id][1] / w.byOp[id][0] < 0.7; });
+      t += weak.length ? ' Needs practice: ' + weak.map(function (id) { return OP_BY_ID[id].label; }).join(', ') + '.' : ' No weak spots this week!';
+      return t;
+    }
+    function parentShare() {
+      const text = parentSummary();
+      if (navigator.share) navigator.share({ title: 'Math Quest summary', text: text }).catch(function () {});
+      else if (navigator.clipboard) navigator.clipboard.writeText(text).then(function () { toast('📋 Summary copied'); }, function () { toast(text); });
+      else toast(text);
+    }
+
+    function renderParent() {
+      const locked = parentLocked();
+      document.getElementById('par-lock').style.display = locked ? 'block' : 'none';
+      document.getElementById('par-content').style.display = locked ? 'none' : 'block';
+      if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
+      document.getElementById('par-pin-note').innerText = state.parentPin ? 'PIN is on. You will be asked each time the app is reopened.' : 'Optional: stop little fingers from changing goals.';
+      document.getElementById('par-pin-clear').style.display = state.parentPin ? 'inline-block' : 'none';
+      const keys = weekKeys();
+      const days = state.stats.days;
+      const wk = sumDays(keys), pv = sumDays(prevWeekKeys());
+      const solved = wk.solved, attempts = wk.attempts, ms = wk.ms, hints = wk.hints, played = wk.played, acc = wk.acc, byOp = wk.byOp;
       const tile = function (v, l) { return '<div class="par-tile"><b>' + v + '</b><span>' + l + '</span></div>'; };
       document.getElementById('par-tiles').innerHTML =
         tile(solved, 'Solved') + tile(attempts ? acc + '%' : '--', 'Accuracy') + tile(Math.round(ms / 60000) + 'm', 'Time played') +
-        tile(played + '/7', 'Days played') + tile(hints, 'Hints used') + tile(state.streakCal.count, 'Streak day');
+        tile(played + '/7', 'Days played') + tile(hints, 'Hints used') + tile(state.streakCal.count, 'Streak day') +
+        tile(wk.weak, 'Weak-point hits') + tile(state.raidsCleared, 'Raids cleared') + tile(state.tour.trophies, 'Trophies');
+      document.getElementById('par-compare').innerText = pv.attempts
+        ? 'vs last week: solved ' + deltaText(solved, pv.solved, '') + ' · accuracy ' + deltaText(acc, pv.acc, '%')
+        : '';
 
       const maxMs = Math.max(60000, Math.max.apply(null, keys.map(function (k) { return days[k] ? days[k].ms : 0; })));
       const names = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -4674,6 +4759,7 @@ const HTML = `<!DOCTYPE html>
     function openParent() {
       soundClick();
       pauseClock();
+      parentUnlocked = false;
       renderParent();
       document.getElementById('parent-modal').style.display = 'flex';
     }
@@ -5320,6 +5406,9 @@ const HTML = `<!DOCTYPE html>
       { at: 150, gems: 250 }, { at: 200, gems: 400 }, { at: 250, gems: 600 }
     ];
     let bookTab = 'buddy';
+    let bookMissingOnly = false;
+    function toggleBookFilter() { soundClick(); bookMissingOnly = !bookMissingOnly; renderBook(); }
+    function bookOpenBuddy(id) { closeBook(); openHub(); hubPet = id; renderHub(); }
 
     function bookCounts() {
       const buddyTotal = storePets.length + mythicCompanions.length + 1 + secretCompanions.length;
@@ -5352,7 +5441,8 @@ const HTML = `<!DOCTYPE html>
     function setBookTab(t) { soundClick(); bookTab = t; renderBook(); }
 
     function bookCard(o) {
-      return '<div class="pet-card' + (o.locked ? ' locked' : '') + '"' + (o.style ? ' style="' + o.style + '"' : '') + '>' +
+      return '<div class="pet-card' + (o.locked ? ' locked' : '') + '"' + (o.style ? ' style="' + o.style + '"' : '') + (o.click ? ' onclick="' + o.click + '"' : '') + '>' +
+        (o.rarity ? '<div class="rar-badge" style="color:' + o.rarity.col + '; border-color:' + o.rarity.col + ';">' + o.rarity.name + '</div>' : '') +
         '<div class="' + (o.locked ? 'silhouette' : '') + '" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">' + o.icon + '</div>' +
         '<div class="card-name">' + o.name + '</div>' +
         (o.elem ? '<div style="margin: 1px 0;"><span class="element-pill elem-' + o.elem + '">' + o.elem + '</span></div>' : '') +
@@ -5363,10 +5453,14 @@ const HTML = `<!DOCTYPE html>
 
     function bookBuddy(sp, lockedHint) {
       const owned = getOwnedIds().indexOf(sp.id) !== -1;
-      if (!owned) return bookCard({ locked: true, icon: sp.icon, name: '???', hint: lockedHint, hintColor: '#94a3b8' });
+      const rar = rarityOf(sp.id);
+      if (!owned) return bookCard({ locked: true, icon: sp.icon, name: '???', hint: lockedHint, hintColor: '#94a3b8', rarity: rar });
       const d = getPetById(sp.id);
-      const forms = sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">' + f.icon + '</span>'; }).join('');
-      return bookCard({ icon: d.icon, name: d.name, elem: d.element, extra: '<div class="forms-row">' + forms + '</div>', hint: 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') });
+      const bond = getBond(sp.id);
+      const extra = '<div class="forms-row">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">' + f.icon + '</span>'; }).join('') + '</div>' +
+        '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
+        '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
+      return bookCard({ icon: d.icon, name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
     }
 
     function renderBook() {
@@ -5397,12 +5491,14 @@ const HTML = `<!DOCTYPE html>
       });
 
       const body = document.getElementById('book-body');
-      let h = '';
+      let h = '<button class="grade-btn' + (bookMissingOnly ? ' active' : '') + '" style="width:100%; margin-bottom:6px; padding:5px;" onclick="toggleBookFilter()">' + (bookMissingOnly ? '👀 Showing only what is missing — tap for all' : '👀 Show only what I am missing') + '</button>';
       if (bookTab === 'buddy') {
         const sec = function (title, arr, hint, icoCount) {
           const found = arr.filter(function (sp) { return getOwnedIds().indexOf(sp.id) !== -1; }).length;
+          const shown = bookMissingOnly ? arr.filter(function (sp) { return getOwnedIds().indexOf(sp.id) === -1; }) : arr;
+          if (!shown.length) return '';
           return '<div class="mystery-section-title">' + title + ' (' + found + ' / ' + arr.length + ')</div><div class="pet-grid">' +
-            arr.map(function (sp) { return bookBuddy(sp, typeof hint === 'function' ? hint(sp) : hint); }).join('') + '</div>';
+            shown.map(function (sp) { return bookBuddy(sp, typeof hint === 'function' ? hint(sp) : hint); }).join('') + '</div>';
         };
         h += sec('Store Buddies', storePets, function (sp) { return '💎 ' + sp.cost + ' in the Sanctuary'; });
         h += sec('Mythic Legends', mythicCompanions, 'Ultra rare boss rescue');
@@ -5412,6 +5508,7 @@ const HTML = `<!DOCTYPE html>
         h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles! 👑 Raids cleared: ' + state.raidsCleared + '</div><div class="pet-grid">';
         monstersList.forEach(function (m, i) {
           const e = state.bossBook[i];
+          if (bookMissingOnly && e) return;
           if (!e) { h += bookCard({ locked: true, icon: m.icon, name: '???', hint: 'Not met yet', hintColor: '#94a3b8' }); return; }
           const best = e.form >= 2 ? 'Alpha' : (e.form === 1 ? 'Elder' : (e.form === 0 ? 'Normal' : null));
           const wk = weakOpForBoss(i);
@@ -5427,12 +5524,14 @@ const HTML = `<!DOCTYPE html>
         h += '<div class="mystery-section-title">Body Armor (' + (state.unlockedArmor.length - 1) + ' / ' + (armorList.length - 1) + ')</div><div class="pet-grid">';
         armorList.filter(function (a) { return a.id !== 'none'; }).forEach(function (a) {
           const own = state.unlockedArmor.indexOf(a.id) !== -1;
+          if (bookMissingOnly && own) return;
           h += own ? bookCard({ icon: a.icon, name: a.name, hint: '+' + a.hp + ' HP', hintColor: '#7dd3fc' })
                    : bookCard({ locked: true, icon: a.icon, name: '???', hint: '💎 ' + a.cost, hintColor: '#f59e0b' });
         });
         h += '</div><div class="mystery-section-title">Accessories (' + (state.unlockedAccessories.length - 1) + ' / ' + (accessoriesList.length - 1) + ')</div><div class="pet-grid">';
         accessoriesList.filter(function (a) { return a.id !== 'none'; }).forEach(function (a) {
           const own = state.unlockedAccessories.indexOf(a.id) !== -1;
+          if (bookMissingOnly && own) return;
           h += own ? bookCard({ icon: a.icon, name: a.name, hint: 'Collected', hintColor: '#10b981' })
                    : bookCard({ locked: true, icon: a.icon, name: '???', hint: '💎 ' + a.cost, hintColor: '#f59e0b' });
         });
