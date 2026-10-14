@@ -198,6 +198,7 @@ function selectOrBuyPet(pet) {
   state.gems -= pet.cost;
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);
+  checkEarnedGear();
   state.activePet = pet.id;
   soundLevelUp();
   launchConfetti();

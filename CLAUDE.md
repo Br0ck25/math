@@ -35,8 +35,9 @@ Search the codebase first. Never write a second copy of something that exists. E
 ## Adding content (buddies, bosses, gear)
 - Append new rows; never reorder or rename ids (saves refer to ids and, for bosses, to list position; secret buddies get `secret_N` from their position).
   Store buddies stay in price order with the Bandit last. Evolved forms must keep the buddy's own face (use its animal, never a bare symbol): the glow, element badge and aura come from `formMarkup`.
+- Cartoon-cast buddies carry a `show` (names and emoji only, no artwork or quotes). Only kid-friendly shows (rated for children / PG at most): never adult-rated ones. Their themed gear is bought or earned by collecting the cast (`cartoons`, `headliners` counters). Say so in the PR if a new show raises licensing questions; the owner decides about publishing.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 250 buddies, 50 bosses, 100 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 289 buddies, 50 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.

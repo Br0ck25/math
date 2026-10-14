@@ -6,8 +6,14 @@ const EARN_COUNTERS = {
   raids: function () { return state.raidsCleared; },
   cups: function () { return state.tour.wins; },
   calendarDay: function () { return state.streakCal.count; },
-  bosses: function () { return state.monstersDefeated; }
+  bosses: function () { return state.monstersDefeated; },
+  cartoons: function () { return ownedCartoons().length; },
+  headliners: function () { return ownedCartoons().filter(function (p) { return p.id.indexOf('toon_') === 0; }).length; }
 };
+// Cartoon-cast buddies (they carry a `show`) that this player owns.
+function ownedCartoons() {
+  return getOwnedIds().map(getSpecies).filter(function (p) { return p && p.show; });
+}
 function earnedReady(g) {
   return !!g.earn && EARN_COUNTERS[g.earn.key]() >= g.earn.n;
 }

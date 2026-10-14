@@ -74,6 +74,12 @@ const storePets = [
   { id: 'scorpion', name: 'Dusty', icon: '🦂', cost: 2700, element: 'dark', superMove: 'Venom Sting', evoLevel: 95, evoName: 'Venom Emperor', evoIcon: '🦂' },
   { id: 'butterfly', name: 'Aurora', icon: '🦋', cost: 2850, element: 'magic', superMove: 'Aurora Wing Storm', evoLevel: 100, evoName: 'Aurora Monarch', evoIcon: '🦋' },
   { id: 'gorilla', name: 'Titan', icon: '🦍', cost: 3000, element: 'nature', superMove: 'Titan Slam', evoLevel: 100, evoName: 'Titan Alpha', evoIcon: '🦍' },
+  { id: 'toon_bluey', name: 'Bluey', icon: '🐕', cost: 3050, element: 'nature', superMove: 'Keepy Uppy Spin', evoLevel: 100, evoName: 'Super Bluey', evoIcon: '🐕', show: 'Bluey' },
+  { id: 'toon_spongebob', name: 'SpongeBob', icon: '🧽', cost: 3080, element: 'water', superMove: 'Bubble Blast Jellyfish Jam', evoLevel: 100, evoName: 'Mighty SpongeBob', evoIcon: '🧽', show: 'SpongeBob' },
+  { id: 'toon_chase', name: 'Chase', icon: '🚓', cost: 3110, element: 'electric', superMove: 'Pup Pursuit Siren', evoLevel: 100, evoName: 'Super Chase', evoIcon: '🚓', show: 'Paw Patrol' },
+  { id: 'toon_peppa', name: 'Peppa Pig', icon: '🐷', cost: 3140, element: 'water', superMove: 'Muddy Puddle Splash', evoLevel: 100, evoName: 'Puddle Queen Peppa', evoIcon: '🐷', show: 'Peppa Pig' },
+  { id: 'toon_bugs', name: 'Bugs Bunny', icon: '🥕', cost: 3170, element: 'magic', superMove: 'Carrot Trick Shot', evoLevel: 100, evoName: 'Wascally Bugs', evoIcon: '🥕', show: 'Looney Tunes' },
+  { id: 'toon_homer', name: 'Homer', icon: '🍩', cost: 3200, element: 'electric', superMove: 'Donut Overload', evoLevel: 100, evoName: 'Power Plant Homer', evoIcon: '🍩', show: 'The Simpsons' },
   { id: 'bandit', name: 'Bandit', icon: banditSvg, cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: banditEvoSvg, requiresAllStorePets: true }
 ];
 
@@ -172,7 +178,21 @@ const accessoriesList = [
   { id: 'comet',      name: 'Comet Trail',      icon: '☄️', cost: 340, slot: 'aura', renderIcon: '☄️' },
   { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
   { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'cups', n: 1, text: 'Win a tournament cup' } },
-  { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } }
+  { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } },
+  // ---- cartoon cast gear: 11 to buy, 2 earned by collecting the cartoon buddies ----
+  { id: 'krabbypatty', name: 'Krabby Patty',      icon: '🍔', cost: 120, slot: 'side', renderIcon: '🍔' },
+  { id: 'jellyrod',    name: 'Jellyfishing Rod',  icon: '🎣', cost: 105, slot: 'side', renderIcon: '🎣' },
+  { id: 'puptag',      name: 'Pup Tag',           icon: '🏷️', cost: 70,  slot: 'neck', renderIcon: '🏷️' },
+  { id: 'rescuesiren', name: 'Rescue Siren',      icon: '🚨', cost: 96,  slot: 'head', renderIcon: '🚨' },
+  { id: 'couchsofa',   name: 'Couch Gag Sofa',    icon: '🛋️', cost: 110, slot: 'back', renderIcon: '🛋️' },
+  { id: 'carrotcannon',name: 'Carrot Cannon',     icon: '🥕', cost: 98,  slot: 'side', renderIcon: '🥕' },
+  { id: 'acmebomb',    name: 'Gadget Bomb',       icon: '💣', cost: 126, slot: 'side', renderIcon: '💣' },
+  { id: 'acmecrate',   name: 'Gadget Crate',      icon: '📦', cost: 134, slot: 'back', renderIcon: '📦' },
+  { id: 'puddleboots', name: 'Puddle Boots',      icon: '👢', cost: 64,  slot: 'side', renderIcon: '👢' },
+  { id: 'balloon',     name: 'Keepy Uppy Balloon',icon: '🎈', cost: 58,  slot: 'side', renderIcon: '🎈' },
+  { id: 'pawprints',   name: 'Paw Prints',        icon: '🐾', cost: 210, slot: 'aura', renderIcon: '🐾' },
+  { id: 'fanpass',     name: 'Fan Club Pass',     icon: '🎫', cost: 0,   slot: 'neck', renderIcon: '🎫', earn: { key: 'cartoons', n: 10, text: 'Collect 10 cartoon buddies' } },
+  { id: 'goldspatula', name: 'Golden Spatula',    icon: '🍳', cost: 0,   slot: 'side', renderIcon: '🍳', earn: { key: 'cartoons', n: 25, text: 'Collect 25 cartoon buddies' } }
 ];
 
 // Body armor: bonus max HP for the active buddy (tiers get pricier; higher tiers glow)
@@ -191,7 +211,12 @@ const armorList = [
   { id: 'celestial', name: 'Celestial Plate', icon: '✨', cost: 1300, hp: 5, tier: 3, renderIcon: '✨' },
   { id: 'sailor',    name: 'Sailor Coat',     icon: '⚓', cost: 180,  hp: 1, tier: 1, renderIcon: '⚓' },
   { id: 'spidersilk',name: 'Spider Silk',     icon: '🕸️', cost: 400,  hp: 3, tier: 2, renderIcon: '🕸️' },
-  { id: 'centurion', name: 'Centurion Plate', icon: '🔰', cost: 0,    hp: 5, tier: 3, renderIcon: '🔰', earn: { key: 'bosses', n: 100, text: 'Defeat 100 bosses' } }
+  { id: 'centurion', name: 'Centurion Plate', icon: '🔰', cost: 0,    hp: 5, tier: 3, renderIcon: '🔰', earn: { key: 'bosses', n: 100, text: 'Defeat 100 bosses' } },
+  { id: 'squareshorts', name: 'Square Shorts',   icon: '🩳', cost: 190, hp: 1, tier: 1, renderIcon: '🩳' },
+  { id: 'puddledress',  name: 'Puddle Dress',    icon: '👗', cost: 200, hp: 1, tier: 1, renderIcon: '👗' },
+  { id: 'speedshirt',   name: 'Speedster Shirt', icon: '🎽', cost: 420, hp: 3, tier: 2, renderIcon: '🎽' },
+  { id: 'sitcomsuit',   name: 'Sitcom Suit',     icon: '👔', cost: 480, hp: 3, tier: 2, renderIcon: '👔' },
+  { id: 'circuscoat',   name: 'Toon Circus Coat',icon: '🎪', cost: 0,   hp: 5, tier: 3, renderIcon: '🎪', earn: { key: 'headliners', n: 6, text: 'Own all 6 headline cartoon buddies' } }
 ];
 accessoriesList.sort(function (a, b) { return a.cost - b.cost; });
 function getArmor(id) { return armorList.find(function (a) { return a.id === id; }) || armorList[0]; }
@@ -226,7 +251,15 @@ const mythicSpecies = [
   { id: 'mythic_alice',      name: 'Alice',        icon: '🫖',  elem: 'magic',    superMove: 'Rabbit Hole Whirl',  mythic: true },
   { id: 'mythic_sinbad',     name: 'Sinbad',       icon: '⛵',  elem: 'water',    superMove: 'Seven Voyages Wave', mythic: true },
   { id: 'mythic_aladdin',    name: 'Aladdin',      icon: '🧞',  elem: 'magic',    superMove: 'Lamp Wish Blast',    mythic: true },
-  { id: 'mythic_dorothy',    name: 'Dorothy',      icon: '👠',  elem: 'electric', superMove: 'Yellow Brick Cyclone',mythic: true }
+  { id: 'mythic_dorothy',    name: 'Dorothy',      icon: '👠',  elem: 'electric', superMove: 'Yellow Brick Cyclone',mythic: true },
+  { id: 'mythic_bingo',      name: 'Bingo',        icon: '🦮',  elem: 'magic',    superMove: 'Magic Xylophone Wave', mythic: true, show: 'Bluey' },
+  { id: 'mythic_patrick',    name: 'Patrick Star', icon: '🌟',  elem: 'water',    superMove: 'Rock Bottom Slam',     mythic: true, show: 'SpongeBob' },
+  { id: 'mythic_skye',       name: 'Skye',         icon: '🚁',  elem: 'magic',    superMove: 'High Flyer Rescue',    mythic: true, show: 'Paw Patrol' },
+  { id: 'mythic_george',     name: 'George Pig',   icon: '🦖',  elem: 'fire',     superMove: 'Dine-Saw Roar',        mythic: true, show: 'Peppa Pig' },
+  { id: 'mythic_lisa',       name: 'Lisa',         icon: '🎷',  elem: 'magic',    superMove: 'Jazz Genius Burst',    mythic: true, show: 'The Simpsons' },
+  { id: 'mythic_daffy',      name: 'Daffy Duck',   icon: '🦆',  elem: 'fire',     superMove: 'Dizzy Duck Dive',      mythic: true, show: 'Looney Tunes' },
+  { id: 'mythic_roadrunner', name: 'Road Runner',  icon: '💨',  elem: 'electric', superMove: 'Supersonic Dash',      mythic: true, show: 'Looney Tunes' },
+  { id: 'mythic_sandy',      name: 'Sandy Cheeks', icon: '🐿️', elem: 'electric', superMove: 'Treedome Karate Chop', mythic: true, show: 'SpongeBob' }
 ];
 
 const mythicCompanions = mythicSpecies.map(m => ({ ...m, element: m.elem, secret: true }));
@@ -427,7 +460,32 @@ const secretSpecies = [
   { name: 'Melon', icon: '🍉', elem: 'nature', superMove: 'Seed Spitter' },
   { name: 'Elara', icon: '🧝', elem: 'magic', superMove: 'Moonlit Archery' },
   { name: 'Merrow', icon: '🧜', elem: 'water', superMove: 'Tidal Song' },
-  { name: 'Scout', icon: '🐕', elem: 'nature', superMove: 'Fetch Fury' }
+  { name: 'Scout', icon: '🐕', elem: 'nature', superMove: 'Fetch Fury' },
+  { name: 'Bandit Heeler', icon: '🐕‍🦺', elem: 'nature', superMove: 'Dad Games Pounce', show: 'Bluey' },
+  { name: 'Chilli', icon: '🐩', elem: 'nature', superMove: 'Calm Mum Cuddle', show: 'Bluey' },
+  { name: 'Muffin', icon: '🐶', elem: 'electric', superMove: 'Toddler Tornado', show: 'Bluey' },
+  { name: 'Socks', icon: '🐾', elem: 'electric', superMove: 'Sock Surprise', show: 'Bluey' },
+  { name: 'Squidward', icon: '🦑', elem: 'dark', superMove: 'Clarinet Gloom', show: 'SpongeBob' },
+  { name: 'Mr. Krabs', icon: '🦀', elem: 'fire', superMove: 'Money Claw Crunch', show: 'SpongeBob' },
+  { name: 'Plankton', icon: '🟢', elem: 'dark', superMove: 'Secret Formula Scheme', show: 'SpongeBob' },
+  { name: 'Gary', icon: '🐌', elem: 'water', superMove: 'Meow Slime Trail', show: 'SpongeBob' },
+  { name: 'Marshall', icon: '🚒', elem: 'fire', superMove: 'Fire Pup Hose Blast', show: 'Paw Patrol' },
+  { name: 'Rubble', icon: '🚜', elem: 'nature', superMove: 'Dig It Dozer', show: 'Paw Patrol' },
+  { name: 'Rocky', icon: '♻️', elem: 'nature', superMove: 'Green Means Go Fix', show: 'Paw Patrol' },
+  { name: 'Zuma', icon: '🚤', elem: 'water', superMove: 'Hovercraft Splash', show: 'Paw Patrol' },
+  { name: 'Everest', icon: '🏔️', elem: 'water', superMove: 'Snow Rescue Slide', show: 'Paw Patrol' },
+  { name: 'Tracker', icon: '🐆', elem: 'nature', superMove: 'Jungle Tracker Leap', show: 'Paw Patrol' },
+  { name: 'Suzy Sheep', icon: '🐑', elem: 'magic', superMove: 'Best Friend Bounce', show: 'Peppa Pig' },
+  { name: 'Rebecca Rabbit', icon: '🐇', elem: 'nature', superMove: 'Carrot Hop Rush', show: 'Peppa Pig' },
+  { name: 'Danny Dog', icon: '🐕', elem: 'water', superMove: 'Pirate Pup Plunge', show: 'Peppa Pig' },
+  { name: 'Marge', icon: '💙', elem: 'nature', superMove: 'Tall Hair Tower', show: 'The Simpsons' },
+  { name: 'Bart', icon: '🛹', elem: 'dark', superMove: 'Skateboard Prank', show: 'The Simpsons' },
+  { name: 'Maggie', icon: '🍼', elem: 'magic', superMove: 'Pacifier Pop', show: 'The Simpsons' },
+  { name: 'Tweety', icon: '🐤', elem: 'nature', superMove: 'Tiny Bird Flutter', show: 'Looney Tunes' },
+  { name: 'Sylvester', icon: '😼', elem: 'dark', superMove: 'Sneaky Cat Pounce', show: 'Looney Tunes' },
+  { name: 'Porky Pig', icon: '🐖', elem: 'nature', superMove: 'Stutter Stomp', show: 'Looney Tunes' },
+  { name: 'Wile E. Coyote', icon: '💣', elem: 'electric', superMove: 'Gadget Gone Wrong', show: 'Looney Tunes' },
+  { name: 'Taz', icon: '🌪️', elem: 'fire', superMove: 'Tasmanian Twirl', show: 'Looney Tunes' }
 ];
 
 const secretCompanions = secretSpecies.map((s, idx) => ({
@@ -436,5 +494,6 @@ const secretCompanions = secretSpecies.map((s, idx) => ({
   icon: s.icon,
   element: s.elem,
   superMove: s.superMove,
-  secret: true
+  secret: true,
+  show: s.show
 }));

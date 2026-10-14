@@ -67,7 +67,7 @@ function bookBuddy(sp, lockedHint) {
   const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>' +
     '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
-  return bookCard({ icon: avatarHtml(d, 40), name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
+  return bookCard({ icon: avatarHtml(d, 40), name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
 }
 
 function renderBook() {

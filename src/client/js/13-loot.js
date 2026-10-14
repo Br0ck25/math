@@ -12,6 +12,7 @@ function checkForSecretLootDrop(hadCasualties) {
   const giveLoot = function (drop, category) {
     grantBuddy(drop.id);
     state.unlockedSecrets.push(drop.id);
+    checkEarnedGear();
     saveState();
     enqueueModal(function () { showLootModal(drop, category); });
   };

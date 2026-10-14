@@ -10,13 +10,13 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 250 buddies, 50 bosses, 100 pieces of gear', async () => {
+test('the collection has the planned size: 289 buddies, 50 bosses, 118 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length
   }));
-  assert.deepEqual(c, { buddies: 250, bosses: 50, gear: 100, store: 37, mythic: 28, secret: 184 });
+  assert.deepEqual(c, { buddies: 289, bosses: 50, gear: 118, store: 43, mythic: 36, secret: 209 });
 });
 
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
@@ -119,6 +119,27 @@ test('earned gear: locked until the achievement, then awarded once, never for sa
   assert.deepEqual(r, { notBought: true, lockText: '🏆 Clear 2 raid bosses', early: 0, awarded: 1, again: 0, rest: 3, all: true });
 });
 
+test('cartoon cast gear is earned by collecting the cartoon buddies', async () => {
+  const r = await inPage(() => {
+    state.raidsCleared = 0; state.tour.wins = 0; state.monstersDefeated = 0; state.streakCal.count = 0;      // only the cast counters matter here
+    const reset = () => { state.unlockedAccessories = ['none']; state.unlockedArmor = ['none']; state.unlockedPets = ['dog']; state.unlockedSecrets = []; };
+    const secrets = secretCompanions.filter((p) => p.show), headliners = storePets.filter((p) => p.id.indexOf('toon_') === 0);
+    const all = headliners.concat(mythicCompanions.filter((p) => p.show), secrets);
+    const give = (list) => { list.forEach((p) => { (p.secret ? state.unlockedSecrets : state.unlockedPets).push(p.id); }); return checkEarnedGear(); };
+    const out = {};
+    reset(); out.none = checkEarnedGear();
+    reset(); out.nine = give(secrets.slice(0, 9));
+    reset(); out.ten = give(secrets.slice(0, 10));
+    out.pass = state.unlockedAccessories.indexOf('fanpass') !== -1 && state.unlockedAccessories.indexOf('goldspatula') === -1;
+    reset(); out.fiveHeadliners = give(headliners.slice(0, 5));
+    out.coat = give(headliners.slice(5)) === 1 && state.unlockedArmor.indexOf('circuscoat') !== -1;
+    reset(); give(all);
+    out.spatula = state.unlockedAccessories.indexOf('goldspatula') !== -1 && state.unlockedAccessories.indexOf('fanpass') !== -1;
+    return out;
+  });
+  assert.deepEqual(r, { none: 0, nine: 0, ten: 1, pass: true, fiveHeadliners: 0, coat: true, spatula: true });
+});
+
 test('earned gear shows as a secret in the shop and the book', async () => {
   const r = await inPage(() => {
     state.unlockedAccessories = ['none']; state.unlockedArmor = ['none'];
@@ -142,13 +163,33 @@ test('new store buddies sit in price order before the Bandit, who still needs al
 
 test('loot can drop the new mythics and secrets, and old saves keep their buddies', async () => {
   const r = await inPage(() => ({
-    mythicIds: mythicCompanions.slice(-6).map((p) => p.id),
+    mythicIds: mythicCompanions.slice(22, 28).map((p) => p.id),
     secretIds: [secretCompanions[153].id, secretCompanions[154].id, secretCompanions[183].id],
     oldIdsStable: secretCompanions[0].id === 'secret_1' && secretCompanions[153].id === 'secret_154'
   }));
   assert.deepEqual(r.mythicIds, ['mythic_arthur', 'mythic_robin', 'mythic_alice', 'mythic_sinbad', 'mythic_aladdin', 'mythic_dorothy']);
   assert.deepEqual(r.secretIds, ['secret_154', 'secret_155', 'secret_184']);
   assert.equal(r.oldIdsStable, true);
+});
+
+test('cartoon cast: kid-friendly shows only, every character complete, and the tiers add up', async () => {
+  const r = await inPage(() => {
+    const toons = storePets.concat(mythicCompanions, secretCompanions).filter((p) => p.show);
+    const byShow = {};
+    toons.forEach((p) => { byShow[p.show] = (byShow[p.show] || 0) + 1; });
+    return {
+      total: toons.length, byShow,
+      tiers: { store: storePets.filter((p) => p.show).length, mythic: mythicCompanions.filter((p) => p.show).length, secret: secretCompanions.filter((p) => p.show).length },
+      incomplete: toons.filter((p) => !p.name || !p.icon || !p.superMove || !p.element).map((p) => p.id),
+      oneHeadlinerPerShow: [...new Set(storePets.filter((p) => p.show).map((p) => p.show))].length
+    };
+  });
+  assert.deepEqual(r.byShow, { 'Bluey': 6, 'SpongeBob': 7, 'Paw Patrol': 8, 'Peppa Pig': 5, 'The Simpsons': 5, 'Looney Tunes': 8 });
+  assert.equal(r.total, 39);
+  assert.deepEqual(r.tiers, { store: 6, mythic: 8, secret: 25 });
+  assert.deepEqual(r.incomplete, []);
+  assert.equal(r.oneHeadlinerPerShow, 6);
+  assert.ok(!Object.keys(r.byShow).some((s) => /south park|rick and morty|family guy/i.test(s)), 'adult-rated shows do not belong in a kids game');
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
