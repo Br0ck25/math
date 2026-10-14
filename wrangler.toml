@@ -2,7 +2,12 @@ name = "math-quest"
 main = "worker.js"
 compatibility_date = "2024-09-23"
 
-# Optional: turns on online accounts. Create the namespace with
+# worker.js is generated from src/ (see CLAUDE.md). Wrangler rebuilds it before every deploy.
+[build]
+command = "node scripts/build.mjs"
+watch_dir = "src"
+
+# Optional: turns on online accounts and online duels. Create the namespace with
 #   npx wrangler kv namespace create MATH_KV
 # then paste the id it prints below. Without this block the game still
 # works exactly as before (progress just stays on the device).
