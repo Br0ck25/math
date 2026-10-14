@@ -1,0 +1,11 @@
+name = "math-quest"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Optional: turns on online accounts. Create the namespace with
+#   npx wrangler kv namespace create MATH_KV
+# then paste the id it prints below. Without this block the game still
+# works exactly as before (progress just stays on the device).
+[[kv_namespaces]]
+binding = "MATH_KV"
+id = "PASTE_YOUR_KV_NAMESPACE_ID"
