@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v23';
+const CACHE_NAME = 'math-quest-v24';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1114,6 +1114,19 @@ const HTML = `<!DOCTYPE html>
     .hint-box { min-height: 0; font-size: 0.8rem; font-weight: 700; color: #fde68a; text-align: center; padding: 0 12px; }
     .hint-box:empty { display: none; }
 
+    .bottom-bar { grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .bottom-bar .btn-secondary { font-size: 0.64rem; padding: 6px 1px; gap: 2px; }
+    .weak-chip { text-align: center; font-size: 0.72rem; font-weight: 900; color: #fecaca; margin: 2px 0 4px; animation: pulseGlow 1s infinite alternate; }
+    .weak-chip:empty { display: none; }
+    #equation-mount.weak-glow { border-radius: 14px; box-shadow: 0 0 0 2px #ef4444, 0 0 16px 3px rgba(239, 68, 68, 0.65); }
+    .milestone-overlay { position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; flex-direction: column; pointer-events: none; background: radial-gradient(circle, rgba(250, 204, 21, 0.25), transparent 65%); }
+    .milestone-overlay.show { display: flex; animation: milestonePop 1.9s ease-out forwards; }
+    .milestone-big { font-size: clamp(2rem, 9vw, 3.4rem); font-weight: 900; color: #fde047; text-shadow: 0 0 18px #f59e0b, 0 3px 0 #92400e; text-align: center; }
+    .milestone-sub { font-size: 1.1rem; font-weight: 800; color: #fff; margin-top: 4px; }
+    @keyframes milestonePop { 0% { opacity: 0; transform: scale(0.4); } 15% { opacity: 1; transform: scale(1.15); } 25% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(1.05); } }
+    @keyframes buddyDance { 0%, 100% { transform: translateY(0) rotate(0); } 20% { transform: translateY(-14px) rotate(-14deg); } 40% { transform: translateY(0) rotate(12deg); } 60% { transform: translateY(-12px) rotate(-10deg); } 80% { transform: translateY(0) rotate(8deg); } }
+    .buddy-dance { animation: buddyDance 1.2s ease-in-out; }
+
     /* ===== v4 additions: daily quests + collection book ===== */
     .notif-dot { background: #ef4444; color: #fff; border-radius: 999px; padding: 0 5px; font-size: 0.62rem; font-weight: 900; margin-left: 3px; display: none; }
     .quest-card { background: #0f172a; border: 2px solid var(--card-border); border-radius: 12px; padding: 8px 10px; margin: 8px 0; text-align: left; }
@@ -1205,6 +1218,8 @@ const HTML = `<!DOCTYPE html>
       <div class="boss-taunt-box" id="boss-taunt-box">
         Fire Drake: "You cannot calculate my flames!"
       </div>
+
+      <div class="weak-chip" id="weak-chip"></div>
 
       <div class="versus-row">
         <div class="fighter">
@@ -1557,6 +1572,8 @@ const HTML = `<!DOCTYPE html>
   </div>
 
   <div id="toast"></div>
+
+  <div class="milestone-overlay" id="milestone-overlay"><div class="milestone-big" id="milestone-big"></div><div class="milestone-sub" id="milestone-sub"></div></div>
 
   <!-- Streak Calendar Modal -->
   <div class="modal-overlay" id="cal-modal" onclick="closeCalOnOverlay(event)">
@@ -2625,6 +2642,58 @@ const HTML = `<!DOCTYPE html>
     let lastSig = '';
     function sigOf(p) { return (p.expr || (p.num1 + p.operator + p.num2)) + '|' + p.answer; }
 
+    // ----- streak milestone celebrations -----
+    const MILESTONES = {
+      5: { text: '🔥 5 IN A ROW!', sub: 'Nice combo! +2 💎', gems: 2 },
+      10: { text: '⚡ 10 IN A ROW!', sub: 'Unstoppable! +5 💎', gems: 5 },
+      25: { text: '👑 25 IN A ROW!', sub: 'LEGENDARY! +15 💎', gems: 15 }
+    };
+    function soundFanfare(big) {
+      const notes = big ? [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5, 1318.51, 1567.98] : [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach(function (f, i) { setTimeout(function () { playTone(f, 0.22, 'triangle'); }, i * 95); });
+    }
+    function streakMilestone(n) {
+      const m = MILESTONES[n];
+      state.gems += m.gems;
+      soundFanfare(n >= 10);
+      for (let i = 0; i < (n >= 25 ? 4 : n >= 10 ? 2 : 1); i++) setTimeout(launchConfetti, i * 220);
+      const ov = document.getElementById('milestone-overlay');
+      document.getElementById('milestone-big').innerText = m.text;
+      document.getElementById('milestone-sub').innerText = m.sub;
+      ov.classList.remove('show');
+      void ov.offsetWidth;
+      ov.classList.add('show');
+      setTimeout(function () { ov.classList.remove('show'); }, 1900);
+      const w = document.getElementById('fighter-icon-wrapper');
+      w.classList.remove('buddy-dance');
+      void w.offsetWidth;
+      w.classList.add('buddy-dance');
+      setTimeout(function () { w.classList.remove('buddy-dance'); }, 1300);
+    }
+
+    // ----- boss weak points: one math type hits this boss extra hard -----
+    const ELEM_WEAK_OPS = {
+      fire: ['mul', 'pow', 'pct'],
+      water: ['sub', 'div', 'frac'],
+      nature: ['add', 'mean', 'order'],
+      electric: ['mul', 'div', 'sqrt', 'alg'],
+      dark: ['sub', 'neg', 'log'],
+      magic: ['alg', 'order', 'frac', 'quad', 'limit']
+    };
+    function getWeakOp() {
+      const ops = getActiveOps();
+      if (ops.length < 2 || currentMonsterIndex < 0 || !monstersList[currentMonsterIndex]) return null;
+      const pref = (ELEM_WEAK_OPS[monstersList[currentMonsterIndex].element] || []).filter(function (o) { return ops.indexOf(o) !== -1; });
+      const pool = pref.length ? pref : ops;
+      return pool[currentMonsterIndex % pool.length];
+    }
+    function updateWeakChip() {
+      const chip = document.getElementById('weak-chip');
+      if (!chip) return;
+      const w = getWeakOp();
+      chip.innerText = w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label + ' = extra damage!' : '';
+    }
+
     // ----- adaptive difficulty: two misses in a row on one type -> a gentler problem next -----
     const missStreak = {};
     const easyQueue = {};
@@ -2646,8 +2715,10 @@ const HTML = `<!DOCTYPE html>
     function generateProblem() {
       const ops = getActiveOps();
       const queued = ops.filter(function (o) { return easyQueue[o]; });
+      const weak = getWeakOp();
       let id = queued.length ? queued[0] : pick(ops);
-      if (!queued.length && ops.length > 1 && id === lastOpId) {
+      if (!queued.length && weak && weak !== lastOpId && Math.random() < 0.4) id = weak;
+      else if (!queued.length && ops.length > 1 && id === lastOpId) {
         id = pick(ops.filter(function (o) { return o !== lastOpId; }));
       }
       lastOpId = id;
@@ -2669,6 +2740,7 @@ const HTML = `<!DOCTYPE html>
       inputLocked = false;
       hintUsed = false;
       renderHintUI();
+      updateWeakChip();
       questionStartTime = Date.now();
       padReset();
       renderEquationUI();
@@ -2678,6 +2750,7 @@ const HTML = `<!DOCTYPE html>
       const mount = document.getElementById('equation-mount');
       const valText = userInput === '' ? '?' : userInput;
       const p = currentProblem;
+      mount.classList.toggle('weak-glow', !!p.modeTag && p.modeTag === getWeakOp());
 
       if (p.layout === 'vertical') {
         mount.innerHTML = \`
@@ -3028,6 +3101,7 @@ const HTML = `<!DOCTYPE html>
       const petHp = getPetHp(pet.id);
 
       document.getElementById('monster-name').innerText = boss.name;
+      updateWeakChip();
       const mIcon = document.getElementById('monster-icon');
       mIcon.innerText = boss.icon;
       setStageClass(mIcon, 'boss-stage-', boss.form);
@@ -3161,7 +3235,7 @@ const HTML = `<!DOCTYPE html>
     // =====================================================================
     //  BATTLE
     // =====================================================================
-    function triggerMonsterDamage(extraDamage) {
+    function triggerMonsterDamage(extraDamage, weakHit) {
       extraDamage = extraDamage || 0;
       const petIconWrapper = document.getElementById('fighter-icon-wrapper');
       const monsterIcon = document.getElementById('monster-icon');
@@ -3198,6 +3272,10 @@ const HTML = `<!DOCTYPE html>
           showPopup('NOT VERY EFFECTIVE... 💧');
         }
 
+        if (weakHit) {
+          damage = Math.max(damage + 1, Math.ceil(damage * 1.5));
+          showPopup('🎯 WEAK POINT! 💥');
+        }
         monsterCurrentHp -= damage;
 
         if (monsterCurrentHp <= 0) {
@@ -3376,7 +3454,7 @@ const HTML = `<!DOCTYPE html>
         if (cloverOn) xpEarned = Math.round(xpEarned * 1.5);
         awardBuddyXp(xpEarned);
 
-        triggerMonsterDamage();
+        triggerMonsterDamage(0, opId === getWeakOp());
 
         let gemsEarned = 1 + speedBonusGems + (state.streak % 3 === 0 ? 2 : 0);
         if (state.cloverLeft > 0) {
@@ -3388,7 +3466,8 @@ const HTML = `<!DOCTYPE html>
         const praises = ['Incredible!', 'Super Sharp!', 'Crushing It!', 'Unstoppable!', 'Bullseye!', 'Math Wizard!'];
         feedback.innerText = \`\${pick(praises)} +\${xpEarned} XP\`;
         if (state.streak >= 3) streakBanner.innerText = \`🔥 \${state.streak} IN A ROW! COMBO ACTIVE!\`;
-        if (state.streak % 5 === 0) launchConfetti();
+        if (MILESTONES[state.streak]) streakMilestone(state.streak);
+        else if (state.streak % 5 === 0) launchConfetti();
 
         if (sessionStats.solved >= sessionStats.goal && !sessionStats.goalClaimed) {
           sessionStats.goalClaimed = true;
