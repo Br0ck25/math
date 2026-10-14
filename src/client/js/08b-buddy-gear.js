@@ -16,6 +16,16 @@ const GEAR_SLOTS = {
 };
 const ARMOR_BADGE = { size: 0.42, glyph: 0.28 };
 
+// Draws an emoji on a canvas. iPhone Safari paints a colour emoji as a flat silhouette filled with whatever
+// fillStyle is current (a gradient made the buddies on trading cards look like grey ghosts), so emoji always get
+// a plain opaque fill. Use this for EVERY emoji drawn on a canvas; tests/cards.test.mjs enforces it.
+function fillEmoji(ctx, text, x, y) {
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
 // The accessory and armor the active buddy is wearing.
 function activeGear() {
   return {
@@ -52,7 +62,7 @@ function drawGear(ctx, acc, armor, cx, cy, size, layer) {
     const gy = cy - size / 2 + slot.y * size + (slot.dy + 0.5) * px;
     ctx.globalAlpha = slot.opacity || 1;
     ctx.font = px + 'px ' + EMOJI_FONT;
-    ctx.fillText(acc.renderIcon, gx, gy);
+    fillEmoji(ctx, acc.renderIcon, gx, gy);
   }
   if (layer === 'front' && armor && armor.renderIcon) {
     const d = ARMOR_BADGE.size * size;
@@ -61,9 +71,8 @@ function drawGear(ctx, acc, armor, cx, cy, size, layer) {
     ctx.strokeStyle = ARMOR_TIER_COLORS[armor.tier] || '#94a3b8';
     ctx.lineWidth = Math.max(2, d * 0.07);
     ctx.beginPath(); ctx.arc(bx, by, d / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#fff';
     ctx.font = ARMOR_BADGE.glyph * size + 'px ' + EMOJI_FONT;
-    ctx.fillText(armor.renderIcon, bx, by + d * 0.04);
+    fillEmoji(ctx, armor.renderIcon, bx, by + d * 0.04);
   }
   ctx.restore();
 }
@@ -101,7 +110,7 @@ function drawForm(ctx, stage, element, cx, cy, size, layer) {
   if (layer === 'behind' && stage >= 2) {
     ctx.globalAlpha = 0.22;
     ctx.font = size * 1.15 + 'px ' + EMOJI_FONT;
-    ctx.fillText(glyph, cx, cy);
+    fillEmoji(ctx, glyph, cx, cy);
   }
   if (layer === 'front') {
     const d = size * 0.34, bx = cx - size / 2 + d * 0.15, by = cy - size / 2 + d * 0.15;
@@ -110,8 +119,8 @@ function drawForm(ctx, stage, element, cx, cy, size, layer) {
     ctx.lineWidth = Math.max(3, d * 0.07);
     ctx.beginPath(); ctx.arc(bx, by, d / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.font = size * 0.2 + 'px ' + EMOJI_FONT;
-    ctx.fillText(glyph, bx, by + d * 0.03);
-    if (stage >= 2) { ctx.font = size * 0.26 + 'px ' + EMOJI_FONT; ctx.fillText('✨', cx + size * 0.42, cy - size * 0.42); }
+    fillEmoji(ctx, glyph, bx, by + d * 0.03);
+    if (stage >= 2) { ctx.font = size * 0.26 + 'px ' + EMOJI_FONT; fillEmoji(ctx, '✨', cx + size * 0.42, cy - size * 0.42); }
   }
   ctx.restore();
 }

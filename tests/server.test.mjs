@@ -24,6 +24,23 @@ test('every response carries the security headers', async () => {
   }
 });
 
+test('plain http is sent to https, with the path kept, and https browsers are told to stay on https', async () => {
+  const hit = async (url, headers) => worker.fetch(new Request(url, { headers: headers || {} }), { MATH_KV: fakeKV() }, {});
+  const r = await hit('http://mathquest.example.com/api/status?x=1');
+  assert.equal(r.status, 301);
+  assert.equal(r.headers.get('location'), 'https://mathquest.example.com/api/status?x=1');
+  assert.match(r.headers.get('strict-transport-security'), /max-age=\d{7,}/);
+  const behindProxy = await hit('https://mathquest.example.com/', { 'cf-visitor': '{"scheme":"http"}' });
+  assert.equal(behindProxy.status, 301, 'Cloudflare says the visitor used http');
+  const ok = await hit('https://mathquest.example.com/');
+  assert.equal(ok.status, 200);
+  assert.match(ok.headers.get('strict-transport-security'), /max-age/);
+  assert.doesNotMatch(ok.headers.get('strict-transport-security'), /includeSubDomains/, 'other sites on the same domain must not be affected');
+  assert.match(ok.headers.get('content-security-policy'), /upgrade-insecure-requests/);
+  assert.equal((await hit('http://localhost:8787/')).status, 200, 'local development stays on http');
+  assert.equal((await hit('http://127.0.0.1:8787/')).status, 200);
+});
+
 test('accounts: bad names, duplicate names, wrong passwords', async () => {
   const { c } = await setup();
   assert.equal((await c('/api/register', 'POST', { name: 'x', password: 'secret1' })).status, 400);

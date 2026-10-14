@@ -51,6 +51,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - KV is eventually consistent and has no transactions: write each key from one writer only, never read-modify-write shared keys
   (see the layout comment in `20-duels.js`). Give every duel key an expiry. Keep reads per poll to one.
 - Answers and scoring for stakes stay on the server. The client is never trusted with money-like results.
+- Plain http is redirected to https (not for localhost) and every response carries HSTS; keep `insecureRequest()` working. The site must never load anything over http.
 - Every response gets the security headers in `30-router.js`. Do not loosen the CSP to make something work; fix the code.
 
 ## Kids first: safety and play
@@ -82,4 +83,5 @@ Search the codebase first. Never write a second copy of something that exists. E
 - A regex-based refactor of open/close functions deleted neighbouring functions (`hubStep`, `setDuelsOnline`) and no test noticed. Refactors of many files must be followed by `npm run lint`; do not edit code with greedy multi-line regexes.
 - A stray quote or backtick in the old single-file layout silently blanked the whole game. The new build catches syntax errors; still load the page after changes.
 - A shared single "ping" key overwrote an invitation with a result notification. Notifications carry a `kind`; decide what a new kind replaces.
+- Canvas emoji (trading cards) were grey silhouettes on iPhone Safari because a gradient was the current fillStyle. Draw every canvas emoji with `fillEmoji()`; `tests/cards.test.mjs` enforces it. Chrome hides this bug, so a green desktop test run is not proof for iOS.
 - Test pages must not register the service worker, and timers scaled by `fast` mean `setTimeout`-based waits in tests need generous multipliers.

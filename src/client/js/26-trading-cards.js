@@ -87,12 +87,12 @@ function drawCardFromDesc(cv, c) {
   ctx.font = fs + 'px ' + EMOJI_FONT;
   ctx.globalAlpha = c.sleepy ? 0.55 : 1;
   if (c.stage) { ctx.shadowColor = ec; ctx.shadowBlur = 22 + 14 * (c.stage - 1); }
-  ctx.fillText(c.icon, W / 2, 335);
+  fillEmoji(ctx, c.icon, W / 2, 335);
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   drawForm(ctx, c.stage, c.element, W / 2, 335, fs, 'front');
   drawGear(ctx, c.gear.acc, c.gear.armor, W / 2, 335, fs, 'front');
-  if (c.sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
+  if (c.sleepy) { ctx.font = '70px ' + EMOJI_FONT; fillEmoji(ctx, '💤', W - 120, 170); }
   // type pill + stars
   ctx.fillStyle = ec;
   rrect(ctx, 48, 575, 190, 46, 23); ctx.fill();

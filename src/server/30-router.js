@@ -85,7 +85,9 @@ async function handleApi(request, env, url) {
 // Headers added to every response. The page needs inline script/style (it is one self-contained file),
 // but nothing may load from, or send data to, any other site.
 const SECURITY_HEADERS = {
-  'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  'content-security-policy': "upgrade-insecure-requests; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+  // browsers that reached us over https must keep using https (ignored over http; no includeSubDomains so other sites on the domain are untouched)
+  'strict-transport-security': 'max-age=15552000',
   'x-content-type-options': 'nosniff',
   'referrer-policy': 'no-referrer',
   'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=()',
@@ -97,8 +99,19 @@ function withSecurityHeaders(res) {
   return out;
 }
 
+// Plain http gets sent to https (browsers label http pages "Not secure" and many school and office filters block them).
+// Cloudflare tells us how the visitor really connected in the cf-visitor header. Local development stays on http.
+function insecureRequest(request, url) {
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(url.hostname) || /\.localhost$/.test(url.hostname)) return false;
+  return url.protocol === 'http:' || /"scheme"\s*:\s*"http"/.test(request.headers.get('cf-visitor') || '');
+}
+
 async function route(request, env, ctx) {
     const url = new URL(request.url);
+    if (insecureRequest(request, url)) {
+      url.protocol = 'https:';
+      return new Response(null, { status: 301, headers: { location: url.toString(), 'cache-control': 'no-store' } });
+    }
 
     if (url.pathname.startsWith("/api/")) {
       try {
