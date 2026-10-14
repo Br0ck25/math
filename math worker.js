@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v22';
+const CACHE_NAME = 'math-quest-v23';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1100,6 +1100,20 @@ const HTML = `<!DOCTYPE html>
     .pad-btn { background: #1e293b; border: 1px solid var(--card-border); color: #e2e8f0; border-radius: 8px; padding: 5px 8px; font-size: 0.76rem; font-weight: 800; cursor: pointer; }
     .pad-btn.active { background: var(--primary); border-color: #818cf8; color: #fff; }
 
+    /* ===== v5 additions: streak calendar + hints ===== */
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin: 10px 0; }
+    .cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; background: #0f172a; border: 2px solid var(--card-border); font-size: 0.8rem; font-weight: 800; color: var(--text-muted); }
+    .cal-cell.filled { background: #422006; border-color: #f59e0b; color: #fde047; }
+    .cal-cell.today { box-shadow: 0 0 0 2px #fff; }
+    .cal-cell.chest { font-size: 1.15rem; }
+    .cal-cell.chest.ready { background: #78350f; border-color: #fbbf24; cursor: pointer; animation: pulseGlow 1s infinite alternate; }
+    .cal-cell.chest.opened { opacity: 0.5; border-color: #10b981; }
+    .cal-cell small { font-size: 0.55rem; line-height: 1; }
+    .hint-btn { position: absolute; top: 4px; left: 6px; z-index: 6; background: #1e1b4b; border: 1px solid #fbbf24; color: #fde047; border-radius: 999px; height: 34px; padding: 0 10px; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .hint-btn:disabled { opacity: 0.45; cursor: default; }
+    .hint-box { min-height: 0; font-size: 0.8rem; font-weight: 700; color: #fde68a; text-align: center; padding: 0 12px; }
+    .hint-box:empty { display: none; }
+
     /* ===== v4 additions: daily quests + collection book ===== */
     .notif-dot { background: #ef4444; color: #fff; border-radius: 999px; padding: 0 5px; font-size: 0.62rem; font-weight: 900; margin-left: 3px; display: none; }
     .quest-card { background: #0f172a; border: 2px solid var(--card-border); border-radius: 12px; padding: 8px 10px; margin: 8px 0; text-align: left; }
@@ -1249,6 +1263,7 @@ const HTML = `<!DOCTYPE html>
     <!-- Arena Container (Zero-Scroll Flex Mount) -->
     <div class="arena">
       <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)">✏️</button>
+      <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Spend 1 gem to see the first step">💡 Hint · 1💎</button>
       <div class="streak-banner" id="streak-msg">READY TO SOLVE?</div>
       <div class="floating-popup" id="floating-popup">CRITICAL HIT! 💥</div>
       
@@ -1256,6 +1271,7 @@ const HTML = `<!DOCTYPE html>
         <!-- Injected via renderEquationUI() -->
       </div>
       
+      <div class="hint-box" id="hint-box"></div>
       <div class="feedback-msg" id="feedback-msg">Type your answer or use keypad!</div>
     </div>
 
@@ -1286,6 +1302,9 @@ const HTML = `<!DOCTYPE html>
       </button>
       <button class="btn-secondary" onclick="openQuests()">
         📜 Quests<span class="notif-dot" id="quest-badge">0</span>
+      </button>
+      <button class="btn-secondary" onclick="openCal()">
+        🔥 Days<span class="notif-dot" id="cal-badge">0</span>
       </button>
       <button class="btn-secondary" onclick="openBook()">
         📖 Book
@@ -1538,6 +1557,17 @@ const HTML = `<!DOCTYPE html>
   </div>
 
   <div id="toast"></div>
+
+  <!-- Streak Calendar Modal -->
+  <div class="modal-overlay" id="cal-modal" onclick="closeCalOnOverlay(event)">
+    <div class="modal-content">
+      <h2 style="font-size: 1.3rem;">🔥 Daily Streak</h2>
+      <p style="font-size: 0.78rem; color: var(--text-muted);" id="cal-status"></p>
+      <div class="cal-grid" id="cal-grid"></div>
+      <p style="font-size: 0.7rem; color: var(--text-muted);" id="cal-foot"></p>
+      <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 8px; height: 44px; font-size:1rem;" onclick="closeCal()">Back to Game</button>
+    </div>
+  </div>
 
   <!-- Daily Quests Modal -->
   <div class="modal-overlay" id="quest-modal" onclick="closeQuestsOnOverlay(event)">
@@ -1825,6 +1855,7 @@ const HTML = `<!DOCTYPE html>
         faintedPets: [],
         recentBossTypes: [],
         quests: null,
+        streakCal: { count: 0, last: '', total: 0, claimed: [] },
         bossBook: {},
         bookClaims: []
       };
@@ -2594,15 +2625,38 @@ const HTML = `<!DOCTYPE html>
     let lastSig = '';
     function sigOf(p) { return (p.expr || (p.num1 + p.operator + p.num2)) + '|' + p.answer; }
 
+    // ----- adaptive difficulty: two misses in a row on one type -> a gentler problem next -----
+    const missStreak = {};
+    const easyQueue = {};
+    function easyScore(p) {
+      const plain = (p.expr || (p.num1 + ' ' + p.num2)).replace(/<[^>]+>/g, '');
+      return plain.length + String(Math.abs(p.answer)).length * 2;
+    }
+    function genEasy(id) {
+      const op = OP_BY_ID[id];
+      const g = Math.max(op.minGrade, state.grade - 1);
+      let best = null;
+      for (let i = 0; i < 5; i++) {
+        const c = op.gen(g);
+        if (!best || easyScore(c) < easyScore(best)) best = c;
+      }
+      return best;
+    }
+
     function generateProblem() {
       const ops = getActiveOps();
-      let id = pick(ops);
-      if (ops.length > 1 && id === lastOpId) {
+      const queued = ops.filter(function (o) { return easyQueue[o]; });
+      let id = queued.length ? queued[0] : pick(ops);
+      if (!queued.length && ops.length > 1 && id === lastOpId) {
         id = pick(ops.filter(function (o) { return o !== lastOpId; }));
       }
       lastOpId = id;
-      let p = OP_BY_ID[id].gen(state.grade);
-      for (let tries = 0; tries < 6 && lastSig && sigOf(p) === lastSig; tries++) p = OP_BY_ID[id].gen(state.grade);
+      const wantEasy = !!easyQueue[id];
+      delete easyQueue[id];
+      const make = function () { return wantEasy ? genEasy(id) : OP_BY_ID[id].gen(state.grade); };
+      let p = make();
+      for (let tries = 0; tries < 6 && lastSig && sigOf(p) === lastSig; tries++) p = make();
+      p.easy = wantEasy;
       lastSig = sigOf(p);
       p.modeTag = id;
       if (!p.layout) {
@@ -2613,6 +2667,8 @@ const HTML = `<!DOCTYPE html>
       currentProblem = p;
       userInput = '';
       inputLocked = false;
+      hintUsed = false;
+      renderHintUI();
       questionStartTime = Date.now();
       padReset();
       renderEquationUI();
@@ -2927,6 +2983,14 @@ const HTML = `<!DOCTYPE html>
       if (!state.bossBook || typeof state.bossBook !== 'object') state.bossBook = {};
       if (!Array.isArray(state.bookClaims)) state.bookClaims = [];
       if (!state.buddyXp) state.buddyXp = {};
+      const sc = state.streakCal;
+      if (!sc || typeof sc !== 'object') state.streakCal = { count: 0, last: '', total: 0, claimed: [] };
+      else {
+        sc.count = clamp(parseInt(sc.count, 10) || 0, 0, CAL_LEN);
+        sc.total = Math.max(0, parseInt(sc.total, 10) || 0);
+        if (typeof sc.last !== 'string') sc.last = '';
+        if (!Array.isArray(sc.claimed)) sc.claimed = [];
+      }
       state.grade = clamp(parseInt(state.grade, 10) || 0, 0, GRADES.length - 1);
       if (!Array.isArray(state.enabledOps) || state.enabledOps.length === 0) state.enabledOps = GRADE_DEFAULT_OPS[state.grade].slice();
       if (!getSpecies(state.activePet) || getOwnedIds().indexOf(state.activePet) === -1) state.activePet = 'dog';
@@ -3059,6 +3123,8 @@ const HTML = `<!DOCTYPE html>
 
     function updateStatsUI() {
       updateQuestBadge();
+      updateCalBadge();
+      if (typeof renderHintUI === 'function') renderHintUI();
       const pet = getActivePetDisplay();
       document.getElementById('lvl-display').innerText = pet.level;
       document.getElementById('gems-display').innerText = state.gems;
@@ -3259,7 +3325,7 @@ const HTML = `<!DOCTYPE html>
     function scheduleNextProblem(delay, msg) {
       setTimeout(function () {
         generateProblem();
-        document.getElementById('feedback-msg').innerText = msg;
+        document.getElementById('feedback-msg').innerText = currentProblem.easy ? 'Warm-up round — you can do this! 🌱' : msg;
       }, delay);
     }
 
@@ -3285,6 +3351,8 @@ const HTML = `<!DOCTYPE html>
         const opId = currentProblem.modeTag;
         sessionStats.byOp[opId] = (sessionStats.byOp[opId] || 0) + 1;
         questEvent('solve', opId);
+        missStreak[opId] = 0;
+        calDayEvent();
         if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
 
         state.streak += 1;
@@ -3293,7 +3361,7 @@ const HTML = `<!DOCTYPE html>
 
         let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
         if (pad.used) speedLimit *= 1.75;
-        const isFast = solveTime <= speedLimit;
+        const isFast = !hintUsed && solveTime <= speedLimit;
         let speedBonusGems = 0;
         if (isFast) {
           speedBonusGems = 1;
@@ -3345,6 +3413,9 @@ const HTML = `<!DOCTYPE html>
       } else {
         soundWrong();
         bossMistakes += 1;
+        const missOp = currentProblem.modeTag;
+        missStreak[missOp] = (missStreak[missOp] || 0) + 1;
+        if (missStreak[missOp] >= 2) { easyQueue[missOp] = true; missStreak[missOp] = 0; }
         if (answerBox) answerBox.className = 'answer-box wrong';
 
         if (state.shields > 0) {
@@ -4041,6 +4112,181 @@ const HTML = `<!DOCTYPE html>
       updateStatsUI();
     }
     function closeQuestsOnOverlay(e) { if (e.target.id === 'quest-modal') closeQuests(); }
+
+    // =====================================================================
+    //  DAILY STREAK CALENDAR  (a missed day pauses the streak, never wipes it)
+    // =====================================================================
+    const CAL_LEN = 14;
+    const CAL_CHESTS = { 3: 40, 7: 90, 14: 200 };
+
+    function dayKeyOf(d) {
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function yesterdayKey() {
+      const d = new Date();
+      d.setDate(d.getDate() - 1);
+      return dayKeyOf(d);
+    }
+
+    // Called on every correct answer; only the first one each day counts.
+    function calDayEvent() {
+      const sc = state.streakCal;
+      const today = dayKey();
+      if (sc.last === today) return;
+      if (sc.count >= CAL_LEN) {
+        // finished a full cycle: pay out any unopened chests and start a new one
+        let owed = 0;
+        Object.keys(CAL_CHESTS).forEach(function (d) {
+          if (sc.claimed.indexOf(Number(d)) === -1) owed += CAL_CHESTS[d];
+        });
+        if (owed) state.gems += owed;
+        sc.count = 0;
+        sc.claimed = [];
+      }
+      sc.count += 1;
+      sc.total += 1;
+      sc.last = today;
+      toast('🔥 Streak day ' + sc.count + '!' + (CAL_CHESTS[sc.count] ? ' A chest is ready!' : ''));
+      saveState();
+      updateCalBadge();
+    }
+
+    function calClaimable() {
+      const sc = state.streakCal;
+      return Object.keys(CAL_CHESTS).filter(function (d) {
+        return Number(d) <= sc.count && sc.claimed.indexOf(Number(d)) === -1;
+      }).length;
+    }
+    function updateCalBadge() {
+      const el = document.getElementById('cal-badge');
+      if (!el) return;
+      const n = calClaimable();
+      el.innerText = n;
+      el.style.display = n > 0 ? 'inline' : 'none';
+    }
+
+    function claimCalChest(day) {
+      const sc = state.streakCal;
+      if (!CAL_CHESTS[day] || day > sc.count || sc.claimed.indexOf(day) !== -1) return;
+      sc.claimed.push(day);
+      state.gems += CAL_CHESTS[day];
+      soundSecretFound();
+      launchConfetti();
+      toast('🎁 Day ' + day + ' chest! +' + CAL_CHESTS[day] + ' 💎');
+      saveState();
+      renderCal();
+      updateStatsUI();
+    }
+
+    function renderCal() {
+      const sc = state.streakCal;
+      const today = dayKey();
+      const playedToday = sc.last === today;
+      const status = document.getElementById('cal-status');
+      if (playedToday) status.innerText = '✅ Today counted! You are on day ' + sc.count + '. Come back tomorrow for day ' + Math.min(sc.count + 1, CAL_LEN) + '.';
+      else if (sc.count > 0 && sc.last !== yesterdayKey()) status.innerText = '⏸ Your streak is paused at day ' + sc.count + '. Solve one problem today to keep going — nothing is lost!';
+      else status.innerText = 'Solve one problem today to reach day ' + (sc.count + 1) + '.';
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      for (let day = 1; day <= CAL_LEN; day++) {
+        const cell = document.createElement('div');
+        const filled = day <= sc.count;
+        let cls = 'cal-cell' + (filled ? ' filled' : '') + (filled && day === sc.count && playedToday ? ' today' : '');
+        if (CAL_CHESTS[day]) {
+          const opened = sc.claimed.indexOf(day) !== -1;
+          cls += ' chest' + (opened ? ' opened' : (filled ? ' ready' : ''));
+          cell.innerHTML = (opened ? '✅' : '🎁') + '<small>+' + CAL_CHESTS[day] + '💎</small>';
+          if (filled && !opened) cell.onclick = (function (d) { return function () { claimCalChest(d); }; })(day);
+        } else {
+          cell.innerHTML = filled ? '🔥' : String(day);
+        }
+        cell.className = cls;
+        grid.appendChild(cell);
+      }
+      document.getElementById('cal-foot').innerText = 'Chests on days 3, 7 and 14. ' + sc.total + ' day' + (sc.total === 1 ? '' : 's') + ' played in total.';
+    }
+    function openCal() {
+      soundClick();
+      pauseClock();
+      renderCal();
+      document.getElementById('cal-modal').style.display = 'flex';
+    }
+    function closeCal() {
+      soundClick();
+      resumeClock();
+      document.getElementById('cal-modal').style.display = 'none';
+      updateStatsUI();
+    }
+    function closeCalOnOverlay(e) { if (e.target.id === 'cal-modal') closeCal(); }
+
+    // =====================================================================
+    //  HINTS  (1 gem shows the first step; no speed bonus on that problem)
+    // =====================================================================
+    let hintUsed = false;
+    const HINT_COST = 1;
+    const HINT_TIPS = {
+      frac: 'Divide the number by the bottom of the fraction first, then multiply by the top.',
+      mean: 'Add all the numbers up, then divide by how many numbers there are.',
+      pow: 'The small number tells you how many times to multiply the big number by itself.',
+      sqrt: 'Which number times itself gives this number?',
+      order: 'Do brackets first, then × and ÷, and last + and −.',
+      pct: 'Find 10% by moving the decimal one place, then build up from there.',
+      dec: 'Line up the decimal points before you add or subtract.',
+      neg: 'Same signs: add and keep the sign. Different signs: subtract and keep the sign of the bigger number.',
+      alg: 'Do the opposite to both sides to get x alone.',
+      log: 'Ask: what power of the small number gives the number in brackets?',
+      quad: 'Find two numbers that multiply to the last number and add to the middle number.',
+      deriv: 'Bring each power down in front and make the power one smaller.',
+      integral: 'Raise each power by one, divide by the new power, then plug in the top number.',
+      limit: 'Try factoring the top, or look at the biggest powers.'
+    };
+
+    function hintFor(p) {
+      const id = p.modeTag;
+      const ones = function (n) { return Math.abs(n) % 10; };
+      if (p.layout === 'vertical' && (id === 'add' || id === 'sub')) {
+        const word = id === 'add' ? 'add' : 'subtract';
+        const note = id === 'sub' && ones(p.num1) < ones(p.num2) ? ' (the top digit is smaller, so borrow from the next column!)' : '';
+        return 'Start with the ones column: ' + word + ' ' + ones(p.num1) + ' and ' + ones(p.num2) + note + '.';
+      }
+      if (id === 'mul') {
+        const m = p.expr.split(' × ');
+        const a = parseInt(m[0], 10), b = parseInt(m[1], 10);
+        const big = Math.max(a, b), small = Math.min(a, b);
+        if (big > 10) {
+          const tens = Math.floor(big / 10) * 10;
+          return 'Split ' + big + ' into ' + tens + ' + ' + (big - tens) + '. First do ' + tens + ' × ' + small + ' = ' + (tens * small) + '.';
+        }
+        return 'Count by ' + big + 's, ' + small + ' times: ' + big + ', ' + (big * 2) + ', ' + (big * 3) + '…';
+      }
+      if (id === 'div') {
+        const m = p.expr.split(' ÷ ');
+        return 'Ask yourself: what times ' + m[1] + ' makes ' + m[0] + '? Try counting by ' + m[1] + 's.';
+      }
+      const digits = String(Math.abs(p.answer)).replace('.', '').length;
+      const clue = 'The answer ' + (p.answer < 0 ? 'is negative, ' : '') + 'has ' + digits + ' digit' + (digits === 1 ? '' : 's') + ' and starts with ' + String(Math.abs(p.answer)).charAt(0) + '.';
+      return (HINT_TIPS[id] || 'Take it one small step at a time.') + ' ' + clue;
+    }
+
+    function renderHintUI() {
+      const btn = document.getElementById('hint-btn');
+      const box = document.getElementById('hint-box');
+      if (!btn || !box) return;
+      if (!hintUsed) box.innerText = '';
+      btn.disabled = hintUsed || state.gems < HINT_COST;
+    }
+    function useHint() {
+      if (hintUsed || inputLocked) return;
+      if (state.gems < HINT_COST) { toast('You need 1 💎 for a hint'); return; }
+      state.gems -= HINT_COST;
+      hintUsed = true;
+      soundClick();
+      document.getElementById('hint-box').innerText = '💡 ' + hintFor(currentProblem);
+      saveState();
+      updateStatsUI();
+      renderHintUI();
+    }
 
     // =====================================================================
     //  COLLECTION BOOK
