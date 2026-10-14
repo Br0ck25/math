@@ -62,6 +62,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 
 ## UI rules
 - The page runs full screen on iPhones (status bar overlaps it): keep the `env(safe-area-inset-*)` padding on `.game-container`, modal overlays and fixed banners. Test layouts at 375px with wider letters (iPhone text is wider than the test machine's), not just at 360px.
+- Every window gets a sticky ✕ (top-right) automatically from `data-close` / `data-esc` (`addCloseButtons()`); never make people scroll to a bottom button to leave. Window height uses `dvh` so iPhone toolbars cannot hide the bottom.
 - Phone first: must work at 320x568, 360x640 and 420x800 with no sideways scroll and the main arena visible without scrolling.
 - Tap targets 44px minimum (the keypad may be 34px tall on very short screens). Every icon-only button needs `aria-label`.
 - Respect reduced motion (`.reduce-motion`, `motionReduced()`); new animations are disabled by that class automatically, new canvas/particle effects must check it.

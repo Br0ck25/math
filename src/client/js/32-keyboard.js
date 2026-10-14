@@ -33,6 +33,26 @@ window.addEventListener('keydown', function (e) {
   else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') pressKey('clear');
 });
 
+// A close button (✕) that stays at the top-right of every window while its content scrolls, so nobody has to scroll
+// to the bottom to leave. It calls the same function as a backdrop tap / Escape (data-close or data-esc).
+function addCloseButtons() {
+  Array.prototype.forEach.call(document.querySelectorAll('.modal-overlay'), function (m) {
+    const fn = m.dataset.close || m.dataset.esc;
+    const box = m.querySelector('.modal-content');
+    if (!fn || !box || box.querySelector('.modal-x')) return;
+    const row = document.createElement('div');
+    row.className = 'modal-x-row';
+    const b = document.createElement('button');
+    b.className = 'modal-x';
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Close');
+    b.innerText = '✕';
+    b.onclick = function () { if (typeof window[fn] === 'function') window[fn](); };
+    row.appendChild(b);
+    box.insertBefore(row, box.firstChild);
+  });
+}
+
 // Dialog semantics for screen readers, plus live regions for the messages that change during play.
 function initAccessibility() {
   Array.prototype.forEach.call(document.querySelectorAll('.modal-overlay'), function (m) {

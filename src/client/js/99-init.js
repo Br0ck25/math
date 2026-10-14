@@ -1,6 +1,7 @@
 loadState();
 migratePin();
 checkEarnedGear();
+addCloseButtons();
 initAccessibility();
 applyMotionPref();
 setBossTaunt();

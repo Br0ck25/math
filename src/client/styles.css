@@ -1100,3 +1100,10 @@
   .fighter-card .fighter-name { font-size: 0.76rem; }
   .fighter-tag .element-pill, .lv-pill { font-size: 0.56rem; padding: 1px 4px; }
 }
+
+/* ===== close button that stays in view while a window scrolls ===== */
+.modal-content { max-height: 88vh; max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); }
+.modal-x-row { position: sticky; top: -18px; height: 0; z-index: 30; text-align: right; }   /* -18px = the window's padding, so it sits in the corner */
+.modal-x-row + * { padding-left: 36px; padding-right: 36px; box-sizing: border-box; }   /* the heading never runs under the ✕ */
+.modal-x { position: relative; top: 2px; right: -10px; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--card-border); background: #0f172a; color: var(--text); font-size: 1.15rem; font-weight: 900; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); display: inline-flex; align-items: center; justify-content: center; }
+.modal-x:active { background: #334155; }
