@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v28';
+const CACHE_NAME = 'math-quest-v29';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1164,6 +1164,7 @@ const HTML = `<!DOCTYPE html>
     .duel-cover { position: absolute; inset: 0; z-index: 8; background: rgba(2, 6, 23, 0.94); border-radius: 16px; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 14px; text-align: center; }
     .duel-cover.show { display: flex; }
     .duel-count { font-size: 5rem; font-weight: 900; color: #fde047; }
+    .duel-chip { position: fixed; top: 8px; left: 50%; transform: translateX(-50%); z-index: 120; background: linear-gradient(90deg, #f59e0b, #ef4444); color: #fff; font-weight: 900; font-size: 0.82rem; border-radius: 999px; padding: 8px 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.5); cursor: pointer; animation: pulseGlow 1s infinite alternate; max-width: 92vw; text-align: center; }
     .rar-badge { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.5px; border: 1px solid; border-radius: 999px; padding: 0 5px; margin: 0 auto 2px; width: fit-content; }
     .pet-card[onclick] { cursor: pointer; }
     .raid-chapter { font-size: 0.7rem; font-weight: 900; color: #fca5a5; letter-spacing: 1px; text-transform: uppercase; }
@@ -1678,6 +1679,12 @@ const HTML = `<!DOCTYPE html>
     </div>
   </div>
 
+  <!-- Online duel -->
+  <div class="modal-overlay" id="rd-modal">
+    <div class="modal-content" style="border-color:#fbbf24;"><div id="rd-box"></div></div>
+  </div>
+  <div class="duel-chip" id="duel-chip" onclick="rdOpenFromChip()" style="display:none;"></div>
+
   <!-- Tournament battle -->
   <div class="modal-overlay" id="tour-modal">
     <div class="modal-content" style="border-color:#fbbf24;">
@@ -1736,6 +1743,8 @@ const HTML = `<!DOCTYPE html>
         <div class="quest-bar"><div class="quest-fill" id="par-goal-fill" style="width:0%"></div></div>
         <div style="font-size:0.74rem; font-weight:700;" id="par-goal-text"></div>
       </div>
+      <div class="settings-label">🌍 Online duels</div>
+      <label style="font-size:0.78rem; display:block; text-align:left;"><input type="checkbox" id="par-duels" onchange="setDuelsOnline(this.checked)"> Let this player challenge friends by player name (no chat, gem stakes up to half their gems)</label>
       <div class="settings-label">🔒 Parent PIN</div>
       <div class="par-goal" style="flex-direction:row; align-items:center; flex-wrap:wrap;">
         <input id="par-pin-new" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:90px;" />
@@ -2052,6 +2061,10 @@ const HTML = `<!DOCTYPE html>
         parentPin: '',
         care: {},
         duelStat: { day: '', count: 0 },
+        duelsOnline: true,
+        duelFriends: [],
+        duelSettled: [],
+        duelRecord: { w: 0, l: 0, t: 0 },
         team: [],
         tour: { day: '', runs: 0, trophies: 0, wins: 0 },
         raid: null,
@@ -3275,6 +3288,13 @@ const HTML = `<!DOCTYPE html>
       state.lastRaidAt = Math.max(0, parseInt(state.lastRaidAt, 10) || 0);
       if (!state.care || typeof state.care !== 'object' || Array.isArray(state.care)) state.care = {};
       if (!Array.isArray(state.team)) state.team = [];
+      state.duelsOnline = state.duelsOnline !== false;
+      if (!Array.isArray(state.duelFriends)) state.duelFriends = [];
+      state.duelFriends = state.duelFriends.filter(function (n) { return typeof n === 'string' && /^[a-z0-9_-]{3,20}$/.test(n); }).slice(0, 8);
+      if (!Array.isArray(state.duelSettled)) state.duelSettled = [];
+      state.duelSettled = state.duelSettled.filter(function (n) { return typeof n === 'string'; }).slice(-80);
+      const dr = state.duelRecord;
+      state.duelRecord = dr && typeof dr === 'object' ? { w: Math.max(0, parseInt(dr.w, 10) || 0), l: Math.max(0, parseInt(dr.l, 10) || 0), t: Math.max(0, parseInt(dr.t, 10) || 0) } : { w: 0, l: 0, t: 0 };
       if (!state.duelStat || typeof state.duelStat !== 'object') state.duelStat = { day: '', count: 0 };
       state.duelStat.count = Math.max(0, parseInt(state.duelStat.count, 10) || 0);
       if (typeof state.duelStat.day !== 'string') state.duelStat.day = '';
@@ -4690,6 +4710,7 @@ const HTML = `<!DOCTYPE html>
     }
     let parentUnlocked = false;
     function parentLocked() { return !!state.parentPin && !parentUnlocked; }
+    function setDuelsOnline(on) { state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off'); }
     function parentUnlock() {
       const v = document.getElementById('par-pin-in').value;
       if (v === state.parentPin) { parentUnlocked = true; document.getElementById('par-pin-in').value = ''; renderParent(); }
@@ -4730,6 +4751,7 @@ const HTML = `<!DOCTYPE html>
       document.getElementById('par-lock').style.display = locked ? 'block' : 'none';
       document.getElementById('par-content').style.display = locked ? 'none' : 'block';
       if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
+      document.getElementById('par-duels').checked = !!state.duelsOnline;
       document.getElementById('par-pin-note').innerText = state.parentPin ? 'PIN is on. You will be asked each time the app is reopened.' : 'Optional: stop little fingers from changing goals.';
       document.getElementById('par-pin-clear').style.display = state.parentPin ? 'inline-block' : 'none';
       const keys = weekKeys();
@@ -5219,7 +5241,7 @@ const HTML = `<!DOCTYPE html>
       if (!duelSetup.b[0] || ids.indexOf(duelSetup.b[0]) === -1) duelSetup.b[0] = hubPet;
       if (!duelSetup.b[1] || ids.indexOf(duelSetup.b[1]) === -1) duelSetup.b[1] = ids.filter(function (i) { return i !== duelSetup.b[0]; })[0] || duelSetup.b[0];
     }
-    function renderDuelTab() {
+    function renderRoomDuel() {
       duelDefaults();
       const ids = getOwnedIds();
       const row = function (pi, label, col) {
@@ -5240,6 +5262,13 @@ const HTML = `<!DOCTYPE html>
     }
     function duelPick(pi, id) { soundClick(); duelSetup.b[pi] = id; renderDuelTab(); }
     function duelSetN(n) { soundClick(); duelSetup.n = n; renderDuelTab(); }
+    let duelMode = 'room';
+    function setDuelMode(m) { soundClick(); duelMode = m; renderDuelTab(); }
+    function renderDuelTab() {
+      if (duelMode === 'online') renderOnlineDuel(); else renderRoomDuel();
+      const body = document.getElementById('hub-body');
+      body.insertAdjacentHTML('afterbegin', '<div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:8px;"><button class="grade-btn' + (duelMode === 'room' ? ' active' : '') + '" onclick="setDuelMode(&quot;room&quot;)">🏠 Same room</button><button class="grade-btn' + (duelMode === 'online' ? ' active' : '') + '" onclick="setDuelMode(&quot;online&quot;)">🌍 Online</button></div>');
+    }
 
     function duelStart(fresh) {
       duelDefaults();
@@ -5364,6 +5393,270 @@ const HTML = `<!DOCTYPE html>
       renderHub();
     }
 
+
+    // ----- online duels (server scores the answers; both players play whenever) -----
+    const RD_STAKES = [0, 5, 10, 25];
+    let rd = { list: [], err: '', loading: false, to: '', stake: 10, cur: null, pollT: 0, waitTimer: null, seen: 0 };
+    try { rd.seen = parseInt(localStorage.getItem('mq_duel_seen') || '0', 10) || 0; } catch (e) {}
+
+    function rdReady() { return !!state.duelsOnline && !!acct && acctEnabled !== false; }
+    function renderOnlineDuel() {
+      const body = document.getElementById('hub-body');
+      if (!state.duelsOnline) { body.innerHTML = '<p style="font-size:0.85rem; margin:12px 0;">🔒 Online duels are turned off. A grown-up can turn them on in Settings → Parent report.</p>'; return; }
+      if (acctEnabled === null) { checkAcctEnabled().then(function () { if (hubTab === 'duel' && duelMode === 'online') renderDuelTab(); }); }
+      if (acctEnabled === false) { body.innerHTML = '<p style="font-size:0.85rem; margin:12px 0;">Online play is not switched on for this game yet.</p>'; return; }
+      if (!acct) {
+        body.innerHTML = '<p style="font-size:0.85rem; margin:10px 0;">Duel friends who are anywhere! You both need a player name. Create or sign in to your account first.</p>' +
+          '<button class="key-btn submit-btn" style="width:100%; height:44px;" onclick="closeHub(); openSettings()">⚙️ Go to Account</button>';
+        return;
+      }
+      const rec = state.duelRecord;
+      const maxStake = Math.floor(state.gems / 2);
+      if (rd.stake > maxStake) rd.stake = RD_STAKES.filter(function (x) { return x <= maxStake; }).pop() || 0;
+      let h = '<div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:4px;">Same questions for both players. Play anytime — whoever scores more wins. Record: ' + rec.w + 'W · ' + rec.l + 'L · ' + rec.t + 'T</div>' +
+        '<div class="care-row" style="flex-direction:column; align-items:stretch; gap:6px;">' +
+        '<input id="rd-to" class="acct-input" style="margin:0;" placeholder="Friend name" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" value="' + escHtml(rd.to) + '" oninput="rd.to = this.value.trim().toLowerCase()">' +
+        (state.duelFriends.length ? '<div class="team-grid" style="grid-template-columns:repeat(4,1fr); margin:0;">' + state.duelFriends.map(function (n) { return '<div class="team-chip' + (rd.to === n ? ' on' : '') + '" style="padding:6px 2px;" onclick="rdPickFriend(&quot;' + n + '&quot;)">' + escHtml(n) + '</div>'; }).join('') + '</div>' : '') +
+        '<div style="font-size:0.74rem; font-weight:800; text-align:left;">Stake (winner takes it, loser pays it):</div>' +
+        '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px;">' + RD_STAKES.map(function (x) {
+          return '<button class="grade-btn' + (rd.stake === x ? ' active' : '') + '" style="padding:6px 2px;" ' + (x > maxStake ? 'disabled' : '') + ' onclick="rdSetStake(' + x + ')">' + (x ? x + ' 💎' : 'Free') + '</button>';
+        }).join('') + '</div>' +
+        '<div style="font-size:0.64rem; color:var(--text-muted); text-align:left;">You can stake up to half your gems. Levels, XP and buddies are never at risk.</div>' +
+        '<button class="key-btn submit-btn" style="height:44px; font-size:1rem;" onclick="rdChallenge()">⚔️ Challenge &amp; play now</button>' +
+        '<div style="font-size:0.72rem; color:#fca5a5; min-height:14px;" id="rd-err">' + escHtml(rd.err) + '</div></div>';
+      h += '<div class="settings-label">Your duels</div><div id="rd-list">' + rdListHtml() + '</div>';
+      body.innerHTML = h;
+      if (!rd.loading && Date.now() - rd.pollT > 2500) rdRefresh();
+    }
+    function rdPickFriend(n) { soundClick(); rd.to = n; renderDuelTab(); }
+    function rdSetStake(x) { soundClick(); rd.stake = x; renderDuelTab(); }
+    function rdListHtml() {
+      if (!rd.list.length) return '<div style="font-size:0.78rem; color:var(--text-muted);">' + (rd.loading ? 'Loading…' : 'No duels yet. Challenge a friend!') + '</div>';
+      return rd.list.map(function (d) {
+        const opp = escHtml(d.opp);
+        const st = d.stake ? ' · ' + d.stake + ' 💎' : ' · friendly';
+        let t, btns = '';
+        if (d.status === 'todo') {
+          const incoming = d.to === acct.name;
+          t = (incoming ? '📨 <b>' + opp + '</b> challenged you!' : '▶️ Your challenge to <b>' + opp + '</b>') + st + ' · ' + d.n + ' Qs';
+          btns = '<button class="claim-btn" onclick="rdPlay(&quot;' + d.id + '&quot;)">Play</button>' + (incoming ? '<button class="grade-btn" style="padding:4px 8px;" onclick="rdDecline(&quot;' + d.id + '&quot;)">✕</button>' : '');
+        } else if (d.status === 'waiting') {
+          t = '⏳ Waiting for <b>' + opp + '</b>' + st + ' · you got ' + d.mine.score + '/' + d.n;
+          btns = '<button class="grade-btn" style="padding:4px 8px;" onclick="rdPlay(&quot;' + d.id + '&quot;)">Open</button>';
+        } else if (d.status === 'declined') {
+          t = '🚫 ' + opp + ' declined';
+        } else {
+          const o = d.outcome;
+          t = (o === 'win' ? '🏆 You beat <b>' + opp + '</b>' : (o === 'loss' ? '😤 <b>' + opp + '</b> won' : '🤝 Tie with <b>' + opp + '</b>')) + ' ' + d.mine.score + '–' + d.theirs.score + (d.stake && o !== 'tie' ? ' · ' + (o === 'win' ? '+' : '-') + d.stake + ' 💎' : '');
+          btns = '<button class="claim-btn" onclick="rdRematch(&quot;' + d.id + '&quot;)">🔁 Rematch</button>';
+        }
+        return '<div class="care-row"><div class="t" style="font-size:0.76rem; font-weight:700;">' + t + '</div><div style="display:flex; gap:4px;">' + btns + '</div></div>';
+      }).join('');
+    }
+    async function rdRefresh() {
+      if (!rdReady()) return;
+      rd.loading = true; rd.pollT = Date.now();
+      try {
+        const r = await api('/api/duel/list');
+        if (r.status === 200) { rd.list = r.data.duels || []; rdSettle(rd.list); }
+        else if (r.status === 401) rd.err = 'Please sign in again in Settings.';
+      } catch (e) { rd.err = 'Could not reach the server.'; }
+      rd.loading = false;
+      if (hubTab === 'duel' && duelMode === 'online' && document.getElementById('hub-modal').style.display === 'flex') {
+        const l = document.getElementById('rd-list');
+        if (l) l.innerHTML = rdListHtml();
+      }
+    }
+    function rdSettle(list) {
+      let changed = false;
+      list.forEach(function (d) {
+        if (d.status !== 'done' || state.duelSettled.indexOf(d.id) !== -1) return;
+        state.duelSettled.push(d.id);
+        changed = true;
+        if (d.outcome === 'win') { state.duelRecord.w += 1; state.gems += d.stake; if (d.stake) toast('🏆 You won ' + d.stake + ' 💎 from ' + d.opp + '!'); }
+        else if (d.outcome === 'loss') { state.duelRecord.l += 1; const pay = Math.min(d.stake, state.gems); state.gems -= pay; if (pay) toast('😤 ' + d.opp + ' won. You paid ' + pay + ' 💎.'); }
+        else state.duelRecord.t += 1;
+      });
+      if (changed) {
+        if (state.duelSettled.length > 80) state.duelSettled = state.duelSettled.slice(-80);
+        saveState();
+        updateStatsUI();
+      }
+    }
+
+    function rdBuildQuestions(n) {
+      const out = [];
+      for (let i = 0; i < n; i++) { const q = makeMcq(); out.push({ e: q.expr, l: q.lead, o: q.opts, a: q.ans }); }
+      return out;
+    }
+    async function rdCreate(to, stake) {
+      rd.err = '';
+      const r = await api('/api/duel/create', 'POST', { to: to, stake: stake, qs: rdBuildQuestions(10) });
+      if (r.status !== 200) { rd.err = (r.data && r.data.error) || 'Could not send the challenge.'; return null; }
+      if (state.duelFriends.indexOf(to) === -1) { state.duelFriends.unshift(to); state.duelFriends = state.duelFriends.slice(0, 8); saveState(); }
+      return r.data.id;
+    }
+    async function rdChallenge() {
+      const to = (rd.to || '').trim().toLowerCase();
+      if (!/^[a-z0-9_-]{3,20}$/.test(to)) { rd.err = 'Type the player name of a friend.'; renderDuelTab(); return; }
+      soundClick();
+      document.getElementById('rd-err').innerText = 'Sending…';
+      let id = null;
+      try { id = await rdCreate(to, rd.stake); } catch (e) { rd.err = 'Could not reach the server.'; }
+      if (!id) { renderDuelTab(); return; }
+      rdPlay(id);
+    }
+    async function rdRematch(id) {
+      const d = rd.list.filter(function (x) { return x.id === id; })[0] || (rd.cur && rd.cur.summary);
+      if (!d) return;
+      let stake = d.stake;
+      const maxStake = Math.floor(state.gems / 2);
+      if (stake > maxStake) { stake = RD_STAKES.filter(function (x) { return x <= maxStake; }).pop() || 0; toast('Stake lowered to ' + stake + ' 💎'); }
+      soundClick();
+      let nid = null;
+      try { nid = await rdCreate(d.opp, stake); } catch (e) { rd.err = 'Could not reach the server.'; }
+      if (!nid) { rdCloseModal(); renderDuelTab(); toast(rd.err); return; }
+      rdPlay(nid);
+    }
+    async function rdDecline(id) {
+      soundClick();
+      try { await api('/api/duel/decline', 'POST', { id: id }); } catch (e) {}
+      rdRefresh();
+    }
+    async function rdBlock(name) {
+      try { await api('/api/duel/block', 'POST', { name: name }); toast('🚫 ' + name + ' blocked'); } catch (e) {}
+    }
+
+    // ----- playing one online duel -----
+    async function rdPlay(id) {
+      soundClick();
+      document.getElementById('hub-modal').style.display = 'none';
+      const m = document.getElementById('rd-modal');
+      m.style.display = 'flex';
+      document.getElementById('rd-box').innerHTML = '<div class="duel-count" style="font-size:2rem;">Loading…</div>';
+      let r;
+      try { r = await api('/api/duel/get?id=' + encodeURIComponent(id)); } catch (e) { r = { status: 0, data: {} }; }
+      if (r.status !== 200) { document.getElementById('rd-box').innerHTML = '<p>' + escHtml((r.data && r.data.error) || 'Could not reach the server.') + '</p><button class="key-btn submit-btn" style="width:100%; height:44px;" onclick="rdCloseModal()">Back</button>'; return; }
+      rd.cur = { id: id, duel: r.data.duel, summary: r.data.summary, i: 0, answers: [], t0: 0 };
+      if (r.data.summary.status !== 'todo') { rdShowResult(r.data.summary); return; }
+      rd.cur.t0 = Date.now();
+      rdShowQuestion();
+    }
+    function rdShowQuestion() {
+      const c = rd.cur, q = c.duel.qs[c.i], n = c.duel.qs.length;
+      const opp = c.duel.from === acct.name ? c.duel.to : c.duel.from;
+      document.getElementById('rd-box').innerHTML =
+        '<div class="raid-chapter" style="color:#fde047;">⚔️ vs ' + escHtml(opp) + (c.duel.stake ? ' · ' + c.duel.stake + ' 💎 on the line' : ' · friendly') + '</div>' +
+        '<div class="duel-bar" style="margin:8px 0 2px;"><i style="width:' + Math.round((c.i / n) * 100) + '%"></i></div>' +
+        '<div style="font-size:0.72rem; color:var(--text-muted);">Question ' + (c.i + 1) + ' of ' + n + '</div>' +
+        '<div class="tour-eq">' + q.e + ' <span style="color:var(--text-muted);">' + escHtml(q.l) + ' ?</span></div><div class="tour-opts" id="rd-opts"></div>' +
+        '<button class="key-btn" style="width:100%; height:34px; font-size:0.75rem; margin-top:10px;" onclick="rdCloseModal()">Leave (you can finish later)</button>';
+      fillOptButtons(document.getElementById('rd-opts'), q.o, rdAnswer);
+    }
+    async function rdAnswer(v) {
+      const c = rd.cur;
+      c.answers.push(v);
+      soundClick();
+      c.i += 1;
+      if (c.i < c.duel.qs.length) { rdShowQuestion(); return; }
+      document.getElementById('rd-box').innerHTML = '<div class="duel-count" style="font-size:2rem;">Checking…</div>';
+      const ms = Date.now() - c.t0;
+      let r;
+      try { r = await api('/api/duel/submit', 'POST', { id: c.id, answers: c.answers, ms: ms }); } catch (e) { r = { status: 0, data: {} }; }
+      if (r.status !== 200) {
+        document.getElementById('rd-box').innerHTML = '<p>' + escHtml((r.data && r.data.error) || 'Could not send your answers. Check your internet.') + '</p><button class="key-btn submit-btn" style="width:100%; height:44px;" onclick="rdRetrySubmit()">Try again</button>';
+        return;
+      }
+      calDayEvent();
+      rdShowResult(r.data.summary);
+    }
+    async function rdRetrySubmit() {
+      const c = rd.cur;
+      c.i = c.duel.qs.length - 1;
+      const last = c.answers.pop();
+      await rdAnswer(last);
+    }
+    function rdShowResult(sum) {
+      rd.cur.summary = sum;
+      const n = sum.n, secs = function (x) { return (x.ms / 1000).toFixed(1) + 's'; };
+      let h;
+      if (sum.status === 'waiting') {
+        h = '<div class="raid-chapter" style="color:#fde047;">Your score</div><div style="font-size:2.4rem; font-weight:900;">' + sum.mine.score + '/' + n + '</div>' +
+          '<div style="font-size:0.78rem; color:var(--text-muted);">' + secs(sum.mine) + '</div>' +
+          '<p style="font-size:0.85rem; margin:10px 0;">⏳ Waiting for <b>' + escHtml(sum.opp) + '</b> to play. You can close this — we will tell you the moment they finish.</p>' +
+          '<button class="key-btn" style="width:100%; height:40px;" onclick="rdCloseModal()">Close</button>';
+        rdWaitStart(sum.id);
+      } else if (sum.status === 'done') {
+        rdSettle([sum]);
+        const o = sum.outcome;
+        const title = o === 'win' ? '🏆 You win!' : (o === 'loss' ? '😤 ' + escHtml(sum.opp) + ' wins' : '🤝 Tie!');
+        if (o === 'win') { launchConfetti(); soundSecretFound(); } else soundWrong();
+        h = '<div style="font-size:1.7rem; font-weight:900; color:#fde047;">' + title + '</div>' +
+          '<div style="font-size:0.95rem; font-weight:800; margin:6px 0;">You ' + sum.mine.score + '/' + n + ' (' + secs(sum.mine) + ') &nbsp;vs&nbsp; ' + escHtml(sum.opp) + ' ' + sum.theirs.score + '/' + n + ' (' + secs(sum.theirs) + ')</div>' +
+          (sum.stake && o !== 'tie' ? '<div style="font-weight:900;">' + (o === 'win' ? '+' : '-') + sum.stake + ' 💎</div>' : '') +
+          '<div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:8px;">Record: ' + state.duelRecord.w + 'W · ' + state.duelRecord.l + 'L · ' + state.duelRecord.t + 'T</div>' +
+          '<button class="key-btn submit-btn" style="width:100%; height:56px; font-size:1.3rem;" onclick="rdRematch(&quot;' + sum.id + '&quot;)">🔁 Rematch</button>' +
+          '<button class="key-btn" style="width:100%; height:38px; margin-top:6px;" onclick="rdCloseModal()">Done</button>';
+      } else {
+        h = '<p>This challenge was declined.</p><button class="key-btn submit-btn" style="width:100%; height:44px;" onclick="rdCloseModal()">Back</button>';
+      }
+      document.getElementById('rd-box').innerHTML = h;
+    }
+    function rdWaitStart(id) {
+      clearInterval(rd.waitTimer);
+      let tries = 0;
+      rd.waitTimer = setInterval(async function () {
+        tries += 1;
+        if (tries > 60 || document.getElementById('rd-modal').style.display !== 'flex' || !rd.cur || rd.cur.id !== id) { clearInterval(rd.waitTimer); return; }
+        try {
+          const r = await api('/api/duel/get?id=' + encodeURIComponent(id));
+          if (r.status === 200 && r.data.summary.status === 'done') { clearInterval(rd.waitTimer); rdShowResult(r.data.summary); }
+        } catch (e) {}
+      }, 3000);
+    }
+    function rdCloseModal() {
+      clearInterval(rd.waitTimer);
+      document.getElementById('rd-modal').style.display = 'none';
+      hubTab = 'duel'; duelMode = 'online';
+      document.getElementById('hub-modal').style.display = 'flex';
+      renderHub();
+    }
+
+    // ----- notifications: cheap poll of one key -----
+    function rdOpenFromChip() {
+      document.getElementById('duel-chip').style.display = 'none';
+      hubTab = 'duel'; duelMode = 'online';
+      openHub();
+    }
+    async function rdTick() {
+      if (!rdReady() || document.hidden) return;
+      const hubOpen = document.getElementById('hub-modal').style.display === 'flex' && hubTab === 'duel' && duelMode === 'online';
+      const modalOpen = document.getElementById('rd-modal').style.display === 'flex';
+      const gap = (hubOpen || modalOpen) ? 2800 : 19000;
+      if (Date.now() - rd.tickAt < gap) return;
+      rd.tickAt = Date.now();
+      let r;
+      try { r = await api('/api/duel/ping'); } catch (e) { return; }
+      const pg = r.status === 200 ? r.data.ping : null;
+      if (!pg || pg.t <= rd.seen) return;
+      rd.seen = pg.t;
+      try { localStorage.setItem('mq_duel_seen', String(pg.t)); } catch (e) {}
+      const who = escHtml(pg.from || 'A friend');
+      if (pg.k === 'invite') {
+        soundSecretFound();
+        const chip = document.getElementById('duel-chip');
+        chip.innerHTML = '⚔️ ' + who + ' challenged you! Tap to play';
+        chip.style.display = 'block';
+      } else if (pg.k === 'result') {
+        toast('✅ ' + (pg.from || 'Your friend') + ' finished your duel!');
+      } else if (pg.k === 'declined') {
+        toast((pg.from || 'Your friend') + ' declined the duel');
+      }
+      if (hubOpen || pg.k === 'result') rdRefresh();
+    }
+    rd.tickAt = 0;
+    setInterval(rdTick, 3000);
+
     // ----- tournament battle -----
     const TRAINERS = [
       { name: 'Trainer Maple', icon: '🧑‍🌾', say: 'My team grew up on the farm!' },
@@ -5451,7 +5744,7 @@ const HTML = `<!DOCTYPE html>
         if (opts.indexOf(v) === -1) opts.push(v);
       }
       opts.sort(function () { return Math.random() - 0.5; });
-      return { op: op, ans: ans, opts: opts, html: expr + ' <span style="color:var(--text-muted);">' + (p.lead || '=') + ' ?</span>' };
+      return { op: op, ans: ans, opts: opts, expr: expr, lead: p.lead || '=', html: expr + ' <span style="color:var(--text-muted);">' + (p.lead || '=') + ' ?</span>' };
     }
     function fillOptButtons(box, opts, onPick) {
       box.innerHTML = '';
@@ -6449,6 +6742,157 @@ async function checkPassword(kv, name, password) {
   return safeEq(h, acct.hash);
 }
 
+
+// ---------------------------------------------------------------------
+//  ONLINE DUELS  (async: same questions, scored on the server, gem stakes)
+//  KV layout (every key expires after 3 days):
+//    duel:<id>           immutable {from,to,stake,qs:[{e,l,o,a}],created}
+//    res:<id>:<name>     written only by that player {score,ms,at}
+//    duels:<name>:<id>   index entry (metadata) for each participant
+//    ping:<name>         last notification for that player
+//    decl:<id>           the invited player declined
+//    blk:<me>:<them>     me has blocked them (no expiry)
+// ---------------------------------------------------------------------
+const DUEL_TTL = 60 * 60 * 24 * 3;
+const DUEL_STAKES = [0, 5, 10, 25];
+function newDuelId() { return toB64(rand(6)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+async function savedGems(kv, name) {
+  const s = await kv.get('save:' + name, 'json');
+  return s && s.state && typeof s.state.gems === 'number' ? s.state.gems : 0;
+}
+function cleanText(t, max, allowSubSup) {
+  if (typeof t !== 'string' || t.length > max) return null;
+  const bare = allowSubSup ? t.replace(/<\/?(sub|sup)>/g, '') : t;
+  return /[<>&"`]/.test(bare) ? null : t;
+}
+function cleanQuestions(qs) {
+  if (!Array.isArray(qs) || [5, 10, 15].indexOf(qs.length) === -1) return null;
+  const out = [];
+  for (let i = 0; i < qs.length; i++) {
+    const q = qs[i] || {};
+    const e = cleanText(q.e, 240, true);
+    const l = cleanText(q.l == null ? '=' : q.l, 24, false);
+    if (!e || l === null) return null;
+    if (!Array.isArray(q.o) || q.o.length < 2 || q.o.length > 4) return null;
+    const o = q.o.map(Number);
+    const a = Number(q.a);
+    if (o.some(function (v) { return !isFinite(v) || Math.abs(v) > 1e9; }) || !isFinite(a)) return null;
+    if (!o.some(function (v) { return Math.abs(v - a) < 0.0001; })) return null;
+    out.push({ e: e, l: l, o: o, a: a });
+  }
+  return out;
+}
+async function duelSummary(kv, duel, me) {
+  const opp = duel.from === me ? duel.to : duel.from;
+  const rs = await Promise.all([kv.get('res:' + duel.id + ':' + me, 'json'), kv.get('res:' + duel.id + ':' + opp, 'json'), kv.get('decl:' + duel.id)]);
+  const mine = rs[0], theirs = rs[1];
+  const sum = { id: duel.id, from: duel.from, to: duel.to, opp: opp, stake: duel.stake, n: duel.qs.length, created: duel.created, mine: mine ? { score: mine.score, ms: mine.ms } : null, theirs: null, outcome: null, declined: false };
+  if (rs[2]) { sum.declined = true; sum.status = 'declined'; return sum; }
+  if (!mine) { sum.status = 'todo'; return sum; }
+  if (!theirs) { sum.status = 'waiting'; return sum; }
+  sum.status = 'done';
+  sum.theirs = { score: theirs.score, ms: theirs.ms };
+  sum.outcome = mine.score > theirs.score ? 'win' : (mine.score < theirs.score ? 'loss' : (mine.ms < theirs.ms ? 'win' : (mine.ms > theirs.ms ? 'loss' : 'tie')));
+  return sum;
+}
+async function ping(kv, to, id, kind, from) {
+  await kv.put('ping:' + to, JSON.stringify({ t: Date.now(), id: id, k: kind, from: from }), { expirationTtl: DUEL_TTL });
+}
+async function handleDuel(path, request, url, kv, who, body) {
+  const me = who.name;
+  if (path === '/api/duel/ping' && request.method === 'GET') {
+    return json({ ping: (await kv.get('ping:' + me, 'json')) || null });
+  }
+
+  if (path === '/api/duel/list' && request.method === 'GET') {
+    const l = await kv.list({ prefix: 'duels:' + me + ':', limit: 60 });
+    const metas = l.keys.map(function (k) { return k.metadata; }).filter(function (m) { return m && m.id; });
+    metas.sort(function (a, b) { return b.created - a.created; });
+    const duels = (await Promise.all(metas.slice(0, 12).map(async function (m) {
+      const d = await kv.get('duel:' + m.id, 'json');
+      return d ? duelSummary(kv, d, me) : null;
+    }))).filter(Boolean);
+    return json({ duels: duels });
+  }
+
+  if (path === '/api/duel/get' && request.method === 'GET') {
+    const id = String(url.searchParams.get('id') || '');
+    const d = /^[A-Za-z0-9_-]{6,12}$/.test(id) ? await kv.get('duel:' + id, 'json') : null;
+    if (!d || (d.from !== me && d.to !== me)) return json({ error: 'That duel is not available any more.' }, 404);
+    const sum = await duelSummary(kv, d, me);
+    return json({ duel: { id: d.id, from: d.from, to: d.to, stake: d.stake, qs: d.qs.map(function (q) { return { e: q.e, l: q.l, o: q.o }; }) }, summary: sum });
+  }
+
+  if (path === '/api/duel/create' && request.method === 'POST') {
+    const to = String(body.to || '').trim().toLowerCase();
+    const stake = Number(body.stake);
+    if (!NAME_RE.test(to) || to === me) return json({ error: 'Type the player name of a friend.' }, 400);
+    if (DUEL_STAKES.indexOf(stake) === -1) return json({ error: 'Pick one of the stake choices.' }, 400);
+    const qs = cleanQuestions(body.qs);
+    if (!qs) return json({ error: 'Those questions were not valid.' }, 400);
+    if (!(await kv.get('acct:' + to)) || (await kv.get('blk:' + to + ':' + me))) return json({ error: 'No player called "' + to + '" can be challenged right now.' }, 404);
+    const rlKey = 'rl:' + me;
+    const used = parseInt((await kv.get(rlKey)) || '0', 10);
+    if (used >= 30) return json({ error: 'Lots of challenges! Take a short break and try again soon.' }, 429);
+    if (stake > 0) {
+      const gems = await Promise.all([savedGems(kv, me), savedGems(kv, to)]);
+      if (stake * 2 > gems[0]) return json({ error: 'You can stake at most half of your gems.' }, 400);
+      if (stake * 2 > gems[1]) return json({ error: 'That friend cannot cover this stake. Try a smaller one.' }, 400);
+    }
+    await kv.put(rlKey, String(used + 1), { expirationTtl: 3600 });
+    const id = newDuelId();
+    const duel = { id: id, from: me, to: to, stake: stake, qs: qs, created: Date.now() };
+    const meta = { id: id, created: duel.created };
+    await Promise.all([
+      kv.put('duel:' + id, JSON.stringify(duel), { expirationTtl: DUEL_TTL }),
+      kv.put('duels:' + me + ':' + id, '1', { expirationTtl: DUEL_TTL, metadata: meta }),
+      kv.put('duels:' + to + ':' + id, '1', { expirationTtl: DUEL_TTL, metadata: meta })
+    ]);
+    await ping(kv, to, id, 'invite', me);
+    return json({ ok: true, id: id });
+  }
+
+  if (path === '/api/duel/submit' && request.method === 'POST') {
+    const id = String(body.id || '');
+    const d = /^[A-Za-z0-9_-]{6,12}$/.test(id) ? await kv.get('duel:' + id, 'json') : null;
+    if (!d || (d.from !== me && d.to !== me)) return json({ error: 'That duel is not available any more.' }, 404);
+    if (await kv.get('decl:' + id)) return json({ error: 'That challenge was declined.' }, 409);
+    const resKey = 'res:' + id + ':' + me;
+    if (!(await kv.get(resKey))) {
+      const ans = Array.isArray(body.answers) ? body.answers : [];
+      if (ans.length !== d.qs.length) return json({ error: 'Answer every question first.' }, 400);
+      let score = 0;
+      d.qs.forEach(function (q, i) { if (Math.abs(Number(ans[i]) - q.a) < 0.0001) score += 1; });
+      const ms = Math.min(900000, Math.max(d.qs.length * 400, Math.round(Number(body.ms) || 0)));
+      await kv.put(resKey, JSON.stringify({ score: score, ms: ms, at: Date.now() }), { expirationTtl: DUEL_TTL });
+      const other = d.from === me ? d.to : d.from;
+      // if they have not played yet this is still an invitation ("your turn"); otherwise it is the result
+      await ping(kv, other, id, (await kv.get('res:' + id + ':' + other)) ? 'result' : 'invite', me);
+    }
+    return json({ ok: true, summary: await duelSummary(kv, d, me) });
+  }
+
+  if (path === '/api/duel/decline' && request.method === 'POST') {
+    const id = String(body.id || '');
+    const d = /^[A-Za-z0-9_-]{6,12}$/.test(id) ? await kv.get('duel:' + id, 'json') : null;
+    if (!d || d.to !== me) return json({ error: 'That duel is not available any more.' }, 404);
+    if (!(await kv.get('res:' + id + ':' + me))) {
+      await kv.put('decl:' + id, '1', { expirationTtl: DUEL_TTL });
+      await ping(kv, d.from, id, 'declined', me);
+    }
+    return json({ ok: true });
+  }
+
+  if (path === '/api/duel/block' && request.method === 'POST') {
+    const name = String(body.name || '').trim().toLowerCase();
+    if (!NAME_RE.test(name) || name === me) return json({ error: 'Bad name' }, 400);
+    await kv.put('blk:' + me + ':' + name, '1');
+    return json({ ok: true });
+  }
+
+  return json({ error: 'Not found' }, 404);
+}
+
 async function handleApi(request, env, url) {
   const path = url.pathname;
   if (path === '/api/status') return json({ enabled: !!env.MATH_KV });
@@ -6514,6 +6958,8 @@ async function handleApi(request, env, url) {
     await kv.put('save:' + who.name, JSON.stringify(next));
     return json({ ok: true, version: next.version, updatedAt: next.updatedAt });
   }
+
+  if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);
 
   if (path === '/api/logout' && request.method === 'POST') {
     await kv.delete('sess:' + who.tokenHash);
