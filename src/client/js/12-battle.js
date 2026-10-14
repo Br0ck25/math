@@ -254,7 +254,7 @@ function checkAnswer() {
 
     const praises = ['Incredible!', 'Super Sharp!', 'Crushing It!', 'Unstoppable!', 'Bullseye!', 'Math Wizard!'];
     feedback.innerText = `${pick(praises)} +${xpEarned} XP`;
-    if (state.streak >= 3) streakBanner.innerText = `🔥 ${state.streak} IN A ROW! COMBO ACTIVE!`;
+    if (state.streak >= 3) streakBanner.innerText = `🔥 ${state.streak} IN A ROW!`;
     if (MILESTONES[state.streak]) streakMilestone(state.streak);
     else if (state.streak % 5 === 0) launchConfetti();
 

@@ -36,6 +36,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Append new rows; never reorder or rename ids (saves refer to ids and, for bosses, to list position; secret buddies get `secret_N` from their position).
   Store buddies stay in price order with the Bandit last. Evolved forms must keep the buddy's own face (use its animal, never a bare symbol): the glow, element badge and aura come from `formMarkup`.
 - Cartoon-cast buddies carry a `show` (names and emoji only, no artwork or quotes). Only kid-friendly shows (rated for children / PG at most): never adult-rated ones. Their themed gear is bought or earned by collecting the cast (`cartoons`, `headliners` counters). Say so in the PR if a new show raises licensing questions; the owner decides about publishing.
+- Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
 - Sizes are asserted in `tests/content.test.mjs` (currently 289 buddies, 50 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
@@ -59,6 +60,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Be kind in copy: a missed day pauses, it never punishes; wrong answers explain how, they do not scold.
 
 ## UI rules
+- The page runs full screen on iPhones (status bar overlaps it): keep the `env(safe-area-inset-*)` padding on `.game-container`, modal overlays and fixed banners. Test layouts at 375px with wider letters (iPhone text is wider than the test machine's), not just at 360px.
 - Phone first: must work at 320x568, 360x640 and 420x800 with no sideways scroll and the main arena visible without scrolling.
 - Tap targets 44px minimum (the keypad may be 34px tall on very short screens). Every icon-only button needs `aria-label`.
 - Respect reduced motion (`.reduce-motion`, `motionReduced()`); new animations are disabled by that class automatically, new canvas/particle effects must check it.

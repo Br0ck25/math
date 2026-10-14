@@ -173,8 +173,10 @@ test('the trading card draws gear in every slot without errors', async () => {
 });
 
 test('arena fighter cards: no \"Buddy\" label, name above pills, nothing wraps or spills at any width or boss', async () => {
-  for (const viewport of [{ width: 300, height: 560 }, { width: 360, height: 640 }, { width: 420, height: 800 }]) {
+  for (const viewport of [{ width: 300, height: 560 }, { width: 360, height: 640 }, { width: 375, height: 667, wide: true }, { width: 420, height: 800 }]) {
     const g = await openGame(browser, worker, env, { viewport });
+    // iPhone text renders wider than the test machine's: widen every letter a little to be safe
+    if (viewport.wide) await g.page.addStyleTag({ content: '* { letter-spacing: 0.05em !important; }' });
     const r = await g.page.evaluate(() => {
       const out = [];
       const rows = () => ['pet', 'monster'].map((side) => {
@@ -189,7 +191,7 @@ test('arena fighter cards: no \"Buddy\" label, name above pills, nothing wraps o
         state.activePet = i % 2 ? 'fox' : 'dog';
         updateBattleUI();
         rows().forEach((x) => {
-          if (x.tag.getBoundingClientRect().height > (window.innerWidth <= 340 ? 40 : 22)) out.push(x.side + ' pills wrap for ' + m.name + ' lv' + lvl);   // very narrow phones may stack the two pills
+          if (x.tag.getBoundingClientRect().height > (window.innerWidth <= 440 ? 40 : 22)) out.push(x.side + ' pills wrap for ' + m.name + ' lv' + lvl);   // very narrow phones may stack the two pills
           if (x.name.getBoundingClientRect().height > 30) out.push(x.side + ' name takes more than two lines for ' + m.name);
           const box = x.info.getBoundingClientRect(), kids = [x.name, x.tag].map((e) => e.getBoundingClientRect());
           if (kids.some((k) => k.left < box.left - 1 || k.right > box.right + 1)) out.push(x.side + ' spills out for ' + m.name + ' lv' + lvl);

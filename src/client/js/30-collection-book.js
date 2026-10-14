@@ -107,10 +107,11 @@ function renderBook() {
       return '<div class="mystery-section-title">' + title + ' (' + found + ' / ' + arr.length + ')</div><div class="pet-grid">' +
         shown.map(function (sp) { return bookBuddy(sp, typeof hint === 'function' ? hint(sp) : hint); }).join('') + '</div>';
     };
-    h += sec('Store Buddies', storePets, function (sp) { return '💎 ' + sp.cost + ' in the Sanctuary'; });
-    h += sec('Mythic Legends', mythicCompanions, 'Ultra rare boss rescue');
-    h += sec('Cosmic Anomaly', [janiePet], 'Rarest of all...');
-    h += sec('Secret Creatures', secretCompanions, 'Rescued from bosses');
+    // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
+    const tierHint = function (sp) {
+      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.isJanie ? 'Rarest of all...' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+    };
+    buddyPacks().forEach(function (g) { h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint); });
   } else if (bookTab === 'boss') {
     h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles! 👑 Raids cleared: ' + state.raidsCleared + '</div><div class="pet-grid">';
     monstersList.forEach(function (m, i) {
