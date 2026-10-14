@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v24';
+const CACHE_NAME = 'math-quest-v25';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1109,13 +1109,36 @@ const HTML = `<!DOCTYPE html>
     .cal-cell.chest.ready { background: #78350f; border-color: #fbbf24; cursor: pointer; animation: pulseGlow 1s infinite alternate; }
     .cal-cell.chest.opened { opacity: 0.5; border-color: #10b981; }
     .cal-cell small { font-size: 0.55rem; line-height: 1; }
-    .hint-btn { position: absolute; top: 4px; left: 6px; z-index: 6; background: #1e1b4b; border: 1px solid #fbbf24; color: #fde047; border-radius: 999px; height: 34px; padding: 0 10px; font-size: 0.75rem; font-weight: 800; cursor: pointer; }
+    .hint-btn { position: absolute; top: 4px; left: 6px; z-index: 6; background: #1e1b4b; border: 1px solid #fbbf24; color: #fde047; border-radius: 999px; width: 34px; height: 34px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .hint-btn .hint-cost { position: absolute; bottom: -5px; right: -6px; background: #0f172a; border: 1px solid #fbbf24; border-radius: 999px; font-size: 0.5rem; font-weight: 900; line-height: 1; padding: 2px 3px; }
+    .arena .streak-banner { padding: 0 44px; text-align: center; }
     .hint-btn:disabled { opacity: 0.45; cursor: default; }
     .hint-box { min-height: 0; font-size: 0.8rem; font-weight: 700; color: #fde68a; text-align: center; padding: 0 12px; }
     .hint-box:empty { display: none; }
 
     .bottom-bar { grid-template-columns: repeat(5, 1fr); gap: 3px; }
     .bottom-bar .btn-secondary { font-size: 0.64rem; padding: 6px 1px; gap: 2px; }
+    .raid-chapter { font-size: 0.7rem; font-weight: 900; color: #fca5a5; letter-spacing: 1px; text-transform: uppercase; }
+    .comic-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    .comic-panel { display: flex; align-items: center; gap: 10px; background: #fef9c3; color: #1c1917; border: 3px solid #1c1917; border-radius: 6px; padding: 6px 10px; text-align: left; box-shadow: 3px 3px 0 #000; animation: fadeIn 0.4s both; }
+    .comic-panel:nth-child(2) { margin-left: 14px; animation-delay: 0.35s; }
+    .comic-panel:nth-child(3) { animation-delay: 0.7s; }
+    .comic-icon { font-size: 2rem; flex-shrink: 0; }
+    .comic-text { font-size: 0.82rem; font-weight: 800; line-height: 1.25; }
+    .par-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 6px 0; }
+    .par-tile { background: #0f172a; border: 1px solid var(--card-border); border-radius: 10px; padding: 6px 2px; text-align: center; }
+    .par-tile b { display: block; font-size: 1.1rem; color: #fde047; }
+    .par-tile span { font-size: 0.6rem; color: var(--text-muted); font-weight: 700; }
+    .par-days { display: flex; align-items: flex-end; gap: 4px; height: 70px; margin: 4px 0; }
+    .par-day { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; font-size: 0.55rem; color: var(--text-muted); font-weight: 700; }
+    .par-day i { display: block; width: 100%; background: linear-gradient(0deg, #6366f1, #10b981); border-radius: 4px 4px 0 0; min-height: 2px; }
+    .par-row { display: flex; align-items: center; gap: 6px; font-size: 0.74rem; margin: 3px 0; font-weight: 700; text-align: left; }
+    .par-row .lbl { width: 42%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .par-row .bar { flex: 1; height: 8px; background: #1e293b; border-radius: 999px; overflow: hidden; border: 1px solid var(--card-border); }
+    .par-row .bar i { display: block; height: 100%; }
+    .par-row .pct { width: 64px; text-align: right; font-size: 0.68rem; }
+    .par-goal { background: #0f172a; border: 1px solid var(--card-border); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+    .par-goal input, .par-goal select { background: #1e293b; color: var(--text); border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 6px; font-size: 0.8rem; }
     .weak-chip { text-align: center; font-size: 0.72rem; font-weight: 900; color: #fecaca; margin: 2px 0 4px; animation: pulseGlow 1s infinite alternate; }
     .weak-chip:empty { display: none; }
     #equation-mount.weak-glow { border-radius: 14px; box-shadow: 0 0 0 2px #ef4444, 0 0 16px 3px rgba(239, 68, 68, 0.65); }
@@ -1278,7 +1301,7 @@ const HTML = `<!DOCTYPE html>
     <!-- Arena Container (Zero-Scroll Flex Mount) -->
     <div class="arena">
       <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)">✏️</button>
-      <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Spend 1 gem to see the first step">💡 Hint · 1💎</button>
+      <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Hint: spend 1 gem to see the first step">💡<span class="hint-cost">1💎</span></button>
       <div class="streak-banner" id="streak-msg">READY TO SOLVE?</div>
       <div class="floating-popup" id="floating-popup">CRITICAL HIT! 💥</div>
       
@@ -1539,6 +1562,7 @@ const HTML = `<!DOCTYPE html>
         <button class="grade-btn" onclick="toggleMute()"><span id="sound-icon">🔊</span> Sound</button>
         <button class="grade-btn" onclick="closeSettings(); openReportModal()">📊 Session report</button>
       </div>
+      <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>
 
       <div class="settings-label">☁️ Account (optional)</div>
       <div id="acct-box"></div>
@@ -1574,6 +1598,42 @@ const HTML = `<!DOCTYPE html>
   <div id="toast"></div>
 
   <div class="milestone-overlay" id="milestone-overlay"><div class="milestone-big" id="milestone-big"></div><div class="milestone-sub" id="milestone-sub"></div></div>
+
+  <!-- Raid story modal -->
+  <div class="modal-overlay" id="raid-modal">
+    <div class="modal-content" style="border-color:#ef4444;">
+      <div class="raid-chapter" id="raid-chapter"></div>
+      <h2 style="font-size:1.25rem; margin-bottom:6px;" id="raid-title"></h2>
+      <div class="comic-grid" id="raid-panels"></div>
+      <p style="font-size:0.78rem; color:var(--text-muted); margin:6px 0;" id="raid-note"></p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" id="raid-btn" onclick="closeRaidModal()">To battle!</button>
+    </div>
+  </div>
+
+  <!-- Parent report modal -->
+  <div class="modal-overlay" id="parent-modal" onclick="closeParentOnOverlay(event)">
+    <div class="modal-content">
+      <h2 style="font-size:1.3rem;">👨‍👩‍👧 Parent Report</h2>
+      <p style="font-size:0.72rem; color:var(--text-muted);">Last 7 days on this device or account.</p>
+      <div class="par-tiles" id="par-tiles"></div>
+      <div class="settings-label">📅 Minutes per day</div>
+      <div class="par-days" id="par-days"></div>
+      <div class="settings-label">🎯 Accuracy by math type</div>
+      <div id="par-types"></div>
+      <div class="settings-label">🔍 Weak spots</div>
+      <div id="par-weak" style="font-size:0.8rem; text-align:left;"></div>
+      <div class="settings-label">🏆 Daily reward goal</div>
+      <div class="par-goal">
+        <div style="font-size:0.78rem;">Math time goal per day:
+          <select id="par-minutes" onchange="setParentGoal()"></select>
+        </div>
+        <input id="par-reward" type="text" maxlength="60" placeholder="Reward, e.g. ice cream trip" onchange="setParentGoal()" />
+        <div class="quest-bar"><div class="quest-fill" id="par-goal-fill" style="width:0%"></div></div>
+        <div style="font-size:0.74rem; font-weight:700;" id="par-goal-text"></div>
+      </div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeParent()">Close</button>
+    </div>
+  </div>
 
   <!-- Streak Calendar Modal -->
   <div class="modal-overlay" id="cal-modal" onclick="closeCalOnOverlay(event)">
@@ -1873,6 +1933,11 @@ const HTML = `<!DOCTYPE html>
         recentBossTypes: [],
         quests: null,
         streakCal: { count: 0, last: '', total: 0, claimed: [] },
+        stats: { days: {} },
+        parentGoal: { minutes: 20, reward: '', notified: '' },
+        raid: null,
+        raidsCleared: 0,
+        lastRaidAt: 0,
         bossBook: {},
         bookClaims: []
       };
@@ -2680,18 +2745,29 @@ const HTML = `<!DOCTYPE html>
       dark: ['sub', 'neg', 'log'],
       magic: ['alg', 'order', 'frac', 'quad', 'limit']
     };
-    function getWeakOp() {
+    function weakOpForBoss(idx) {
       const ops = getActiveOps();
-      if (ops.length < 2 || currentMonsterIndex < 0 || !monstersList[currentMonsterIndex]) return null;
-      const pref = (ELEM_WEAK_OPS[monstersList[currentMonsterIndex].element] || []).filter(function (o) { return ops.indexOf(o) !== -1; });
+      if (ops.length < 2 || idx < 0 || !monstersList[idx]) return null;
+      const pref = (ELEM_WEAK_OPS[monstersList[idx].element] || []).filter(function (o) { return ops.indexOf(o) !== -1; });
       const pool = pref.length ? pref : ops;
-      return pool[currentMonsterIndex % pool.length];
+      return pool[idx % pool.length];
+    }
+    function getWeakOp() {
+      const r = state.raid;
+      if (r) {
+        const ops = getActiveOps();
+        const w = r.weaks[r.phase];
+        return ops.length >= 2 && ops.indexOf(w) !== -1 ? w : null;
+      }
+      return weakOpForBoss(currentMonsterIndex);
     }
     function updateWeakChip() {
       const chip = document.getElementById('weak-chip');
       if (!chip) return;
       const w = getWeakOp();
-      chip.innerText = w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label + ' = extra damage!' : '';
+      const r = state.raid;
+      const head = r ? '👑 RAID phase ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
+      chip.innerText = (w || r) ? head + (w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
     }
 
     // ----- adaptive difficulty: two misses in a row on one type -> a gentler problem next -----
@@ -2950,9 +3026,9 @@ const HTML = `<!DOCTYPE html>
       const form = getBossFormIndex(bossLevel);
       const name = form === 2 ? 'Alpha ' + base.name : (form === 1 ? 'Elder ' + base.name : base.name);
       return {
-        name: name, icon: base.icon, element: base.element, taunts: base.taunts,
+        name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts,
         form: form, level: bossLevel,
-        maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2,
+        maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0),
         atk: 1 + (form === 2 ? 1 : 0)
       };
     }
@@ -2994,6 +3070,11 @@ const HTML = `<!DOCTYPE html>
       if (state.recentBossTypes.length > 10) state.recentBossTypes = state.recentBossTypes.slice(-10);
 
       bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-2, 3), 1, MAX_LEVEL);
+      state.raid = null;
+      if (state.monstersDefeated > 0 && state.monstersDefeated % 10 === 0 && state.lastRaidAt !== state.monstersDefeated) {
+        startRaid();
+        bossLevel = clamp(bossLevel + 3, 1, MAX_LEVEL);
+      }
       state.bossLevel = bossLevel;
       monsterCurrentHp = getBossMaxHp();
       partyHp = {};
@@ -3064,6 +3145,15 @@ const HTML = `<!DOCTYPE html>
         if (typeof sc.last !== 'string') sc.last = '';
         if (!Array.isArray(sc.claimed)) sc.claimed = [];
       }
+      if (!state.stats || typeof state.stats.days !== 'object' || !state.stats.days) state.stats = { days: {} };
+      if (!state.parentGoal || typeof state.parentGoal !== 'object') state.parentGoal = { minutes: 20, reward: '', notified: '' };
+      state.parentGoal.minutes = clamp(parseInt(state.parentGoal.minutes, 10) || 20, 5, 240);
+      state.parentGoal.reward = String(state.parentGoal.reward || '').slice(0, 60);
+      if (typeof state.parentGoal.notified !== 'string') state.parentGoal.notified = '';
+      state.raidsCleared = Math.max(0, parseInt(state.raidsCleared, 10) || 0);
+      state.lastRaidAt = Math.max(0, parseInt(state.lastRaidAt, 10) || 0);
+      const rd = state.raid;
+      if (!rd || typeof rd !== 'object' || !Array.isArray(rd.weaks) || !(rd.total >= 2) || !(rd.phase >= 0 && rd.phase < rd.total)) state.raid = null;
       state.grade = clamp(parseInt(state.grade, 10) || 0, 0, GRADES.length - 1);
       if (!Array.isArray(state.enabledOps) || state.enabledOps.length === 0) state.enabledOps = GRADE_DEFAULT_OPS[state.grade].slice();
       if (!getSpecies(state.activePet) || getOwnedIds().indexOf(state.activePet) === -1) state.activePet = 'dog';
@@ -3278,14 +3368,25 @@ const HTML = `<!DOCTYPE html>
         }
         monsterCurrentHp -= damage;
 
-        if (monsterCurrentHp <= 0) {
+        if (monsterCurrentHp <= 0 && state.raid && state.raid.phase < state.raid.total - 1) {
+          state.raid.phase += 1;
+          monsterCurrentHp = getBossMaxHp();
+          soundSuperMove();
+          launchConfetti();
+          showPopup('⚠️ PHASE ' + (state.raid.phase + 1) + '!');
+          toast('👑 The raid boss changes! Find its new weak point!');
+          updateStatsUI();
+          saveState();
+        } else if (monsterCurrentHp <= 0) {
           soundMonsterDefeated();
           launchConfetti();
           state.monstersDefeated += 1;
           questEvent('boss');
           if (bossMistakes === 0) questEvent('flawless');
           markBossWin(currentMonsterIndex, boss.form);
-          const gemBonus = 8 + Math.floor(boss.level / 5);
+          let gemBonus = 8 + Math.floor(boss.level / 5);
+          const wasRaid = state.raid ? state.raid.chapter : -1;
+          if (wasRaid >= 0) { gemBonus += 40; state.raidsCleared += 1; state.raid = null; }
           state.gems += gemBonus;
 
           // Pokémon-style: more XP for beating higher-level bosses
@@ -3307,9 +3408,11 @@ const HTML = `<!DOCTYPE html>
             setBossTaunt();
             updateStatsUI();
             saveState();
+            if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
             const nb = getBossInfo();
             toast(\`A wild Lv \${nb.level} \${nb.name} appeared!\`);
             if (shouldTriggerVault) enqueueModal(startGoldenVault);
+            if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
           }, 650);
         } else {
           updateBattleUI();
@@ -3431,6 +3534,8 @@ const HTML = `<!DOCTYPE html>
         questEvent('solve', opId);
         missStreak[opId] = 0;
         calDayEvent();
+        recordStat(opId, true, solveTime, opId === getWeakOp());
+        checkParentGoal();
         if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
 
         state.streak += 1;
@@ -3493,6 +3598,7 @@ const HTML = `<!DOCTYPE html>
         soundWrong();
         bossMistakes += 1;
         const missOp = currentProblem.modeTag;
+        recordStat(missOp, false, solveTime, false);
         missStreak[missOp] = (missStreak[missOp] || 0) + 1;
         if (missStreak[missOp] >= 2) { easyQueue[missOp] = true; missStreak[missOp] = 0; }
         if (answerBox) answerBox.className = 'answer-box wrong';
@@ -4360,11 +4466,200 @@ const HTML = `<!DOCTYPE html>
       if (state.gems < HINT_COST) { toast('You need 1 💎 for a hint'); return; }
       state.gems -= HINT_COST;
       hintUsed = true;
+      statDay().h += 1;
       soundClick();
       document.getElementById('hint-box').innerText = '💡 ' + hintFor(currentProblem);
       saveState();
       updateStatsUI();
       renderHintUI();
+    }
+
+
+    // =====================================================================
+    //  PLAY STATS  (feeds the parent report)
+    // =====================================================================
+    function escHtml(t) {
+      return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function statDay() {
+      const days = state.stats.days;
+      const k = dayKey();
+      if (!days[k]) {
+        days[k] = { s: 0, a: 0, ms: 0, h: 0, w: 0, ops: {} };
+        const keys = Object.keys(days).sort();
+        while (keys.length > 35) delete days[keys.shift()];
+      }
+      return days[k];
+    }
+    function recordStat(op, correct, secs, weakHit) {
+      const d = statDay();
+      d.a += 1;
+      if (correct) d.s += 1;
+      if (weakHit) d.w += 1;
+      d.ms += Math.round(Math.min(Math.max(secs || 0, 0), 60) * 1000);
+      const o = d.ops[op] || (d.ops[op] = [0, 0]);
+      o[0] += 1;
+      if (correct) o[1] += 1;
+    }
+    function minutesToday() {
+      const d = state.stats.days[dayKey()];
+      return d ? d.ms / 60000 : 0;
+    }
+    function checkParentGoal() {
+      const g = state.parentGoal;
+      const today = dayKey();
+      if (g.notified === today || minutesToday() < g.minutes) return;
+      g.notified = today;
+      launchConfetti();
+      soundSecretFound();
+      toast('🏆 Daily math goal reached!' + (g.reward ? ' Reward: ' + g.reward : ' Tell a grown-up!'));
+    }
+
+    // =====================================================================
+    //  PARENT REPORT
+    // =====================================================================
+    function weekKeys() {
+      const out = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        out.push(dayKeyOf(d));
+      }
+      return out;
+    }
+    function renderParent() {
+      const keys = weekKeys();
+      const days = state.stats.days;
+      let solved = 0, attempts = 0, ms = 0, hints = 0, played = 0;
+      const byOp = {};
+      keys.forEach(function (k) {
+        const d = days[k];
+        if (!d) return;
+        played += d.a > 0 ? 1 : 0;
+        solved += d.s; attempts += d.a; ms += d.ms; hints += d.h;
+        Object.keys(d.ops).forEach(function (op) {
+          const o = byOp[op] || (byOp[op] = [0, 0]);
+          o[0] += d.ops[op][0]; o[1] += d.ops[op][1];
+        });
+      });
+      const acc = attempts ? Math.round((solved / attempts) * 100) : 0;
+      const tile = function (v, l) { return '<div class="par-tile"><b>' + v + '</b><span>' + l + '</span></div>'; };
+      document.getElementById('par-tiles').innerHTML =
+        tile(solved, 'Solved') + tile(attempts ? acc + '%' : '--', 'Accuracy') + tile(Math.round(ms / 60000) + 'm', 'Time played') +
+        tile(played + '/7', 'Days played') + tile(hints, 'Hints used') + tile(state.streakCal.count, 'Streak day');
+
+      const maxMs = Math.max(60000, Math.max.apply(null, keys.map(function (k) { return days[k] ? days[k].ms : 0; })));
+      const names = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+      document.getElementById('par-days').innerHTML = keys.map(function (k) {
+        const m = days[k] ? days[k].ms : 0;
+        const dt = new Date(k + 'T12:00:00');
+        return '<div class="par-day">' + (m ? Math.round(m / 60000) : '') + '<i style="height:' + Math.round((m / maxMs) * 52) + 'px"></i>' + names[dt.getDay()] + '</div>';
+      }).join('');
+
+      const ids = Object.keys(byOp).filter(function (id) { return OP_BY_ID[id]; }).sort(function (a, b) { return byOp[b][0] - byOp[a][0]; });
+      document.getElementById('par-types').innerHTML = ids.length ? ids.map(function (id) {
+        const a = byOp[id][0], c = byOp[id][1];
+        const pct = Math.round((c / a) * 100);
+        const col = pct >= 85 ? '#10b981' : (pct >= 65 ? '#f59e0b' : '#ef4444');
+        return '<div class="par-row"><span class="lbl">' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + '</span><span class="bar"><i style="width:' + pct + '%; background:' + col + '"></i></span><span class="pct">' + pct + '% (' + a + ')</span></div>';
+      }).join('') : '<div style="font-size:0.78rem; color:var(--text-muted);">No practice recorded yet this week.</div>';
+
+      const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
+      document.getElementById('par-weak').innerHTML = weak.length
+        ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')
+        : (ids.length ? '✅ No weak spots this week. Great work!' : '<span style="color:var(--text-muted);">Needs at least 5 tries of a type to show.</span>');
+
+      const g = state.parentGoal;
+      const sel = document.getElementById('par-minutes');
+      if (!sel.options.length) [10, 15, 20, 30, 45, 60].forEach(function (m) { sel.add(new Option(m + ' minutes', m)); });
+      sel.value = String(g.minutes);
+      if (sel.value !== String(g.minutes)) { sel.add(new Option(g.minutes + ' minutes', g.minutes)); sel.value = String(g.minutes); }
+      document.getElementById('par-reward').value = g.reward;
+      const mins = minutesToday();
+      document.getElementById('par-goal-fill').style.width = Math.min(100, Math.round((mins / g.minutes) * 100)) + '%';
+      document.getElementById('par-goal-text').innerText = mins >= g.minutes
+        ? '🎉 Goal reached today!' + (g.reward ? ' Time for: ' + g.reward : '')
+        : Math.floor(mins) + ' of ' + g.minutes + ' minutes today' + (g.reward ? ' — reward: ' + g.reward : '');
+    }
+    function setParentGoal() {
+      const g = state.parentGoal;
+      g.minutes = clamp(parseInt(document.getElementById('par-minutes').value, 10) || 20, 5, 240);
+      g.reward = document.getElementById('par-reward').value.slice(0, 60);
+      g.notified = minutesToday() >= g.minutes ? dayKey() : '';
+      saveState();
+      renderParent();
+    }
+    function openParent() {
+      soundClick();
+      pauseClock();
+      renderParent();
+      document.getElementById('parent-modal').style.display = 'flex';
+    }
+    function closeParent() {
+      soundClick();
+      resumeClock();
+      document.getElementById('parent-modal').style.display = 'none';
+    }
+    function closeParentOnOverlay(e) { if (e.target.id === 'parent-modal') closeParent(); }
+
+    // =====================================================================
+    //  BOSS RAIDS  (every 10 bosses: 3 phases, a new weak point each phase)
+    // =====================================================================
+    const RAID_STORY = [
+      { title: 'The Gate Breaks', panels: [
+          { icon: '🏰', text: 'The Number Kingdom was peaceful and bright...' },
+          { icon: '💥', text: 'BOOM! A dark portal tears open above the castle!' },
+          { icon: '👑', text: 'A giant Raid Boss storms the gates! Only you and your buddies can stop it!' }],
+        outro: 'The gates hold! But the portal is still glowing...' },
+      { title: 'The Missing Numbers', panels: [
+          { icon: '🔢', text: 'Oh no! The royal numbers have vanished from the library!' },
+          { icon: '🕵️', text: 'Clues lead to a huge shadow guarding the stolen digits.' },
+          { icon: '⚔️', text: 'Defeat it and the numbers come home!' }],
+        outro: 'The numbers are back on their shelves. The king cheers!' },
+      { title: 'The Frozen Bridge', panels: [
+          { icon: '🌉', text: 'The Great Bridge to the Equation Hills is frozen solid.' },
+          { icon: '🥶', text: 'A towering beast blocks the way and laughs at your math!' },
+          { icon: '🔥', text: 'Time to heat things up, hero!' }],
+        outro: 'The ice melts and the bridge reopens. On to the hills!' },
+      { title: 'The Clockwork Tower', panels: [
+          { icon: '🕰️', text: 'The kingdom clock has stopped ticking!' },
+          { icon: '🤖', text: 'A mighty machine has taken over the clock tower.' },
+          { icon: '🔧', text: 'Solve fast and set time moving again!' }],
+        outro: 'Tick-tock! The clock runs again. Almost there...' },
+      { title: 'The Shadow King', panels: [
+          { icon: '🌑', text: 'The darkness behind the portal finally shows itself.' },
+          { icon: '👁️', text: 'The Shadow King rises. Every number you know is his weakness!' },
+          { icon: '🌟', text: 'This is the final stand for the Number Kingdom!' }],
+        outro: 'The Shadow King fades. The Number Kingdom is saved... for now!' }
+    ];
+
+    function startRaid() {
+      const ops = getActiveOps().slice();
+      ops.sort(function () { return Math.random() - 0.5; });
+      const weaks = [];
+      for (let i = 0; i < 3; i++) weaks.push(ops[i % ops.length]);
+      state.lastRaidAt = state.monstersDefeated;
+      state.raid = { phase: 0, total: 3, weaks: weaks, chapter: state.raidsCleared % RAID_STORY.length, introSeen: false };
+    }
+    function showRaidStory(mode, chapter) {
+      const st = RAID_STORY[chapter % RAID_STORY.length];
+      const intro = mode === 'intro';
+      if (intro && state.raid) { state.raid.introSeen = true; saveState(); }
+      document.getElementById('raid-chapter').innerText = 'Chapter ' + (chapter + 1) + (intro ? ' · Raid!' : ' · Cleared!');
+      document.getElementById('raid-title').innerText = intro ? st.title : '🎉 Raid Cleared!';
+      const panels = intro ? st.panels : [{ icon: '🏆', text: st.outro }, { icon: '💎', text: 'Raid bonus: +40 gems!' }];
+      document.getElementById('raid-panels').innerHTML = panels.map(function (pn) {
+        return '<div class="comic-panel"><span class="comic-icon">' + pn.icon + '</span><span class="comic-text">' + escHtml(pn.text) + '</span></div>';
+      }).join('');
+      document.getElementById('raid-note').innerText = intro ? 'Raid bosses have 3 phases — and a new weak point each phase!' : 'Raids cleared: ' + state.raidsCleared;
+      document.getElementById('raid-btn').innerText = intro ? '⚔️ To battle!' : 'Hooray!';
+      soundFanfare(!intro ? true : false);
+      document.getElementById('raid-modal').style.display = 'flex';
+    }
+    function closeRaidModal() {
+      soundClick();
+      document.getElementById('raid-modal').style.display = 'none';
+      modalDone();
     }
 
     // =====================================================================
@@ -4476,13 +4771,15 @@ const HTML = `<!DOCTYPE html>
         h += sec('Cosmic Anomaly', [janiePet], 'Rarest of all...');
         h += sec('Secret Creatures', secretCompanions, 'Rescued from bosses');
       } else if (bookTab === 'boss') {
-        h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles!</div><div class="pet-grid">';
+        h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles! 👑 Raids cleared: ' + state.raidsCleared + '</div><div class="pet-grid">';
         monstersList.forEach(function (m, i) {
           const e = state.bossBook[i];
           if (!e) { h += bookCard({ locked: true, icon: m.icon, name: '???', hint: 'Not met yet', hintColor: '#94a3b8' }); return; }
           const best = e.form >= 2 ? 'Alpha' : (e.form === 1 ? 'Elder' : (e.form === 0 ? 'Normal' : null));
+          const wk = weakOpForBoss(i);
           h += bookCard({
             icon: m.icon, name: m.name, elem: m.element,
+            extra: wk ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">🎯 Weak: ' + OP_BY_ID[wk].icon + ' ' + OP_BY_ID[wk].label + '</div>' : '',
             hint: e.wins > 0 ? ('Beaten x' + e.wins + ' • ' + best) : 'Met • not beaten yet',
             hintColor: e.wins > 0 ? '#6ee7b7' : '#fbbf24'
           });
@@ -5153,6 +5450,7 @@ const HTML = `<!DOCTYPE html>
     setBossTaunt();
     updateStatsUI();
     generateProblem();
+    if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
     acctStartup();
   </script>
 </body>
