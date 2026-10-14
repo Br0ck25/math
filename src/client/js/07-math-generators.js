@@ -399,39 +399,15 @@ function updateWeakChip() {
   chip.innerText = (w || r) ? head + (w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
 }
 
-// ----- adaptive difficulty: two misses in a row on one type -> a gentler problem next -----
-// Misses in a row per math type, and types queued for an easier problem. Both live in the save (state.adapt).
-function easyScore(p) {
-  const plain = (p.expr || (p.num1 + ' ' + p.num2)).replace(/<[^>]+>/g, '');
-  return plain.length + String(Math.abs(p.answer)).length * 2;
-}
-function genEasy(id) {
-  const op = OP_BY_ID[id];
-  const g = Math.max(op.minGrade, state.grade - 1);
-  let best = null;
-  for (let i = 0; i < 5; i++) {
-    const c = op.gen(g);
-    if (!best || easyScore(c) < easyScore(best)) best = c;
-  }
-  return best;
-}
-
 function generateProblem() {
-  const ops = getActiveOps();
-  const queued = ops.filter(function (o) { return state.adapt.easy[o]; });
-  const weak = getWeakOp();
-  let id = queued.length ? queued[0] : pick(ops);
-  if (!queued.length && weak && weak !== lastOpId && Math.random() < 0.4) id = weak;
-  else if (!queued.length && ops.length > 1 && id === lastOpId) {
-    id = pick(ops.filter(function (o) { return o !== lastOpId; }));
-  }
+  const next = pickNextProblem(lastOpId);
+  const id = next.op;
   lastOpId = id;
-  const wantEasy = !!state.adapt.easy[id];
-  delete state.adapt.easy[id];
-  const make = function () { return wantEasy ? genEasy(id) : OP_BY_ID[id].gen(state.grade); };
-  let p = make();
-  for (let tries = 0; tries < 6 && lastSig && sigOf(p) === lastSig; tries++) p = make();
-  p.easy = wantEasy;
+  let p = next.make();
+  for (let tries = 0; tries < 6 && lastSig && sigOf(p) === lastSig; tries++) p = next.make();
+  p.easy = next.kind === 'warmup';
+  p.challenge = next.kind === 'challenge';
+  noteServed(p.challenge);
   lastSig = sigOf(p);
   p.modeTag = id;
   if (!p.layout) {
@@ -445,6 +421,7 @@ function generateProblem() {
   hintUsed = false;
   renderHintUI();
   updateWeakChip();
+  document.getElementById('equation-mount').classList.toggle('challenge', p.challenge);
   questionStartTime = Date.now();
   padReset();
   renderEquationUI();

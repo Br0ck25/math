@@ -21,6 +21,9 @@ function deltaText(now, before, unit) {
   return (d > 0 ? '▲ +' : (d < 0 ? '▼ ' : '＝ ')) + (d === 0 ? 'same' : d + unit);
 }
 let parentUnlocked = false;
+// Parent switches. (setDuelsOnline was lost in an earlier rewrite; tests/parent-switches covers both now.)
+function setDuelsOnline(on) { state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off'); }
+function setAdaptive(on) { state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent(); }
 function parentLocked() { return !!state.parentPinHash && !parentUnlocked; }
 // 4-digit PIN stored only as a SHA-256 hash (a light lock against little fingers, not real security).
 async function hashPin(pin) {
@@ -82,6 +85,13 @@ function renderParent() {
   document.getElementById('par-content').style.display = locked ? 'none' : 'block';
   if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
   document.getElementById('par-duels').checked = !!state.duelsOnline;
+  document.getElementById('par-adaptive').checked = state.adapt.on;
+  const lv = getActiveOps().filter(function (op) { return state.adapt.on ? true : false; }).map(function (op) {
+    const t = opTier(op), acc = recentAccuracy(op);
+    const col = t > 0 ? '#fde047' : (t < 0 ? '#86efac' : 'var(--text-muted)');
+    return '<div class="par-row"><span class="lbl">' + OP_BY_ID[op].icon + ' ' + OP_BY_ID[op].label + '</span><span style="color:' + col + '; font-weight:800;">' + TIER_NAMES[t] + '</span><span class="pct">' + (acc === null ? 'new' : Math.round(acc * 100) + '% lately') + '</span></div>';
+  });
+  document.getElementById('par-levels').innerHTML = state.adapt.on ? lv.join('') : '<span style="color:var(--text-muted);">Off: every type uses the chosen grade.</span>';
   document.getElementById('par-pin-note').innerText = state.parentPinHash ? 'PIN is on. You will be asked each time the app is reopened.' : 'Optional: stop little fingers from changing goals.';
   document.getElementById('par-pin-clear').style.display = state.parentPinHash ? 'inline-block' : 'none';
   const keys = lastDayKeys(7);

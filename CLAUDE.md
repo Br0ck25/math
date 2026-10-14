@@ -14,7 +14,7 @@ accounts in Cloudflare KV. Read this before changing anything.
 - The service-worker cache name is derived from the build hash automatically. Never bump a version by hand.
 
 ## Commands
-- `npm test` builds, then runs every test (about 2 minutes). `npm run check` verifies `worker.js` is current. `npm run sim` prints the gem economy.
+- `npm test` builds, lints, then runs every test (about 3 minutes). `npm run lint` checks the browser script and the Worker for calls to functions that do not exist and for page handlers with no function behind them (an earlier refactor silently deleted `hubStep`). `npm run check` verifies `worker.js` is current. `npm run sim` prints the gem economy.
 - Run `npm test` before every commit. A change that touches what players see needs a test, not just a screenshot.
 - In the cloud sandbox Playwright's Chromium is already installed; do not run `playwright install`.
 
@@ -28,6 +28,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Buddy gear: every accessory has a `slot` (head, face, neck, back, side, aura); positions come only from `GEAR_SLOTS` in `08b-buddy-gear.js` and are used by the battle screen, hub and trading card. Never add per-item pixel offsets in CSS. Armor is the corner badge. New gear needs no CSS.
 - Text safety: `escHtml()` for anything a user typed or the server sent, before it goes into `innerHTML`.
 - Saves: `saveState()` (never `localStorage` directly), `statDay()`/`recordStat()` for parent-report numbers, `addXpTo(id, n)` for buddy XP.
+- Practice difficulty: which type and level the next problem uses is decided only in `07b-adaptive.js` (`pickNextProblem`, `recordAdaptive`, `typeShares`); numbers are in `ECON.adaptive`. Levels follow recent accuracy and speed per type, never the combo streak. Tournaments, duels and the vault use `makeMcq`, which ignores levels on purpose (fair for both players).
 - Stakes: `stakeAllowed()` / `allowedStakes()` (shared with the server). Session-goal pay: `sessionGoalReward()`.
 - If the same shape of code appears a second time, extract a helper in the right file instead of pasting.
 
@@ -75,6 +76,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Keep commits focused: one feature or fix, with its tests and the rebuilt `worker.js`.
 
 ## Mistakes that already happened (do not repeat)
+- A regex-based refactor of open/close functions deleted neighbouring functions (`hubStep`, `setDuelsOnline`) and no test noticed. Refactors of many files must be followed by `npm run lint`; do not edit code with greedy multi-line regexes.
 - A stray quote or backtick in the old single-file layout silently blanked the whole game. The new build catches syntax errors; still load the page after changes.
 - A shared single "ping" key overwrote an invitation with a result notification. Notifications carry a `kind`; decide what a new kind replaces.
 - Test pages must not register the service worker, and timers scaled by `fast` mean `setTimeout`-based waits in tests need generous multipliers.

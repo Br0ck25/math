@@ -264,7 +264,7 @@ test('an old or damaged save is repaired, versioned and keeps working', async ()
   assert.equal(s.tour.trophies, 0);
   assert.equal(s.raid, null);
   assert.equal(s.activePet, 'dog');
-  assert.deepEqual(s.adapt, { miss: {}, easy: {} });
+  assert.deepEqual([s.adapt.on, s.adapt.miss, s.adapt.easy, s.adapt.calm, s.adapt.recent, s.adapt.tier], [true, {}, {}, {}, {}, {}]);
   assert.deepEqual(errors, []);
 });
 

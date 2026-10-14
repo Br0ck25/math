@@ -187,7 +187,7 @@ function scheduleNextProblem(delay, msg) {
   explainHold = 0;
   setTimeout(function () {
     generateProblem();
-    document.getElementById('feedback-msg').innerText = currentProblem.easy ? 'Warm-up round — you can do this! 🌱' : msg;
+    document.getElementById('feedback-msg').innerText = currentProblem.easy ? 'Warm-up round — you can do this! 🌱' : currentProblem.challenge ? 'Challenge problem: +' + Math.round(ECON.adaptive.challengeXpBonus * 100) + '% XP if you get it! 💪' : msg;
   }, wait);
 }
 
@@ -214,6 +214,7 @@ function checkAnswer() {
     sessionStats.byOp[opId] = (sessionStats.byOp[opId] || 0) + 1;
     questEvent('solve', opId);
     state.adapt.miss[opId] = 0;
+    const wasChallenge = !!currentProblem.challenge;
     calDayEvent();
     recordStat(opId, true, solveTime, opId === getWeakOp());
     checkParentGoal();
@@ -237,7 +238,9 @@ function checkAnswer() {
 
     const cloverOn = state.cloverLeft > 0;
     let xpEarned = 8 + Math.min(state.streak, 10) + (isFast ? 4 : 0);
+    if (wasChallenge) xpEarned = Math.round(xpEarned * (1 + ECON.adaptive.challengeXpBonus));
     if (cloverOn) xpEarned = Math.round(xpEarned * 1.5);
+    recordAdaptive(opId, true, isFast);
     awardBuddyXp(xpEarned);
 
     triggerMonsterDamage(0, opId === getWeakOp());
@@ -280,6 +283,8 @@ function checkAnswer() {
     bossMistakes += 1;
     const missOp = currentProblem.modeTag;
     recordStat(missOp, false, solveTime, false);
+    if (currentProblem.challenge) state.adapt.calm[missOp] = true;     // after a missed challenge the next one steps back
+    recordAdaptive(missOp, false, false);
     state.adapt.miss[missOp] = (state.adapt.miss[missOp] || 0) + 1;
     if (state.adapt.miss[missOp] >= 2) { state.adapt.easy[missOp] = true; state.adapt.miss[missOp] = 0; }
     explainMistake();

@@ -75,8 +75,16 @@ const NORMALIZERS = [
     if (!/^[0-9a-f]{64}$|^$/.test(s.parentPinHash)) s.parentPinHash = '';
   },
   function adapt(s) {
-    if (!isPlainObject(s.adapt.miss)) s.adapt.miss = {};
-    if (!isPlainObject(s.adapt.easy)) s.adapt.easy = {};
+    const a = s.adapt, w = ECON.adaptive.window;
+    ['miss', 'easy', 'calm', 'recent', 'tier'].forEach(function (k) { if (!isPlainObject(a[k])) a[k] = {}; });
+    Object.keys(a.recent).forEach(function (op) {
+      if (!OP_BY_ID[op] || typeof a.recent[op] !== 'string') delete a.recent[op];
+      else a.recent[op] = a.recent[op].replace(/[^012]/g, '').slice(-w);
+    });
+    Object.keys(a.tier).forEach(function (op) {
+      if (!OP_BY_ID[op] || [-1, 0, 1].indexOf(a.tier[op]) === -1) delete a.tier[op];
+    });
+    a.served = a.served.replace(/[^cn]/g, '').slice(-ECON.adaptive.servedWindow);
   },
   function social(s) {
     s.duelFriends = s.duelFriends.filter(function (n) { return typeof n === 'string' && /^[a-z0-9_-]{3,20}$/.test(n); }).slice(0, 8);

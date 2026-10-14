@@ -59,6 +59,13 @@ let hubPet = 'dog';
 let hubTab = 'care';
 function openHub() { showModal('hub-modal', function () { state.seen.hub = true; hubPet = getOwnedIds().indexOf(state.activePet) !== -1 ? state.activePet : 'dog'; renderHub(); }); }
 function closeHub() { hideModal('hub-modal', function () { saveState(); updateStatsUI(); }); }
+// ‹ › in the hub header: previous / next buddy you own
+function hubStep(dir) {
+  const ids = getOwnedIds();
+  hubPet = ids[(ids.indexOf(hubPet) + dir + ids.length) % ids.length];
+  soundClick();
+  renderHub();
+}
 function setHubTab(t) { soundClick(); hubTab = t; renderHub(); }
 function renderHub() {
   const d = getPetById(hubPet);

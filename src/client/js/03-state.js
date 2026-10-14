@@ -27,7 +27,7 @@ function freshState() {
     stats: { days: {} },
     parentGoal: { minutes: 20, reward: '', notified: '' },
     parentPinHash: '',
-    adapt: { miss: {}, easy: {} },
+    adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
     seen: { hub: false },
     care: {},

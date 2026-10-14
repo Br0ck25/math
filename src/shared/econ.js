@@ -20,6 +20,16 @@ const ECON = {
   raid: { every: 10, phases: 3, bonusGems: 40 },
   tournament: { rounds: 3, gemsPerRound: 5, xpPerRound: 15, championGems: 30, rewardedRunsPerDay: 2 },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
+  // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.
+  adaptive: {
+    window: 20, upAfter: 20, downAfter: 10,            // results kept per type; tries needed before moving up / down
+    upAccuracy: 0.85, upFastShare: 0.4, downAccuracy: 0.55,
+    weakBoost: 2,                                      // a type you are at 0% on is picked up to 3x as often as one you have mastered
+    maxTypeShare: 0.5,                                 // no single type may take more than half of the problems
+    bossWeakShare: 0.4,                                // the boss weak point's share of problems
+    servedWindow: 12, maxChallengeServed: 4,           // at most 4 challenge problems in any 12
+    challengeXpBonus: 0.5
+  },
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 
