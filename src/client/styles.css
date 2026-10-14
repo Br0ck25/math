@@ -219,13 +219,6 @@
       min-height: 44px;
     }
 
-    .fighter {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      position: relative;
-    }
-
     .fighter-icon-wrapper {
       --u: 44px;                     /* the buddy's size: gear is sized and placed from this (see 08b-buddy-gear.js) */
       position: relative;
@@ -238,13 +231,13 @@
     }
 
     .fighter-icon {
-      font-size: 2.1rem;
+      font-size: calc(var(--u, 44px) * 0.8);
       line-height: 1;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 42px;
-      height: 42px;
+      width: var(--u, 44px);
+      height: var(--u, 44px);
       position: relative;
       z-index: 3;
       filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
@@ -292,21 +285,7 @@
       padding: 2px 6px;
     }
 
-    .battle-bars-container {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 6px;
-    }
 
-    .hp-label-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      font-weight: 700;
-      color: var(--text-muted);
-      margin-bottom: 2px;
-    }
 
     .hp-bar-bg {
       height: 7px;
@@ -592,11 +571,7 @@
       .battle-title-row { margin-bottom: 2px; }
       .boss-taunt-box { padding: 2px 4px; font-size: 0.68rem; margin-bottom: 3px; }
       .versus-row { min-height: 38px; }
-      .fighter-icon-wrapper { --u: 38px; }
-      .fighter-icon { font-size: 1.8rem; width: 36px; height: 36px; }
       .fighter-name { font-size: 0.82rem; }
-      .battle-bars-container { margin-top: 3px; gap: 6px; }
-      .hp-label-row { font-size: 0.68rem; }
       .hp-bar-bg { height: 6px; }
       .ultimate-container { margin-top: 3px; padding: 2px 6px; }
       .ult-bar-bg { height: 6px; }
@@ -852,8 +827,9 @@
     .empty-note { grid-column: span 3; font-size: 0.75rem; color: var(--text-muted); padding: 8px 4px; font-style: italic; }
 
     /* evolution glow */
-    .fighter-icon.stage-1, .icon-wrap.stage-1 { filter: drop-shadow(0 0 5px rgba(250, 204, 21, 0.95)); }
-    .fighter-icon.stage-2, .icon-wrap.stage-2 { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.95)) drop-shadow(0 0 3px #ffffff); }
+    /* evolved buddies glow in their element's colour (--evo is set from the buddy's type) */
+    .stage-1 { filter: drop-shadow(0 0 5px var(--evo, #facc15)) drop-shadow(0 0 2px var(--evo, #facc15)); }
+    .stage-2 { filter: drop-shadow(0 0 9px var(--evo, #ec4899)) drop-shadow(0 0 3px #ffffff); }
     .fighter-icon.boss-stage-1 { filter: drop-shadow(0 0 6px rgba(249, 115, 22, 0.95)); }
     .fighter-icon.boss-stage-2 { filter: drop-shadow(0 0 9px rgba(239, 68, 68, 1)) drop-shadow(0 0 3px #fff); font-size: 2.4rem; }
 
@@ -1068,16 +1044,44 @@
 .versus-row { margin-top: 6px; }
 .hub-avatar { --u: 56px; position: relative; display: inline-block; isolation: isolate; width: var(--u); height: var(--u); line-height: var(--u); }
 
-/* ===== fighter cards in the arena: name on top, type + level pills underneath ===== */
-.versus-row .fighter { flex: 1 1 0; min-width: 0; }
-.fighter.right { flex-direction: row-reverse; text-align: right; }
+/* ===== arena fighter cards: icon + name + pills, with the HP bar inside the card ===== */
+.fighter-card { flex: 1 1 0; min-width: 0; position: relative; display: flex; flex-direction: column; gap: 5px; padding: 6px 8px; background: rgba(15, 23, 42, 0.55); border: 1px solid var(--card-border); border-radius: 12px; }
+.fighter-card.right { text-align: right; }
+.fighter-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.fighter-card.right .fighter-top { flex-direction: row-reverse; }
+.fighter-icon-wrapper, .boss-box { --u: 52px; }
+.boss-box { width: var(--u); height: var(--u); display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+.boss-box .fighter-icon { width: var(--u); height: var(--u); font-size: calc(var(--u) * 0.85); }
 .fighter-info { flex: 1 1 auto; min-width: 0; text-align: left; }
-.fighter.right .fighter-info { text-align: right; }
+.fighter-card.right .fighter-info { text-align: right; }
 .fighter-name { font-size: 0.9rem; font-weight: 800; line-height: 1.15; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fighter-tag { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; white-space: nowrap; margin-top: 2px; }
-.fighter.right .fighter-tag { justify-content: flex-end; }
+.fighter-tag { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; white-space: nowrap; margin-top: 3px; }
+.fighter-card.right .fighter-tag { justify-content: flex-end; }
 .fighter-tag .element-pill { margin-left: 0; }
 .lv-pill { font-size: 0.6rem; font-weight: 900; color: #fde047; background: #422006; border: 1px solid #a16207; border-radius: 4px; padding: 1px 5px; letter-spacing: 0.4px; text-transform: uppercase; }
+.hp-line { display: flex; align-items: center; gap: 6px; }
+.hp-line .hp-bar-bg { flex: 1; }
+.hp-num { font-size: 0.62rem; font-weight: 800; color: var(--text-muted); white-space: nowrap; }
 .boss-btn { background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: inherit; font-family: inherit; }
 .boss-btn:focus-visible, .fighter-icon-wrapper:focus-visible { outline: 2px solid #fbbf24; outline-offset: 2px; border-radius: 10px; }
-@media (max-height: 720px) { .fighter-name { font-size: 0.82rem; } }
+@media (max-height: 720px) { .fighter-icon-wrapper, .boss-box { --u: 44px; } .fighter-name { font-size: 0.82rem; } .fighter-card { padding: 4px 6px; gap: 3px; } }
+@media (max-width: 340px) { .fighter-top { gap: 5px; } .fighter-icon-wrapper, .boss-box { --u: 40px; } }
+
+/* ===== evolution look (see formMarkup in 08b-buddy-gear.js) ===== */
+.buddy-avatar { position: relative; display: inline-block; isolation: isolate; width: var(--u); height: var(--u); line-height: var(--u); text-align: center; vertical-align: middle; }
+.buddy-glyph { position: relative; z-index: 3; display: inline-block; font-size: calc(var(--u) * 0.8); line-height: var(--u); }
+.buddy-glyph svg { vertical-align: middle; }
+.evo-badge { position: absolute; left: -6%; top: -6%; z-index: 6; display: flex; align-items: center; justify-content: center; border-radius: 50%; line-height: 1; background: rgba(15, 23, 42, 0.92); border: 2px solid var(--evo, #a855f7); box-shadow: 0 0 6px var(--evo, #a855f7); }
+.evo-aura { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; line-height: 1; opacity: 0.25; animation: evoPulse 2.2s ease-in-out infinite alternate; }
+.evo-spark { position: absolute; right: -6%; top: -8%; z-index: 6; line-height: 1; animation: evoTwinkle 1.4s ease-in-out infinite alternate; }
+@keyframes evoPulse { from { transform: scale(0.92); opacity: 0.18; } to { transform: scale(1.05); opacity: 0.32; } }
+@keyframes evoTwinkle { from { opacity: 0.4; transform: scale(0.8) rotate(0deg); } to { opacity: 1; transform: scale(1.15) rotate(20deg); } }
+
+/* header row and fighter cards must survive narrow screens */
+.battle-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.battle-title-badge { white-space: nowrap; flex-shrink: 0; }
+.battle-goal-hint { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; }
+.versus-row { position: relative; gap: 16px; }
+.versus-row .vs-badge { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 8; font-size: 0.6rem; padding: 1px 4px; }   /* sits in the 16px gap; never over any text */
+.fighter-card .fighter-name { white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; font-size: 0.8rem; line-height: 1.12; word-break: break-word; }
+@media (max-width: 340px) { .fighter-tag { flex-wrap: wrap; row-gap: 2px; } .fighter-tag .element-pill, .lv-pill { font-size: 0.56rem; padding: 1px 4px; } }

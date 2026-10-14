@@ -22,8 +22,8 @@ storePets.forEach(function (p) {
 function secretForms(p) {
   return [
     { name: p.name, icon: p.icon, minLevel: 1 },
-    { name: 'Solar ' + p.name, icon: '👑 ' + p.icon, minLevel: 30 },
-    { name: 'Cosmic ' + p.name, icon: '🌌 ' + p.icon, minLevel: 65 }
+    { name: 'Solar ' + p.name, icon: p.icon, minLevel: 30 },
+    { name: 'Cosmic ' + p.name, icon: p.icon, minLevel: 65 }
   ];
 }
 janiePet.forms = secretForms(janiePet);
@@ -113,8 +113,8 @@ function openEvoModal(before, after) {
   soundSecretFound();
   launchConfetti();
   document.getElementById('evo-title').innerText = 'What? ' + before.name + ' is evolving!';
-  document.getElementById('evo-from').innerHTML = before.icon;
-  document.getElementById('evo-to').innerHTML = after.icon;
+  document.getElementById('evo-from').innerHTML = avatarHtml(before, 72);
+  document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
   document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)';
   document.getElementById('evo-stats').innerText =
     'Lv ' + after.level + '  •  ❤️ HP ' + getPetMaxHp(after.id) + '  •  ⚔️ ATK ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove;

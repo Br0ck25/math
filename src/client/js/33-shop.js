@@ -41,7 +41,7 @@ function renderArmor() {
       <div class="card-name">${ar.name}</div>
       <div class="armor-hp">${ar.hp > 0 ? '+' + ar.hp + ' HP' : 'No bonus'}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
-        ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : '💎 ' + ar.cost}
+        ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : gearLockText(ar)}
       </div>`;
     container.appendChild(card);
   });
@@ -50,6 +50,7 @@ function renderArmor() {
 function selectOrBuyArmor(ar) {
   const owned = state.unlockedArmor.indexOf(ar.id) !== -1;
   if (!owned) {
+    if (ar.earn) { soundWrong(); toast('🔒 Earn it: ' + ar.earn.text); return; }
     if (state.gems < ar.cost) {
       soundWrong();
       toast(`You need ${ar.cost - state.gems} more 💎 Gems for ${ar.name}!`);
@@ -86,7 +87,7 @@ function renderAccessories() {
       <div style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${acc.icon}</div>
       <div style="font-weight: 700; font-size: 0.78rem;">${acc.name}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
-        ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : '💎 ' + acc.cost}
+        ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : gearLockText(acc)}
       </div>`;
     container.appendChild(card);
   });
@@ -96,6 +97,9 @@ function selectOrBuyAccessory(acc) {
   if (state.unlockedAccessories.indexOf(acc.id) !== -1) {
     state.activeAccessory = acc.id;
     soundClick();
+  } else if (acc.earn) {
+    soundWrong();
+    toast('🔒 Earn it: ' + acc.earn.text);
   } else if (state.gems >= acc.cost) {
     state.gems -= acc.cost;
     state.unlockedAccessories.push(acc.id);
@@ -138,7 +142,7 @@ function makePetCard(sp, o) {
   const nameColor = o.nameColor ? `color:${o.nameColor};` : '';
 
   card.innerHTML = `
-    <div class="icon-wrap stage-${d.stage}" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${d.icon}</div>
+    <div class="icon-wrap" style="min-height: 44px; display: flex; align-items: center; justify-content: center;">${avatarHtml(d, 40)}</div>
     <div class="card-name" style="${nameColor}">${d.name}</div>
     <div style="margin: 1px 0;"><span class="element-pill elem-${d.element}">${d.element}</span></div>
     <div style="font-size: 0.62rem; color: #cbd5e1;">${stats}</div>

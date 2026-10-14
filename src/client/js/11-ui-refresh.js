@@ -19,10 +19,10 @@ function updateBattleUI() {
   setStageClass(mIcon, 'boss-stage-', boss.form);
   document.getElementById('monster-level').innerText = boss.level;
   const bossHpNow = Math.max(0, monsterCurrentHp);
-  document.getElementById('monster-hp-text').innerText = `HP: ${bossHpNow}/${boss.maxHp}`;
+  document.getElementById('monster-hp-text').innerText = `HP ${bossHpNow}/${boss.maxHp}`;
   document.getElementById('monster-hp-bar').style.width = `${Math.round((bossHpNow / boss.maxHp) * 100)}%`;
 
-  document.getElementById('pet-hp-text').innerText = `HP: ${petHp}/${petMax}`;
+  document.getElementById('pet-hp-text').innerText = `HP ${petHp}/${petMax}`;
   document.getElementById('pet-hp-bar').style.width = `${Math.round((petHp / petMax) * 100)}%`;
 
   const pIcon = document.getElementById('pet-fighter-icon');
@@ -32,7 +32,8 @@ function updateBattleUI() {
   document.getElementById('pet-level').innerText = pet.level;
 
   const gear = activeGear();
-  document.getElementById('pet-gear').innerHTML = gearMarkup(gear.acc, gear.armor);
+  document.getElementById('pet-gear').innerHTML = formMarkup(pet.stage, pet.element) + gearMarkup(gear.acc, gear.armor);
+  document.getElementById('fighter-icon-wrapper').style.setProperty('--evo', elemColor(pet.element));
 
   const candyBtn = document.getElementById('candy-btn');
   if (candyBtn) candyBtn.innerText = getCandyCost() + ' 💎 Eat';
@@ -47,16 +48,16 @@ function updateBattleUI() {
   const rel = getTypeRelation(pet.element, boss.element);
   const hint = document.getElementById('type-match-hint');
   if (pet.element === 'shadow') {
-    hint.innerText = '🌟 Shadow Mastery: x1.25 damage vs everything!';
+    hint.innerText = '🌟 Shadow: x1.25 damage';
     hint.style.color = '#d946ef';
   } else if (rel === 1) {
-    hint.innerText = '⚡ Super effective! (x1.5 damage)';
+    hint.innerText = '⚡ Super effective! x1.5';
     hint.style.color = '#4ade80';
   } else if (rel === -1) {
-    hint.innerText = '⚠️ Not very effective... (x0.5 damage)';
+    hint.innerText = '⚠️ Not very effective x0.5';
     hint.style.color = '#f87171';
   } else {
-    hint.innerText = 'Elemental Match: Neutral';
+    hint.innerText = 'Neutral matchup';
     hint.style.color = 'var(--text-muted)';
   }
 

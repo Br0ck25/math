@@ -45,7 +45,22 @@ const monstersList = [
   { name: "Tome Mimic", icon: "📖", baseHp: 4, element: "magic", taunts: ["I am the book that bites back!", "Turn the page... if you dare!"] },
   { name: "Mirror Wraith", icon: "🪞", baseHp: 5, element: "magic", taunts: ["I reflect your every mistake!", "Which answer is real?"] },
   { name: "Chaos Jester", icon: "🤡", baseHp: 4, element: "magic", taunts: ["Abra-cadabra, you are wrong!", "Tricks and spells, no treats!"] },
-  { name: "Arcane Archmage", icon: "🧙‍♂️", baseHp: 6, element: "magic", taunts: ["Behold my forbidden formulas!", "Mathematics is the oldest magic!"] }
+  { name: "Arcane Archmage", icon: "🧙‍♂️", baseHp: 6, element: "magic", taunts: ["Behold my forbidden formulas!", "Mathematics is the oldest magic!"] },
+  // ---- v4 additions: 14 more bosses (appended so saved boss books keep their numbers) ----
+  { name: "Dynamite Imp", icon: "🧨", baseHp: 4, element: "fire", taunts: ["Three, two... boom!", "I light up every fuse!"] },
+  { name: "Scorch Scorpion", icon: "🦂", baseHp: 5, element: "fire", taunts: ["My tail burns like a torch!", "The desert sand is red hot!"] },
+  { name: "Ember Ogre", icon: "👹", baseHp: 6, element: "fire", taunts: ["Smash and sizzle!", "Nobody out-counts an ogre!"] },
+  { name: "Tide Turtle", icon: "🐢", baseHp: 4, element: "water", taunts: ["Slow and steady beats you!", "Splash! Right into my shell!"] },
+  { name: "Storm Shark", icon: "🦈", baseHp: 5, element: "water", taunts: ["I smell a wrong answer!", "Circling closer, little mathlete!"] },
+  { name: "Coral Siren", icon: "🧜‍♀️", baseHp: 5, element: "water", taunts: ["My song makes numbers dance!", "Sink into the sparkling deep!"] },
+  { name: "Swamp Gator", icon: "🐊", baseHp: 5, element: "nature", taunts: ["Snap! Too slow!", "The bog swallows bad sums!"] },
+  { name: "Bee Queen", icon: "🐝", baseHp: 4, element: "nature", taunts: ["Buzz off, math cadet!", "My hive counts faster than you!"] },
+  { name: "Neon Beetle", icon: "🪲", baseHp: 4, element: "electric", taunts: ["Glow, glow, zap!", "My shell is fully charged!"] },
+  { name: "Circuit Spider", icon: "🕷️", baseHp: 5, element: "electric", taunts: ["Caught in my web of wires!", "Every thread carries a shock!"] },
+  { name: "Gloom Owl", icon: "🦉", baseHp: 5, element: "dark", taunts: ["Who? Who got that wrong?", "The night sees every mistake!"] },
+  { name: "Bone Pirate", icon: "☠️", baseHp: 6, element: "dark", taunts: ["Yo ho ho, give me your gems!", "X marks your mistake!"] },
+  { name: "Potion Imp", icon: "🧪", baseHp: 4, element: "magic", taunts: ["Bubble, bubble, wrong answer!", "One drop and poof!"] },
+  { name: "Mirror Knight", icon: "🤺", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] }
 ];
 
 const GRADES = [

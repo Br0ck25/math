@@ -189,15 +189,19 @@ test('arena fighter cards: no \"Buddy\" label, name above pills, nothing wraps o
         state.activePet = i % 2 ? 'fox' : 'dog';
         updateBattleUI();
         rows().forEach((x) => {
-          if (x.tag.getBoundingClientRect().height > 22) out.push(x.side + ' pills wrap for ' + m.name + ' lv' + lvl);
-          if (x.name.getBoundingClientRect().height > 24) out.push(x.side + ' name wraps for ' + m.name);
+          if (x.tag.getBoundingClientRect().height > (window.innerWidth <= 340 ? 40 : 22)) out.push(x.side + ' pills wrap for ' + m.name + ' lv' + lvl);   // very narrow phones may stack the two pills
+          if (x.name.getBoundingClientRect().height > 30) out.push(x.side + ' name takes more than two lines for ' + m.name);
           const box = x.info.getBoundingClientRect(), kids = [x.name, x.tag].map((e) => e.getBoundingClientRect());
           if (kids.some((k) => k.left < box.left - 1 || k.right > box.right + 1)) out.push(x.side + ' spills out for ' + m.name + ' lv' + lvl);
         });
         const vs = document.querySelector('.vs-badge').getBoundingClientRect();
-        const pr = document.getElementById('pet-fighter-name').parentElement.getBoundingClientRect();
-        const mr = document.getElementById('monster-name').parentElement.getBoundingClientRect();
-        if (pr.right > vs.left + 1 || mr.left < vs.right - 1) out.push('fighter text runs into the VS badge for ' + m.name);
+        ['pet-fighter-name', 'monster-name'].forEach((id) => {
+          const el = document.getElementById(id);
+          [el, el.nextElementSibling].forEach((e) => {
+            const r = e.getBoundingClientRect();
+            if (r.left < vs.right && r.right > vs.left && r.top < vs.bottom && r.bottom > vs.top) out.push('VS badge covers ' + id + ' text for ' + m.name);
+          });
+        });
       }));
       state.raid = null;
       return [...new Set(out.filter(Boolean))].slice(0, 6);

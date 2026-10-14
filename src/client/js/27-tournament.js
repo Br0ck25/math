@@ -195,6 +195,7 @@ function tourChampion(gems) {
   const bonus = tour.rewarded ? ECON.tournament.championGems : 0;
   if (bonus) { state.gems += bonus; state.tour.trophies += 1; }
   state.tour.wins += 1;
+  checkEarnedGear();
   saveState();
   updateStatsUI();
   soundSecretFound();

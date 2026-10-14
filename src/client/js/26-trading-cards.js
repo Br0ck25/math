@@ -25,7 +25,7 @@ function buddyCard(id) {
   return {
     name: d.name, levelText: 'Lv ' + d.level, icon: d.icon, element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
     stats: [['❤️', getPetMaxHp(id), 'HP'], ['⚔️', getPetAttack(id), 'Attack'], ['🏆', state.tour.trophies, 'Trophies']],
-    line: '⚡ ' + d.superMove, foot: heartsHtml(getBond(id)), sleepy: isSleepy(id),
+    line: '⚡ ' + d.superMove, foot: heartsHtml(getBond(id)), sleepy: isSleepy(id), stage: d.stage,
     gear: id === state.activePet ? activeGear() : { acc: null, armor: null }    // gear belongs to the active buddy
   };
 }
@@ -82,11 +82,15 @@ function drawCardFromDesc(cv, c) {
   let fs = 250;
   ctx.font = fs + 'px ' + EMOJI_FONT;
   while (ctx.measureText(c.icon).width > 400 && fs > 90) { fs -= 20; ctx.font = fs + 'px ' + EMOJI_FONT; }
+  drawForm(ctx, c.stage, c.element, W / 2, 335, fs, 'behind');
   drawGear(ctx, c.gear.acc, c.gear.armor, W / 2, 335, fs, 'behind');
   ctx.font = fs + 'px ' + EMOJI_FONT;
   ctx.globalAlpha = c.sleepy ? 0.55 : 1;
+  if (c.stage) { ctx.shadowColor = ec; ctx.shadowBlur = 22 + 14 * (c.stage - 1); }
   ctx.fillText(c.icon, W / 2, 335);
+  ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
+  drawForm(ctx, c.stage, c.element, W / 2, 335, fs, 'front');
   drawGear(ctx, c.gear.acc, c.gear.armor, W / 2, 335, fs, 'front');
   if (c.sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
   // type pill + stars

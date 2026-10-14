@@ -70,47 +70,40 @@
       <div class="weak-chip" id="weak-chip"></div>
 
       <div class="versus-row">
-        <div class="fighter">
-          <div class="fighter-icon-wrapper" id="fighter-icon-wrapper" onclick="openHub()" role="button" tabindex="0" aria-label="Your buddy: open care, trading card, tournament and duels" title="Tap your buddy: care, trading card, tournament">
-            <span class="fighter-icon" id="pet-fighter-icon">🐶</span>
-            <span class="mood-bubble" id="mood-bubble"></span>
-            <span class="gear-layer" id="pet-gear"></span>
+        <div class="fighter-card">
+          <div class="fighter-top">
+            <div class="fighter-icon-wrapper" id="fighter-icon-wrapper" onclick="openHub()" role="button" tabindex="0" aria-label="Your buddy: open care, trading card, tournament and duels" title="Tap your buddy: care, trading card, tournament">
+              <span class="fighter-icon" id="pet-fighter-icon">🐶</span>
+              <span class="mood-bubble" id="mood-bubble"></span>
+              <span class="gear-layer" id="pet-gear"></span>
+            </div>
+            <div class="fighter-info">
+              <div class="fighter-name" id="pet-fighter-name">Pup</div>
+              <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span></div>
+            </div>
           </div>
-          <div class="fighter-info">
-            <div class="fighter-name" id="pet-fighter-name">Pup</div>
-            <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span></div>
+          <div class="hp-line" title="Buddy HP">
+            <div class="hp-bar-bg"><div id="pet-hp-bar" class="hp-bar-fill hp-bar-pet"></div></div>
+            <span class="hp-num" id="pet-hp-text">HP 3/3</span>
           </div>
           <div class="battle-fx" id="pet-attack-fx">⚡</div>
         </div>
         <div class="vs-badge">VS</div>
-        <div class="fighter right">
-          <button class="fighter-icon boss-btn" id="monster-icon" onclick="openArenaBossCard()" aria-label="Boss card">🐲</button>
-          <div class="fighter-info">
-            <div class="fighter-name" id="monster-name">Fire Drake</div>
-            <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-pill">Lv <span id="monster-level">1</span></span></div>
+        <div class="fighter-card right">
+          <div class="fighter-top">
+            <div class="boss-box" id="boss-box">
+              <button class="fighter-icon boss-btn" id="monster-icon" onclick="openArenaBossCard()" aria-label="Boss card">🐲</button>
+            </div>
+            <div class="fighter-info">
+              <div class="fighter-name" id="monster-name">Fire Drake</div>
+              <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-pill">Lv <span id="monster-level">1</span></span></div>
+            </div>
+          </div>
+          <div class="hp-line" title="Boss HP">
+            <div class="hp-bar-bg"><div id="monster-hp-bar" class="hp-bar-fill hp-bar-monster"></div></div>
+            <span class="hp-num" id="monster-hp-text">HP 4/4</span>
           </div>
           <div class="battle-fx" id="monster-attack-fx">💥</div>
-        </div>
-      </div>
-
-      <div class="battle-bars-container">
-        <div>
-          <div class="hp-label-row">
-            <span style="color: #34d399;">Buddy HP</span>
-            <span id="pet-hp-text">HP: 3/3</span>
-          </div>
-          <div class="hp-bar-bg">
-            <div id="pet-hp-bar" class="hp-bar-fill hp-bar-pet"></div>
-          </div>
-        </div>
-        <div>
-          <div class="hp-label-row">
-            <span style="color: #f87171;">Boss HP</span>
-            <span id="monster-hp-text">HP: 4/4</span>
-          </div>
-          <div class="hp-bar-bg">
-            <div id="monster-hp-bar" class="hp-bar-fill hp-bar-monster"></div>
-          </div>
         </div>
       </div>
 

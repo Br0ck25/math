@@ -64,6 +64,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels);
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
+      checkEarnedGear();
       state.gems += gemBonus;
 
       // Pokémon-style: more XP for beating higher-level bosses

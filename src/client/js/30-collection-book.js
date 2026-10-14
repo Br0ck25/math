@@ -64,10 +64,10 @@ function bookBuddy(sp, lockedHint) {
   if (!owned) return bookCard({ locked: true, icon: sp.icon, name: '???', hint: lockedHint, hintColor: '#94a3b8', rarity: rar });
   const d = getPetById(sp.id);
   const bond = getBond(sp.id);
-  const extra = '<div class="forms-row">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">' + f.icon + '</span>'; }).join('') + '</div>' +
+  const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>' +
     '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
-  return bookCard({ icon: d.icon, name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
+  return bookCard({ icon: avatarHtml(d, 40), name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
 }
 
 function renderBook() {
@@ -134,14 +134,14 @@ function renderBook() {
       const own = state.unlockedArmor.indexOf(a.id) !== -1;
       if (bookMissingOnly && own) return;
       h += own ? bookCard({ icon: a.icon, name: a.name, hint: '+' + a.hp + ' HP', hintColor: '#7dd3fc' })
-               : bookCard({ locked: true, icon: a.icon, name: '???', hint: '💎 ' + a.cost, hintColor: '#f59e0b' });
+               : bookCard({ locked: true, icon: a.icon, name: a.earn ? '🔒 Secret' : '???', hint: gearLockText(a), hintColor: '#f59e0b' });
     });
     h += '</div><div class="mystery-section-title">Accessories (' + (state.unlockedAccessories.length - 1) + ' / ' + (accessoriesList.length - 1) + ')</div><div class="pet-grid">';
     accessoriesList.filter(function (a) { return a.id !== 'none'; }).forEach(function (a) {
       const own = state.unlockedAccessories.indexOf(a.id) !== -1;
       if (bookMissingOnly && own) return;
       h += own ? bookCard({ icon: a.icon, name: a.name, hint: 'Collected', hintColor: '#10b981' })
-               : bookCard({ locked: true, icon: a.icon, name: '???', hint: '💎 ' + a.cost, hintColor: '#f59e0b' });
+               : bookCard({ locked: true, icon: a.icon, name: a.earn ? '🔒 Secret' : '???', hint: gearLockText(a), hintColor: '#f59e0b' });
     });
     h += '</div>';
   }

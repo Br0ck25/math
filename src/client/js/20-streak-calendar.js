@@ -21,6 +21,7 @@ function calDayEvent() {
   sc.count += 1;
   sc.total += 1;
   sc.last = today;
+  checkEarnedGear();
   toast('🔥 Streak day ' + sc.count + '!' + (ECON.calendar.chests[sc.count] ? ' A chest is ready!' : ''));
   saveState();
   updateCalBadge();

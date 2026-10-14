@@ -39,29 +39,41 @@ const banditEvoSvg = `
 // Store Companions: All unique names
 const storePets = [
   { id: 'dog', name: 'Pup', icon: '🐶', cost: 0, element: 'nature', superMove: 'Bark Strike', evoLevel: 30, evoName: 'Thunder Wolf', evoIcon: '🐺' },
-  { id: 'fox', name: 'Sparky', icon: '🦊', cost: 52, element: 'fire', superMove: 'Flame Tail', evoLevel: 40, evoName: 'Blaze Fox', evoIcon: '🔥' },
-  { id: 'bunny', name: 'Hops', icon: '🐰', cost: 75, element: 'magic', superMove: 'Carrot Cannon', evoLevel: 40, evoName: 'Moon Rabbit', evoIcon: '🌙' },
-  { id: 'otter', name: 'Pip', icon: '🦦', cost: 104, element: 'water', superMove: 'River Splash', evoLevel: 40, evoName: 'Frost Otter', evoIcon: '🌊' },
-  { id: 'hedgehog', name: 'Spike', icon: '🦔', cost: 145, element: 'nature', superMove: 'Needle Barrage', evoLevel: 45, evoName: 'Thorn King', evoIcon: '🌵' },
+  { id: 'fox', name: 'Sparky', icon: '🦊', cost: 52, element: 'fire', superMove: 'Flame Tail', evoLevel: 40, evoName: 'Blaze Fox', evoIcon: '🦊' },
+  { id: 'bunny', name: 'Hops', icon: '🐰', cost: 75, element: 'magic', superMove: 'Carrot Cannon', evoLevel: 40, evoName: 'Moon Rabbit', evoIcon: '🐰' },
+  { id: 'otter', name: 'Pip', icon: '🦦', cost: 104, element: 'water', superMove: 'River Splash', evoLevel: 40, evoName: 'Frost Otter', evoIcon: '🦦' },
+  { id: 'hedgehog', name: 'Spike', icon: '🦔', cost: 145, element: 'nature', superMove: 'Needle Barrage', evoLevel: 45, evoName: 'Thorn King', evoIcon: '🦔' },
   { id: 'ignis', name: 'Ignis', icon: '🐲', cost: 182, element: 'fire', superMove: 'Inferno Blast', evoLevel: 50, evoName: 'Ancient Drake', evoIcon: '🐉' },
-  { id: 'penguin', name: 'Pebble', icon: '🐧', cost: 220, element: 'water', superMove: 'Blizzard Slide', evoLevel: 50, evoName: 'Emperor Penguin', evoIcon: '👑' },
-  { id: 'bear', name: 'Barnaby', icon: '🐻', cost: 260, element: 'nature', superMove: 'Mega Maul', evoLevel: 50, evoName: 'Grizzly King', evoIcon: '👑' },
-  { id: 'olaf', name: 'Olaf', icon: '⛄', cost: 290, element: 'water', superMove: 'Warm Hug Avalanche', evoLevel: 50, evoName: 'Frost Olaf', evoIcon: '❄️' },
-  { id: 'hedwig', name: 'Hedwig', icon: '🦉', cost: 320, element: 'magic', superMove: 'Letter Dive Strike', evoLevel: 50, evoName: 'Royal Hedwig', evoIcon: '⚡' },
-  { id: 'dolphin', name: 'Splash', icon: '🐬', cost: 345, element: 'water', superMove: 'Hydro Jet', evoLevel: 50, evoName: 'Tidal Dolphin', evoIcon: '🌊' },
-  { id: 'pascal', name: 'Pascal', icon: '🦎', cost: 380, element: 'nature', superMove: 'Camo Whip Strike', evoLevel: 55, evoName: 'Rainbow Chameleon', evoIcon: '🌈' },
-  { id: 'byte', name: 'Byte', icon: '🤖', cost: 410, element: 'electric', superMove: 'Overclock Shock', evoLevel: 60, evoName: 'Cyber Mecha', evoIcon: '🦾' },
+  { id: 'penguin', name: 'Pebble', icon: '🐧', cost: 220, element: 'water', superMove: 'Blizzard Slide', evoLevel: 50, evoName: 'Emperor Penguin', evoIcon: '🐧' },
+  { id: 'bear', name: 'Barnaby', icon: '🐻', cost: 260, element: 'nature', superMove: 'Mega Maul', evoLevel: 50, evoName: 'Grizzly King', evoIcon: '🐻' },
+  { id: 'olaf', name: 'Olaf', icon: '⛄', cost: 290, element: 'water', superMove: 'Warm Hug Avalanche', evoLevel: 50, evoName: 'Frost Olaf', evoIcon: '⛄' },
+  { id: 'hedwig', name: 'Hedwig', icon: '🦉', cost: 320, element: 'magic', superMove: 'Letter Dive Strike', evoLevel: 50, evoName: 'Royal Hedwig', evoIcon: '🦉' },
+  { id: 'dolphin', name: 'Splash', icon: '🐬', cost: 345, element: 'water', superMove: 'Hydro Jet', evoLevel: 50, evoName: 'Tidal Dolphin', evoIcon: '🐬' },
+  { id: 'pascal', name: 'Pascal', icon: '🦎', cost: 380, element: 'nature', superMove: 'Camo Whip Strike', evoLevel: 55, evoName: 'Rainbow Chameleon', evoIcon: '🦎' },
+  { id: 'byte', name: 'Byte', icon: '🤖', cost: 410, element: 'electric', superMove: 'Overclock Shock', evoLevel: 60, evoName: 'Cyber Mecha', evoIcon: '🤖' },
   { id: 'crookshanks', name: 'Crookshanks', icon: '🐱', cost: 440, element: 'magic', superMove: 'Kneazle Pounce', evoLevel: 60, evoName: 'Shadow Kneazle', evoIcon: '🐈' },
-  { id: 'rhino', name: 'Tank', icon: '🦏', cost: 470, element: 'electric', superMove: 'Volt Charge', evoLevel: 65, evoName: 'Thunder Rhino', evoIcon: '⚡' },
+  { id: 'rhino', name: 'Tank', icon: '🦏', cost: 470, element: 'electric', superMove: 'Volt Charge', evoLevel: 65, evoName: 'Thunder Rhino', evoIcon: '🦏' },
   { id: 'tiger', name: 'Blaze', icon: '🐯', cost: 510, element: 'fire', superMove: 'Tiger Claw', evoLevel: 60, evoName: 'Saber Tiger', evoIcon: '🐅' },
   { id: 'panther', name: 'Nyx', icon: '🐆', cost: 560, element: 'dark', superMove: 'Shadow Pounce', evoLevel: 70, evoName: 'Night Panther', evoIcon: '🐈‍⬛' },
   { id: 'bat', name: 'Echo', icon: '🦇', cost: 610, element: 'dark', superMove: 'Sonic Shriek', evoLevel: 70, evoName: 'Vampire Lord', evoIcon: '🧛' },
-  { id: 'griffin', name: 'Zeus', icon: '🦅', cost: 690, element: 'electric', superMove: 'Thunderstorm', evoLevel: 80, evoName: 'Sky King', evoIcon: '⚡' },
+  { id: 'griffin', name: 'Zeus', icon: '🦅', cost: 690, element: 'electric', superMove: 'Thunderstorm', evoLevel: 80, evoName: 'Sky King', evoIcon: '🦅' },
   { id: 'cosmo', name: 'Cosmo', icon: '⭐', cost: 780, element: 'magic', superMove: 'Supernova Wave', evoLevel: 75, evoName: 'Nova Astral', evoIcon: '🌟' },
-  { id: 'lion', name: 'Aslan', icon: '🦁', cost: 870, element: 'nature', superMove: 'Solar Roar', evoLevel: 80, evoName: 'Golden Monarch', evoIcon: '👑' },
-  { id: 'phoenix', name: 'Solaris', icon: '🦅', cost: 975, element: 'fire', superMove: 'Solar Rebirth', evoLevel: 80, evoName: 'Sun Emperor', evoIcon: '☀️' },
-  { id: 'frostfang', name: 'Frostfang', icon: '🐉', cost: 1105, element: 'water', superMove: 'Glacial Frost', evoLevel: 85, evoName: 'Ice Dragon', evoIcon: '❄️' },
-  { id: 'pegasus', name: 'Aero', icon: '🦄', cost: 1450, element: 'magic', superMove: 'Starlight Gallop', evoLevel: 90, evoName: 'Celestial Pegasus', evoIcon: '✨' },
+  { id: 'lion', name: 'Aslan', icon: '🦁', cost: 870, element: 'nature', superMove: 'Solar Roar', evoLevel: 80, evoName: 'Golden Monarch', evoIcon: '🦁' },
+  { id: 'phoenix', name: 'Solaris', icon: '🦅', cost: 975, element: 'fire', superMove: 'Solar Rebirth', evoLevel: 80, evoName: 'Sun Emperor', evoIcon: '🦅' },
+  { id: 'frostfang', name: 'Frostfang', icon: '🐉', cost: 1105, element: 'water', superMove: 'Glacial Frost', evoLevel: 85, evoName: 'Ice Dragon', evoIcon: '🐉' },
+  { id: 'pegasus', name: 'Aero', icon: '🦄', cost: 1450, element: 'magic', superMove: 'Starlight Gallop', evoLevel: 90, evoName: 'Celestial Pegasus', evoIcon: '🦄' },
+  { id: 'panda', name: 'Mochi', icon: '🐼', cost: 1600, element: 'nature', superMove: 'Bamboo Crash', evoLevel: 85, evoName: 'Bamboo Sage', evoIcon: '🐼' },
+  { id: 'koala', name: 'Dreamy', icon: '🐨', cost: 1700, element: 'magic', superMove: 'Lullaby Wave', evoLevel: 85, evoName: 'Dream Weaver', evoIcon: '🐨' },
+  { id: 'monkey', name: 'Banjo', icon: '🐵', cost: 1800, element: 'electric', superMove: 'Vine Swing Shock', evoLevel: 85, evoName: 'Storm Ape', evoIcon: '🦧' },
+  { id: 'turtle', name: 'Shelldon', icon: '🐢', cost: 1900, element: 'water', superMove: 'Shell Fortress', evoLevel: 90, evoName: 'Tidal Titan', evoIcon: '🐢' },
+  { id: 'octopus', name: 'Octavia', icon: '🐙', cost: 2000, element: 'water', superMove: 'Eight Arm Whirl', evoLevel: 90, evoName: 'Abyssal Octavia', evoIcon: '🦑' },
+  { id: 'wolf', name: 'Howl', icon: '🐺', cost: 2100, element: 'dark', superMove: 'Moonlit Howl', evoLevel: 90, evoName: 'Moon Fenrir', evoIcon: '🐺' },
+  { id: 'zephyr', name: 'Zephyr', icon: '🐉', cost: 2250, element: 'electric', superMove: 'Thunder Wyrm Dive', evoLevel: 95, evoName: 'Storm Wyrm', evoIcon: '🐲' },
+  { id: 'shark', name: 'Finn', icon: '🦈', cost: 2400, element: 'water', superMove: 'Deep Sea Chomp', evoLevel: 95, evoName: 'Leviathan Jaws', evoIcon: '🦈' },
+  { id: 'raptor', name: 'Raptor', icon: '🦅', cost: 2550, element: 'nature', superMove: 'Cliffside Dive', evoLevel: 95, evoName: 'Apex Raptor', evoIcon: '🦅' },
+  { id: 'scorpion', name: 'Dusty', icon: '🦂', cost: 2700, element: 'dark', superMove: 'Venom Sting', evoLevel: 95, evoName: 'Venom Emperor', evoIcon: '🦂' },
+  { id: 'butterfly', name: 'Aurora', icon: '🦋', cost: 2850, element: 'magic', superMove: 'Aurora Wing Storm', evoLevel: 100, evoName: 'Aurora Monarch', evoIcon: '🦋' },
+  { id: 'gorilla', name: 'Titan', icon: '🦍', cost: 3000, element: 'nature', superMove: 'Titan Slam', evoLevel: 100, evoName: 'Titan Alpha', evoIcon: '🦍' },
   { id: 'bandit', name: 'Bandit', icon: banditSvg, cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: banditEvoSvg, requiresAllStorePets: true }
 ];
 
@@ -149,7 +161,18 @@ const accessoriesList = [
   { id: 'cloudrider', name: 'Cloud Rider',    icon: '☁️', cost: 310, slot: 'aura', renderIcon: '☁️' },
   { id: 'supernova',  name: 'Super Nova',     icon: '🌠', cost: 350, slot: 'aura', renderIcon: '🌠' },
   { id: 'fireworks',  name: 'Fireworks',      icon: '🎆', cost: 380, slot: 'aura', renderIcon: '🎆' },
-  { id: 'orbit',      name: 'Orbit Ring',     icon: '🪐', cost: 420, slot: 'aura', renderIcon: '🪐' }
+  { id: 'orbit',      name: 'Orbit Ring',     icon: '🪐', cost: 420, slot: 'aura', renderIcon: '🪐' },
+  // ---- v4 additions: 7 to buy, 3 earned (cost 0 + `earn`: awarded for achievements, see 08c-earned-gear.js) ----
+  { id: 'donut',      name: 'Donut Hat',        icon: '🍩', cost: 64,  slot: 'head', renderIcon: '🍩' },
+  { id: 'dramamask',  name: 'Drama Mask',       icon: '🎭', cost: 92,  slot: 'face', renderIcon: '🎭' },
+  { id: 'disguise',   name: 'Disguise Kit',     icon: '🥸', cost: 68,  slot: 'face', renderIcon: '🥸' },
+  { id: 'goldcoin',   name: 'Gold Coin Charm',  icon: '🪙', cost: 118, slot: 'neck', renderIcon: '🪙' },
+  { id: 'skateboard', name: 'Skateboard',       icon: '🛹', cost: 128, slot: 'back', renderIcon: '🛹' },
+  { id: 'sax',        name: 'Jazz Sax',         icon: '🎷', cost: 118, slot: 'side', renderIcon: '🎷' },
+  { id: 'comet',      name: 'Comet Trail',      icon: '☄️', cost: 340, slot: 'aura', renderIcon: '☄️' },
+  { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
+  { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'cups', n: 1, text: 'Win a tournament cup' } },
+  { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } }
 ];
 
 // Body armor: bonus max HP for the active buddy (tiers get pricier; higher tiers glow)
@@ -165,7 +188,10 @@ const armorList = [
   { id: 'dragon',    name: 'Dragon Scale',    icon: '🐉', cost: 560,  hp: 3, tier: 2, renderIcon: '🐉' },
   { id: 'crystal',   name: 'Crystal Armor',   icon: '💠', cost: 750,  hp: 4, tier: 3, renderIcon: '💠' },
   { id: 'mythril',   name: 'Mythril Aegis',   icon: '🔷', cost: 950,  hp: 4, tier: 3, renderIcon: '🔷' },
-  { id: 'celestial', name: 'Celestial Plate', icon: '✨', cost: 1300, hp: 5, tier: 3, renderIcon: '✨' }
+  { id: 'celestial', name: 'Celestial Plate', icon: '✨', cost: 1300, hp: 5, tier: 3, renderIcon: '✨' },
+  { id: 'sailor',    name: 'Sailor Coat',     icon: '⚓', cost: 180,  hp: 1, tier: 1, renderIcon: '⚓' },
+  { id: 'spidersilk',name: 'Spider Silk',     icon: '🕸️', cost: 400,  hp: 3, tier: 2, renderIcon: '🕸️' },
+  { id: 'centurion', name: 'Centurion Plate', icon: '🔰', cost: 0,    hp: 5, tier: 3, renderIcon: '🔰', earn: { key: 'bosses', n: 100, text: 'Defeat 100 bosses' } }
 ];
 accessoriesList.sort(function (a, b) { return a.cost - b.cost; });
 function getArmor(id) { return armorList.find(function (a) { return a.id === id; }) || armorList[0]; }
@@ -194,7 +220,13 @@ const mythicSpecies = [
   { id: 'mythic_barbie',     name: 'Barbie',       icon: '💖',  elem: 'fire',     superMove: 'Dreamhouse Sparkle', mythic: true },
   { id: 'mythic_tinkerbell', name: 'Tinkerbell',   icon: '🧚',  elem: 'magic', superMove: 'Pixie Dust Nova',    mythic: true },
   { id: 'mythic_mulan',      name: 'Mulan',        icon: '🗡️',  elem: 'fire',     superMove: 'Imperial Dragon Slash',mythic: true },
-  { id: 'mythic_stitch',     name: 'Stitch',       icon: '💙',  elem: 'electric', superMove: 'Experiment 626 Havoc',mythic: true }
+  { id: 'mythic_stitch',     name: 'Stitch',       icon: '💙',  elem: 'electric', superMove: 'Experiment 626 Havoc',mythic: true },
+  { id: 'mythic_arthur',      name: 'Arthur',       icon: '🏰',  elem: 'magic',    superMove: 'Excalibur Rising',   mythic: true },
+  { id: 'mythic_robin',      name: 'Robin',        icon: '🏹',  elem: 'nature',   superMove: 'Merry Arrow Storm',  mythic: true },
+  { id: 'mythic_alice',      name: 'Alice',        icon: '🫖',  elem: 'magic',    superMove: 'Rabbit Hole Whirl',  mythic: true },
+  { id: 'mythic_sinbad',     name: 'Sinbad',       icon: '⛵',  elem: 'water',    superMove: 'Seven Voyages Wave', mythic: true },
+  { id: 'mythic_aladdin',    name: 'Aladdin',      icon: '🧞',  elem: 'magic',    superMove: 'Lamp Wish Blast',    mythic: true },
+  { id: 'mythic_dorothy',    name: 'Dorothy',      icon: '👠',  elem: 'electric', superMove: 'Yellow Brick Cyclone',mythic: true }
 ];
 
 const mythicCompanions = mythicSpecies.map(m => ({ ...m, element: m.elem, secret: true }));
@@ -365,7 +397,37 @@ const secretSpecies = [
   { name: 'Scorpio', icon: '🦂', elem: 'dark', superMove: 'Stinger Guillotine' },
   { name: 'Carnotaur', icon: '🦖', elem: 'fire', superMove: 'Horn Rampage' },
   { name: 'Diplodocus', icon: '🦕', elem: 'nature', superMove: 'Tail Whip Slam' },
-  { name: 'Alicorn', icon: '🦄', elem: 'magic', superMove: 'Holy Thunder' }
+  { name: 'Alicorn', icon: '🦄', elem: 'magic', superMove: 'Holy Thunder' },
+  { name: 'Hammy', icon: '🐹', elem: 'nature', superMove: 'Cheek Stuffer Rush' },
+  { name: 'Nibbles', icon: '🐭', elem: 'electric', superMove: 'Cheese Zap' },
+  { name: 'Daisy', icon: '🐮', elem: 'nature', superMove: 'Meadow Moo-ve' },
+  { name: 'Truffle', icon: '🐷', elem: 'nature', superMove: 'Mud Slide Slam' },
+  { name: 'Fleece', icon: '🐑', elem: 'magic', superMove: 'Dream Wool Wave' },
+  { name: 'Billy', icon: '🐐', elem: 'nature', superMove: 'Mountain Ram Leap' },
+  { name: 'Dune', icon: '🐪', elem: 'fire', superMove: 'Desert Mirage' },
+  { name: 'Antler', icon: '🦌', elem: 'nature', superMove: 'Royal Stag Charge' },
+  { name: 'Gallop', icon: '🐎', elem: 'electric', superMove: 'Lightning Trot' },
+  { name: 'Whisker', icon: '🐈', elem: 'magic', superMove: 'Nine Lives Pounce' },
+  { name: 'Fifi', icon: '🐩', elem: 'magic', superMove: 'Show Dog Sparkle' },
+  { name: 'Olive', icon: '🕊️', elem: 'magic', superMove: 'Peace Wing Blessing' },
+  { name: 'Dodo', icon: '🦤', elem: 'nature', superMove: 'Last Stand Waddle' },
+  { name: 'Fluff', icon: '🐥', elem: 'fire', superMove: 'Fuzzy Flare' },
+  { name: 'Scarab', icon: '🪲', elem: 'dark', superMove: 'Pharaoh Shell Smash' },
+  { name: 'Wiggle', icon: '🪱', elem: 'nature', superMove: 'Tunnel Burst' },
+  { name: 'Conch', icon: '🐚', elem: 'water', superMove: 'Ocean Echo Call' },
+  { name: 'Pearl', icon: '🦪', elem: 'water', superMove: 'Shell Shine' },
+  { name: 'Orang', icon: '🦧', elem: 'nature', superMove: 'Jungle Swing' },
+  { name: 'Rocky', icon: '🦝', elem: 'dark', superMove: 'Mask Bandit Dash' },
+  { name: 'Taurus', icon: '🐂', elem: 'fire', superMove: 'Red Cape Charge' },
+  { name: 'Buffalo', icon: '🐃', elem: 'nature', superMove: 'Prairie Stampede' },
+  { name: 'Tweet', icon: '🐦', elem: 'electric', superMove: 'Song Shock' },
+  { name: 'Zing', icon: '🪰', elem: 'electric', superMove: 'Buzz Bomb' },
+  { name: 'Plumette', icon: '🪶', elem: 'magic', superMove: 'Feather Fall Spell' },
+  { name: 'Cupcake', icon: '🧁', elem: 'magic', superMove: 'Frosting Burst' },
+  { name: 'Melon', icon: '🍉', elem: 'nature', superMove: 'Seed Spitter' },
+  { name: 'Elara', icon: '🧝', elem: 'magic', superMove: 'Moonlit Archery' },
+  { name: 'Merrow', icon: '🧜', elem: 'water', superMove: 'Tidal Song' },
+  { name: 'Scout', icon: '🐕', elem: 'nature', superMove: 'Fetch Fury' }
 ];
 
 const secretCompanions = secretSpecies.map((s, idx) => ({
