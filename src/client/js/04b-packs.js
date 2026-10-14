@@ -20,7 +20,7 @@ const PACKS = [
   { id: 'elements', name: 'Elements Pack', icon: '⚡', icons: ['⚡', '🔥', '🌪️', '🌈', '☄️', '☀️', '🌙'] },
   { id: 'space', name: 'Space & Tech Pack', icon: '🚀', icons: ['🪐', '⭐', '🚀', '🛸', '👽', '🤖'], ids: ['cosmo', 'byte', 'secret_janie'] },
   { id: 'night', name: 'Night Pack', icon: '🦇', icons: ['🦇', '🎃', '👻'], ids: ['bat'] },
-  { id: 'fantasy', name: 'Fantasy Pack', icon: '🐲', icons: ['🐲', '🐉', '🦄', '🧝'], ids: ['phoenix', 'griffin'] },
+  { id: 'fantasy', name: 'Fantasy Pack', icon: '🐲', icons: ['🐲', '🐉', '🦄', '🧝'], ids: ['phoenix', 'griffin', 'secret_papaw'] },
   { id: 'treasure', name: 'Treasure & Knights Pack', icon: '💎', icons: ['💎', '👑', '🛡️', '⚔️', '🔮', '🧿'], ids: ['bandit'] },
   { id: 'wizard', name: 'Wizard School Pack', icon: '🧙', ids: ['hedwig', 'crookshanks', 'mythic_harry', 'mythic_hermione', 'mythic_ron', 'mythic_dumbledore', 'mythic_dobby', 'mythic_fawkes', 'mythic_buckbeak', 'mythic_niffler', 'mythic_luna', 'mythic_sirius'] },
   { id: 'princess', name: 'Fairytale Princess Pack', icon: '👸', ids: ['olaf', 'pascal', 'mythic_elsa', 'mythic_anna', 'mythic_rapunzel', 'mythic_moana', 'mythic_mirabel', 'mythic_ariel', 'mythic_belle', 'mythic_cinderella', 'mythic_barbie', 'mythic_tinkerbell', 'mythic_mulan', 'mythic_stitch'] },
@@ -36,8 +36,8 @@ const PACKS = [
 const PACK_BY_ID = {};
 PACKS.forEach(function (p) { PACK_BY_ID[p.id] = p; });
 
-// Every buddy in the game, in one list: store, mythic, the cosmic one, then secret creatures.
-function allBuddies() { return storePets.concat(mythicCompanions, [janiePet], secretCompanions); }
+// Every buddy in the game, in one list: store, mythic, the ultra-rare trio, then secret creatures.
+function allBuddies() { return storePets.concat(mythicCompanions, ultraPets, secretCompanions); }
 
 let packCache = null;
 function packOf(sp) {

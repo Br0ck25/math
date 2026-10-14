@@ -57,7 +57,7 @@ test('the book groups buddies by pack with found / total counts, keeping the sam
     return { sections: titles.length, cards, allCardsHaveBadge: cards === badges, pets, woods, bluey, first: titles[0] };
   });
   assert.equal(r.sections, 27);
-  assert.equal(r.cards, 289);
+  assert.equal(r.cards, 291);
   assert.equal(r.allCardsHaveBadge, true);
   assert.match(r.pets, /\(1 \/ 13\)/);
   assert.match(r.woods, /\(1 \/ 22\)/);

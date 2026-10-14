@@ -48,9 +48,9 @@ function updateBattleUI() {
   monsterElemBadge.innerText = boss.element;
   monsterElemBadge.className = `element-pill elem-${boss.element}`;
 
-  const rel = getTypeRelation(pet.element, boss.element);
+  const rel = getTypeRelation(battleElement(pet), boss.element);
   const hint = document.getElementById('type-match-hint');
-  if (pet.element === 'shadow') {
+  if (battleElement(pet) === 'shadow') {
     hint.innerText = '🌟 Shadow: x1.25 damage';
     hint.style.color = '#d946ef';
   } else if (rel === 1) {

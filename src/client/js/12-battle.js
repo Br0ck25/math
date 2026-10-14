@@ -55,8 +55,8 @@ function triggerMonsterDamage(extraDamage, weakHit) {
     soundHitSlash();
 
     let damage = getPetAttack(pet.id) + extraDamage;
-    const rel = getTypeRelation(pet.element, boss.element);
-    if (pet.element === 'shadow') {
+    const rel = getTypeRelation(battleElement(pet), boss.element);
+    if (battleElement(pet) === 'shadow') {
       damage = Math.ceil(damage * 1.25);
     } else if (rel === 1) {
       damage = Math.ceil(damage * 1.5);
@@ -170,7 +170,7 @@ function triggerBuddyDamage() {
     screenShake(false);
 
     let incoming = boss.atk;
-    const rel = getTypeRelation(boss.element, pet.element);
+    const rel = getTypeRelation(boss.element, battleElement(pet));
     if (rel === 1) incoming += 1;
     else if (rel === -1) incoming = Math.max(1, incoming - 1);
     // no single hit may take more than 40% of the buddy's max HP (a fair fight, not a one-shot)

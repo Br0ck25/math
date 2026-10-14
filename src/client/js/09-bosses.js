@@ -23,6 +23,8 @@ const TYPE_STRONG = {
   dark: ['nature'],
   magic: ['dark', 'fire']
 };
+// The element a fighter battles with: ultra-rare buddies always use Shadow power, whatever element badge they show.
+function battleElement(p) { return p.ultra ? 'shadow' : p.element; }
 function getTypeRelation(att, def) {
   if (att === 'shadow' || def === 'shadow') return 0;
   if ((TYPE_STRONG[att] || []).indexOf(def) !== -1) return 1;

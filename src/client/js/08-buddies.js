@@ -26,12 +26,13 @@ function secretForms(p) {
     { name: 'Cosmic ' + p.name, icon: p.icon, minLevel: 65 }
   ];
 }
-janiePet.forms = secretForms(janiePet);
+ultraPets.forEach(function (p) { p.forms = secretForms(p); });
 mythicCompanions.forEach(function (p) { p.forms = secretForms(p); });
 secretCompanions.forEach(function (p) { p.forms = secretForms(p); });
 
 function getSpecies(id) {
-  if (id === 'secret_janie') return janiePet;
+  const ultra = ultraPets.find(function (p) { return p.id === id; });
+  if (ultra) return ultra;
   return storePets.find(function (p) { return p.id === id; }) ||
          mythicCompanions.find(function (p) { return p.id === id; }) ||
          secretCompanions.find(function (p) { return p.id === id; }) || null;
@@ -62,7 +63,8 @@ function getPetById(id) {
     isEvolved: stage > 0,
     secret: !!sp.secret,
     mythic: !!sp.mythic,
-    isJanie: !!sp.isJanie
+    isJanie: !!sp.isJanie,
+    ultra: !!sp.ultra
   };
 }
 function getActivePetDisplay() { return getPetById(state.activePet); }

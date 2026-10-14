@@ -221,21 +221,24 @@ function renderSecretPets() {
     });
   }
 
-  // Janie
-  const janieContainer = document.getElementById('janie-pet-grid');
-  janieContainer.innerHTML = '';
-  const janieFound = state.unlockedSecrets.indexOf('secret_janie') !== -1;
-  document.getElementById('janie-found-count').innerText = janieFound ? 1 : 0;
-  if (!janieFound) {
-    janieContainer.innerHTML = '<div class="empty-note">Janie has not been detected yet. Keep exploring flawless boss runs!</div>';
+  // The ultra-rare trio
+  const ultraContainer = document.getElementById('ultra-pet-grid');
+  ultraContainer.innerHTML = '';
+  const ultraFound = ultraPets.filter(function (u) { return state.unlockedSecrets.indexOf(u.id) !== -1; });
+  document.getElementById('ultra-found-count').innerText = ultraFound.length;
+  document.getElementById('ultra-total-count').innerText = ultraPets.length;
+  if (!ultraFound.length) {
+    ultraContainer.innerHTML = '<div class="empty-note">Janie, Amber and Papaw have not been detected yet. Keep exploring flawless boss runs!</div>';
   } else {
-    janieContainer.appendChild(makePetCard(janiePet, { owned: true, accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0', onclick: function () { equipPet('secret_janie'); } }));
+    ultraFound.forEach(function (u) {
+      ultraContainer.appendChild(makePetCard(u, { owned: true, accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0', onclick: function () { equipPet(u.id); } }));
+    });
   }
 
   // Regular secrets
   const container = document.getElementById('secret-pet-grid');
   container.innerHTML = '';
-  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && id.indexOf('secret_janie') !== 0; });
+  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.some(function (u) { return u.id === id; }); });
   document.getElementById('secret-found-count').innerText = regular.length;
   if (regular.length === 0) {
     container.innerHTML = '<div class="empty-note">Defeat bosses in battle to discover rare secret creatures!</div>';

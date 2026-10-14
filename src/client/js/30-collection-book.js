@@ -23,7 +23,7 @@ function toggleBookFilter() { soundClick(); bookMissingOnly = !bookMissingOnly; 
 function bookOpenBuddy(id) { closeBook(); openHub(); hubPet = id; renderHub(); }
 
 function bookCounts() {
-  const buddyTotal = storePets.length + mythicCompanions.length + 1 + secretCompanions.length;
+  const buddyTotal = allBuddies().length;
   const buddyFound = getOwnedIds().length;
   const bossFound = Object.keys(state.bossBook).filter(function (k) { return monstersList[k]; }).length;
   const gearTotal = (accessoriesList.length - 1) + (armorList.length - 1);
@@ -109,7 +109,7 @@ function renderBook() {
     };
     // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
     const tierHint = function (sp) {
-      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.isJanie ? 'Rarest of all...' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.ultra ? 'Rarest of all...' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
     };
     buddyPacks().forEach(function (g) { h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint); });
   } else if (bookTab === 'boss') {

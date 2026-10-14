@@ -264,7 +264,9 @@ const mythicSpecies = [
 
 const mythicCompanions = mythicSpecies.map(m => ({ ...m, element: m.elem, secret: true }));
 
-// Ultra-Rare Cosmic Alien Janie (Lowest Drop Rate: 0.5%)
+// The ultra-rare trio (lowest drop rate in the game: 0.5% each). All three fight with Shadow power whatever their element badge
+// says (x1.25 damage, no type weaknesses; see battleElement), so they are exactly as strong as each other.
+// `snack` is the favorite food shown in Buddy care; `lore` is the line on the discovery window.
 const janiePet = {
   id: 'secret_janie',
   name: 'Janie',
@@ -272,8 +274,34 @@ const janiePet = {
   element: 'shadow',
   superMove: 'Cosmic Abduction',
   secret: true,
-  isJanie: true
+  isJanie: true,
+  ultra: true,
+  snack: { icon: '🍞', name: 'Hawaiian rolls' },
+  lore: '👽 The Rarest Buddy in the Universe!'
 };
+const amberPet = {
+  id: 'secret_amber',
+  name: 'Amber',
+  icon: '🦥',
+  element: 'nature',
+  superMove: 'Slow-Mo Slam',
+  secret: true,
+  ultra: true,
+  snack: { icon: '🍟', name: 'air fried potatoes' },
+  lore: '🦥 So slow, so strong! Never rushed, never beaten.'
+};
+const papawPet = {
+  id: 'secret_papaw',
+  name: 'Papaw',
+  icon: '🧘',
+  element: 'magic',
+  superMove: 'Inner Peace Blast',
+  secret: true,
+  ultra: true,
+  snack: { icon: '🍔', name: 'hamburgers' },
+  lore: '🧘 Calm, wise and unstoppable.'
+};
+const ultraPets = [janiePet, amberPet, papawPet];
 
 // Completely Unique Secret Companions
 const secretSpecies = [
