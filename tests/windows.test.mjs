@@ -102,7 +102,7 @@ test('with wide iPhone letters, windows stay inside the screen (book tabs too) a
       state.unlockedPets = ['dog', 'fox'];
       ['shop-modal', 'settings-modal', 'book-modal', 'parent-modal', 'hub-modal'].forEach((id) => {
         window[open[id]]();
-        if (id === 'book-modal') ['bosses', 'gear', 'buddies'].forEach((t) => { if (window.setBookTab) window.setBookTab(t); });
+        if (id === 'book-modal') ['boss', 'gear', 'buddy'].forEach((t) => { if (window.setBookTab) window.setBookTab(t); });
         const m = document.getElementById(id), b = m.querySelector('.modal-content').getBoundingClientRect(), x = m.querySelector('.modal-x').getBoundingClientRect();
         if (b.left < -0.5 || b.right > w + 0.5) o.push(w + 'x' + h + ' ' + id + ' box ' + Math.round(b.left) + '..' + Math.round(b.right));
         if (x.right > w + 0.5 || x.left < 0) o.push(w + 'x' + h + ' ' + id + ' ✕ off screen');
