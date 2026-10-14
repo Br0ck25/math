@@ -1,0 +1,302 @@
+// =====================================================================
+//  BATTLE
+// =====================================================================
+function triggerMonsterDamage(extraDamage, weakHit) {
+  extraDamage = extraDamage || 0;
+  const petIconWrapper = document.getElementById('fighter-icon-wrapper');
+  const monsterIcon = document.getElementById('monster-icon');
+  const petFx = document.getElementById('pet-attack-fx');
+  const pet = getActivePetDisplay();
+  const boss = getBossInfo();
+
+  petIconWrapper.classList.remove('tackle-right');
+  void petIconWrapper.offsetWidth;
+  petIconWrapper.classList.add('tackle-right');
+  soundTackle();
+
+  setTimeout(function () {
+    petFx.classList.remove('slash-right');
+    void petFx.offsetWidth;
+    petFx.classList.add('slash-right');
+  }, 100);
+
+  setTimeout(function () {
+    monsterIcon.classList.remove('hurt-flash');
+    void monsterIcon.offsetWidth;
+    monsterIcon.classList.add('hurt-flash');
+    soundHitSlash();
+
+    let damage = getPetAttack(pet.id) + extraDamage;
+    const rel = getTypeRelation(pet.element, boss.element);
+    if (pet.element === 'shadow') {
+      damage = Math.ceil(damage * 1.25);
+    } else if (rel === 1) {
+      damage = Math.ceil(damage * 1.5);
+      showPopup('SUPER EFFECTIVE! 💥');
+    } else if (rel === -1) {
+      damage = Math.max(1, Math.floor(damage * 0.5));
+      showPopup('NOT VERY EFFECTIVE... 💧');
+    }
+
+    if (weakHit) {
+      damage = Math.max(damage + 1, Math.ceil(damage * 1.5));
+      showPopup('🎯 WEAK POINT! 💥');
+    }
+    monsterCurrentHp -= damage;
+
+    if (monsterCurrentHp <= 0 && state.raid && state.raid.phase < state.raid.total - 1) {
+      state.raid.phase += 1;
+      monsterCurrentHp = getBossMaxHp();
+      soundSuperMove();
+      launchConfetti();
+      showPopup('⚠️ PHASE ' + (state.raid.phase + 1) + '!');
+      toast('👑 The raid boss changes! Find its new weak point!');
+      updateStatsUI();
+      saveState();
+    } else if (monsterCurrentHp <= 0) {
+      soundMonsterDefeated();
+      launchConfetti();
+      state.monstersDefeated += 1;
+      questEvent('boss');
+      if (bossMistakes === 0) questEvent('flawless');
+      markBossWin(currentMonsterIndex, boss.form);
+      buddyReact('win');
+      let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels);
+      const wasRaid = state.raid ? state.raid.chapter : -1;
+      if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
+      state.gems += gemBonus;
+
+      // Pokémon-style: more XP for beating higher-level bosses
+      const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
+      awardBuddyXp(Math.round(20 + boss.level * 2 * ratio));
+
+      const hadCasualties = state.faintedPets.length > 0;
+      if (hadCasualties) {
+        state.faintedPets = [];
+        showPopup('✨ ALL BUDDIES REVIVED!');
+      }
+
+      checkForSecretLootDrop(hadCasualties);
+      showPopup(`VICTORY! +${gemBonus} 💎`);
+
+      const shouldTriggerVault = (state.monstersDefeated % 2 === 0);
+      setTimeout(function () {
+        pickNextBoss();
+        setBossTaunt();
+        updateStatsUI();
+        saveState();
+        if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
+        const nb = getBossInfo();
+        toast(`A wild Lv ${nb.level} ${nb.name} appeared!`);
+        if (shouldTriggerVault) enqueueModal(startGoldenVault);
+        if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
+      }, 650);
+    } else {
+      updateBattleUI();
+    }
+  }, 200);
+}
+
+function triggerSuperMove() {
+  if (ultimateCharge < 3 || inputLocked) return;
+  ultimateCharge = 0;
+  questEvent('ult');
+  soundSuperMove();
+  launchConfetti();
+  const pet = getActivePetDisplay();
+  showPopup(`⚡ ${pet.superMove}!`);
+  inputLocked = true;
+  triggerMonsterDamage(2 + Math.floor(pet.level / 10));
+  updateBattleUI();
+  setTimeout(function () { inputLocked = false; }, 700);
+}
+
+function triggerBuddyDamage() {
+  const boss = getBossInfo();
+  const pet = getActivePetDisplay();
+  const id = pet.id;
+  const monsterIcon = document.getElementById('monster-icon');
+  const petIconWrapper = document.getElementById('fighter-icon-wrapper');
+  const monsterFx = document.getElementById('monster-attack-fx');
+
+  monsterIcon.classList.remove('tackle-left');
+  void monsterIcon.offsetWidth;
+  monsterIcon.classList.add('tackle-left');
+  soundTackle();
+
+  setTimeout(function () {
+    monsterFx.classList.remove('slash-left');
+    void monsterFx.offsetWidth;
+    monsterFx.classList.add('slash-left');
+  }, 100);
+
+  setTimeout(function () {
+    petIconWrapper.classList.remove('hurt-flash');
+    void petIconWrapper.offsetWidth;
+    petIconWrapper.classList.add('hurt-flash');
+    soundHitSlash();
+
+    let incoming = boss.atk;
+    const rel = getTypeRelation(boss.element, pet.element);
+    if (rel === 1) incoming += 1;
+    else if (rel === -1) incoming = Math.max(1, incoming - 1);
+    // no single hit may take more than 40% of the buddy's max HP (a fair fight, not a one-shot)
+    incoming = Math.max(1, Math.min(incoming, Math.ceil(getPetMaxHp(id) * 0.4)));
+    showPopup(rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
+
+    setPetHp(id, getPetHp(id) - incoming);
+    state.streak = 0;
+    ultimateCharge = 0;
+
+    if (getPetHp(id) > 0) {
+      updateStatsUI();
+      scheduleNextProblem(1100, 'Give this one your best shot!');
+      return;
+    }
+
+    // Buddy fainted
+    soundBuddyFaint();
+    toast('💤 ' + pet.name + ' is sleepy and needs a rest');
+    if (state.faintedPets.indexOf(id) === -1) state.faintedPets.push(id);
+
+    const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
+    if (alive.length === 0) {
+      state.faintedPets = [];
+      partyHp = {};
+      monsterCurrentHp = getBossMaxHp();
+      showPopup('💀 ALL BUDDIES FAINTED! PARTY REVIVED!');
+      document.getElementById('feedback-msg').innerText = 'All buddies fell in battle! Full team revived!';
+      updateStatsUI();
+      scheduleNextProblem(1500, 'Try again — you can do it!');
+    } else {
+      alive.sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
+      state.activePet = alive[0];
+      const next = getActivePetDisplay();
+      showPopup(`💔 ${pet.name} FAINTED! ${next.name} enters!`);
+      document.getElementById('feedback-msg').innerText = `${pet.name} needs rest! ${next.name} enters!`;
+      updateStatsUI();
+      scheduleNextProblem(1400, 'Ready for the next one!');
+    }
+    saveState();
+  }, 200);
+}
+
+function scheduleNextProblem(delay, msg) {
+  const wait = Math.max(delay, explainHold);
+  explainHold = 0;
+  setTimeout(function () {
+    generateProblem();
+    document.getElementById('feedback-msg').innerText = currentProblem.easy ? 'Warm-up round — you can do this! 🌱' : msg;
+  }, wait);
+}
+
+function checkAnswer() {
+  if (inputLocked) return;
+  if (userInput === '' || userInput === '-' || userInput === '.' || userInput === '-.') return;
+  const numVal = parseFloat(userInput);
+  if (isNaN(numVal)) return;
+
+  inputLocked = true;
+  const answerBox = document.getElementById('answer-box');
+  const feedback = document.getElementById('feedback-msg');
+  const streakBanner = document.getElementById('streak-msg');
+  const solveTime = (Date.now() - questionStartTime) / 1000;
+
+  sessionStats.attempts += 1;
+
+  if (Math.abs(numVal - currentProblem.answer) < 0.0001) {
+    soundCorrect();
+    if (answerBox) answerBox.className = 'answer-box correct';
+
+    sessionStats.solved += 1;
+    const opId = currentProblem.modeTag;
+    sessionStats.byOp[opId] = (sessionStats.byOp[opId] || 0) + 1;
+    questEvent('solve', opId);
+    state.adapt.miss[opId] = 0;
+    calDayEvent();
+    recordStat(opId, true, solveTime, opId === getWeakOp());
+    checkParentGoal();
+    if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
+
+    state.streak += 1;
+    questEvent('streak', state.streak);
+    if (ultimateCharge < 3) ultimateCharge += 1;
+
+    let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
+    if (pad.used) speedLimit *= 1.75;
+    const isFast = !hintUsed && solveTime <= speedLimit;
+    let speedBonusGems = 0;
+    if (isFast) {
+      speedBonusGems = ECON.solve.speedGem;
+      questEvent('fast');
+      showPopup('⚡ SPEED STRIKE! +1 💎');
+    } else {
+      showPopup('HIT! 💥');
+    }
+
+    const cloverOn = state.cloverLeft > 0;
+    let xpEarned = 8 + Math.min(state.streak, 10) + (isFast ? 4 : 0);
+    if (cloverOn) xpEarned = Math.round(xpEarned * 1.5);
+    awardBuddyXp(xpEarned);
+
+    triggerMonsterDamage(0, opId === getWeakOp());
+
+    let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
+    if (state.cloverLeft > 0) {
+      gemsEarned *= 2;
+      state.cloverLeft -= 1;
+    }
+    state.gems += gemsEarned;
+
+    const praises = ['Incredible!', 'Super Sharp!', 'Crushing It!', 'Unstoppable!', 'Bullseye!', 'Math Wizard!'];
+    feedback.innerText = `${pick(praises)} +${xpEarned} XP`;
+    if (state.streak >= 3) streakBanner.innerText = `🔥 ${state.streak} IN A ROW! COMBO ACTIVE!`;
+    if (MILESTONES[state.streak]) streakMilestone(state.streak);
+    else if (state.streak % 5 === 0) launchConfetti();
+
+    if (sessionStats.solved >= sessionStats.goal && !sessionStats.goalClaimed) {
+      sessionStats.goalClaimed = true;
+      const reached = sessionStats.goal;
+      const goalReward = sessionGoalReward(reached);
+      state.gems += goalReward;
+      setTimeout(function () {
+        enqueueModal(function () {
+          soundSecretFound();
+          launchConfetti();
+          document.getElementById('goal-done-num').innerText = reached;
+          document.getElementById('goal-reward-num').innerText = goalReward;
+          document.getElementById('goal-modal').style.display = 'flex';
+        });
+      }, 800);
+    }
+
+    updateStatsUI();
+    saveState();
+    scheduleNextProblem(650, 'Ready for the next one!');
+
+  } else {
+    soundWrong();
+    bossMistakes += 1;
+    const missOp = currentProblem.modeTag;
+    recordStat(missOp, false, solveTime, false);
+    state.adapt.miss[missOp] = (state.adapt.miss[missOp] || 0) + 1;
+    if (state.adapt.miss[missOp] >= 2) { state.adapt.easy[missOp] = true; state.adapt.miss[missOp] = 0; }
+    explainMistake();
+    if (answerBox) answerBox.className = 'answer-box wrong';
+
+    if (state.shields > 0) {
+      state.shields -= 1;
+      soundShieldBreak();
+      showPopup('🛡️ STREAK SHIELD SAVED YOU!');
+      feedback.innerText = `Shield absorbed it! The answer was ${fmtAns(currentProblem.answer)}`;
+      updateStatsUI();
+      saveState();
+      scheduleNextProblem(1300, 'Shield used up — stay sharp!');
+    } else {
+      feedback.innerText = `Almost! The answer was ${fmtAns(currentProblem.answer)}`;
+      streakBanner.innerText = 'COMBO BROKEN!';
+      triggerBuddyDamage();
+      saveState();
+    }
+  }
+}
