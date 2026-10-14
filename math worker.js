@@ -16,7 +16,7 @@ const MANIFEST = {
 };
 
 const SW = `
-const CACHE_NAME = 'math-quest-v25';
+const CACHE_NAME = 'math-quest-v26';
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
@@ -1118,6 +1118,36 @@ const HTML = `<!DOCTYPE html>
 
     .bottom-bar { grid-template-columns: repeat(5, 1fr); gap: 3px; }
     .bottom-bar .btn-secondary { font-size: 0.64rem; padding: 6px 1px; gap: 2px; }
+    .fighter-icon-wrapper { cursor: pointer; }
+    .mood-bubble { position: absolute; top: -12px; right: -8px; font-size: 1.1rem; pointer-events: none; opacity: 0; z-index: 4; }
+    .mood-bubble.show { animation: moodFloat 1.8s ease-out forwards; }
+    @keyframes moodFloat { 0% { opacity: 0; transform: translateY(6px) scale(0.5); } 20% { opacity: 1; transform: translateY(-2px) scale(1.2); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-14px) scale(1); } }
+    @keyframes happyBounce { 0%, 100% { transform: translateY(0) scale(1); } 25% { transform: translateY(-12px) scale(1.12, 0.92); } 50% { transform: translateY(0) scale(0.94, 1.06); } 75% { transform: translateY(-6px) scale(1.05); } }
+    .happy-bounce { animation: happyBounce 0.9s ease-out; }
+    @keyframes sleepySway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+    .hub-head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .hub-head .nav { background: #1e293b; border: 1px solid var(--card-border); color: var(--text); border-radius: 10px; width: 40px; height: 54px; font-size: 1.4rem; cursor: pointer; }
+    .hub-icon { font-size: 3rem; line-height: 1.1; transition: transform 0.2s; }
+    .hub-icon.sleepy { opacity: 0.55; filter: grayscale(0.6); animation: sleepySway 2.4s ease-in-out infinite; }
+    .hub-icon.bounce { animation: happyBounce 0.9s ease-out; }
+    .hub-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin: 8px 0; }
+    .hearts { font-size: 1rem; letter-spacing: 2px; }
+    .care-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #0f172a; border: 1px solid var(--card-border); border-radius: 10px; padding: 7px 9px; margin: 5px 0; text-align: left; }
+    .care-row .t { font-weight: 800; font-size: 0.82rem; }
+    .care-row .d { font-size: 0.66rem; color: var(--text-muted); }
+    .card-canvas { width: 100%; max-width: 300px; border-radius: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); display: block; margin: 6px auto; }
+    .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 6px 0; }
+    .team-chip { background: #0f172a; border: 2px solid var(--card-border); border-radius: 10px; padding: 4px 2px; cursor: pointer; font-size: 0.6rem; color: var(--text-muted); font-weight: 700; }
+    .team-chip b { display: block; font-size: 1.5rem; }
+    .team-chip.on { border-color: #fbbf24; background: #422006; color: #fde047; }
+    .tour-side { flex: 1; background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; padding: 6px; font-size: 0.7rem; font-weight: 800; }
+    .tour-side .ic { font-size: 2.2rem; line-height: 1.1; }
+    .tour-side.hit { animation: shake 0.3s; border-color: #ef4444; }
+    .tour-hp { height: 7px; background: #1e293b; border-radius: 999px; overflow: hidden; margin-top: 3px; }
+    .tour-hp i { display: block; height: 100%; background: #10b981; transition: width 0.3s; }
+    .tour-hp.foe i { background: #ef4444; }
+    .tour-eq { font-size: 1.7rem; font-weight: 900; margin: 10px 0 6px; min-height: 40px; }
+    .tour-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .raid-chapter { font-size: 0.7rem; font-weight: 900; color: #fca5a5; letter-spacing: 1px; text-transform: uppercase; }
     .comic-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
     .comic-panel { display: flex; align-items: center; gap: 10px; background: #fef9c3; color: #1c1917; border: 3px solid #1c1917; border-radius: 6px; padding: 6px 10px; text-align: left; box-shadow: 3px 3px 0 #000; animation: fadeIn 0.4s both; }
@@ -1246,8 +1276,9 @@ const HTML = `<!DOCTYPE html>
 
       <div class="versus-row">
         <div class="fighter">
-          <div class="fighter-icon-wrapper" id="fighter-icon-wrapper">
+          <div class="fighter-icon-wrapper" id="fighter-icon-wrapper" onclick="openHub()" title="Tap your buddy: care, trading card, tournament">
             <span class="fighter-icon" id="pet-fighter-icon">🐶</span>
+            <span class="mood-bubble" id="mood-bubble"></span>
             <span class="armor-overlay" id="pet-armor-overlay"></span>
             <span class="accessory-overlay" id="pet-accessory-overlay"></span>
           </div>
@@ -1360,6 +1391,8 @@ const HTML = `<!DOCTYPE html>
       <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
         Adopt companions, customize body gear, or buy boosters! You have <b style="color:#38bdf8;">💎 <span id="shop-gems">0</span></b>
       </p>
+
+      <button class="grade-btn" style="width:100%; margin-bottom:8px;" onclick="closeShop(); openHub()">💖 Buddy care · 🃏 Trading cards · 🏆 Tournament</button>
 
       <!-- Consumables (All Increased by 30%) -->
       <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-align:left; text-transform:uppercase; margin-bottom:4px;">🧪 Battle Supplies &amp; Items</div>
@@ -1598,6 +1631,42 @@ const HTML = `<!DOCTYPE html>
   <div id="toast"></div>
 
   <div class="milestone-overlay" id="milestone-overlay"><div class="milestone-big" id="milestone-big"></div><div class="milestone-sub" id="milestone-sub"></div></div>
+
+  <!-- Buddy hub: care / trading card / tournament -->
+  <div class="modal-overlay" id="hub-modal" onclick="closeHubOnOverlay(event)">
+    <div class="modal-content">
+      <div class="hub-head">
+        <button class="nav" onclick="hubStep(-1)">‹</button>
+        <div>
+          <div class="hub-icon" id="hub-icon"></div>
+          <div style="font-weight:900; font-size:1.05rem;" id="hub-name"></div>
+          <div style="font-size:0.7rem; color:var(--text-muted);" id="hub-sub"></div>
+        </div>
+        <button class="nav" onclick="hubStep(1)">›</button>
+      </div>
+      <div class="hub-tabs" id="hub-tabs"></div>
+      <div id="hub-body"></div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeHub()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Tournament battle -->
+  <div class="modal-overlay" id="tour-modal">
+    <div class="modal-content" style="border-color:#fbbf24;">
+      <div class="raid-chapter" style="color:#fde047;" id="tour-title"></div>
+      <div style="font-size:0.8rem; font-weight:800; margin:2px 0 6px;" id="tour-trainer"></div>
+      <div style="display:flex; gap:6px;">
+        <div class="tour-side" id="tour-me"></div>
+        <div class="tour-side" id="tour-foe"></div>
+      </div>
+      <div id="tour-play">
+        <div class="tour-eq" id="tour-eq"></div>
+        <div class="tour-opts" id="tour-opts"></div>
+      </div>
+      <p style="font-size:0.78rem; min-height:34px; margin:8px 0; font-weight:700;" id="tour-log"></p>
+      <button class="key-btn" style="width:100%; height:38px; font-size:0.85rem;" id="tour-close" onclick="tourQuit()">Give up</button>
+    </div>
+  </div>
 
   <!-- Raid story modal -->
   <div class="modal-overlay" id="raid-modal">
@@ -1935,6 +2004,9 @@ const HTML = `<!DOCTYPE html>
         streakCal: { count: 0, last: '', total: 0, claimed: [] },
         stats: { days: {} },
         parentGoal: { minutes: 20, reward: '', notified: '' },
+        care: {},
+        team: [],
+        tour: { day: '', runs: 0, trophies: 0, wins: 0 },
         raid: null,
         raidsCleared: 0,
         lastRaidAt: 0,
@@ -2976,6 +3048,7 @@ const HTML = `<!DOCTYPE html>
 
     function awardBuddyXp(amount) {
       const id = state.activePet;
+      amount = Math.round(amount * (1 + 0.04 * getBond(id)));
       const before = getPetById(id);
       const oldMax = getPetMaxHp(id);
       const curHp = getPetHp(id);
@@ -3152,6 +3225,13 @@ const HTML = `<!DOCTYPE html>
       if (typeof state.parentGoal.notified !== 'string') state.parentGoal.notified = '';
       state.raidsCleared = Math.max(0, parseInt(state.raidsCleared, 10) || 0);
       state.lastRaidAt = Math.max(0, parseInt(state.lastRaidAt, 10) || 0);
+      if (!state.care || typeof state.care !== 'object' || Array.isArray(state.care)) state.care = {};
+      if (!Array.isArray(state.team)) state.team = [];
+      if (!state.tour || typeof state.tour !== 'object') state.tour = { day: '', runs: 0, trophies: 0, wins: 0 };
+      state.tour.trophies = Math.max(0, parseInt(state.tour.trophies, 10) || 0);
+      state.tour.wins = Math.max(0, parseInt(state.tour.wins, 10) || 0);
+      state.tour.runs = Math.max(0, parseInt(state.tour.runs, 10) || 0);
+      if (typeof state.tour.day !== 'string') state.tour.day = '';
       const rd = state.raid;
       if (!rd || typeof rd !== 'object' || !Array.isArray(rd.weaks) || !(rd.total >= 2) || !(rd.phase >= 0 && rd.phase < rd.total)) state.raid = null;
       state.grade = clamp(parseInt(state.grade, 10) || 0, 0, GRADES.length - 1);
@@ -3384,6 +3464,7 @@ const HTML = `<!DOCTYPE html>
           questEvent('boss');
           if (bossMistakes === 0) questEvent('flawless');
           markBossWin(currentMonsterIndex, boss.form);
+          buddyReact('win');
           let gemBonus = 8 + Math.floor(boss.level / 5);
           const wasRaid = state.raid ? state.raid.chapter : -1;
           if (wasRaid >= 0) { gemBonus += 40; state.raidsCleared += 1; state.raid = null; }
@@ -3479,6 +3560,7 @@ const HTML = `<!DOCTYPE html>
 
         // Buddy fainted
         soundBuddyFaint();
+        toast('💤 ' + pet.name + ' is sleepy and needs a rest');
         if (state.faintedPets.indexOf(id) === -1) state.faintedPets.push(id);
 
         const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
@@ -4660,6 +4742,562 @@ const HTML = `<!DOCTYPE html>
       soundClick();
       document.getElementById('raid-modal').style.display = 'none';
       modalDone();
+    }
+
+
+    // =====================================================================
+    //  BUDDY HUB: CARE, TRADING CARDS, TOURNAMENT
+    // =====================================================================
+    const SNACKS = [
+      { icon: '🥩', name: 'juicy steak' }, { icon: '🍓', name: 'sweet berries' }, { icon: '🥕', name: 'crunchy carrots' },
+      { icon: '🐟', name: 'fresh fish' }, { icon: '🍯', name: 'golden honey' }, { icon: '🧀', name: 'stinky cheese' },
+      { icon: '🍉', name: 'watermelon' }, { icon: '🌰', name: 'toasty nuts' }
+    ];
+    const TREAT_COST = 2, FAV_COST = 8, MAX_BOND = 5, MAX_PETS_PER_DAY = 3;
+    const ELEM_COLORS = { fire: '#ef4444', water: '#38bdf8', nature: '#22c55e', electric: '#facc15', dark: '#8b5cf6', magic: '#ec4899', shadow: '#a855f7' };
+
+    function favSnack(id) {
+      let h = 0;
+      for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
+      return SNACKS[h % SNACKS.length];
+    }
+    function getCare(id) {
+      const today = dayKey();
+      let c = state.care[id];
+      if (!c) c = state.care[id] = { day: today, pets: 0, treat: false, fav: false, bond: 0, last: '' };
+      if (c.day !== today) { c.day = today; c.pets = 0; c.treat = false; c.fav = false; }
+      return c;
+    }
+    function getBond(id) {
+      const c = state.care && state.care[id];
+      return c ? clamp(parseInt(c.bond, 10) || 0, 0, MAX_BOND) : 0;
+    }
+    function addXpTo(id, amt) {
+      state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amt);
+    }
+    function isSleepy(id) { return state.faintedPets.indexOf(id) !== -1; }
+    function moodOf(id) {
+      if (isSleepy(id)) return { icon: '😴', text: 'Sleepy — wakes up after your next boss win' };
+      const c = getCare(id);
+      if (c.treat || c.fav) return { icon: '😄', text: 'Happy and full!' };
+      const gap = c.last ? Math.round((new Date(dayKey() + 'T12:00:00') - new Date(c.last + 'T12:00:00')) / 86400000) : 9;
+      if (gap >= 2) return { icon: '🥺', text: 'Feeling a bit hungry...' };
+      return { icon: '🙂', text: 'Doing fine' };
+    }
+
+    // arena reactions
+    function buddyReact(kind) {
+      const w = document.getElementById('fighter-icon-wrapper');
+      const b = document.getElementById('mood-bubble');
+      if (!w || !b) return;
+      if (kind === 'win') {
+        w.classList.remove('happy-bounce');
+        void w.offsetWidth;
+        w.classList.add('happy-bounce');
+        setTimeout(function () { w.classList.remove('happy-bounce'); }, 1000);
+        b.innerText = pick(['🥳', '❤️', '✨']);
+        b.classList.remove('show');
+        void b.offsetWidth;
+        b.classList.add('show');
+      }
+    }
+
+    // ----- hub shell -----
+    let hubPet = 'dog';
+    let hubTab = 'care';
+    function openHub() {
+      soundClick();
+      pauseClock();
+      hubPet = getOwnedIds().indexOf(state.activePet) !== -1 ? state.activePet : 'dog';
+      renderHub();
+      document.getElementById('hub-modal').style.display = 'flex';
+    }
+    function closeHub() {
+      soundClick();
+      resumeClock();
+      document.getElementById('hub-modal').style.display = 'none';
+      saveState();
+      updateStatsUI();
+    }
+    function closeHubOnOverlay(e) { if (e.target.id === 'hub-modal') closeHub(); }
+    function hubStep(dir) {
+      const ids = getOwnedIds();
+      const i = ids.indexOf(hubPet);
+      hubPet = ids[(i + dir + ids.length) % ids.length];
+      soundClick();
+      renderHub();
+    }
+    function setHubTab(t) { soundClick(); hubTab = t; renderHub(); }
+    function renderHub() {
+      const d = getPetById(hubPet);
+      const sleepy = isSleepy(hubPet);
+      const ic = document.getElementById('hub-icon');
+      ic.className = 'hub-icon' + (sleepy ? ' sleepy' : '');
+      ic.innerHTML = d.icon + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
+      document.getElementById('hub-name').innerText = d.name;
+      document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
+      const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Tournament']];
+      const tb = document.getElementById('hub-tabs');
+      tb.innerHTML = '';
+      tabs.forEach(function (t) {
+        const b = document.createElement('button');
+        b.className = 'grade-btn' + (hubTab === t[0] ? ' active' : '');
+        b.innerText = t[1];
+        b.onclick = function () { setHubTab(t[0]); };
+        tb.appendChild(b);
+      });
+      if (hubTab === 'care') renderCare();
+      else if (hubTab === 'card') renderCardTab();
+      else renderTourTab();
+    }
+
+    // ----- care -----
+    function heartsHtml(n) {
+      let h = '';
+      for (let i = 0; i < MAX_BOND; i++) h += i < n ? '❤️' : '🤍';
+      return h;
+    }
+    function renderCare() {
+      const id = hubPet;
+      const c = getCare(id);
+      const sleepy = isSleepy(id);
+      const fav = favSnack(id);
+      const bond = getBond(id);
+      const row = function (title, desc, btn) {
+        return '<div class="care-row"><div><div class="t">' + title + '</div><div class="d">' + desc + '</div></div>' + btn + '</div>';
+      };
+      const btn = function (label, fn, off) {
+        return '<button class="claim-btn" ' + (off ? 'disabled' : '') + ' onclick="' + fn + '">' + label + '</button>';
+      };
+      let h = '<div class="hearts" title="Bond">' + heartsHtml(bond) + '</div>' +
+        '<div style="font-size:0.68rem; color:var(--text-muted);">Bond ' + bond + '/' + MAX_BOND + (bond ? ' · +' + (bond * 4) + '% XP for this buddy' : ' · feed the favorite snack to grow it') + '</div>';
+      if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Beat a boss to wake everyone up!</div>';
+      h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + MAX_PETS_PER_DAY + ' · +3 XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= MAX_PETS_PER_DAY));
+      h += row('🍪 Biscuit', 'A tasty treat · +10 XP · once a day', btn(c.treat ? 'Eaten' : TREAT_COST + ' 💎', 'careAct(&quot;treat&quot;)', sleepy || c.treat));
+      h += row(fav.icon + ' Favorite: ' + fav.name, 'Their very favorite! +1 bond · +25 XP · once a day', btn(c.fav ? 'Eaten' : FAV_COST + ' 💎', 'careAct(&quot;fav&quot;)', sleepy || c.fav));
+      h += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">You have 💎 ' + state.gems + '</div>';
+      document.getElementById('hub-body').innerHTML = h;
+    }
+    function hubBounce(emoji) {
+      const ic = document.getElementById('hub-icon');
+      ic.classList.remove('bounce');
+      void ic.offsetWidth;
+      ic.classList.add('bounce');
+      if (emoji) toast(emoji);
+    }
+    function careAct(kind) {
+      const id = hubPet;
+      if (isSleepy(id)) return;
+      const c = getCare(id);
+      const name = getPetById(id).baseName;
+      if (kind === 'pet') {
+        if (c.pets >= MAX_PETS_PER_DAY) return;
+        c.pets += 1;
+        addXpTo(id, 3);
+        soundClick();
+        hubBounce('💕 ' + name + ' loves it!');
+      } else if (kind === 'treat') {
+        if (c.treat || state.gems < TREAT_COST) { if (!c.treat) toast('Not enough 💎'); return; }
+        state.gems -= TREAT_COST;
+        c.treat = true;
+        addXpTo(id, 10);
+        soundCoinChirp();
+        hubBounce('🍪 Yum! ' + name + ' is happy!');
+      } else if (kind === 'fav') {
+        if (c.fav || state.gems < FAV_COST) { if (!c.fav) toast('Not enough 💎'); return; }
+        state.gems -= FAV_COST;
+        c.fav = true;
+        addXpTo(id, 25);
+        const before = c.bond;
+        c.bond = Math.min(MAX_BOND, c.bond + 1);
+        soundSecretFound();
+        if (c.bond > before) launchConfetti();
+        hubBounce(favSnack(id).icon + ' ' + name + ' LOVES ' + favSnack(id).name + '!' + (c.bond > before ? ' Bond up! ❤️' : ''));
+      }
+      c.last = dayKey();
+      saveState();
+      updateStatsUI();
+      renderHub();
+    }
+
+    // ----- trading card -----
+    function rarityOf(id) {
+      const sp = getSpecies(id) || {};
+      if (sp.isJanie) return { name: 'COSMIC', col: '#e879f9' };
+      if (sp.mythic) return { name: 'MYTHIC', col: '#f43f5e' };
+      if (sp.secret) return { name: 'LEGENDARY', col: '#fbbf24' };
+      if ((sp.cost || 0) >= 400) return { name: 'EPIC', col: '#a78bfa' };
+      if ((sp.cost || 0) >= 150) return { name: 'RARE', col: '#38bdf8' };
+      return { name: 'COMMON', col: '#94a3b8' };
+    }
+    function rrect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+    const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    function drawCard(cv, id) {
+      const W = 600, H = 840;
+      cv.width = W; cv.height = H;
+      const ctx = cv.getContext('2d');
+      const d = getPetById(id);
+      const rar = rarityOf(id);
+      const ec = ELEM_COLORS[d.element] || '#6366f1';
+      const sleepy = isSleepy(id);
+      const g = ctx.createLinearGradient(0, 0, W, H);
+      g.addColorStop(0, ec);
+      g.addColorStop(0.55, '#1e1b4b');
+      g.addColorStop(1, '#0f172a');
+      ctx.fillStyle = g;
+      rrect(ctx, 0, 0, W, H, 36); ctx.fill();
+      ctx.lineWidth = 12; ctx.strokeStyle = rar.col;
+      rrect(ctx, 8, 8, W - 16, H - 16, 30); ctx.stroke();
+      ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      rrect(ctx, 26, 26, W - 52, H - 52, 20); ctx.stroke();
+      ctx.textBaseline = 'middle';
+      // name + level
+      ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
+      ctx.font = '900 42px system-ui, sans-serif';
+      ctx.fillText(d.name.length > 16 ? d.name.slice(0, 15) + '…' : d.name, 48, 66);
+      ctx.textAlign = 'right'; ctx.fillStyle = '#fde047';
+      ctx.font = '900 34px system-ui, sans-serif';
+      ctx.fillText('Lv ' + d.level, W - 48, 66);
+      // art box
+      const art = ctx.createRadialGradient(W / 2, 330, 20, W / 2, 330, 260);
+      art.addColorStop(0, 'rgba(255,255,255,0.35)');
+      art.addColorStop(1, 'rgba(0,0,0,0.35)');
+      ctx.fillStyle = art;
+      rrect(ctx, 48, 110, W - 96, 440, 24); ctx.fill();
+      ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+      ctx.textAlign = 'center';
+      let fs = 250;
+      ctx.font = fs + 'px ' + EMOJI_FONT;
+      while (ctx.measureText(d.icon).width > 400 && fs > 90) { fs -= 20; ctx.font = fs + 'px ' + EMOJI_FONT; }
+      ctx.globalAlpha = sleepy ? 0.55 : 1;
+      ctx.fillText(d.icon, W / 2, 335);
+      ctx.globalAlpha = 1;
+      if (sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
+      // gear
+      const acc = accessoriesList.find(function (a) { return a.id === state.activeAccessory; });
+      const arm = getArmor(state.activeArmor);
+      ctx.font = '56px ' + EMOJI_FONT;
+      if (id === state.activePet) {
+        if (acc && acc.renderIcon) ctx.fillText(acc.renderIcon, 110, 180);
+        if (arm.renderIcon) ctx.fillText(arm.renderIcon, 110, 500);
+      }
+      // type pill + stars
+      ctx.fillStyle = ec;
+      rrect(ctx, 48, 575, 190, 46, 23); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 24px system-ui, sans-serif';
+      ctx.fillText(d.element.toUpperCase(), 143, 599);
+      ctx.textAlign = 'right'; ctx.fillStyle = '#fde047'; ctx.font = '36px ' + EMOJI_FONT;
+      ctx.fillText(d.stage === 0 ? '⭐' : (d.stage === 1 ? '⭐⭐' : '⭐⭐⭐'), W - 48, 599);
+      // stats
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      rrect(ctx, 48, 640, W - 96, 84, 18); ctx.fill();
+      ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '900 30px system-ui, sans-serif';
+      ctx.fillText('❤️ ' + getPetMaxHp(id), 150, 668);
+      ctx.fillText('⚔️ ' + getPetAttack(id), 300, 668);
+      ctx.fillText('🏆 ' + state.tour.trophies, 450, 668);
+      ctx.font = '700 22px system-ui, sans-serif'; ctx.fillStyle = '#c7d2fe';
+      ctx.fillText('HP', 150, 703); ctx.fillText('Attack', 300, 703); ctx.fillText('Trophies', 450, 703);
+      // super move + bond
+      ctx.font = '800 26px system-ui, sans-serif'; ctx.fillStyle = '#fde68a';
+      ctx.fillText('⚡ ' + d.superMove, W / 2, 755);
+      ctx.font = '28px ' + EMOJI_FONT;
+      ctx.fillText(heartsHtml(getBond(id)), W / 2, 793);
+      // rarity ribbon
+      ctx.fillStyle = rar.col;
+      rrect(ctx, W / 2 - 110, 812 - 6, 220, 0.1, 1);
+      ctx.font = '900 20px system-ui, sans-serif';
+      ctx.textAlign = 'left'; ctx.fillStyle = rar.col;
+      ctx.fillText('◆ ' + rar.name, 48, 812);
+      ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText('MATH QUEST', W - 48, 812);
+    }
+    function renderCardTab() {
+      const rar = rarityOf(hubPet);
+      document.getElementById('hub-body').innerHTML =
+        '<canvas class="card-canvas" id="card-canvas"></canvas>' +
+        '<div style="font-size:0.72rem; font-weight:800; color:' + rar.col + ';">◆ ' + rar.name + ' card</div>' +
+        '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">' +
+        '<button class="grade-btn" onclick="cardSave()">💾 Save image</button>' +
+        '<button class="grade-btn" onclick="cardShare()">📤 Share</button></div>';
+      drawCard(document.getElementById('card-canvas'), hubPet);
+    }
+    function cardBlob(cb) { document.getElementById('card-canvas').toBlob(cb, 'image/png'); }
+    function cardSave() {
+      cardBlob(function (blob) {
+        if (!blob) return;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'math-quest-' + hubPet + '.png';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+        toast('🃏 Card saved!');
+      });
+    }
+    function cardShare() {
+      cardBlob(function (blob) {
+        if (!blob) return;
+        const file = new File([blob], 'math-quest-' + hubPet + '.png', { type: 'image/png' });
+        const d = getPetById(hubPet);
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: d.name + ' — Math Quest', text: 'Check out my ' + d.name + '! Lv ' + d.level }).catch(function () {});
+        } else {
+          cardSave();
+        }
+      });
+    }
+
+    // ----- tournament: team picker -----
+    function getTeam() {
+      const owned = getOwnedIds();
+      let t = state.team.filter(function (id, i) { return owned.indexOf(id) !== -1 && state.team.indexOf(id) === i; }).slice(0, 3);
+      if (!t.length) {
+        t = owned.slice().sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }).slice(0, 3);
+      }
+      return t;
+    }
+    function toggleTeam(id) {
+      let t = getTeam();
+      const i = t.indexOf(id);
+      if (i !== -1) { if (t.length > 1) t.splice(i, 1); }
+      else if (t.length < 3) t.push(id);
+      else t = [t[1], t[2], id];
+      state.team = t;
+      soundClick();
+      saveState();
+      renderHub();
+    }
+    function tourRunsLeft() {
+      const t = state.tour;
+      return t.day === dayKey() ? Math.max(0, 2 - t.runs) : 2;
+    }
+    function renderTourTab() {
+      const team = getTeam();
+      let h = '<div style="font-size:0.78rem; font-weight:800; margin-bottom:2px;">Pick up to 3 buddies for your team</div>' +
+        '<div class="team-grid">' + getOwnedIds().map(function (id) {
+          const d = getPetById(id);
+          return '<div class="team-chip' + (team.indexOf(id) !== -1 ? ' on' : '') + '" onclick="toggleTeam(&quot;' + id + '&quot;)"><b>' + d.icon + '</b>Lv ' + d.level + '</div>';
+        }).join('') + '</div>';
+      h += '<div style="font-size:0.72rem; color:var(--text-muted);">3 rounds vs computer trainers. Answer to attack, miss and they hit back! Type matchups count.</div>' +
+        '<div style="font-size:0.72rem; margin:4px 0; color:#fde047; font-weight:800;">🏆 Trophies: ' + state.tour.trophies + ' · Rewarded runs left today: ' + tourRunsLeft() + '</div>' +
+        '<button class="key-btn submit-btn" style="width:100%; height:44px; font-size:1rem;" onclick="tourStart()">🏆 Enter Tournament</button>';
+      document.getElementById('hub-body').innerHTML = h;
+    }
+
+    // ----- tournament battle -----
+    const TRAINERS = [
+      { name: 'Trainer Maple', icon: '🧑‍🌾', say: 'My team grew up on the farm!' },
+      { name: 'Captain Bolt', icon: '🧑‍✈️', say: 'Ready for takeoff... and defeat!' },
+      { name: 'Professor Pi', icon: '🧑‍🏫', say: 'Let me calculate your loss!' },
+      { name: 'Ninja Nia', icon: '🥷', say: 'You will not see me coming.' },
+      { name: 'Chef Basil', icon: '🧑‍🍳', say: 'Cooked up a winning team!' },
+      { name: 'Wizard Wren', icon: '🧙', say: 'Abracadabra, I win!' }
+    ];
+    let tour = null;
+
+    function mkFighter(id, level) {
+      const sp = getSpecies(id);
+      const stage = getFormIndex(sp, level);
+      const f = sp.forms[stage];
+      return { id: id, name: f.name, icon: f.icon, element: sp.element, level: level, stage: stage,
+        atk: 1 + Math.floor(level / 12) + stage, maxHp: 3 + Math.floor(level / 8) + stage, hp: 0 };
+    }
+    function tourMakeRound(n, avg) {
+      const tr = TRAINERS[(rnd(0, TRAINERS.length - 1) + n) % TRAINERS.length];
+      const pool = storePets.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 3);
+      const foes = pool.map(function (sp) {
+        const f = mkFighter(sp.id, clamp(avg + (n - 1) * 2 + rnd(-1, 1), 1, MAX_LEVEL));
+        f.hp = f.maxHp;
+        return f;
+      });
+      return { trainer: tr, foes: foes };
+    }
+    function tourStart() {
+      const team = getTeam();
+      if (!team.length) return;
+      const t = state.tour;
+      if (t.day !== dayKey()) { t.day = dayKey(); t.runs = 0; }
+      t.runs += 1;
+      const rewarded = t.runs <= 2;
+      const mine = team.map(function (id) {
+        const d = getPetById(id);
+        return { id: id, name: d.name, icon: d.icon, element: d.element, level: d.level, stage: d.stage,
+          atk: getPetAttack(id), maxHp: getPetMaxHp(id), hp: getPetMaxHp(id) };
+      });
+      const avg = Math.round(mine.reduce(function (a, f) { return a + f.level; }, 0) / mine.length);
+      tour = { mine: mine, avg: avg, round: 1, rewarded: rewarded, round1: tourMakeRound(1, avg), me: 0, foe: 0, answer: null, busy: false, over: false };
+      saveState();
+      document.getElementById('hub-modal').style.display = 'none';
+      document.getElementById('tour-close').innerText = 'Give up';
+      document.getElementById('tour-play').style.display = 'block';
+      document.getElementById('tour-modal').style.display = 'flex';
+      document.getElementById('tour-log').innerText = tour.round1.trainer.icon + ' "' + tour.round1.trainer.say + '"' + (rewarded ? '' : ' (practice run: no rewards today)');
+      tourRender();
+      tourQuestion();
+    }
+    function tourCur() { return tour.round1; }
+    function tourSideHtml(f, foe) {
+      const pct = Math.max(0, Math.round((f.hp / f.maxHp) * 100));
+      return '<div class="ic">' + f.icon + '</div>' + escHtml(f.name) + '<br><span style="color:var(--text-muted);">Lv ' + f.level + ' · ' + f.element + '</span>' +
+        '<div class="tour-hp' + (foe ? ' foe' : '') + '"><i style="width:' + pct + '%"></i></div>' + Math.max(0, f.hp) + '/' + f.maxHp + ' HP';
+    }
+    function tourRender() {
+      const r = tourCur();
+      document.getElementById('tour-title').innerText = '🏆 Tournament · Round ' + tour.round + '/3';
+      document.getElementById('tour-trainer').innerText = r.trainer.icon + ' ' + r.trainer.name + ' · foes left ' + r.foes.filter(function (f) { return f.hp > 0; }).length + ' · your team ' + tour.mine.filter(function (f) { return f.hp > 0; }).length;
+      document.getElementById('tour-me').innerHTML = tourSideHtml(tour.mine[tour.me], false);
+      document.getElementById('tour-foe').innerHTML = tourSideHtml(r.foes[tour.foe], true);
+    }
+    function tourDamage(att, def) {
+      let dmg = att.atk;
+      const rel = getTypeRelation(att.element, def.element);
+      if (att.element === 'shadow') dmg = Math.ceil(dmg * 1.25);
+      else if (rel === 1) dmg = Math.ceil(dmg * 1.5);
+      else if (rel === -1) dmg = Math.max(1, Math.floor(dmg * 0.5));
+      return Math.max(1, dmg);
+    }
+    function tourQuestion() {
+      if (!tour || tour.over) return;
+      const ops = getActiveOps();
+      const op = pick(ops);
+      const p = OP_BY_ID[op].gen(state.grade);
+      const ans = Math.round(p.answer * 100) / 100;
+      const expr = p.layout === 'vertical' ? p.num1 + ' ' + p.operator + ' ' + p.num2 : p.expr;
+      tour.answer = ans;
+      tour.op = op;
+      tour.t0 = Date.now();
+      document.getElementById('tour-eq').innerHTML = expr + ' <span style="color:var(--text-muted);">' + (p.lead || '=') + ' ?</span>';
+      const mag = Math.abs(ans);
+      let step = Number.isInteger(ans) ? (mag >= 100 ? Math.pow(10, Math.floor(Math.log10(mag)) - 1) : 1) : 0.1;
+      const opts = [ans];
+      let guard = 0;
+      while (opts.length < 4 && guard++ < 60) {
+        const k = rnd(1, 5) * (Math.random() < 0.5 ? -1 : 1);
+        const v = Math.round((ans + k * step) * 100) / 100;
+        if (opts.indexOf(v) === -1) opts.push(v);
+      }
+      opts.sort(function () { return Math.random() - 0.5; });
+      const box = document.getElementById('tour-opts');
+      box.innerHTML = '';
+      opts.forEach(function (v) {
+        const b = document.createElement('button');
+        b.className = 'vault-btn';
+        b.innerText = fmtAns(v);
+        b.onclick = function () { tourAnswer(v); };
+        box.appendChild(b);
+      });
+      tour.busy = false;
+    }
+    function tourFlash(id) {
+      const el = document.getElementById(id);
+      el.classList.remove('hit');
+      void el.offsetWidth;
+      el.classList.add('hit');
+    }
+    function tourAnswer(v) {
+      if (!tour || tour.busy || tour.over) return;
+      tour.busy = true;
+      const r = tourCur();
+      const me = tour.mine[tour.me], foe = r.foes[tour.foe];
+      const ok = Math.abs(v - tour.answer) < 0.0001;
+      const secs = (Date.now() - tour.t0) / 1000;
+      recordStat(tour.op, ok, secs, false);
+      calDayEvent();
+      let msg;
+      let next = 700;
+      if (ok) {
+        questEvent('solve', tour.op);
+        soundCorrect();
+        const dmg = tourDamage(me, foe);
+        foe.hp -= dmg;
+        tourFlash('tour-foe');
+        msg = '✅ ' + me.name + ' hits for ' + dmg + '!';
+        if (foe.hp <= 0) {
+          msg += ' ' + foe.name + ' is out!';
+          next = 1100;
+          const alive = r.foes.map(function (f, i) { return f.hp > 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+          if (alive.length) tour.foe = alive[0];
+          else { tourRender(); document.getElementById('tour-log').innerText = msg; setTimeout(tourRoundWon, 900); return; }
+        }
+      } else {
+        soundWrong();
+        const dmg = tourDamage(foe, me);
+        me.hp -= dmg;
+        tourFlash('tour-me');
+        msg = '❌ Answer was ' + fmtAns(tour.answer) + '. ' + foe.name + ' hits for ' + dmg + '!';
+        if (me.hp <= 0) {
+          msg += ' ' + me.name + ' is out!';
+          next = 1400;
+          const alive = tour.mine.map(function (f, i) { return f.hp > 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+          if (alive.length) tour.me = alive[0];
+          else { tourRender(); document.getElementById('tour-log').innerText = msg; setTimeout(tourLost, 1000); return; }
+        }
+      }
+      tourRender();
+      document.getElementById('tour-log').innerText = msg;
+      setTimeout(tourQuestion, next + (ok ? 0 : 500));
+    }
+    function tourRoundWon() {
+      if (!tour) return;
+      const n = tour.round;
+      const gems = tour.rewarded ? 10 * n : 0;
+      const xp = tour.rewarded ? 15 * n : 0;
+      if (gems) state.gems += gems;
+      tour.mine.forEach(function (f) { if (xp) addXpTo(f.id, xp); });
+      launchConfetti();
+      soundMonsterDefeated();
+      if (n >= 3) { tourChampion(gems); return; }
+      tour.round = n + 1;
+      tour.round1 = tourMakeRound(tour.round, tour.avg);
+      tour.foe = 0;
+      tour.mine.forEach(function (f) { if (f.hp > 0) f.hp = Math.min(f.maxHp, f.hp + 1); });
+      const alive = tour.mine.map(function (f, i) { return f.hp > 0 ? i : -1; }).filter(function (i) { return i >= 0; });
+      tour.me = alive.length ? alive[0] : 0;
+      saveState();
+      updateStatsUI();
+      tourRender();
+      document.getElementById('tour-log').innerText = '🎉 Round ' + n + ' won!' + (gems ? ' +' + gems + ' 💎, buddies +' + xp + ' XP.' : '') + ' Next: ' + tour.round1.trainer.name + ' — "' + tour.round1.trainer.say + '"';
+      tour.busy = true;
+      setTimeout(tourQuestion, 2200);
+    }
+    function tourChampion(gems) {
+      tour.over = true;
+      const bonus = tour.rewarded ? 60 : 0;
+      if (bonus) { state.gems += bonus; state.tour.trophies += 1; }
+      state.tour.wins += 1;
+      saveState();
+      updateStatsUI();
+      soundSecretFound();
+      launchConfetti();
+      document.getElementById('tour-play').style.display = 'none';
+      document.getElementById('tour-log').innerText = '🏆 CHAMPION! You won the tournament!' + (bonus ? ' +' + gems + ' 💎 and a +' + bonus + ' 💎 champion bonus, plus a trophy for your cards!' : ' (Practice run — come back tomorrow for rewards.)');
+      document.getElementById('tour-close').innerText = 'Back to Game';
+    }
+    function tourLost() {
+      if (!tour) return;
+      tour.over = true;
+      saveState();
+      updateStatsUI();
+      document.getElementById('tour-play').style.display = 'none';
+      document.getElementById('tour-log').innerText = '💔 Your team was beaten in round ' + tour.round + '. You kept everything you earned so far — train up and try again!';
+      document.getElementById('tour-close').innerText = 'Back to Game';
+    }
+    function tourQuit() {
+      soundClick();
+      document.getElementById('tour-modal').style.display = 'none';
+      tour = null;
+      saveState();
+      updateStatsUI();
+      document.getElementById('hub-modal').style.display = 'flex';
+      renderHub();
     }
 
     // =====================================================================
