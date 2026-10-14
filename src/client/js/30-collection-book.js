@@ -123,7 +123,8 @@ function renderBook() {
         icon: m.icon, name: m.name, elem: m.element,
         extra: wk ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">🎯 Weak: ' + OP_BY_ID[wk].icon + ' ' + OP_BY_ID[wk].label + '</div>' : '',
         hint: e.wins > 0 ? ('Beaten x' + e.wins + ' • ' + best) : 'Met • not beaten yet',
-        hintColor: e.wins > 0 ? '#6ee7b7' : '#fbbf24'
+        hintColor: e.wins > 0 ? '#6ee7b7' : '#fbbf24',
+        click: 'openBossCard(' + i + ')'
       });
     });
     h += '</div>';

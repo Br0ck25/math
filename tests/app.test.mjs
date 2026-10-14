@@ -172,6 +172,76 @@ test('the trading card draws gear in every slot without errors', async () => {
   assert.deepEqual(r, ['aura', 'back', 'face', 'head', 'neck', 'side']);
 });
 
+test('arena fighter cards: no \"Buddy\" label, name above pills, nothing wraps or spills at any width or boss', async () => {
+  for (const viewport of [{ width: 300, height: 560 }, { width: 360, height: 640 }, { width: 420, height: 800 }]) {
+    const g = await openGame(browser, worker, env, { viewport });
+    const r = await g.page.evaluate(() => {
+      const out = [];
+      const rows = () => ['pet', 'monster'].map((side) => {
+        const name = document.getElementById(side === 'pet' ? 'pet-fighter-name' : 'monster-name');
+        const tag = name.nextElementSibling;
+        return { side, name, tag, info: name.parentElement };
+      });
+      state.unlockedPets = ['dog', 'fox'];
+      out.push(document.querySelector('.versus-row').innerText.includes('BUDDY') || /\bbuddy\b/i.test(document.querySelector('.fighter-tag').innerText) ? 'still says Buddy' : null);
+      monstersList.forEach((m, i) => [1, 20, 45].forEach((lvl) => {
+        currentMonsterIndex = i; bossLevel = lvl; state.raid = lvl === 45 ? { phase: 0, total: 3, weaks: ['add', 'sub', 'mul'], chapter: 0, introSeen: true } : null;
+        state.activePet = i % 2 ? 'fox' : 'dog';
+        updateBattleUI();
+        rows().forEach((x) => {
+          if (x.tag.getBoundingClientRect().height > 22) out.push(x.side + ' pills wrap for ' + m.name + ' lv' + lvl);
+          if (x.name.getBoundingClientRect().height > 24) out.push(x.side + ' name wraps for ' + m.name);
+          const box = x.info.getBoundingClientRect(), kids = [x.name, x.tag].map((e) => e.getBoundingClientRect());
+          if (kids.some((k) => k.left < box.left - 1 || k.right > box.right + 1)) out.push(x.side + ' spills out for ' + m.name + ' lv' + lvl);
+        });
+        const vs = document.querySelector('.vs-badge').getBoundingClientRect();
+        const pr = document.getElementById('pet-fighter-name').parentElement.getBoundingClientRect();
+        const mr = document.getElementById('monster-name').parentElement.getBoundingClientRect();
+        if (pr.right > vs.left + 1 || mr.left < vs.right - 1) out.push('fighter text runs into the VS badge for ' + m.name);
+      }));
+      state.raid = null;
+      return [...new Set(out.filter(Boolean))].slice(0, 6);
+    });
+    assert.deepEqual(r, [], 'at ' + viewport.width);
+    await g.context.close();
+  }
+});
+
+test('boss cards: tap the boss in the arena or a met boss in the book; every boss draws', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    updateBattleUI();
+    document.getElementById('monster-icon').click();
+    const m = document.getElementById('bosscard-modal');
+    out.arenaOpens = m.style.display === 'flex';
+    out.arenaLevel = bossCard(currentMonsterIndex, { level: bossLevel }).levelText === 'Lv ' + bossLevel;
+    closeBossCard();
+    state.bossBook[3] = { wins: 4, form: 1 };
+    openBook(); bookTab = 'boss'; renderBook();
+    const met = [...document.querySelectorAll('#book-body .pet-card')].filter((c) => c.getAttribute('onclick'));
+    out.metClickable = met.length === Object.keys(state.bossBook).length;     // every met boss is clickable, unmet ones are not
+    met.find((c) => c.getAttribute('onclick') === 'openBossCard(3)').click();
+    out.bookOpens = m.style.display === 'flex' && /Elder/.test(bossCard(3).name) && bossCard(3).stats[2][1] === 4;
+    closeBossCard(); closeBook();
+    const sizes = new Set();
+    monstersList.forEach((_, i) => [{}, { level: 30 }, { level: 50, raid: true }].forEach((o) => { const c = document.createElement('canvas'); drawCardFromDesc(c, bossCard(i, o)); sizes.add(c.width + 'x' + c.height); }));
+    out.sizes = [...sizes];
+    out.labelled = !!document.getElementById('monster-icon').getAttribute('aria-label');
+    return out;
+  });
+  assert.deepEqual(r, { arenaOpens: true, arenaLevel: true, metClickable: true, bookOpens: true, sizes: ['600x840'], labelled: true });
+});
+
+test('the buddy can be opened from the keyboard too', async () => {
+  const opened = await page.evaluate(() => {
+    const w = document.getElementById('fighter-icon-wrapper');
+    w.focus();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    return document.getElementById('hub-modal').style.display === 'flex';
+  });
+  assert.equal(opened, true);
+});
+
 // ---------------------------------------------------------------- saves
 test('an old or damaged save is repaired, versioned and keeps working', async () => {
   await page.evaluate(() => localStorage.setItem('math_quest_save', JSON.stringify({

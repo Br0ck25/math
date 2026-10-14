@@ -19,6 +19,8 @@ document.addEventListener('click', function (e) {
   if (t.classList && t.classList.contains('modal-overlay') && t.dataset.close && typeof window[t.dataset.close] === 'function') window[t.dataset.close]();
 });
 window.addEventListener('keydown', function (e) {
+  const a = document.activeElement;
+  if ((e.key === 'Enter' || e.key === ' ') && a && a.getAttribute('role') === 'button' && a.tagName !== 'BUTTON') { e.preventDefault(); a.click(); return; }
   if (e.key === 'Escape' && closeTopOverlay()) return;
   if (isModalOpen()) return;
   if (e.key >= '0' && e.key <= '9') pressKey(e.key);

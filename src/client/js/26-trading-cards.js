@@ -18,32 +18,59 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-function drawCard(cv, id) {
+// A card is plain data, so buddies and bosses share one renderer:
+//   {name, levelText, icon, element, rarity:{name,col}, stars, stats:[[emoji, value, label] x3], line, foot, sleepy, gear}
+function buddyCard(id) {
+  const d = getPetById(id);
+  return {
+    name: d.name, levelText: 'Lv ' + d.level, icon: d.icon, element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
+    stats: [['❤️', getPetMaxHp(id), 'HP'], ['⚔️', getPetAttack(id), 'Attack'], ['🏆', state.tour.trophies, 'Trophies']],
+    line: '⚡ ' + d.superMove, foot: heartsHtml(getBond(id)), sleepy: isSleepy(id),
+    gear: id === state.activePet ? activeGear() : { acc: null, armor: null }    // gear belongs to the active buddy
+  };
+}
+// opts.level / opts.form describe the boss currently in the arena; without them the card shows the best form you have beaten.
+function bossCard(idx, opts) {
+  opts = opts || {};
+  const base = monstersList[idx];
+  const seen = state.bossBook[idx] || { wins: 0, form: -1 };
+  const form = opts.level ? getBossFormIndex(opts.level) : Math.max(0, seen.form);
+  const raid = !!opts.raid;
+  const weak = opts.level && currentMonsterIndex === idx ? getWeakOp() : weakOpForBoss(idx);
+  const hp = base.baseHp + (opts.level ? Math.floor(opts.level / 3) : 0) + form * 2 + (raid ? 2 : 0);
+  return {
+    name: (raid ? '👑 ' : '') + (form === 2 ? 'Alpha ' : form === 1 ? 'Elder ' : '') + base.name,
+    levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: base.icon, element: base.element,
+    rarity: raid ? { name: 'RAID BOSS', col: '#ef4444' } : [null, null, null, { name: 'COMMON', col: '#94a3b8' }, { name: 'RARE', col: '#38bdf8' }, { name: 'EPIC', col: '#a78bfa' }, { name: 'LEGENDARY', col: '#fbbf24' }][clamp(base.baseHp, 3, 6)],
+    stars: form + 1,
+    stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', 1 + (form === 2 ? 1 : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
+    line: '"' + base.taunts[0] + '"',
+    foot: weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
+  };
+}
+function drawCardFromDesc(cv, c) {
   const W = 600, H = 840;
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
-  const d = getPetById(id);
-  const rar = rarityOf(id);
-  const ec = ELEM_COLORS[d.element] || '#6366f1';
-  const sleepy = isSleepy(id);
+  const ec = ELEM_COLORS[c.element] || '#6366f1';
   const g = ctx.createLinearGradient(0, 0, W, H);
   g.addColorStop(0, ec);
   g.addColorStop(0.55, '#1e1b4b');
   g.addColorStop(1, '#0f172a');
   ctx.fillStyle = g;
   rrect(ctx, 0, 0, W, H, 36); ctx.fill();
-  ctx.lineWidth = 12; ctx.strokeStyle = rar.col;
+  ctx.lineWidth = 12; ctx.strokeStyle = c.rarity.col;
   rrect(ctx, 8, 8, W - 16, H - 16, 30); ctx.stroke();
   ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.35)';
   rrect(ctx, 26, 26, W - 52, H - 52, 20); ctx.stroke();
   ctx.textBaseline = 'middle';
   // name + level
   ctx.fillStyle = '#fff'; ctx.textAlign = 'left';
-  ctx.font = '900 42px system-ui, sans-serif';
-  ctx.fillText(d.name.length > 16 ? d.name.slice(0, 15) + '…' : d.name, 48, 66);
+  ctx.font = '900 40px system-ui, sans-serif, ' + EMOJI_FONT;
+  ctx.fillText(c.name.length > 17 ? c.name.slice(0, 16) + '…' : c.name, 48, 66);
   ctx.textAlign = 'right'; ctx.fillStyle = '#fde047';
   ctx.font = '900 34px system-ui, sans-serif';
-  ctx.fillText('Lv ' + d.level, W - 48, 66);
+  ctx.fillText(c.levelText, W - 48, 66);
   // art box
   const art = ctx.createRadialGradient(W / 2, 330, 20, W / 2, 330, 260);
   art.addColorStop(0, 'rgba(255,255,255,0.35)');
@@ -54,77 +81,97 @@ function drawCard(cv, id) {
   ctx.textAlign = 'center';
   let fs = 250;
   ctx.font = fs + 'px ' + EMOJI_FONT;
-  while (ctx.measureText(d.icon).width > 400 && fs > 90) { fs -= 20; ctx.font = fs + 'px ' + EMOJI_FONT; }
-  const gear = id === state.activePet ? activeGear() : { acc: null, armor: null };   // gear belongs to the active buddy
-  drawGear(ctx, gear.acc, gear.armor, W / 2, 335, fs, 'behind');
+  while (ctx.measureText(c.icon).width > 400 && fs > 90) { fs -= 20; ctx.font = fs + 'px ' + EMOJI_FONT; }
+  drawGear(ctx, c.gear.acc, c.gear.armor, W / 2, 335, fs, 'behind');
   ctx.font = fs + 'px ' + EMOJI_FONT;
-  ctx.globalAlpha = sleepy ? 0.55 : 1;
-  ctx.fillText(d.icon, W / 2, 335);
+  ctx.globalAlpha = c.sleepy ? 0.55 : 1;
+  ctx.fillText(c.icon, W / 2, 335);
   ctx.globalAlpha = 1;
-  drawGear(ctx, gear.acc, gear.armor, W / 2, 335, fs, 'front');
-  if (sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
+  drawGear(ctx, c.gear.acc, c.gear.armor, W / 2, 335, fs, 'front');
+  if (c.sleepy) { ctx.font = '70px ' + EMOJI_FONT; ctx.fillText('💤', W - 120, 170); }
   // type pill + stars
   ctx.fillStyle = ec;
   rrect(ctx, 48, 575, 190, 46, 23); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = '900 24px system-ui, sans-serif';
-  ctx.fillText(d.element.toUpperCase(), 143, 599);
+  ctx.fillText(c.element.toUpperCase(), 143, 599);
   ctx.textAlign = 'right'; ctx.fillStyle = '#fde047'; ctx.font = '36px ' + EMOJI_FONT;
-  ctx.fillText(d.stage === 0 ? '⭐' : (d.stage === 1 ? '⭐⭐' : '⭐⭐⭐'), W - 48, 599);
+  ctx.fillText('⭐'.repeat(clamp(c.stars, 1, 3)), W - 48, 599);
   // stats
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   rrect(ctx, 48, 640, W - 96, 84, 18); ctx.fill();
-  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '900 30px system-ui, sans-serif';
-  ctx.fillText('❤️ ' + getPetMaxHp(id), 150, 668);
-  ctx.fillText('⚔️ ' + getPetAttack(id), 300, 668);
-  ctx.fillText('🏆 ' + state.tour.trophies, 450, 668);
-  ctx.font = '700 22px system-ui, sans-serif'; ctx.fillStyle = '#c7d2fe';
-  ctx.fillText('HP', 150, 703); ctx.fillText('Attack', 300, 703); ctx.fillText('Trophies', 450, 703);
-  // super move + bond
-  ctx.font = '800 26px system-ui, sans-serif'; ctx.fillStyle = '#fde68a';
-  ctx.fillText('⚡ ' + d.superMove, W / 2, 755);
-  ctx.font = '28px ' + EMOJI_FONT;
-  ctx.fillText(heartsHtml(getBond(id)), W / 2, 793);
-  // rarity ribbon
-  ctx.fillStyle = rar.col;
-  rrect(ctx, W / 2 - 110, 812 - 6, 220, 0.1, 1);
+  ctx.textAlign = 'center';
+  c.stats.forEach(function (st, i) {
+    const x = 150 + i * 150;
+    ctx.fillStyle = '#fff'; ctx.font = '900 30px system-ui, sans-serif, ' + EMOJI_FONT;
+    ctx.fillText(st[0] + ' ' + st[1], x, 668);
+    ctx.font = '700 22px system-ui, sans-serif'; ctx.fillStyle = '#c7d2fe';
+    ctx.fillText(st[2], x, 703);
+  });
+  // line (super move / taunt) and footer (bond hearts / weak point)
+  ctx.fillStyle = '#fde68a';
+  let lf = 26;
+  ctx.font = '800 ' + lf + 'px system-ui, sans-serif, ' + EMOJI_FONT;
+  while (ctx.measureText(c.line).width > W - 110 && lf > 14) { lf -= 2; ctx.font = '800 ' + lf + 'px system-ui, sans-serif, ' + EMOJI_FONT; }
+  ctx.fillText(c.line, W / 2, 750);
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 26px system-ui, sans-serif, ' + EMOJI_FONT;
+  ctx.fillText(c.foot, W / 2, 778);
+  // rarity + brand
   ctx.font = '900 20px system-ui, sans-serif';
-  ctx.textAlign = 'left'; ctx.fillStyle = rar.col;
-  ctx.fillText('◆ ' + rar.name, 48, 812);
+  ctx.textAlign = 'left'; ctx.fillStyle = c.rarity.col;
+  ctx.fillText('◆ ' + c.rarity.name, 52, 800);
   ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('MATH QUEST', W - 48, 812);
+  ctx.fillText('MATH QUEST', W - 52, 800);
 }
+function drawCard(cv, id) { drawCardFromDesc(cv, buddyCard(id)); }
 function renderCardTab() {
   const rar = rarityOf(hubPet);
   document.getElementById('hub-body').innerHTML =
     '<canvas class="card-canvas" id="card-canvas"></canvas>' +
     '<div style="font-size:0.72rem; font-weight:800; color:' + rar.col + ';">◆ ' + rar.name + ' card</div>' +
     '<div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">' +
-    '<button class="grade-btn" onclick="cardSave()">💾 Save image</button>' +
-    '<button class="grade-btn" onclick="cardShare()">📤 Share</button></div>';
+    '<button class="grade-btn" onclick="cardSave(&quot;card-canvas&quot;, hubPet)">💾 Save image</button>' +
+    '<button class="grade-btn" onclick="cardShare(&quot;card-canvas&quot;, hubPet, getPetById(hubPet).name)">📤 Share</button></div>';
   drawCard(document.getElementById('card-canvas'), hubPet);
 }
-function cardBlob(cb) { document.getElementById('card-canvas').toBlob(cb, 'image/png'); }
-function cardSave() {
-  cardBlob(function (blob) {
+function cardBlob(canvasId, cb) { document.getElementById(canvasId).toBlob(cb, 'image/png'); }
+function cardSave(canvasId, slug) {
+  cardBlob(canvasId, function (blob) {
     if (!blob) return;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'math-quest-' + hubPet + '.png';
+    a.download = 'math-quest-' + slug + '.png';
     document.body.appendChild(a);
     a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     toast('🃏 Card saved!');
   });
 }
-function cardShare() {
-  cardBlob(function (blob) {
+function cardShare(canvasId, slug, title) {
+  cardBlob(canvasId, function (blob) {
     if (!blob) return;
-    const file = new File([blob], 'math-quest-' + hubPet + '.png', { type: 'image/png' });
-    const d = getPetById(hubPet);
+    const file = new File([blob], 'math-quest-' + slug + '.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: d.name + ' — Math Quest', text: 'Check out my ' + d.name + '! Lv ' + d.level }).catch(function () {});
+      navigator.share({ files: [file], title: title + ' — Math Quest', text: 'Check out ' + title + ' in Math Quest!' }).catch(function () {});
     } else {
-      cardSave();
+      cardSave(canvasId, slug);
     }
   });
 }
+
+// ----- boss cards: tap the boss in the arena, or a met boss in the collection book -----
+let bossCardArgs = { idx: 0, opts: {} };
+function renderBossCard() {
+  const c = bossCard(bossCardArgs.idx, bossCardArgs.opts);
+  drawCardFromDesc(document.getElementById('boss-canvas'), c);
+  document.getElementById('boss-card-rarity').innerText = '◆ ' + c.rarity.name + ' card';
+  document.getElementById('boss-card-rarity').style.color = c.rarity.col;
+}
+function openBossCard(idx, opts) {
+  bossCardArgs = { idx: idx, opts: opts || {} };
+  showModal('bosscard-modal', renderBossCard);
+}
+function openArenaBossCard() {
+  openBossCard(currentMonsterIndex, { level: bossLevel, raid: !!state.raid });
+}
+function closeBossCard() { hideModal('bosscard-modal'); }

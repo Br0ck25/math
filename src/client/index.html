@@ -71,23 +71,23 @@
 
       <div class="versus-row">
         <div class="fighter">
-          <div class="fighter-icon-wrapper" id="fighter-icon-wrapper" onclick="openHub()" title="Tap your buddy: care, trading card, tournament">
+          <div class="fighter-icon-wrapper" id="fighter-icon-wrapper" onclick="openHub()" role="button" tabindex="0" aria-label="Your buddy: open care, trading card, tournament and duels" title="Tap your buddy: care, trading card, tournament">
             <span class="fighter-icon" id="pet-fighter-icon">🐶</span>
             <span class="mood-bubble" id="mood-bubble"></span>
             <span class="gear-layer" id="pet-gear"></span>
           </div>
           <div class="fighter-info">
-            <div class="fighter-tag">Buddy <span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-tag">Lv <span id="pet-level">1</span></span></div>
             <div class="fighter-name" id="pet-fighter-name">Pup</div>
+            <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span></div>
           </div>
           <div class="battle-fx" id="pet-attack-fx">⚡</div>
         </div>
         <div class="vs-badge">VS</div>
-        <div class="fighter" style="flex-direction: row-reverse; text-align: right;">
-          <span class="fighter-icon" id="monster-icon">🐲</span>
-          <div class="fighter-info" style="text-align: right;">
-            <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-tag">Lv <span id="monster-level">1</span></span></div>
+        <div class="fighter right">
+          <button class="fighter-icon boss-btn" id="monster-icon" onclick="openArenaBossCard()" aria-label="Boss card">🐲</button>
+          <div class="fighter-info">
             <div class="fighter-name" id="monster-name">Fire Drake</div>
+            <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-pill">Lv <span id="monster-level">1</span></span></div>
           </div>
           <div class="battle-fx" id="monster-attack-fx">💥</div>
         </div>
@@ -458,6 +458,19 @@
   <!-- Online duel -->
   <div class="modal-overlay" id="rd-modal" data-esc="rdCloseModal">
     <div class="modal-content" style="border-color:#fbbf24;"><div id="rd-box"></div></div>
+  </div>
+  <!-- Boss card -->
+  <div class="modal-overlay" id="bosscard-modal" data-close="closeBossCard">
+    <div class="modal-content">
+      <h2 style="font-size: 1.2rem;">👾 Boss Card</h2>
+      <canvas class="card-canvas" id="boss-canvas"></canvas>
+      <div style="font-size:0.72rem; font-weight:800;" id="boss-card-rarity"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
+        <button class="grade-btn" onclick="cardSave('boss-canvas', 'boss')">💾 Save image</button>
+        <button class="grade-btn" onclick="cardShare('boss-canvas', 'boss', 'Boss card')">📤 Share</button>
+      </div>
+      <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 8px; height: 44px; font-size:1rem;" onclick="closeBossCard()">Back to Game</button>
+    </div>
   </div>
   <div class="duel-chip" id="duel-chip" onclick="rdOpenFromChip()" style="display:none;"></div>
 
