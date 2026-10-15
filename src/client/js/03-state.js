@@ -58,6 +58,7 @@ function freshState() {
     bossBook: {},
     bossSwapped: false,
     bookClaims: [],
+    shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
     packClaims: [],                                  // pack ids whose completion reward was claimed
   };
 }

@@ -101,6 +101,11 @@ const NORMALIZERS = [
     Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });
     s.dexSeen = seen;
   },
+  function shinies(s) {
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), shiny = {};
+    Object.keys(s.shinies || {}).forEach(function (id) { if (s.shinies[id] && owned.indexOf(id) !== -1) shiny[id] = 1; });
+    s.shinies = shiny;
+  },
   function packs(s) {
     s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
   },

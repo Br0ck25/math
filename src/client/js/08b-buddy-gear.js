@@ -97,7 +97,7 @@ function formMarkup(stage, element) {
 }
 // A buddy picture of `px` pixels with its evolution look (and optional extra gear markup) for menus and modals.
 function avatarHtml(pet, px, gearHtml) {
-  return '<span class="buddy-avatar" style="--u:' + px + 'px; --evo:' + elemColor(pet.element) + ';"><span class="buddy-glyph stage-' + pet.stage + '">' + pet.icon +
+  return '<span class="buddy-avatar' + (state.shinies[pet.id] ? ' shiny' : '') + '" style="--u:' + px + 'px; --evo:' + elemColor(pet.element) + ';"><span class="buddy-glyph stage-' + pet.stage + '">' + pet.icon +
     '</span><span class="gear-layer">' + formMarkup(pet.stage, pet.element) + (gearHtml || '') + '</span></span>';
 }
 // Same look on the trading card canvas. layer 'behind' draws the aura, 'front' the badge and sparkle.

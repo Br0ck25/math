@@ -97,13 +97,16 @@ function resolveCatch(data, nets) {
   const chance = wildCatchChance(sp, { flawless: data.flawless, shiny: data.shiny, nets: nets });
   if (nets) { state.nets -= nets; toast('🕸️ ' + nets + ' Catch Net' + (nets > 1 ? 's' : '') + ' thrown (' + state.nets + ' left)'); }
   if (Math.random() >= chance) { if (data.shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
+  if (data.shiny && !state.shinies[sp.id]) toast('✨ A shiny ' + sp.name + '! It will glow from now on.');
   if (getOwnedIds().indexOf(sp.id) !== -1) {
+    if (data.shiny) state.shinies[sp.id] = 1;
     state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1);
     toast('🎉 Caught a spare ' + sp.name + '! Sell it in the buddy hub for ' + spareValueOf(sp.id) + ' 💎');
     return;
   }
   grantBuddy(sp.id);
   (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id);
+  if (data.shiny) state.shinies[sp.id] = 1;
   checkEarnedGear();
   enqueueModal(function () { showLootModal(sp, 'wild'); });
 }

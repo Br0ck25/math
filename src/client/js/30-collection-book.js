@@ -121,12 +121,12 @@ function bookBuddy(sp, lockedHint) {
   const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>' +
     '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
-  return bookCard({ icon: avatarHtml(d, 40), name: no + ' ' + escHtml(d.name), elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
+  return bookCard({ icon: avatarHtml(d, 40), name: no + ' ' + (state.shinies[sp.id] ? '✨ ' : '') + escHtml(d.name), elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
 }
 
 function renderBook() {
   const c = bookCounts();
-  document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses and gear';
+  document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + (Object.keys(state.shinies).length ? ' · ✨ Shiny ' + Object.keys(state.shinies).length : '') + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses and gear';
 
   const ms = document.getElementById('book-milestones');
   ms.innerHTML = '';

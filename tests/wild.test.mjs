@@ -349,6 +349,36 @@ test('Dex pack rewards: owning every buddy of a pack pays once (gems per member 
   assert.equal(r.clean, 'arctic');
 });
 
+test('shiny buddies: catching the golden daily rare makes that buddy glow for good (owned or a spare), and saves are repaired', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const real = Math.random; Math.random = () => 0;                    // every catch succeeds
+    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.shinies = {};
+    const sp = wildPool().find((p) => isStoreBuddy(p) && p.id !== 'dog');
+    resolveCatch({ id: sp.id, flawless: false, shiny: false }, 0);
+    out.plain = [getOwnedIds().includes(sp.id), !!state.shinies[sp.id]];
+    state.unlockedPets = ['dog']; state.shinies = {};
+    resolveCatch({ id: sp.id, flawless: false, shiny: true }, 0);
+    out.shiny = [getOwnedIds().includes(sp.id), !!state.shinies[sp.id]];
+    out.glow = avatarHtml(getPetById(sp.id), 40).includes('buddy-avatar shiny') && !avatarHtml(getPetById('dog'), 40).includes('shiny');
+    resolveCatch({ id: sp.id, flawless: false, shiny: true }, 0);        // already owned: a spare, still shiny
+    out.spare = [state.spares[sp.id], !!state.shinies[sp.id]];
+    bookTab = 'buddy'; bookMissingOnly = false; renderBook();
+    out.book = document.getElementById('book-body').innerHTML.includes('✨ ') && /Shiny 1/.test(document.getElementById('book-progress').innerText);
+    Math.random = real;
+    state.shinies = { [sp.id]: 1, dog: 0, stranger: 1, fox: 1 }; NORMALIZERS.forEach((fn) => fn(state));
+    out.clean = Object.keys(state.shinies).join();
+    out.id = sp.id;
+    return out;
+  });
+  assert.deepEqual(r.plain, [true, false], 'a normal catch is not shiny');
+  assert.deepEqual(r.shiny, [true, true]);
+  assert.equal(r.glow, true);
+  assert.deepEqual(r.spare, [1, true]);
+  assert.equal(r.book, true);
+  assert.equal(r.clean, r.id, 'only owned buddies can be shiny');
+});
+
 test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets, better chance; closing the window is a plain try', async () => {
   const r = await page.evaluate(async () => {
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
