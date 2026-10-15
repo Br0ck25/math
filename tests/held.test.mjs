@@ -214,26 +214,53 @@ test('when your fighter faints and a teammate can still fight, you choose who co
   assert.equal(r.stillFree, true);
 });
 
-test('when no teammate can fight any more, the strongest buddy that can fight comes in; when everyone has fainted the team is revived', async () => {
+test('when the whole team has fainted, everyone is revived (a buddy outside the team never comes in)', async () => {
   const r = await page.evaluate(async () => {
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
     const out = {};
     const ids = storePets.slice(0, 3).map((x) => x.id);
     state.unlockedPets = ids; state.team = ids.slice(0, 2); state.activePet = ids[0]; state.faintedPets = [ids[1]]; state.shields = 0;
-    state.buddyXp[ids[2]] = xpForLevel(20);
+    state.buddyXp[ids[2]] = xpForLevel(40);                  // strong, but not on the team
     state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 60; partyHp = {}; setPetHp(ids[0], 1); monsterCurrentHp = 99; inputLocked = false;
     const real = Math.random; Math.random = () => 0.99;
     userInput = String(currentProblem.answer + 7); checkAnswer();
-    await wait(2500);
-    out.auto = [state.activePet === ids[2], state.faintedPets.includes(ids[0]), needsSwitch()];
-    state.faintedPets = [ids[0], ids[1]]; state.activePet = ids[2]; partyHp = {}; setPetHp(ids[2], 1); inputLocked = false;
-    userInput = String(currentProblem.answer + 7); checkAnswer();
     await wait(2500); Math.random = real;
-    out.revived = [state.faintedPets.length, needsSwitch()];
+    out.revived = [state.faintedPets.length, needsSwitch(), state.activePet === ids[0], state.activePet === ids[2]];
     return out;
   });
-  assert.deepEqual(r.auto, [true, true, false], 'no teammate left: the strongest buddy that can fight comes in');
-  assert.deepEqual(r.revived, [0, false], 'everyone fainted: revived');
+  assert.deepEqual(r.revived, [0, false, true, false], 'the team is revived; the outsider never fought');
+});
+
+test('only team members can fight: the Sanctuary refuses an outsider, the picker keeps your fighter on the team, new buddies join only if there is room', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const ids = storePets.slice(0, 5).map((x) => x.id);
+    state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; state.gems = 100000;
+    equipPet(ids[4]); out.outsider = [state.activePet === ids[0], state.swapUsed, document.getElementById('toast').innerText];
+    equipPet(ids[1]); out.member = state.activePet === ids[1];
+    // the fighter stays on the team
+    hubPet = ids[1]; toggleTeam(ids[1]); out.stay = getTeam().includes(ids[1]);
+    toggleTeam(ids[4]); out.replaced = [getTeam().length, getTeam().includes(ids[4]), getTeam().includes(ids[1]), getTeam().includes(ids[0])];
+    // an old save whose team lacks the fighter: the fighter is added
+    state.team = [ids[2], ids[3]]; state.activePet = ids[0]; out.included = getTeam().includes(ids[0]) && getTeam().length === 3;
+    // a new buddy: room on the team = it joins and fights; full team = it waits in the collection
+    state.team = [ids[0]]; state.activePet = ids[0]; state.swapUsed = false;
+    out.room = [joinTeamIfRoom('x1'), joinTeamIfRoom(ids[1]), getTeam().length];
+    state.team = ids.slice(0, 3); out.full = joinTeamIfRoom(ids[3]);
+    state.activePet = ids[0]; state.swapUsed = false; pendingLootPet = getSpecies(ids[4]); closeLootModal(true);
+    out.loot = [state.activePet === ids[0], document.getElementById('toast').innerText];
+    return out;
+  });
+  assert.deepEqual(r.outsider.slice(0, 2), [true, false], 'an outsider cannot be equipped, and no swap is used');
+  assert.match(r.outsider[2], /Only your team can fight/);
+  assert.equal(r.member, true);
+  assert.equal(r.stay, true, 'the fighter cannot be taken off the team');
+  assert.deepEqual(r.replaced, [3, true, true, false], 'a full team drops the oldest buddy that is not the fighter');
+  assert.equal(r.included, true);
+  assert.deepEqual(r.room.slice(1), [true, 2]);
+  assert.equal(r.full, false);
+  assert.deepEqual([r.loot[0]], [true]);
+  assert.match(r.loot[1], /team is full/);
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

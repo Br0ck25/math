@@ -41,11 +41,11 @@ function slayerTarget(boss) { const sp = boss.slays && getSpecies(boss.slays); r
 function getBossMaxHp() { return getBossInfo().maxHp; }
 
 const TYPE_STRONG = {
-  fire: ['nature'],
+  fire: ['nature', 'dark'],
   water: ['fire', 'magic'],
   nature: ['water', 'electric'],
   electric: ['water', 'magic'],
-  dark: ['nature'],
+  dark: ['nature', 'electric'],
   magic: ['dark', 'fire']
 };
 // The element a fighter battles with: ultra-rare buddies always use Shadow power, whatever element badge they show.

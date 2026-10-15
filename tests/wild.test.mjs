@@ -55,7 +55,7 @@ test('a boss appears after every 5 to 8 wild buddies, then wild buddies start ag
 
 test('a wild win pays wild gems, counts no boss, and the boss counter is untouched', async () => {
   const r = await page.evaluate(async () => {
-    state.gems = 0; const lvl = bossLevel;
+    state.gems = 0; state.monstersDefeated = 0; state.wild.since = 0; const lvl = bossLevel;      // (an earlier test's late save may have been reloaded)
     monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
     await new Promise((res) => setTimeout(res, 1000));
@@ -383,7 +383,7 @@ test('the daily rare: once a day after 3 wild wins a golden buddy appears, tough
 });
 const ECON_DAILY_GEMS = 20;
 
-test('the type chart is fair: no two types beat each other, every type beats someone and loses to someone, and Magic is even', async () => {
+test('the type chart is fair: no two types beat each other, every type beats exactly two and loses to exactly two', async () => {
   const r = await page.evaluate(() => {
     const types = Object.keys(TYPE_STRONG), out = { mutual: [], none: [], count: {} };
     types.forEach((a) => TYPE_STRONG[a].forEach((b) => { if (TYPE_STRONG[b].includes(a)) out.mutual.push(a + '/' + b); }));
@@ -397,7 +397,7 @@ test('the type chart is fair: no two types beat each other, every type beats som
   });
   assert.deepEqual(r.mutual, []);
   assert.deepEqual(r.none, []);
-  assert.deepEqual(r.count.magic, [2, 2], 'Magic beats two types and loses to two');
+  Object.keys(r.count).forEach((t) => assert.deepEqual(r.count[t], [2, 2], t + ' beats two types and loses to two'));
   assert.deepEqual(r.magic, [1, 1, 1, 1, -1, -1]);
   assert.match(r.chart, /Magic[\s\S]*weak to 💧 Water, ⚡ Electric/);
 });

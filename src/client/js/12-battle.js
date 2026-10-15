@@ -242,24 +242,14 @@ function triggerBuddyDamage() {
       return;
     }
 
-    const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
-    if (alive.length === 0) {
-      state.faintedPets = [];
-      partyHp = {};
-      monsterCurrentHp = getBossMaxHp();
-      showPopup('💀 ALL BUDDIES FAINTED! PARTY REVIVED!');
-      document.getElementById('feedback-msg').innerText = 'All buddies fell in battle! Full team revived!';
-      updateStatsUI();
-      scheduleNextProblem(1500, 'Try again — you can do it!');
-    } else {
-      alive.sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
-      state.activePet = alive[0];
-      const next = getActivePetDisplay();
-      showPopup(`💔 ${pet.name} FAINTED! ${next.name} enters!`);
-      document.getElementById('feedback-msg').innerText = `${pet.name} needs rest! ${next.name} enters!`;
-      updateStatsUI();
-      scheduleNextProblem(1400, 'Ready for the next one!');
-    }
+    // the whole team has fainted: everyone is revived and the battle goes on
+    state.faintedPets = [];
+    partyHp = {};
+    monsterCurrentHp = getBossMaxHp();
+    showPopup('💀 YOUR TEAM FAINTED! EVERYONE IS REVIVED!');
+    document.getElementById('feedback-msg').innerText = 'Your whole team fell in battle! Everyone is revived, try again!';
+    updateStatsUI();
+    scheduleNextProblem(1500, 'Try again — you can do it!');
     saveState();
   }, 200);
 }

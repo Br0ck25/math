@@ -199,10 +199,10 @@ function selectOrBuyPet(pet) {
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);
   checkEarnedGear();
-  const fights = !state.swapUsed && useSwap(pet.id);             // a new buddy only takes over if this battle's swap is still free
+  const fights = !state.swapUsed && joinTeamIfRoom(pet.id) && useSwap(pet.id);    // a new buddy fights only if the team has room and this battle's swap is still free
   soundLevelUp();
   launchConfetti();
-  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' You can switch to it in the next battle.'));
+  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' It is in your collection: put it on your team to fight with it.'));
   saveState();
   rerenderShop();
 }

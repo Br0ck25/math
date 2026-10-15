@@ -76,7 +76,7 @@ function sendInReplacement(id) {
   saveState();
   updateStatsUI();
 }
-// Called whenever a new problem is made: if the fighter is fainted, wait for a teammate, or (no teammate left) bring in the strongest buddy that can fight.
+// Called whenever a new problem is made: if the fighter is fainted, wait for a teammate, or (no teammate left) revive the team.
 function holdForSwitch() {
   if (!needsSwitch()) return;
   if (aliveTeamIds().length) {
@@ -84,9 +84,8 @@ function holdForSwitch() {
     document.getElementById('feedback-msg').innerText = getActivePetDisplay().name + ' needs rest! Tap a teammate to send in.';
     return;
   }
-  const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
-  if (alive.length) { alive.sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }); state.activePet = alive[0]; }
-  else { state.faintedPets = []; partyHp = {}; }
+  state.faintedPets = [];                                        // the whole team has fainted: everyone is revived
+  partyHp = {};
 }
 const LONG_PRESS_MS = 500;
 // The team picker is the Cup tab of the buddy hub.
@@ -132,6 +131,7 @@ function updateTeamBar() {
 // Returns true when the swap happened; a refusal says why.
 function useSwap(id) {
   if (id === state.activePet) return false;
+  if (getTeam().indexOf(id) === -1) { soundWrong(); toast('Only your team can fight. Add it to your team first (press and hold a team buddy).'); return false; }
   if (needsSwitch()) {                                           // your fighter fainted: a teammate must take over (this is not the battle's free swap)
     if (aliveTeamIds().indexOf(id) === -1) { soundWrong(); toast('Pick a buddy from your team to send in.'); return false; }
     sendInReplacement(id);

@@ -261,7 +261,7 @@ test('the team bar shows each buddy\'s matchup against the boss and swapping cha
     state.faintedPets = [owned[2]]; updateStatsUI();
     document.querySelectorAll('#team-bar .swap-chip')[2].click();
     out.restingStays = state.activePet === owned[1];
-    state.team = [owned[0]]; updateStatsUI();
+    state.activePet = owned[0]; state.team = [owned[0]]; updateStatsUI();      // the fighter is always on the team
     out.hidden = document.getElementById('team-bar').children.length;
     return out;
   });
