@@ -73,9 +73,11 @@ function updateTeamBar() {
     const resting = state.faintedPets.indexOf(id) !== -1;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'team-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (state.swapUsed && id !== state.activePet) ? ' resting' : '');
-    b.setAttribute('aria-label', 'Swap to ' + p.name + ', ' + (resting ? 'resting' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name));
-    b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-mult">' + (resting ? '💤' : mu.icon + mu.mult) + '</span>';
+    b.className = 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (state.swapUsed && id !== state.activePet) ? ' resting' : '');
+    const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
+    b.setAttribute('aria-label', label);
+    b.title = label;
+    b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-badge" aria-hidden="true">' + (resting ? '💤' : mu.icon) + '</span>';
     b.onclick = function () { swapBuddy(id); };
     bar.appendChild(b);
   });

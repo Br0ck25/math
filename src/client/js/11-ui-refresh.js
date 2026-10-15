@@ -75,13 +75,14 @@ function updateBattleUI() {
     ultBtn.innerText = `🔥 ${pet.superMove}!`;
   } else {
     ultBtn.className = 'ult-btn';
-    ultBtn.innerText = `CHARGING (${ultimateCharge}/3)`;
+    ultBtn.innerHTML = `<span class="ult-word">CHARGING </span>(${ultimateCharge}/3)`;       // the word steps aside on narrow phones
   }
 
   document.getElementById('comp-count-badge').innerText = getOwnedIds().length;
   document.getElementById('shield-display').innerText = state.shields;
   document.getElementById('session-count-text').innerText = sessionStats.solved;
   document.getElementById('session-goal-text').innerText = sessionStats.goal;
+  document.getElementById('goal-pill-text').innerText = sessionStats.solved + '/' + sessionStats.goal;
   document.getElementById('session-badge').innerText = `🎁 ${sessionStats.goal}`;       // the gem reward arrives at this many solves
 
   const cloverTag = document.getElementById('clover-status');

@@ -37,7 +37,7 @@ test('a new player starts against a wild buddy, with its catch chance shown and 
   assert.ok(r.id);
   assert.equal(r.name, r.want);
   assert.equal(r.form, 0);
-  assert.match(r.chip, /Catch chance: \d+%/);
+  assert.match(r.chip, /Catch \d+%/);
 });
 
 test('a boss appears after every 5 to 8 wild buddies, then wild buddies start again', async () => {
@@ -235,7 +235,7 @@ test('one buddy swap per battle; a new battle gives a new swap', async () => {
     const out = { first: state.activePet === ids[1], used: state.swapUsed };
     swapBuddy(ids[2]);
     out.stayed = state.activePet === ids[1];
-    out.dimmed = [...document.querySelectorAll('#team-bar .team-chip')].filter((c) => c.classList.contains('resting')).length;
+    out.dimmed = [...document.querySelectorAll('#team-bar .swap-chip')].filter((c) => c.classList.contains('resting')).length;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
     await new Promise((res) => setTimeout(res, 1000));
     out.reset = state.swapUsed === false;

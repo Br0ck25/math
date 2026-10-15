@@ -253,13 +253,13 @@ test('the team bar shows each buddy\'s matchup against the boss and swapping cha
     const owned = storePets.slice(0, 3).map((s) => s.id);
     state.unlockedPets = owned; state.team = owned.slice(); state.activePet = owned[0]; state.faintedPets = [];
     updateStatsUI();
-    const chips = [...document.querySelectorAll('#team-bar .team-chip')];
+    const chips = [...document.querySelectorAll('#team-bar .swap-chip')];
     const out = { n: chips.length, first: chips[0].classList.contains('active'), labels: chips.map((c) => c.getAttribute('aria-label')) };
     chips[1].click();
     out.now = state.activePet === owned[1];
-    out.second = document.querySelectorAll('#team-bar .team-chip')[1].classList.contains('active');
+    out.second = document.querySelectorAll('#team-bar .swap-chip')[1].classList.contains('active');
     state.faintedPets = [owned[2]]; updateStatsUI();
-    document.querySelectorAll('#team-bar .team-chip')[2].click();
+    document.querySelectorAll('#team-bar .swap-chip')[2].click();
     out.restingStays = state.activePet === owned[1];
     state.team = [owned[0]]; updateStatsUI();
     out.hidden = document.getElementById('team-bar').children.length;

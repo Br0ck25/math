@@ -30,6 +30,9 @@
       <div class="stat-pill" title="Streak Shields Owned">
         <span>🛡️ <span id="shield-display">0</span></span>
       </div>
+      <div class="stat-pill goal-pill" title="Session goal: solve problems to earn a bonus">
+        <span>🎯 <span id="goal-pill-text">0/25</span></span>
+      </div>
     </div>
 
     <!-- Active Session Tracker + practice settings chip (one row) -->
@@ -55,15 +58,13 @@
     <!-- Battle Arena -->
     <div class="battle-header" id="battle-header-arena">
       <div class="battle-title-row">
-        <span class="battle-title-badge">⚔️ Monster Arena</span>
-        <span class="battle-goal-hint" id="type-match-hint">Elemental Match: Normal</span>
+        <span class="battle-goal-hint" id="type-match-hint">Neutral matchup</span>
+        <span class="weak-chip" id="weak-chip"></span>
       </div>
 
       <div class="boss-taunt-box" id="boss-taunt-box">
         Fire Drake: "You cannot calculate my flames!"
       </div>
-
-      <div class="weak-chip" id="weak-chip"></div>
 
       <div class="versus-row">
         <div class="fighter-card">
@@ -102,10 +103,9 @@
         </div>
       </div>
 
-      <div class="team-bar" id="team-bar" role="group" aria-label="Your team: tap to swap buddies"></div>
-
       <div class="ultimate-container">
-        <div style="font-size:0.72rem; font-weight:800; color:#f59e0b;">ULTIMATE</div>
+        <div class="swap-bar" id="team-bar" role="group" aria-label="Your team: tap to swap buddies"></div>
+        <div class="ult-label">ULTIMATE</div>
         <div class="ult-bar-bg">
           <div id="ult-bar" class="ult-bar-fill"></div>
         </div>

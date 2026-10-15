@@ -76,6 +76,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Respect reduced motion (`.reduce-motion`, `motionReduced()`); new animations are disabled by that class automatically, new canvas/particle effects must check it.
 - Small text needs 4.5:1 contrast. Use the CSS variables in `:root`, not new one-off colours.
 - Short iPhones (SE: 375x548 to 647) are the tightest case: decorative rows hide by height in `styles.css` so the equation and answer box never clip. Windows need `min-width:0` and must stay inside the screen with wide letters; `tests/windows.test.mjs` checks both.
+- The answer area (`.arena`, `#equation-mount`) is a size container: the equation is sized from the room it has (`cqh`), and banner then feedback step aside when it is short. Add rows above it freely, but run `tests/layout.test.mjs` (worst case at six phone sizes). Battle team chips are `.swap-chip` (`.team-chip` is the tournament picker).
 - Look at your change: screenshot at 360x640 and 420x800 before calling UI work done.
 
 ## Tests

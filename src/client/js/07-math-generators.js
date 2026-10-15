@@ -391,18 +391,20 @@ function getWeakOp() {
   }
   return weakOpForBoss(currentMonsterIndex);
 }
+// The small chip beside the type hint: a wild buddy's catch chance, or a boss's weak point (and raid phase). Kept short so it shares one row.
 function updateWeakChip() {
   const chip = document.getElementById('weak-chip');
   if (!chip) return;
-  const w = getWeakOp();
   const r = state.raid;
   if (state.wild.id) {
-    const sp = getSpecies(state.wild.id), rel = catchMatchup(sp);
-    chip.innerText = '🫧 Catch chance: ' + Math.round(wildCatchChance(sp) * 100) + '%' + (rel === 1 ? ' ⚡ (strong against it)' : rel === -1 ? ' ⚠️ (weak against it)' : '');
+    chip.innerText = '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%';
+    chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it.';
     return;
   }
-  const head = r ? '👑 RAID phase ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
-  chip.innerText = (w || r) ? head + (w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
+  const w = getWeakOp();
+  const head = r ? '👑 ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
+  chip.innerText = (w || r) ? head + (w ? '🎯 Weak: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
+  chip.title = w ? 'Weak point: solve ' + OP_BY_ID[w].label + ' problems to hit harder' + (r ? ' (raid phase ' + (r.phase + 1) + ' of ' + r.total + ')' : '') : '';
 }
 
 function generateProblem() {

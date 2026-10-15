@@ -493,7 +493,7 @@
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(4, 1fr);
       gap: 6px;
-      height: clamp(165px, 26vh, 220px);
+      height: clamp(150px, 26vh, 196px);
       flex-shrink: 0;
     }
 
@@ -579,10 +579,6 @@
       .arena { padding: 4px 8px; margin-bottom: 5px; }
       .streak-banner { min-height: 14px; font-size: 0.7rem; }
       .feedback-msg { min-height: 14px; font-size: 0.72rem; }
-      .equation-vertical { font-size: clamp(1.4rem, 3.8vh, 1.9rem); line-height: 1.05; letter-spacing: 2px; }
-      .equation-inline { font-size: clamp(1.4rem, 3.8vh, 1.9rem); }
-      .vertical-op { font-size: clamp(1.2rem, 3.4vh, 1.7rem); }
-      .answer-box { min-width: 80px; height: clamp(30px, 4.5vh, 36px); font-size: clamp(1.3rem, 3.6vh, 1.7rem); border-bottom-width: 3px; }
       .vertical-row.bottom-row { border-bottom-width: 2.5px; padding-bottom: 1px; margin-bottom: 2px; gap: 10px; }
       .keypad { height: clamp(140px, 24vh, 175px); gap: 5px; }
       .key-btn { font-size: 1.35rem; border-radius: 10px; box-shadow: 0 3px 0 #090d16; }
@@ -1095,8 +1091,8 @@
 
 /* iPhone SE and other short screens: the arena (equation + answer box) must always fit, so the decorative rows give way first */
 .modal-content { min-width: 0; box-sizing: border-box; overflow-x: hidden; }
-@media (max-height: 700px) { .boss-taunt-box, .battle-goal-hint { display: none; } }
-@media (max-height: 660px) { .session-info-row { display: none; } .weak-chip:empty { display: none; } }
+@media (max-height: 700px) { .boss-taunt-box { display: none; } }
+@media (max-height: 660px) { .session-info-row { display: none; } .top-bar { grid-template-columns: repeat(5, 1fr); } .goal-pill { display: flex; } }
 @media (max-height: 600px) { .xp-section { display: none; } .keypad { height: clamp(120px, 22vh, 140px); } .battle-header { padding: 3px 6px; margin-bottom: 3px; } }
 .modal-x-row + .hub-head { padding-top: 10px; }   /* the ‹ › arrows sit below the ✕ */
 
@@ -1200,13 +1196,51 @@
 @keyframes napBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
 .fighter-icon-wrapper.napping #pet-fighter-icon { filter: brightness(0.8); animation: napBob 2.4s ease-in-out infinite; }
 .fighter-icon-wrapper.napping::after { content: '💤'; position: absolute; top: -10px; right: -6px; font-size: 1rem; pointer-events: none; z-index: 4; animation: moodFloat 2.4s ease-out infinite; }
-.team-bar { display: flex; justify-content: center; gap: 6px; margin: 4px 0; }
-.team-bar:empty { display: none; }
-.team-chip { display: flex; align-items: center; gap: 4px; min-height: 44px; min-width: 0; padding: 2px 8px; border-radius: 12px; border: 2px solid var(--card-border); background: rgba(255,255,255,0.05); color: inherit; font: inherit; font-weight: 800; font-size: 0.72rem; cursor: pointer; }
-.team-chip .tc-icon { font-size: 1.3rem; line-height: 1; }
-.team-chip.active { border-color: #38bdf8; background: rgba(56,189,248,0.15); }
-.team-chip.good { box-shadow: 0 0 8px 1px rgba(74,222,128,0.7); }
-.team-chip.good .tc-mult { color: #4ade80; }
-.team-chip.bad .tc-mult { color: #fca5a5; }
-.team-chip.resting { opacity: 0.55; }
-@media (max-height: 720px) { .team-bar { margin: 1px 0; } }
+/* the battle team chips (sizes and the ultimate row are in the layout block below) */
+.swap-chip { display: flex; align-items: center; border-radius: 12px; border: 2px solid var(--card-border); background: rgba(255,255,255,0.05); color: inherit; font: inherit; cursor: pointer; }
+.swap-chip .tc-icon { line-height: 1; }
+.swap-chip.active { border-color: #38bdf8; background: rgba(56,189,248,0.15); }
+.swap-chip.good { box-shadow: 0 0 8px 1px rgba(74,222,128,0.7); }
+.swap-chip.resting { opacity: 0.55; }
+
+/* ===== Layout that fits any phone: rows share the space, and the equation is sized by the room it actually has ===== */
+/* 1. The answer area sizes its content from its own height (container units), so extra rows above it can never make the equation overlap the text below. */
+.arena { container: arena / size; }
+#equation-mount { container: eq / size; }
+#equation-mount .equation-vertical { --fs: clamp(1.05rem, calc((100cqh - 10px) / 3.5), 2.3rem); font-size: var(--fs); }
+#equation-mount .equation-inline { --fs: clamp(1.1rem, calc(100cqh / 1.6), 2.5rem); font-size: var(--fs); }
+#equation-mount .equation-stack { --fs: clamp(0.95rem, calc((100cqh - 8px) / 4), 1.7rem); }     /* room for a two-line expression */
+.equation-vertical .vertical-op { font-size: calc(var(--fs) * 0.85); }
+.answer-box { font-size: var(--fs, 1.6rem); height: calc(var(--fs, 1.6rem) * 1.35); min-width: calc(var(--fs, 1.6rem) * 3.2); border-bottom-width: 3px; }
+.eq-expr, .eq-ans { font-size: var(--fs, 1.2rem); }
+/* When the area is short, the least useful lines step aside first (kept in the page for screen readers and tests): banner, then feedback. */
+@container arena (max-height: 150px) { .streak-banner { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; min-height: 0; margin: 0; } }
+@container arena (max-height: 118px) { .feedback-msg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-height: 0; margin: 0; } }
+.hint-box { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.hint-box:empty { display: none; }
+@container arena (max-height: 150px) { .hint-box { -webkit-line-clamp: 1; line-clamp: 1; } }
+
+/* 2. The battle panel: type hint and chip share one row; the team chips sit on the ultimate row. */
+.battle-title-row { justify-content: space-between; margin-bottom: 3px; }
+.battle-goal-hint { text-align: left; }
+.weak-chip { flex: 0 1 auto; min-width: 0; margin: 0; font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.weak-chip:empty { display: none; }
+.ultimate-container { flex-wrap: wrap; row-gap: 4px; }
+.ult-bar-bg { min-width: 36px; }
+.ult-label { font-size: 0.72rem; font-weight: 800; color: #f59e0b; }
+.ult-label { display: none; }
+@media (max-width: 400px) { .ult-word { display: none; } }
+.swap-bar { display: flex; gap: 4px; margin: 0; flex: 0 0 auto; }
+.swap-bar:empty { display: none; }
+.swap-chip { position: relative; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; }
+.swap-chip .tc-icon { font-size: 1.5rem; }
+.swap-chip .tc-badge { position: absolute; top: -3px; right: -3px; font-size: 0.7rem; line-height: 1; pointer-events: none; }
+.top-bar .goal-pill { display: none; }
+@media (max-height: 660px) { .top-bar .goal-pill { display: flex; } }
+/* 3. On tall phones there is room for the unlock hint; on shorter ones it steps aside (kept for screen readers). */
+@media (max-height: 820px) { .next-goal { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); margin: 0; } }
+
+/* 4. Bubbles and the nap marker stay inside their own card, so they never cover the row beside it. */
+.mood-bubble { top: 2px; right: 2px; }
+.boss-box .boss-bubble { left: 2px; right: auto; }
+.fighter-icon-wrapper.napping::after { top: 0; right: 0; }

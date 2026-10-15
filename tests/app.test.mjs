@@ -353,7 +353,7 @@ test('daily quests: three quests, claiming pays, the chest needs all three', asy
 // ---------------------------------------------------------------- battle features
 test('boss weak point shows, glows and hits harder', async () => {
   await page.evaluate(() => { state.enabledOps = ['add', 'mul', 'sub']; updateBattleUI(); });
-  assert.match(await page.evaluate(() => document.getElementById('weak-chip').innerText), /Weak point/);
+  assert.match(await page.evaluate(() => document.getElementById('weak-chip').innerText), /Weak:/);
   const r = await page.evaluate(async () => {
     const weak = getWeakOp();
     do { generateProblem(); } while (currentProblem.modeTag !== weak);
