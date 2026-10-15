@@ -42,6 +42,7 @@ function freshState() {
     raidsCleared: 0,
     lastRaidAt: 0,
     bossBook: {},
+    bossSwapped: false,
     bookClaims: []
   };
 }

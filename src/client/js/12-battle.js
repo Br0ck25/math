@@ -95,7 +95,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       markBossWin(currentMonsterIndex, boss.form);
       checkBossBuddy(currentMonsterIndex, boss.form);
       buddyReact('win');
-      let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels);
+      let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();
@@ -126,7 +126,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);
-    } else {
+    } else if (!maybeBackupBoss(boss, pet)) {
       updateBattleUI();
     }
   }, 200);

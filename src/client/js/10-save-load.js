@@ -72,6 +72,7 @@ const NORMALIZERS = [
       book[k] = { wins: asInt(e.wins, 0, 1e6, 0), form: asInt(e.form, -1, 2, -1), alpha: asInt(e.alpha, 0, 1e6, 0) };
     });
     s.bossBook = book;
+    s.bossSwapped = s.bossSwapped === true;
   },
   function calendar(s) {
     const sc = s.streakCal;

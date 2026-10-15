@@ -9,8 +9,9 @@ function getBossInfo() {
   return {
     name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts, slays: base.slays || null,
     form: form, level: bossLevel,
-    maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0),
-    atk: 1 + (form === 2 ? 1 : 0)
+    maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0) + (state.bossSwapped ? ECON.boss.swap.extraHp : 0),
+    atk: 1 + (form === 2 ? 1 : 0) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
+    swapped: !!state.bossSwapped
   };
 }
 // True when this boss is a slayer of that buddy (a boss from getBossInfo(), a buddy from getPetById()).
@@ -47,6 +48,43 @@ function wantedBossCopies(candidates) {
   });
   return extra;
 }
+// The partner an Alpha boss calls for: half the time one that beats your buddy (a slayer of it, or an element strong against it), else any other boss.
+function pickBackupBoss(pet) {
+  const others = monstersList.map(function (_, i) { return i; }).filter(function (i) { return i !== currentMonsterIndex; });
+  if (Math.random() < ECON.boss.swap.counterChance) {
+    const counters = others.filter(function (i) {
+      const m = monstersList[i];
+      return m.slays === pet.id || (TYPE_STRONG[m.element] || []).indexOf(pet.element) !== -1;
+    });
+    if (counters.length) return pick(counters);
+  }
+  return pick(others);
+}
+// Called after each hit that leaves the boss alive. An Alpha boss under 25% health may swap for a fresh, tougher boss (never in raids, once per boss).
+// Returns true when it swapped. The first boss is not beaten: only the new one can give a win.
+function maybeBackupBoss(boss, pet) {
+  const S = ECON.boss.swap;
+  if (boss.form !== 2 || state.raid || state.bossSwapped || monsterCurrentHp <= 0 || monsterCurrentHp >= boss.maxHp * S.below) return false;
+  if (Math.random() >= S.chance) return false;
+  const old = boss.name;
+  currentMonsterIndex = pickBackupBoss(pet);
+  state.currentMonsterIndex = currentMonsterIndex;
+  state.bossSwapped = true;
+  state.recentBossTypes.push(monstersList[currentMonsterIndex].element);
+  if (state.recentBossTypes.length > 10) state.recentBossTypes = state.recentBossTypes.slice(-10);
+  markBossSeen(currentMonsterIndex);
+  monsterCurrentHp = getBossMaxHp();
+  const nb = getBossInfo();
+  soundSuperMove();
+  launchConfetti('streak');
+  screenShake(true);
+  showPopup('📣 BACKUP ARRIVES!');
+  toast('⚠️ ' + old + ' calls for backup! ' + nb.name + ' steps in at full health' + (nb.slays === pet.id ? ' and is strong against ' + pet.baseName + '!' : '!'));
+  setBossTaunt();
+  updateStatsUI();
+  saveState();
+  return true;
+}
 function pickNextBoss() {
   if (!state.recentBossTypes) state.recentBossTypes = [];
   let excludedType = null;
@@ -69,6 +107,7 @@ function pickNextBoss() {
   if (state.recentBossTypes.length > 10) state.recentBossTypes = state.recentBossTypes.slice(-10);
 
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-2, 3), 1, MAX_LEVEL);
+  state.bossSwapped = false;
   state.raid = null;
   if (state.monstersDefeated > 0 && state.monstersDefeated % ECON.raid.every === 0 && state.lastRaidAt !== state.monstersDefeated) {
     startRaid();

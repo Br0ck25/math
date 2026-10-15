@@ -9,7 +9,11 @@ const ECON = {
     gemBase: 8, gemPerLevels: 5,
     // A "slayer" boss is strong against one buddy: it hits that buddy harder (and may take up to 60% of its max HP in one hit instead of 40%),
     // and that buddy only deals 75% damage to it (no Shadow bonus).
-    slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 }
+    slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 },
+    // Backup: an Alpha boss under `below` of its health may swap out for another boss at full health. The new boss is what you must beat
+    // (the first one never counts as a win). It is tougher (+HP, +attack) and pays a bonus. `counterChance`: how often the partner is one that
+    // beats your buddy (a slayer of it, or one whose element is strong against it).
+    swap: { chance: 0.2, below: 0.25, counterChance: 0.5, extraHp: 2, extraAtk: 1, bonusGems: 5 }
   },
   // Beat any boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
   // A boss you have started on (1 or 2 Alpha wins) is picked `weight` times as often, once your buddy can reach Alpha bosses (level `minLevel`).
