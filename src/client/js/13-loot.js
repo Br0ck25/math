@@ -56,6 +56,13 @@ function showLootModal(pet, lootCategory) {
     tag.innerText = '🛸 ULTRA RARE COSMIC ANOMALY!';
     title.innerText = pet.name + ' Discovered!';
     subtitle.innerText = `${pet.lore} Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
+  } else if (lootCategory === 'boss') {
+    border.style.borderColor = '#ef4444';
+    tag.style.background = '#7f1d1d';
+    tag.style.color = '#fecaca';
+    tag.innerText = '🏆 BOSS BUDDY!';
+    title.innerText = pet.name + ' Joins You!';
+    subtitle.innerText = `💪 Beaten ${ECON.bossBuddy.alphaWins} times as an Alpha! Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
   } else if (lootCategory === 'mythic') {
     border.style.borderColor = '#d946ef';
     tag.style.background = '#701a75';

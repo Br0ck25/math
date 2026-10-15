@@ -303,6 +303,13 @@ const papawPet = {
 };
 const ultraPets = [janiePet, amberPet, papawPet];
 
+// Boss buddies: a boss you have beaten ECON.bossBuddy.alphaWins times in its Alpha form joins you. They are ordinary secret-strength buddies.
+const bossBuddies = [
+  { id: 'boss_cow', name: 'Bovine Bruiser', icon: '🐄', element: 'nature', superMove: 'Stampede Slam', secret: true, bossBuddy: true, snack: { icon: '🌾', name: 'fresh hay' } },
+  { id: 'boss_harpy', name: 'Harpy Eagle', icon: '🦅', element: 'electric', superMove: 'Thunder Talon Dive', secret: true, bossBuddy: true },
+  { id: 'boss_mara', name: 'Māra', icon: '😈', element: 'dark', superMove: 'Tempting Trick', secret: true, bossBuddy: true }
+];
+
 // Completely Unique Secret Companions
 const secretSpecies = [
   { name: 'Leo', icon: '🦁', elem: 'nature', superMove: 'Sovereign Roar' },

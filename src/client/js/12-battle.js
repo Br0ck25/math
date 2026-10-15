@@ -93,6 +93,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       questEvent('boss');
       if (bossMistakes === 0) questEvent('flawless');
       markBossWin(currentMonsterIndex, boss.form);
+      checkBossBuddy(currentMonsterIndex, boss.form);
       buddyReact('win');
       let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels);
       const wasRaid = state.raid ? state.raid.chapter : -1;

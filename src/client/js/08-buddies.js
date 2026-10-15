@@ -26,13 +26,15 @@ function secretForms(p) {
     { name: 'Cosmic ' + p.name, icon: p.icon, minLevel: 65 }
   ];
 }
-ultraPets.forEach(function (p) { p.forms = secretForms(p); });
+ultraPets.concat(bossBuddies).forEach(function (p) { p.forms = secretForms(p); });
 mythicCompanions.forEach(function (p) { p.forms = secretForms(p); });
 secretCompanions.forEach(function (p) { p.forms = secretForms(p); });
 
 function getSpecies(id) {
   const ultra = ultraPets.find(function (p) { return p.id === id; });
   if (ultra) return ultra;
+  const bb = bossBuddies.find(function (p) { return p.id === id; });
+  if (bb) return bb;
   return storePets.find(function (p) { return p.id === id; }) ||
          mythicCompanions.find(function (p) { return p.id === id; }) ||
          secretCompanions.find(function (p) { return p.id === id; }) || null;

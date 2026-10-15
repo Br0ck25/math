@@ -64,6 +64,15 @@ const NORMALIZERS = [
     if (!s.activeArmor || s.unlockedArmor.indexOf(s.activeArmor) === -1) s.activeArmor = 'none';
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
   },
+  function bossBook(s) {
+    const book = {};
+    Object.keys(s.bossBook || {}).forEach(function (k) {
+      const e = s.bossBook[k];
+      if (!monstersList[k] || !e || typeof e !== 'object') return;
+      book[k] = { wins: asInt(e.wins, 0, 1e6, 0), form: asInt(e.form, -1, 2, -1), alpha: asInt(e.alpha, 0, 1e6, 0) };
+    });
+    s.bossBook = book;
+  },
   function calendar(s) {
     const sc = s.streakCal;
     sc.count = asInt(sc.count, 0, ECON.calendar.length, 0);

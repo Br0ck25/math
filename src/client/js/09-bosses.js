@@ -35,6 +35,17 @@ function getTypeRelation(att, def) {
   return 0;
 }
 
+// Extra copies of the bosses whose buddy you can still win, so the Alpha wins come in reasonable time. Only once your buddy can reach Alpha bosses.
+function wantedBossCopies(candidates) {
+  const B = ECON.bossBuddy;
+  if (getBuddyLevel(state.activePet) < B.minLevel) return [];
+  const extra = [];
+  candidates.forEach(function (i) {
+    const m = monstersList[i];
+    if (m.buddy && state.unlockedSecrets.indexOf(m.buddy) === -1) for (let k = 1; k < B.weight; k++) extra.push(i);
+  });
+  return extra;
+}
 function pickNextBoss() {
   if (!state.recentBossTypes) state.recentBossTypes = [];
   let excludedType = null;
@@ -48,6 +59,7 @@ function pickNextBoss() {
     if (i !== currentMonsterIndex) candidates.push(i);
   }
   if (candidates.length === 0) candidates = monstersList.map(function (_, idx) { return idx; });
+  candidates = candidates.concat(wantedBossCopies(candidates));
 
   const nextIdx = candidates[rnd(0, candidates.length - 1)];
   currentMonsterIndex = nextIdx;

@@ -63,9 +63,9 @@ const monstersList = [
   { name: "Mirror Knight", icon: "🤺", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] },
 
   // 3 Buddy Slayers: they fight like any other boss, but each is strong against one ultra-rare buddy (see ECON.boss.slayer)
-  { name: "Bovine Bruiser", icon: "🐄", baseHp: 6, element: "nature", slays: "secret_janie", taunts: ["Moo-ve over, math cadet!", "I will stampede right over your sums!"] },
-  { name: "Harpy Eagle", icon: "🦅", baseHp: 6, element: "electric", slays: "secret_amber", taunts: ["Slow and steady will not save you from my dive!", "Nothing escapes my talons!"] },
-  { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] }
+  { name: "Bovine Bruiser", icon: "🐄", baseHp: 6, element: "nature", slays: "secret_janie", buddy: "boss_cow", taunts: ["Moo-ve over, math cadet!", "I will stampede right over your sums!"] },
+  { name: "Harpy Eagle", icon: "🦅", baseHp: 6, element: "electric", slays: "secret_amber", buddy: "boss_harpy", taunts: ["Slow and steady will not save you from my dive!", "Nothing escapes my talons!"] },
+  { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", buddy: "boss_mara", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] }
 ];
 
 const GRADES = [

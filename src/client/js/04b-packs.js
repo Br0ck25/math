@@ -5,7 +5,7 @@
 // =====================================================================
 const PACKS = [
   { id: 'pets', name: 'Pet Shop Pack', icon: '🐹', icons: ['🐶', '🐱', '🐈', '🐕', '🐩', '🦮', '🐹', '🐭', '🐁', '🐀', '🐰', '🐇', '🧸'] },
-  { id: 'farm', name: 'Farm Pack', icon: '🐮', icons: ['🐮', '🐷', '🐖', '🐑', '🐐', '🐔', '🐓', '🐣', '🐥', '🦃', '🐴', '🐎', '🐂', '🐃', '🦙', '🦆'] },
+  { id: 'farm', name: 'Farm Pack', icon: '🐮', icons: ['🐮', '🐷', '🐖', '🐑', '🐐', '🐔', '🐓', '🐣', '🐥', '🦃', '🐴', '🐎', '🐂', '🐃', '🦙', '🦆', '🐄'] },
   { id: 'cats', name: 'Wild Cats Pack', icon: '🐯', icons: ['🦁', '🐯', '🐅', '🐆'] },
   { id: 'bears', name: 'Bears & Pandas Pack', icon: '🐼', icons: ['🐼', '🐨', '🐻'] },
   { id: 'safari', name: 'Safari Pack', icon: '🦒', icons: ['🐵', '🦧', '🦍', '🦒', '🦓', '🦘', '🦏', '🦛', '🐘', '🐪', '🦥'] },
@@ -19,7 +19,7 @@ const PACKS = [
   { id: 'garden', name: 'Garden & Treats Pack', icon: '🌳', icons: ['🍄', '🌵', '🌲', '🍁', '🍉', '🧁'] },
   { id: 'elements', name: 'Elements Pack', icon: '⚡', icons: ['⚡', '🔥', '🌪️', '🌈', '☄️', '☀️', '🌙'] },
   { id: 'space', name: 'Space & Tech Pack', icon: '🚀', icons: ['🪐', '⭐', '🚀', '🛸', '👽', '🤖'], ids: ['cosmo', 'byte', 'secret_janie'] },
-  { id: 'night', name: 'Night Pack', icon: '🦇', icons: ['🦇', '🎃', '👻'], ids: ['bat'] },
+  { id: 'night', name: 'Night Pack', icon: '🦇', icons: ['🦇', '🎃', '👻'], ids: ['bat', 'boss_mara'] },
   { id: 'fantasy', name: 'Fantasy Pack', icon: '🐲', icons: ['🐲', '🐉', '🦄', '🧝'], ids: ['phoenix', 'griffin', 'secret_papaw'] },
   { id: 'treasure', name: 'Treasure & Knights Pack', icon: '💎', icons: ['💎', '👑', '🛡️', '⚔️', '🔮', '🧿'], ids: ['bandit'] },
   { id: 'wizard', name: 'Wizard School Pack', icon: '🧙', ids: ['hedwig', 'crookshanks', 'mythic_harry', 'mythic_hermione', 'mythic_ron', 'mythic_dumbledore', 'mythic_dobby', 'mythic_fawkes', 'mythic_buckbeak', 'mythic_niffler', 'mythic_luna', 'mythic_sirius'] },
@@ -36,8 +36,8 @@ const PACKS = [
 const PACK_BY_ID = {};
 PACKS.forEach(function (p) { PACK_BY_ID[p.id] = p; });
 
-// Every buddy in the game, in one list: store, mythic, the ultra-rare trio, then secret creatures.
-function allBuddies() { return storePets.concat(mythicCompanions, ultraPets, secretCompanions); }
+// Every buddy in the game, in one list: store, mythic, the ultra-rare trio, the boss buddies, then secret creatures.
+function allBuddies() { return storePets.concat(mythicCompanions, ultraPets, bossBuddies, secretCompanions); }
 
 let packCache = null;
 function packOf(sp) {

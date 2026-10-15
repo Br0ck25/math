@@ -207,6 +207,18 @@ function selectOrBuyPet(pet) {
   rerenderShop();
 }
 
+// Fills "<name>-pet-grid" with the owned buddies of a short list and "<name>-found-count" / "<name>-total-count" with the totals.
+function fillBuddyGrid(name, list, emptyNote, look) {
+  const box = document.getElementById(name + '-pet-grid');
+  box.innerHTML = '';
+  const found = list.filter(function (u) { return state.unlockedSecrets.indexOf(u.id) !== -1; });
+  document.getElementById(name + '-found-count').innerText = found.length;
+  document.getElementById(name + '-total-count').innerText = list.length;
+  if (!found.length) { box.innerHTML = '<div class="empty-note">' + emptyNote + '</div>'; return; }
+  found.forEach(function (u) {
+    box.appendChild(makePetCard(u, { owned: true, accent: look.accent, dim: look.dim, nameColor: look.nameColor, onclick: function () { equipPet(u.id); } }));
+  });
+}
 function renderSecretPets() {
   // Mythic
   const mythicContainer = document.getElementById('mythic-pet-grid');
@@ -221,24 +233,14 @@ function renderSecretPets() {
     });
   }
 
-  // The ultra-rare trio
-  const ultraContainer = document.getElementById('ultra-pet-grid');
-  ultraContainer.innerHTML = '';
-  const ultraFound = ultraPets.filter(function (u) { return state.unlockedSecrets.indexOf(u.id) !== -1; });
-  document.getElementById('ultra-found-count').innerText = ultraFound.length;
-  document.getElementById('ultra-total-count').innerText = ultraPets.length;
-  if (!ultraFound.length) {
-    ultraContainer.innerHTML = '<div class="empty-note">Janie, Amber and Papaw have not been detected yet. Keep exploring flawless boss runs!</div>';
-  } else {
-    ultraFound.forEach(function (u) {
-      ultraContainer.appendChild(makePetCard(u, { owned: true, accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0', onclick: function () { equipPet(u.id); } }));
-    });
-  }
+  // The ultra-rare trio, then the boss buddies
+  fillBuddyGrid('ultra', ultraPets, 'Janie, Amber and Papaw have not been detected yet. Keep exploring flawless boss runs!', { accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0' });
+  fillBuddyGrid('bossbuddy', bossBuddies, 'Beat a boss ' + ECON.bossBuddy.alphaWins + ' times in its Alpha form to win it as a buddy. Check the Boss tab in the Book!', { accent: '#ef4444', dim: '#7f1d1d', nameColor: '#fecaca' });
 
   // Regular secrets
   const container = document.getElementById('secret-pet-grid');
   container.innerHTML = '';
-  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.some(function (u) { return u.id === id; }); });
+  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.concat(bossBuddies).some(function (u) { return u.id === id; }); });
   document.getElementById('secret-found-count').innerText = regular.length;
   if (regular.length === 0) {
     container.innerHTML = '<div class="empty-note">Defeat bosses in battle to discover rare secret creatures!</div>';

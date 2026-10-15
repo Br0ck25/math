@@ -1,6 +1,7 @@
 // ----- trading card -----
 function rarityOf(id) {
   const sp = getSpecies(id) || {};
+  if (sp.bossBuddy) return { name: 'BOSS', col: '#f87171' };
   if (sp.ultra) return { name: 'COSMIC', col: '#e879f9' };
   if (sp.mythic) return { name: 'MYTHIC', col: '#f43f5e' };
   if (sp.secret) return { name: 'LEGENDARY', col: '#fbbf24' };
