@@ -467,7 +467,8 @@
       <h2 style="font-size:1.2rem; margin-bottom:2px;">⚔️ Moves</h2>
       <div style="font-size:0.85rem; font-weight:800; color:#fde047; margin-bottom:8px;" id="moves-head"></div>
       <div class="moves-list" id="moves-list"></div>
-      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;">Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!</p>
+      <button type="button" class="grade-btn" id="moves-edit" style="width:100%; margin-top:8px; padding:8px; min-height:44px;" onclick="toggleMovesEdit()"></button>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;" id="moves-note"></p>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeMoves()">Back to Game</button>
     </div>
   </div>

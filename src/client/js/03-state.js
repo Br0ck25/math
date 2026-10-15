@@ -53,6 +53,7 @@ function freshState() {
     wild: { id: '', trainer: '', shiny: false, since: 0, next: 6 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat before the next boss
     swapUsed: false,                                 // the one free buddy swap of this battle has been used
     dexSeen: {},                                     // buddy id -> 1 once met (wild or as a boss); owned buddies always count as seen
+    moveSet: {},                                     // buddy id -> the move ids the player took into battle (absent = the first ones it learned)
     spares: {},                                      // buddy id -> extra copies that can be sold
     bossBook: {},
     bossSwapped: false,

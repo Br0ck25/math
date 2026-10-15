@@ -117,6 +117,14 @@ const NORMALIZERS = [
     });
     s.spares = spares;
   },
+  function moves(s) {
+    const set = {}, ids = MOVES.filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
+    Object.keys(s.moveSet || {}).forEach(function (b) {
+      if (!getSpecies(b) || !Array.isArray(s.moveSet[b])) return;
+      set[b] = s.moveSet[b].filter(function (id, i, a) { return ids.indexOf(id) !== -1 && a.indexOf(id) === i; }).slice(0, ECON.moves.slots);
+    });
+    s.moveSet = set;
+  },
   function bossBook(s) {
     const book = {};
     Object.keys(s.bossBook || {}).forEach(function (k) {

@@ -44,8 +44,8 @@ const ECON = {
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
-  // Moves (12c-moves.js): Recover heals this share of max HP.
-  moves: { healShare: 0.4 },
+  // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
+  moves: { healShare: 0.4, slots: 4 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
