@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ECON, PROFILES, simulate } from '../scripts/economy-sim.mjs';
+import { ECON, PROFILES, simulate, longGame } from '../scripts/economy-sim.mjs';
 
 const typical = simulate(PROFILES.typical);
 const share = (r, k) => r.sources[k] / r.total;
@@ -40,4 +40,12 @@ test('a streak shield is expensive enough to be a real decision, yet reachable w
   assert.equal(ECON.items.shield, 100);
   assert.ok(ECON.items.shield > simulate(PROFILES.quick).total / 4, 'dearer than a quarter of a short session');
   assert.ok(ECON.items.shield < typical.total / 3, 'under a third of a typical day');
+});
+
+test('the long game: a typical player has goals for months, and a buddy takes weeks (not days, not years) to reach the top', () => {
+  const g = longGame(PROFILES.typical);
+  assert.ok(g.buddyDays > 60 && g.buddyDays < 200, 'buying every buddy takes ' + Math.round(g.buddyDays) + ' days');
+  assert.ok(g.gearDays > 15 && g.gearDays < 100, 'buying all gear takes ' + Math.round(g.gearDays) + ' days');
+  assert.ok(g.level100 > 30 && g.level100 < 150, 'level 100 takes ' + g.level100 + ' days');
+  assert.ok(simulate(PROFILES.quick).total > 0 && longGame(PROFILES.quick).level100 < 400, 'even a 10 minute player gets there within a year');
 });

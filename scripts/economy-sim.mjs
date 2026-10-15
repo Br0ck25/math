@@ -61,11 +61,45 @@ export function simulate(p) {
   return { profile: p.name, sources, total, competitive: tournament, sinks, perCorrect };
 }
 
+// ---- The long game: how many days until a kid has everything? ----
+// Gems: the shop buddies and the gear are priced in 04-data-buddies.js (buddies come first, gear after `accessoriesList`). Only gems from `simulate` pay for them.
+// Levels: one buddy gets all the XP (the worst case; swapping spreads it). Mirrors xpForLevel / awardBuddyXp / the XP line in 12-battle.js.
+export function shopTotals() {
+  const src = fs.readFileSync(path.join(root, 'src/client/js/04-data-buddies.js'), 'utf8');
+  const cut = src.indexOf('const accessoriesList');
+  const sum = (t) => (t.match(/cost:\s*(\d+)/g) || []).reduce((a, m) => a + Number(m.replace(/\D/g, '')), 0);
+  return { buddies: sum(src.slice(0, cut)), gear: sum(src.slice(cut)) };
+}
+export function xpForLevel(L) { return L <= 1 ? 0 : Math.floor(2.4 * Math.pow(L, 2.3)); }
+export function daysToLevel(p, target) {
+  const E = ECON, fights = (p.problems * p.accuracy) / HITS_PER_BOSS, perBoss = avg(E.wild.bossEvery);
+  const bossShare = 1 / (perBoss + 1), bond = 1 + E.care.bondXpBonus * E.care.maxBond;
+  let xp = 0, level = 1;
+  for (let day = 1; day <= 5000; day++) {
+    const ratio = Math.min(2, Math.max(0.5, (level - 1) / level));       // foes average one level below the fighter
+    const perFight = bossShare * (20 + level * 2 * ratio) + (1 - bossShare) * (E.wild.xpBase + level * ratio);
+    xp += fights * perFight * bond;
+    while (level < target && xp >= xpForLevel(level + 1)) level++;
+    if (level >= target) return day;
+  }
+  return Infinity;
+}
+export function longGame(p) {
+  const t = shopTotals(), gems = simulate(p).total;
+  return { buddyDays: t.buddies / gems, gearDays: t.gear / gems, level50: daysToLevel(p, 50), level100: daysToLevel(p, 100), totals: t };
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   Object.keys(PROFILES).forEach((k) => {
     const r = simulate(PROFILES[k]);
     console.log('\n' + r.profile + '  ->  about ' + Math.round(r.total) + ' gems/day');
     Object.keys(r.sources).forEach((s) => console.log('  ' + s.padEnd(18) + String(Math.round(r.sources[s])).padStart(5) + '  ' + String(Math.round((r.sources[s] / r.total) * 100)).padStart(3) + '%'));
   });
+  console.log('\nThe long game (days of play at that pace, gems only from play, nothing spent on anything else)');
+  Object.keys(PROFILES).forEach((k) => {
+    const g = longGame(PROFILES[k]);
+    console.log('  ' + PROFILES[k].name.padEnd(24) + 'buy every buddy ' + String(Math.round(g.buddyDays)).padStart(4) + ' d   all gear ' + String(Math.round(g.gearDays)).padStart(3) + ' d   Lv50 ' + String(g.level50).padStart(4) + ' d   Lv100 ' + String(g.level100).padStart(4) + ' d');
+  });
+  console.log('  (shop buddies cost ' + shopTotals().buddies + ' gems in all, gear ' + shopTotals().gear + ')');
   console.log('\nCompetitive modes (tournament) are ' + Math.round((simulate(PROFILES.typical).competitive / simulate(PROFILES.typical).total) * 100) + '% of a typical day. Online duel stakes are zero-sum, so they add nothing to the total.');
 }
