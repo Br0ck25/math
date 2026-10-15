@@ -61,12 +61,23 @@ function teamMatchup(id, boss) {
   if (rel === -1) return { icon: '⚠️', mult: 'x0.5', cls: 'bad' };
   return { icon: '', mult: 'x1', cls: '' };
 }
+const LONG_PRESS_MS = 500;
+// The team picker is the Cup tab of the buddy hub.
+function openTeamPicker() {
+  if (isModalOpen()) return;
+  hubTab = 'tour';
+  openHub();
+}
 function updateTeamBar() {
   const bar = document.getElementById('team-bar');
   if (!bar) return;
   const ids = getTeam();
   if (ids.length < 2) { bar.innerHTML = ''; return; }
   const boss = getBossInfo();
+  if (getOwnedIds().length >= 4 && !state.storySeen.teamHint) {          // one-time tip
+    state.storySeen.teamHint = 1;
+    toast('💡 Tip: press and hold a buddy under the arena to change your team');
+  }
   bar.innerHTML = '';
   ids.forEach(function (id) {
     const p = getPetById(id), mu = teamMatchup(id, boss);
@@ -76,9 +87,15 @@ function updateTeamBar() {
     b.className = 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (state.swapUsed && id !== state.activePet) ? ' resting' : '');
     const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
     b.setAttribute('aria-label', label);
-    b.title = label;
+    b.title = label + ' (press and hold to change your team)';
     b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-badge" aria-hidden="true">' + (resting ? '💤' : mu.icon) + '</span>';
-    b.onclick = function () { swapBuddy(id); };
+    // a quick tap swaps; pressing and holding opens the team picker
+    let pressTimer = null, held = false;
+    const stop = function () { clearTimeout(pressTimer); };
+    b.addEventListener('pointerdown', function () { held = false; stop(); pressTimer = setTimeout(function () { held = true; openTeamPicker(); }, LONG_PRESS_MS); });
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) { b.addEventListener(ev, stop); });
+    b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    b.onclick = function () { if (held) { held = false; return; } swapBuddy(id); };
     bar.appendChild(b);
   });
 }

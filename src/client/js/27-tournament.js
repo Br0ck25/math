@@ -24,7 +24,7 @@ function tourRunsLeft() {
 }
 function renderTourTab() {
   const team = getTeam();
-  let h = '<div style="font-size:0.78rem; font-weight:800; margin-bottom:2px;">Pick up to 3 buddies for your team</div>' +
+  let h = '<div style="font-size:0.78rem; font-weight:800; margin-bottom:2px;">Your team: pick up to 3 buddies (used in battles and tournaments)</div>' +
     '<div class="team-grid">' + getOwnedIds().map(function (id) {
       const d = getPetById(id);
       return '<div class="team-chip' + (team.indexOf(id) !== -1 ? ' on' : '') + '" onclick="toggleTeam(&quot;' + id + '&quot;)"><b>' + d.icon + '</b>Lv ' + d.level + '</div>';

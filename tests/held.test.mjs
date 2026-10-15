@@ -122,4 +122,30 @@ test('Hard Shell blocks the first hit of a battle, Oran Berry heals once when lo
   assert.ok(Math.abs(r.bait - 1.25) < 1e-9);
 });
 
+test('pressing and holding a team chip opens the team picker; a quick tap still swaps; a tip shows once', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    const ids = storePets.slice(0, 4).map((x) => x.id);
+    state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; state.storySeen = {};
+    updateStatsUI();
+    out.tip = document.getElementById('toast').innerText; state.storySeen.teamHint = state.storySeen.teamHint;
+    const chip = () => document.querySelectorAll('#team-bar .swap-chip')[1];
+    chip().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await new Promise((res) => setTimeout(res, 1500));
+    chip().dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); chip().click();
+    out.hub = [document.getElementById('hub-modal').style.display, hubTab, state.activePet === ids[0], state.swapUsed];
+    document.getElementById('hub-modal').style.display = 'none'; modalDone();
+    chip().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); chip().dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); chip().click();
+    out.tap = [state.activePet === ids[1], document.getElementById('hub-modal').style.display];
+    document.getElementById('toast').innerText = ''; updateStatsUI(); out.tip2 = document.getElementById('toast').innerText;
+    hubTab = 'tour'; hubPet = ids[0]; renderHub(); out.heading = document.getElementById('hub-body').innerText;
+    return out;
+  });
+  assert.match(r.tip, /press and hold a buddy/);
+  assert.deepEqual(r.hub, ['flex', 'tour', true, false], 'a long press opens the picker and does not swap');
+  assert.deepEqual(r.tap, [true, 'none'], 'a quick tap swaps');
+  assert.equal(r.tip2, '', 'the tip shows only once');
+  assert.match(r.heading, /Your team: pick up to 3 buddies/);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
