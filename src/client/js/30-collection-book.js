@@ -1,8 +1,17 @@
 // =====================================================================
-//  COLLECTION BOOK
+//  BUDDY DEX  (the Collection Book: every buddy seen or caught, bosses, gear)
 // =====================================================================
+// A buddy counts as "seen" once met in a battle (the dex shows its name and type); owned buddies always count.
+function markDexSeen(id) { if (id && state.dexSeen && !state.dexSeen[id]) state.dexSeen[id] = 1; }
+function dexSeen(id) { return !!state.dexSeen[id] || getOwnedIds().indexOf(id) !== -1; }
+let dexNumbers = null;
+function dexNumber(id) {
+  if (!dexNumbers) { dexNumbers = {}; allBuddies().forEach(function (b, i) { dexNumbers[b.id] = i + 1; }); }
+  return dexNumbers[id] || 0;
+}
 function markBossSeen(i) {
   if (i === undefined || i < 0 || !state.bossBook) return;
+  if (monstersList[i]) markDexSeen(monstersList[i].buddy);
   if (!state.bossBook[i]) state.bossBook[i] = { wins: 0, form: -1, alpha: 0 };
 }
 function markBossWin(i, form) {
@@ -56,7 +65,9 @@ function bookCounts() {
   const bossFound = Object.keys(state.bossBook).filter(function (k) { return monstersList[k]; }).length;
   const gearTotal = (accessoriesList.length - 1) + (armorList.length - 1);
   const gearFound = (state.unlockedAccessories.length - 1) + (state.unlockedArmor.length - 1);
+  const buddySeen = allBuddies().filter(function (p) { return dexSeen(p.id); }).length;
   return {
+    seen: buddySeen,
     buddy: { found: buddyFound, total: buddyTotal },
     boss: { found: bossFound, total: monstersList.length },
     gear: { found: Math.max(0, gearFound), total: gearTotal },
@@ -89,18 +100,20 @@ function bookCard(o) {
 function bookBuddy(sp, lockedHint) {
   const owned = getOwnedIds().indexOf(sp.id) !== -1;
   const rar = rarityOf(sp.id);
-  if (!owned) return bookCard({ locked: true, icon: sp.icon, name: '???', hint: lockedHint, hintColor: '#94a3b8', rarity: rar });
+  const no = '#' + String(dexNumber(sp.id)).padStart(3, '0');
+  if (!owned && dexSeen(sp.id)) return bookCard({ locked: true, icon: sp.icon, name: no + ' ' + escHtml(sp.name), elem: sp.element, hint: '👀 Seen · not caught yet', hintColor: '#fbbf24', rarity: rar });
+  if (!owned) return bookCard({ locked: true, icon: sp.icon, name: no + ' ???', hint: lockedHint, hintColor: '#94a3b8', rarity: rar });
   const d = getPetById(sp.id);
   const bond = getBond(sp.id);
   const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>' +
     '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
-  return bookCard({ icon: avatarHtml(d, 40), name: d.name, elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
+  return bookCard({ icon: avatarHtml(d, 40), name: no + ' ' + escHtml(d.name), elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
 }
 
 function renderBook() {
   const c = bookCounts();
-  document.getElementById('book-progress').innerText = c.all.found + ' / ' + c.all.total + ' discovered';
+  document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses and gear';
 
   const ms = document.getElementById('book-milestones');
   ms.innerHTML = '';

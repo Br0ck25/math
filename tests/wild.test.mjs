@@ -294,4 +294,32 @@ test('Rocky only appears once your buddy is level 50, and never as a pick for a 
   assert.equal(r.availStrong, true);
 });
 
+test('the Buddy Dex: a buddy you have only met shows its name, an unmet one is hidden, and it counts seen and caught', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    state.unlockedPets = ['dog']; state.dexSeen = {};
+    const unmet = wildPool().find((p) => p.id === 'fox');
+    out.unseenBefore = dexSeen('fox');
+    state.wild.id = ''; pickNextWild(); const met = state.wild.id;
+    out.metSeen = dexSeen(met) && !getOwnedIds().includes(met);
+    state.dexSeen = { fox: 1 };
+    bookTab = 'buddy'; bookMissingOnly = false; renderBook();
+    const html = document.getElementById('book-body').innerHTML;
+    out.seenCard = /Seen · not caught yet/.test(html) && html.includes('Sparky');
+    out.header = document.getElementById('book-progress').innerText;
+    out.title = document.querySelector('#book-modal h2').innerText;
+    out.num = '#' + String(dexNumber('dog')).padStart(3, '0');
+    out.hasNum = html.includes(out.num + ' Pup');
+    state.dexSeen = { fox: 1, nope: 1 }; NORMALIZERS.forEach((fn) => fn(state)); out.cleaned = Object.keys(state.dexSeen);
+    return out;
+  });
+  assert.equal(r.unseenBefore, false);
+  assert.equal(r.metSeen, true, 'meeting a wild buddy marks it seen');
+  assert.equal(r.seenCard, true);
+  assert.match(r.header, /Seen \d+ · ✅ Caught 1 \/ \d+/);
+  assert.match(r.title, /Buddy Dex/);
+  assert.equal(r.hasNum, true, 'dex numbers on cards');
+  assert.deepEqual(r.cleaned, ['fox']);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

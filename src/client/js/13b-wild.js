@@ -33,6 +33,7 @@ function pickNextWild() {
     if (sp.id !== state.wild.id) break;
   }
   state.wild.id = sp.id;
+  markDexSeen(sp.id);
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
   state.bossSwapped = false;

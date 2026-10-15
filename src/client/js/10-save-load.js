@@ -72,6 +72,11 @@ const NORMALIZERS = [
     r.attempts = asInt(r.attempts, 0, 100000000, 0);
     if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
   },
+  function dex(s) {
+    const seen = {};
+    Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });
+    s.dexSeen = seen;
+  },
   function wild(s) {
     const w = s.wild;
     const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
@@ -160,6 +165,7 @@ function loadState() {
   normalizeState();
 
   partyHp = {};
+  markDexSeen(state.wild.id);
   const wildFight = !!state.wild.id && !!state.bossLevel;
   if (wildFight || (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel)) {
     currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
