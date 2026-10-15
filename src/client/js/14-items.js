@@ -10,9 +10,11 @@ function getCandyCost() {
 
 // Price of a shop item right now (the candy depends on the active buddy; everything else is in ECON).
 function itemCost(type) { return type === 'candy' ? getCandyCost() : ECON.items[type]; }
-const ITEM_VERBS = { shield: 'Buy', candy: 'Eat', ult: 'Charge', clover: 'Use' };
+const ITEM_VERBS = { shield: 'Buy', candy: 'Eat', ult: 'Charge', clover: 'Use', net: 'Buy' };
 // Labels the four item buttons: the price when affordable, otherwise how many more gems are needed (dimmed, but a tap still explains).
 function renderItemButtons() {
+  const nc = document.getElementById('net-count');
+  if (nc) nc.innerText = state.nets;
   Object.keys(ITEM_VERBS).forEach(function (type) {
     const b = document.getElementById('item-' + type);
     if (!b) return;
@@ -41,9 +43,13 @@ function buyItem(type) {
     awardBuddyXp(xpForLevel(lvl + 1) - getBuddyXp(state.activePet));
     showPopup('🍬 RARE CANDY! LEVEL UP!');
   } else {
+    if (type === 'net' && state.nets >= ECON.wild.net.stock) { toast('You can hold ' + ECON.wild.net.stock + ' Catch Nets'); return; }
     state.gems -= cost;
     soundLevelUp();
-    if (type === 'shield') {
+    if (type === 'net') {
+      state.nets += 1;
+      showPopup('🕸️ CATCH NET! (' + state.nets + ')');
+    } else if (type === 'shield') {
       state.shields += 1;
       showPopup('+1 STREAK SHIELD! 🛡️');
     } else if (type === 'ult') {

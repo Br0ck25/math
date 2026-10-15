@@ -25,10 +25,14 @@ const ECON = {
   // `storeShare`: how often the wild buddy is a store buddy (else a secret one; their catch chance is low so secret buddies stay a rare find).
   wild: {
     hpBase: 3, hpPerLevel: 0.4, atkPerLevels: 15, gemBase: 4, gemPerLevels: 6, xpBase: 8, bossEvery: [5, 8], storeShare: 0.35,
-    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.03 }, matchup: { strong: 1.5, weak: 0.5 }
+    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.03 }, matchup: { strong: 1.5, weak: 0.5 },
+    flawless: 1.25,                                   // beating it without a single mistake
+    net: { mult: 2, max: 0.75, stock: 5 }             // a Catch Net doubles the chance (never above `max`) on your next wild win; you can hold `stock`
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12 },
+  // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
+  held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
   // Moves (12c-moves.js): Recover heals this share of max HP.
@@ -38,7 +42,7 @@ const ECON = {
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
-  items: { shield: 100, ult: 33, clover: 25 },
+  items: { shield: 100, ult: 33, clover: 25, net: 30 },
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,

@@ -397,8 +397,8 @@ function updateWeakChip() {
   if (!chip) return;
   const r = state.raid;
   if (state.wild.id) {
-    chip.innerText = '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%';
-    chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it.';
+    chip.innerText = '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%' + (state.nets > 0 ? ' 🕸️' : '');
+    chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, a Catch Net doubles it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%.';
     return;
   }
   const w = getWeakOp();

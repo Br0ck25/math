@@ -322,4 +322,28 @@ test('the Buddy Dex: a buddy you have only met shows its name, an unmet one is h
   assert.deepEqual(r.cleaned, ['fox']);
 });
 
+test('a flawless win and a Catch Net raise the catch chance; the net is used up by a wild win', async () => {
+  const r = await page.evaluate(async () => {
+    const sp = getSpecies('fox'); state.activePet = 'dog'; state.nets = 0;
+    const base = wildCatchChance(sp), flawless = wildCatchChance(sp, { flawless: true });
+    state.nets = 1; const net = wildCatchChance(sp), both = wildCatchChance(sp, { flawless: true });
+    state.unlockedPets = ['dog', 'fox']; state.spares = {}; state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0;
+    const real = Math.random; Math.random = () => 0.99;              // the roll fails, but the net is spent
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    Math.random = real;
+    state.nets = 0; state.gems = 1000; buyItem('net'); const bought = [state.nets, state.gems];
+    state.nets = 5; state.gems = 1000; buyItem('net'); const full = [state.nets, state.gems];
+    state.nets = 0; state.wild.id = 'fox'; updateStatsUI(); const chip0 = document.getElementById('weak-chip').innerText;
+    state.nets = 2; updateStatsUI();
+    return { base, flawless, net, both, left: state.nets, bought, full, chip0, chip2: document.getElementById('weak-chip').innerText };
+  });
+  assert.ok(Math.abs(r.flawless - r.base * 1.25) < 1e-9);
+  assert.ok(Math.abs(r.net - r.base * 2) < 1e-9);
+  assert.ok(r.both > r.net && r.both <= 0.75 + 1e-9);
+  assert.deepEqual(r.bought, [1, 970]);
+  assert.deepEqual(r.full, [5, 1000], 'at most 5 nets, and no gems taken');
+  assert.ok(!r.chip0.includes('🕸️') && r.chip2.includes('🕸️'));
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

@@ -63,7 +63,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
     } else if (battleElement(pet) === 'shadow') {
       damage = Math.ceil(damage * 1.25);
     } else if (rel === 1) {
-      damage = Math.ceil(damage * 1.5);
+      damage = Math.ceil(damage * 1.5) + (activeHolds('charm') ? 1 : 0);
       showPopup('SUPER EFFECTIVE! 💥');
     } else if (rel === -1) {
       damage = Math.max(1, Math.floor(damage * 0.5));
@@ -120,7 +120,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         showPopup('✨ ALL BUDDIES REVIVED!');
       }
 
-      if (wild) rollCatch(wildId); else checkForSecretLootDrop(hadCasualties);
+      if (wild) rollCatch(wildId, bossMistakes === 0); else checkForSecretLootDrop(hadCasualties);
       showPopup(`VICTORY! +${gemBonus} 💎`);
 
       const shouldTriggerVault = !wild && (state.monstersDefeated % 2 === 0);
@@ -160,9 +160,10 @@ function triggerBuddyDamage() {
   const boss = getBossInfo();
   const pet = getActivePetDisplay();
   const id = pet.id;
-  const burned = hasStatus('burn');                // read now: the status may run out at the end of this answer
-  if (guardUp) {                                   // Guard blocks this hit completely (the combo still ends)
-    guardUp = false;
+  const burned = hasStatus('burn');
+  const shellBlock = holds(id, 'shell') && !heldUsed.shell;      // Hard Shell: the first hit of each battle                // read now: the status may run out at the end of this answer
+  if (guardUp || shellBlock) {                     // Guard (or a Hard Shell) blocks this hit completely (the combo still ends)
+    if (guardUp) guardUp = false; else heldUsed.shell = true;
     state.streak = 0;
     soundShieldBreak();
     showPopup('🛡️ BLOCKED! NO DAMAGE');
@@ -203,11 +204,17 @@ function triggerBuddyDamage() {
     const slayer = slaysBuddy(boss, pet);
     if (slayer) incoming += ECON.boss.slayer.extraDamage;
     incoming = Math.max(1, Math.min(incoming, Math.ceil(getPetMaxHp(id) * (slayer ? ECON.boss.slayer.maxHpShare : 0.4))));
+    if (roleOf(pet).name === 'Tank') incoming = Math.max(1, incoming - 1);
     showPopup(slayer ? `☠️ STRONG AGAINST ${pet.baseName.toUpperCase()}! -${incoming} HP 💔` : rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
 
     setPetHp(id, getPetHp(id) - incoming);
     state.streak = 0;
     if (getPetHp(id) > 0) maybeInflictStatus(boss);
+    if (getPetHp(id) > 0 && holds(id, 'berry') && !heldUsed.berry && getPetHp(id) <= getPetMaxHp(id) / 3) {
+      heldUsed.berry = true;
+      setPetHp(id, Math.min(getPetMaxHp(id), getPetHp(id) + ECON.held.berryHeal));
+      toast('🫐 ' + pet.baseName + ' ate its Oran Berry!');
+    }
     ultimateCharge = 0;
 
     if (getPetHp(id) > 0) {
@@ -288,7 +295,9 @@ function checkAnswer() {
 
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
+    if (activeRole('Speedster')) speedLimit *= 1.25;
     const isFast = !hintUsed && solveTime <= speedLimit;
+    answerBonuses(isFast);
     let speedBonusGems = 0;
     if (isFast) {
       speedBonusGems = ECON.solve.speedGem;
@@ -307,7 +316,7 @@ function checkAnswer() {
 
     const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
     if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
-    triggerMonsterDamage(0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
+    triggerMonsterDamage(isFast && activeRole('Attacker') ? 1 : 0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
     let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
     if (state.cloverLeft > 0) {

@@ -13,11 +13,17 @@ function catchMatchup(sp) {
   if (battleElement(mine) === 'shadow') return 0;
   return getTypeRelation(battleElement(mine), sp.element);
 }
-function wildCatchChance(sp) {
+// opts.flawless: you won without a mistake. A Catch Net in stock is counted (it is used up by the roll).
+function wildCatchChance(sp, opts) {
   const W = ECON.wild.catchChance;
   const base = !isStoreBuddy(sp) ? W.secret : sp.cost < 150 ? W.cheap : sp.cost < 800 ? W.mid : W.rare;
   const rel = catchMatchup(sp);
-  return Math.min(1, base * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1));
+  let chance = base * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
+  if (opts && opts.flawless) chance *= ECON.wild.flawless;
+  if (activeRole('Trickster')) chance *= 1.25;
+  if (activeHolds('bait')) chance *= 1.25;
+  if (state.nets > 0) chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult, ECON.wild.net.max));       // a net never lowers a chance
+  return Math.min(1, chance);
 }
 function spareValueOf(id) {
   const sp = getSpecies(id);
@@ -52,10 +58,12 @@ function pickNextFoe() {
 }
 
 // After a wild win: roll to catch it. A buddy you already own becomes a spare.
-function rollCatch(wildId) {
+function rollCatch(wildId, flawless) {
   const sp = getSpecies(wildId);
   if (!sp) return;
-  if (Math.random() >= wildCatchChance(sp)) return;
+  const chance = wildCatchChance(sp, { flawless: flawless });
+  if (state.nets > 0) { state.nets -= 1; toast('🕸️ Catch Net used (' + state.nets + ' left)'); }
+  if (Math.random() >= chance) return;
   if (getOwnedIds().indexOf(sp.id) !== -1) {
     state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1);
     toast('🎉 Caught a spare ' + sp.name + '! Sell it in the buddy hub for ' + spareValueOf(sp.id) + ' 💎');

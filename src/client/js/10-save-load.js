@@ -55,6 +55,7 @@ function fillDefaults(target, defaults) {
 const NORMALIZERS = [
   function core(s) {
     s.gems = isFinite(s.gems) ? Math.max(0, s.gems) : 0;
+    s.nets = asInt(s.nets, 0, ECON.wild.net.stock, 0);
     s.grade = clamp(parseInt(s.grade, 10) || 0, 0, GRADES.length - 1);
     if (!s.enabledOps.length) s.enabledOps = GRADE_DEFAULT_OPS[s.grade].slice();
     if (s.unlockedPets.indexOf('dog') === -1) s.unlockedPets.unshift('dog');
@@ -71,6 +72,16 @@ const NORMALIZERS = [
     r.solved = asInt(r.solved, 0, 100000000, 0);
     r.attempts = asInt(r.attempts, 0, 100000000, 0);
     if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
+  },
+  function held(s) {
+    const ids = HELD_ITEMS.map(function (i) { return i.id; });
+    s.heldOwned = s.heldOwned.filter(function (id, i) { return ids.indexOf(id) !== -1 && s.heldOwned.indexOf(id) === i; });
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), taken = {}, held = {};
+    Object.keys(s.held).forEach(function (b) {
+      const item = s.held[b];
+      if (owned.indexOf(b) !== -1 && s.heldOwned.indexOf(item) !== -1 && !taken[item]) { held[b] = item; taken[item] = true; }
+    });
+    s.held = held;
   },
   function dex(s) {
     const seen = {};

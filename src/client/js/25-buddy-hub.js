@@ -86,8 +86,8 @@ function renderHub() {
   const gear = hubPet === state.activePet ? activeGear() : { acc: null, armor: null };
   ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
-  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
-  const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel']];
+  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
+  const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold']];
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
@@ -100,6 +100,7 @@ function renderHub() {
   if (hubTab === 'care') renderCare();
   else if (hubTab === 'card') renderCardTab();
   else if (hubTab === 'duel') renderDuelTab();
+  else if (hubTab === 'hold') renderHoldTab();
   else renderTourTab();
 }
 
