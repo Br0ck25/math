@@ -40,6 +40,7 @@ function updateBattleUI() {
   fw.classList.toggle('combo-hot', state.streak >= 5);                          // a fiery glow while the combo is hot
 
   renderItemButtons();
+  updateTeamBar();
 
   const petElemBadge = document.getElementById('pet-elem-badge');
   petElemBadge.innerText = pet.element;

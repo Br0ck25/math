@@ -29,7 +29,7 @@ function screenShake(strong) {
   setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
 }
 
-function triggerMonsterDamage(extraDamage, weakHit) {
+function triggerMonsterDamage(extraDamage, weakHit, fast) {
   extraDamage = extraDamage || 0;
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterIcon = document.getElementById('monster-icon');
@@ -74,6 +74,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       showPopup('🎯 WEAK POINT! 💥');
     }
     monsterCurrentHp -= damage;
+    if (monsterCurrentHp > 0) bossReact(fast ? 'fast' : (weakHit || rel === 1) ? 'wow' : monsterCurrentHp <= boss.maxHp / 4 ? 'angry' : 'flinch');
 
     if (monsterCurrentHp <= 0 && state.raid && state.raid.phase < state.raid.total - 1) {
       state.raid.phase += 1;
@@ -172,6 +173,7 @@ function triggerBuddyDamage() {
     petIconWrapper.classList.add('hurt-flash');
     soundHitSlash();
     screenShake(false);
+    bossReact('laugh');
 
     let incoming = boss.atk;
     const rel = getTypeRelation(boss.element, battleElement(pet));
@@ -245,7 +247,7 @@ function checkAnswer() {
 
   if (Math.abs(numVal - currentProblem.answer) < 0.0001) {
     soundCorrect(state.streak + 1);
-    buddyReact('cheer');
+    buddyReact(state.streak >= 2 && (state.streak + 1) % 3 === 0 ? 'streak' : 'cheer');
     if (answerBox) answerBox.className = 'answer-box correct';
 
     sessionStats.solved += 1;
@@ -282,7 +284,7 @@ function checkAnswer() {
     recordAdaptive(opId, true, isFast);
     awardBuddyXp(xpEarned);
 
-    triggerMonsterDamage(0, opId === getWeakOp());
+    triggerMonsterDamage(0, opId === getWeakOp(), isFast);
 
     let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
     if (state.cloverLeft > 0) {

@@ -193,3 +193,82 @@ test('all-time records keep the fastest answer, longest streak and totals', asyn
   assert.match(t, /9/);
   assert.match(t, /80%/);
 });
+
+test('bosses react by element: bubble and line on a Speed Strike, a laugh when they hit, anger when low', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].forEach((e) => { out[e] = Object.keys(BOSS_MOODS[e]).sort().join(); });
+    const boss = getBossInfo();
+    bossReact('fast');
+    out.fastBubble = document.getElementById('boss-bubble').innerText;
+    out.fastLine = document.getElementById('boss-taunt-box').innerText;
+    out.fastWant = BOSS_MOODS[boss.element].say.fast;
+    bossReact('laugh');
+    out.laughCls = document.getElementById('boss-box').classList.contains('boss-laugh');
+    return out;
+  });
+  const keys = r.fire;
+  ['water', 'nature', 'electric', 'dark', 'magic'].forEach((e) => assert.equal(r[e], keys, e + ' has every mood'));
+  assert.equal(r.fastBubble, '💨');
+  assert.ok(r.fastLine.includes(r.fastWant), r.fastLine);
+  assert.equal(r.laughCls, true);
+});
+
+test('a hit that leaves the boss alive and a Speed Strike both make it react, and a miss makes it laugh', async () => {
+  const r = await page.evaluate(() => {
+    monsterCurrentHp = getBossMaxHp() + 50;
+    state.shields = 0;
+    userInput = String(currentProblem.answer + 7); inputLocked = false; checkAnswer();
+    return new Promise((res) => setTimeout(() => res(document.getElementById('boss-bubble').innerText), 300));
+  });
+  assert.ok(r.length > 0, 'a bubble over the boss after it hit your buddy');
+});
+
+test('the buddy cheers every third answer in a row, naps when idle and wakes on a tap', async () => {
+  const r = await page.evaluate(async () => {
+    const w = document.getElementById('fighter-icon-wrapper');
+    const out = {};
+    state.streak = 2; inputLocked = false; userInput = String(currentProblem.answer); checkAnswer();
+    out.cheer = w.classList.contains('happy-bounce');
+    inputLocked = false;
+    napBuddy();
+    out.napping = w.classList.contains('napping');
+    document.dispatchEvent(new Event('pointerdown'));
+    out.woke = !w.classList.contains('napping');
+    inputLocked = false;
+    document.querySelectorAll('.modal-overlay').forEach((m) => { m.style.display = 'none'; });   // a milestone window would keep the buddy awake
+    document.dispatchEvent(new Event('pointerdown'));
+    await new Promise((res) => setTimeout(res, IDLE_NAP_MS + 2000));
+    out.napsByItself = w.classList.contains('napping');
+    return out;
+  });
+  assert.equal(r.cheer, true, 'a streak of 3 bounces the buddy ' + JSON.stringify(r));
+  assert.equal(r.napping, true, JSON.stringify(r));
+  assert.equal(r.woke, true, JSON.stringify(r));
+  assert.equal(r.napsByItself, true, 'idle for a while: the buddy falls asleep ' + JSON.stringify(r));
+});
+
+test('the team bar shows each buddy\'s matchup against the boss and swapping changes the fighter', async () => {
+  const r = await page.evaluate(() => {
+    const owned = storePets.slice(0, 3).map((s) => s.id);
+    state.unlockedPets = owned; state.team = owned.slice(); state.activePet = owned[0]; state.faintedPets = [];
+    updateStatsUI();
+    const chips = [...document.querySelectorAll('#team-bar .team-chip')];
+    const out = { n: chips.length, first: chips[0].classList.contains('active'), labels: chips.map((c) => c.getAttribute('aria-label')) };
+    chips[1].click();
+    out.now = state.activePet === owned[1];
+    out.second = document.querySelectorAll('#team-bar .team-chip')[1].classList.contains('active');
+    state.faintedPets = [owned[2]]; updateStatsUI();
+    document.querySelectorAll('#team-bar .team-chip')[2].click();
+    out.restingStays = state.activePet === owned[1];
+    state.team = [owned[0]]; updateStatsUI();
+    out.hidden = document.getElementById('team-bar').children.length;
+    return out;
+  });
+  assert.equal(r.n, 3);
+  assert.ok(r.first);
+  assert.ok(r.labels.every((l) => /damage against/.test(l)), r.labels.join('|'));
+  assert.ok(r.now && r.second, 'tapping a chip swaps in that buddy');
+  assert.ok(r.restingStays, 'a resting buddy cannot be swapped in');
+  assert.equal(r.hidden, 0, 'a one-buddy team shows no bar');
+});
