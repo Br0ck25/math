@@ -36,7 +36,10 @@ const ECON = {
   // Winning the gym gives a badge and gems; all six badges make you Champion.
   map: {
     levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
-    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250
+    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250,
+    // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
+    // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
+    rematch: { levels: 4, gems: 40, perDay: 3 }
   },
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },

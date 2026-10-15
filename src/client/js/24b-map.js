@@ -24,6 +24,19 @@ const GYM_STORY = {
   mystic: { intro: ['Mystic Peak is at the top of the kingdom, full of floating stars.', 'Riley: "This is the last gym. Do your best!"', 'Magic and math are best friends here.'], outro: 'Stars sparkle all around. The Mystic Badge is yours! Riley hugs the team: "You are the real champion!"' }
 };
 
+// What Riley says in a rematch: the first one, then the others in turn.
+const RIVAL_REMATCH = [
+  { intro: 'Riley is waiting: "I trained all week, Champion. This time I will win!"', outro: 'Riley sighs, then smiles: "You won again... but I was so close!"' },
+  { intro: 'Riley grins: "My buddies learned new tricks just to beat you!"', outro: 'Riley laughs: "Still not enough! Same time next week?"' },
+  { intro: 'Riley cracks their knuckles: "Today I am not holding back!"', outro: 'Riley shakes your hand: "You make me a better trainer every time."' }
+];
+function isChampion() { return !!state.storySeen.champion; }
+function rematchLine() { return RIVAL_REMATCH[state.rematch.wins % RIVAL_REMATCH.length]; }
+// The first clear of a land each day pays, up to ECON.map.rematch.perDay lands a day.
+function rematchPays(id) {
+  const rm = state.rematch;
+  return (rm.day !== dayKey() || (rm.lands.indexOf(id) === -1 && rm.lands.length < ECON.map.rematch.perDay));
+}
 function regionById(id) { return REGIONS.find(function (r) { return r.id === id; }) || REGIONS[0]; }
 function currentRegion() { return regionById(state.region); }
 function regionLevel(r) { return ECON.map.levels[r.id] || 1; }
@@ -43,14 +56,14 @@ function gymFoeReset() {
   bossMistakes = 0;
 }
 function pickGymFoe() {
-  const g = state.gym, r = regionById(g.region), mine = getBuddyLevel(state.activePet);
+  const g = state.gym, r = regionById(g.region), mine = getBuddyLevel(state.activePet), bonus = g.rematch ? ECON.map.rematch.levels : 0;
   if (g.step < ECON.map.trainers) {
     const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
     state.wild.id = sp.id;
     state.wild.trainer = GYM_TRAINERS[g.step % GYM_TRAINERS.length];
     state.wild.shiny = false;
     markDexSeen(sp.id);
-    bossLevel = clamp(mine + rnd(0, 2), 1, MAX_LEVEL);
+    bossLevel = clamp(mine + rnd(0, 2) + bonus, 1, MAX_LEVEL);
   } else {
     const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return monstersList[i].element === r.element && !monstersList[i].slays && bossAvailable(i); });
     currentMonsterIndex = pick(cands);
@@ -58,7 +71,7 @@ function pickGymFoe() {
     state.wild.id = '';
     state.wild.trainer = '';
     state.wild.shiny = false;
-    bossLevel = clamp(mine + rnd(1, 3), 1, MAX_LEVEL);
+    bossLevel = clamp(mine + rnd(1, 3) + bonus, 1, MAX_LEVEL);
     markBossSeen(currentMonsterIndex);
   }
   gymFoeReset();
@@ -72,6 +85,13 @@ function advanceGym(leaderWon) {
   if (!leaderWon) { g.step += 1; return null; }
   const r = regionById(g.region);
   state.gym = null;
+  if (g.rematch && hasBadge(r.id)) {
+    const rm = state.rematch, pays = rematchPays(r.id);
+    if (rm.day !== dayKey()) { rm.day = dayKey(); rm.lands = []; }
+    rm.wins += 1;
+    if (pays && rm.lands.indexOf(r.id) === -1) { rm.lands.push(r.id); state.gems += ECON.map.rematch.gems; return { region: r, rematch: true, gems: ECON.map.rematch.gems }; }
+    return { region: r, rematch: true, gems: 0 };
+  }
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
   state.gems += ECON.map.badgeGems;
@@ -80,6 +100,11 @@ function advanceGym(leaderWon) {
   return { region: r, champion: champion };
 }
 function showBadgeStory(res) {
+  if (res.rematch) {
+    const line = RIVAL_REMATCH[(state.rematch.wins - 1 + RIVAL_REMATCH.length) % RIVAL_REMATCH.length];
+    showStoryModal({ chapter: 'Champion Rematch', title: res.region.icon + ' ' + res.region.name + ' cleared again!', panels: [{ icon: '🧢', text: line.outro }, { icon: '💎', text: res.gems ? 'Rematch reward: +' + res.gems + ' gems!' : 'No more rematch rewards today, but come back tomorrow!' }], note: 'Rematches won: ' + state.rematch.wins, btn: 'Hooray!', cleared: true });
+    return;
+  }
   const st = GYM_STORY[res.region.id];
   const panels = [{ icon: '🏅', text: st.outro }, { icon: '💎', text: 'Badge reward: +' + ECON.map.badgeGems + ' gems!' }];
   if (res.champion) panels.push({ icon: '🏆', text: 'All badges! You are the Number Kingdom Champion! +' + ECON.map.championGems + ' gems!' });
@@ -101,15 +126,22 @@ function travelTo(id) {
 }
 function startGym(id) {
   const r = regionById(id);
-  if (!r.element || !regionUnlocked(r) || hasBadge(id) || state.gym) return;
+  const rematch = hasBadge(id);
+  if (!r.element || !regionUnlocked(r) || (rematch && !isChampion()) || state.gym) return;
   state.region = id;
-  state.gym = { region: id, step: 0 };
+  state.gym = rematch ? { region: id, step: 0, rematch: true } : { region: id, step: 0 };
   closeMap();
   pickGymFoe();
   setBossTaunt();
   updateStatsUI();
   saveState();
   const st = GYM_STORY[id];
+  if (rematch) {
+    enqueueModal(function () {
+      showStoryModal({ chapter: 'Champion Rematch', title: r.icon + ' Rematch at ' + r.name, panels: [{ icon: '🏟️', text: 'The ' + r.name + ' gym welcomes the Champion back. The trainers and the leader are stronger now!' }, { icon: '🧢', text: rematchLine().intro }, { icon: '💎', text: rematchPays(id) ? 'The first clear of a land each day pays +' + ECON.map.rematch.gems + ' gems.' : 'Today\'s rewards are done, but the fights are still great practice!' }], note: ECON.map.trainers + ' trainers, then the gym leader.', btn: '⚔️ To battle!' });
+    });
+    return;
+  }
   enqueueModal(function () {
     showStoryModal({ chapter: r.name + ' Gym', title: r.icon + ' The ' + r.name + ' Gym', panels: st.intro.map(function (t, i) { return { icon: ['🏟️', '🧢', '⚔️'][i] || '⭐', text: t }; }), note: ECON.map.trainers + ' trainers, then the gym leader. Trainer buddies cannot be caught.', btn: '⚔️ To battle!' });
   });
@@ -136,7 +168,8 @@ function renderMap() {
     else {
       actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>';
       if (r.element) {
-        if (hasBadge(r.id)) actions += '<span class="map-badge" title="Badge earned">🏅</span>';
+        if (hasBadge(r.id) && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
+        else if (hasBadge(r.id)) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');
         else if (g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave gym (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else actions += '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🏟️ Gym</button>';
       }

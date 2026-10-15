@@ -48,6 +48,7 @@ function freshState() {
     region: 'meadow',                                // where you are on the map (wild buddies of its type are more common)
     daily: { day: '', fights: 0, spawned: false },   // today's count of wild buddies beaten, and whether the daily rare has appeared yet
     badges: [],                                      // gym badges: region ids
+    rematch: { day: '', lands: [], wins: 0 },        // Champion rematches: the lands paid today, and how many rematches were won in all
     gym: null,                                       // a gym run in progress: { region, step }
     storySeen: {},                                   // one-time story beats already shown
     wild: { id: '', trainer: '', shiny: false, since: 0, next: 6 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat before the next boss

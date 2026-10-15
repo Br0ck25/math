@@ -135,6 +135,65 @@ test('all six badges make you Champion once, with a bonus', async () => {
   assert.equal(r.again, false, 'the Champion bonus is paid once');
 });
 
+test('Champion rematches: only Champions can replay a cleared gym; trainers and leader are stronger, Riley is back, and the first clear of a land each day pays (3 lands a day)', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    state.buddyXp.dog = xpForLevel(60); state.badges = ['ember', 'tide', 'grove', 'volt']; state.gems = 0;
+    startGym('ember'); out.notChampion = state.gym;
+    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; state.storySeen.champion = 1; state.rematch = { day: '', lands: [], wins: 0 };
+    const mine = getBuddyLevel(state.activePet);
+    startGym('ember'); document.getElementById('raid-modal').style.display = 'none'; modalDone();
+    out.gym = JSON.stringify(state.gym);
+    out.intro = document.getElementById('raid-title').innerText;
+    const lv = []; for (let i = 0; i < 20; i++) { pickGymFoe(); lv.push(bossLevel - mine); }
+    out.stronger = Math.min.apply(null, lv) >= ECON.map.rematch.levels;
+    out.rivalStep = (state.gym.step = 1, pickGymFoe(), getBossInfo().trainer);
+    // clears: the first three lands pay, the fourth does not, the same land again does not
+    const clear = (id) => { state.gym = { region: id, step: 3, rematch: true }; const g0 = state.gems; const res = advanceGym(true); return [res.rematch, state.gems - g0, state.gym]; };
+    out.c1 = clear('ember'); out.c2 = clear('ember'); out.c3 = clear('tide'); out.c4 = clear('grove'); out.c5 = clear('volt');
+    out.wins = state.rematch.wins; out.lands = state.rematch.lands.join();
+    state.rematch.day = '2000-01-01'; out.nextDay = clear('volt')[1];
+    out.badges = state.badges.length;
+    // the map offers a rematch only to Champions
+    openMap(); out.buttons = [...document.querySelectorAll('#map-body .claim-btn')].filter((b) => /Rematch/.test(b.innerText)).length; closeMap();
+    state.storySeen.champion = 0; openMap(); out.noButtons = [...document.querySelectorAll('#map-body .claim-btn')].filter((b) => /Rematch/.test(b.innerText)).length; closeMap();
+    return out;
+  });
+  assert.equal(r.notChampion, null, 'only Champions can rematch');
+  assert.equal(r.gym, '{"region":"ember","step":0,"rematch":true}');
+  assert.match(r.intro, /Rematch at Ember Hills/);
+  assert.equal(r.stronger, true, 'foes are stronger in a rematch');
+  assert.equal(r.rivalStep, 'Rival Riley');
+  assert.deepEqual(r.c1, [true, 40, null]);
+  assert.deepEqual(r.c2, [true, 0, null], 'the same land pays once a day');
+  assert.deepEqual(r.c3, [true, 40, null]);
+  assert.deepEqual(r.c4, [true, 40, null]);
+  assert.deepEqual(r.c5, [true, 0, null], 'only 3 lands pay per day');
+  assert.equal(r.wins, 5);
+  assert.equal(r.lands, 'ember,tide,grove');
+  assert.equal(r.nextDay, 40, 'a new day pays again');
+  assert.equal(r.badges, 6, 'a rematch gives no new badge');
+  assert.equal(r.buttons, 6);
+  assert.equal(r.noButtons, 0);
+});
+
+test('a rematch in a save is kept for Champions and dropped for everyone else', async () => {
+  const r = await page.evaluate(() => {
+    state.badges = ['ember']; state.storySeen.champion = 1; state.gym = { region: 'ember', step: 2, rematch: true };
+    state.rematch = { day: 5, lands: ['ember', 'ember', 'nope', 'tide'], wins: -3 };
+    NORMALIZERS.forEach((fn) => fn(state));
+    const a = [JSON.stringify(state.gym), JSON.stringify(state.rematch)];
+    state.storySeen.champion = 0; state.gym = { region: 'ember', step: 2, rematch: true }; NORMALIZERS.forEach((fn) => fn(state));
+    const b = state.gym;
+    state.storySeen.champion = 1; state.gym = { region: 'ember', step: 2 }; NORMALIZERS.forEach((fn) => fn(state));
+    return { a, b, c: state.gym };
+  });
+  assert.equal(r.a[0], '{"region":"ember","step":2,"rematch":true}');
+  assert.equal(r.a[1], '{"day":"","lands":["ember","tide"],"wins":0}');
+  assert.equal(r.b, null);
+  assert.equal(r.c, null, 'a gym without the rematch flag in a cleared land is still dropped');
+});
+
 test('map data in a save is repaired', async () => {
   const r = await page.evaluate(() => {
     state.region = 'nowhere'; state.badges = ['volt', 'volt', 'meadow', 'zzz']; state.gym = { region: 'ember', step: 99 };

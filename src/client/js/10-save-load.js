@@ -77,10 +77,16 @@ const NORMALIZERS = [
     s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
     const g = s.gym;
-    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && s.badges.indexOf(g.region) === -1) {
+    const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
+    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {
       s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
+      if (rematch) s.gym.rematch = true;
       s.region = g.region;
     } else s.gym = null;
+    const rm = s.rematch;
+    rm.day = typeof rm.day === 'string' ? rm.day.slice(0, 12) : '';
+    rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return gymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
+    rm.wins = asInt(rm.wins, 0, 1e6, 0);
   },
   function daily(s) {
     s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
