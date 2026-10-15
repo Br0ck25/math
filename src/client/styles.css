@@ -1082,7 +1082,7 @@
   .fighter-top { gap: 6px; }
   .fighter-card { padding: 5px 6px; }
   .fighter-card .fighter-name { font-size: 0.76rem; }
-  .fighter-tag .element-pill, .lv-pill { font-size: 0.6rem; padding: 1px 4px; }
+  .fighter-tag .element-pill, .lv-pill { font-size: 0.56rem; padding: 1px 4px; }
 }
 
 /* ===== close button that stays in view while a window scrolls ===== */
