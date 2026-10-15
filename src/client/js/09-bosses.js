@@ -42,7 +42,7 @@ function getBossMaxHp() { return getBossInfo().maxHp; }
 
 const TYPE_STRONG = {
   fire: ['nature'],
-  water: ['fire'],
+  water: ['fire', 'magic'],
   nature: ['water', 'electric'],
   electric: ['water', 'magic'],
   dark: ['nature'],

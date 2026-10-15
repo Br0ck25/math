@@ -1275,3 +1275,8 @@
 /* ===== A fainted fighter: the available teammates glow until one is chosen ===== */
 .swap-bar.pick .swap-chip:not(.resting) { animation: pickGlow 0.9s ease-in-out infinite alternate; border-color: #fde047; }
 @keyframes pickGlow { from { box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.2); } to { box-shadow: 0 0 10px 3px rgba(253, 224, 71, 0.8); } }
+
+/* Type chart in settings */
+.type-chart .tc-row { display: flex; flex-direction: column; margin: 0 0 6px; padding-bottom: 5px; border-bottom: 1px solid var(--card-border); }
+.type-chart .tc-row b { font-size: 0.9rem; }
+.type-chart .tc-row span { font-size: 0.8rem; color: var(--text-muted); }

@@ -383,4 +383,23 @@ test('the daily rare: once a day after 3 wild wins a golden buddy appears, tough
 });
 const ECON_DAILY_GEMS = 20;
 
+test('the type chart is fair: no two types beat each other, every type beats someone and loses to someone, and Magic is even', async () => {
+  const r = await page.evaluate(() => {
+    const types = Object.keys(TYPE_STRONG), out = { mutual: [], none: [], count: {} };
+    types.forEach((a) => TYPE_STRONG[a].forEach((b) => { if (TYPE_STRONG[b].includes(a)) out.mutual.push(a + '/' + b); }));
+    types.forEach((t) => {
+      const beats = TYPE_STRONG[t].length, weak = types.filter((o) => TYPE_STRONG[o].includes(t)).length;
+      out.count[t] = [beats, weak]; if (!beats || !weak) out.none.push(t);
+    });
+    out.magic = [getTypeRelation('magic', 'dark'), getTypeRelation('magic', 'fire'), getTypeRelation('electric', 'magic'), getTypeRelation('water', 'magic'), getTypeRelation('magic', 'water'), getTypeRelation('magic', 'electric')];
+    openSettings(); out.chart = document.getElementById('type-chart').textContent; closeSettings();
+    return out;
+  });
+  assert.deepEqual(r.mutual, []);
+  assert.deepEqual(r.none, []);
+  assert.deepEqual(r.count.magic, [2, 2], 'Magic beats two types and loses to two');
+  assert.deepEqual(r.magic, [1, 1, 1, 1, -1, -1]);
+  assert.match(r.chart, /Magic[\s\S]*weak to 💧 Water, ⚡ Electric/);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
