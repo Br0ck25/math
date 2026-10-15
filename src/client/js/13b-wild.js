@@ -14,15 +14,23 @@ function catchMatchup(sp) {
   return getTypeRelation(battleElement(mine), sp.element);
 }
 // opts.flawless: you won without a mistake. A Catch Net in stock is counted (it is used up by the roll).
+// The species of today's rare: the same for the whole day.
+function dailyRareId() {
+  const pool = wildPool(), k = dayKey();
+  let h = 0;
+  for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) % 100003;
+  return pool[h % pool.length].id;
+}
 function wildCatchChance(sp, opts) {
   const W = ECON.wild.catchChance;
   const base = !isStoreBuddy(sp) ? W.secret : sp.cost < 150 ? W.cheap : sp.cost < 800 ? W.mid : W.rare;
   const rel = catchMatchup(sp);
-  let chance = base * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
+  let chance = base * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
   if (activeHolds('bait')) chance *= 1.25;
   if (state.nets > 0) chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult, ECON.wild.net.max));       // a net never lowers a chance
+  if (opts && opts.shiny) chance = Math.min(chance, Math.max(ECON.daily.catchMax, base));
   return Math.min(1, chance);
 }
 function spareValueOf(id) {
@@ -43,6 +51,14 @@ function pickNextWild() {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);
     if (sp.id !== state.wild.id) break;
   }
+  const d = state.daily, today = dayKey();
+  if (d.day !== today) { d.day = today; d.fights = 0; d.spawned = false; }
+  if (!d.spawned && d.fights >= ECON.daily.after && !state.gym) {   // the daily rare
+    d.spawned = true;
+    sp = getSpecies(dailyRareId());
+    state.wild.shiny = true;
+    toast('✨ A rare golden buddy appeared! It only comes once a day.');
+  } else state.wild.shiny = false;
   state.wild.id = sp.id;
   state.wild.trainer = '';
   markDexSeen(sp.id);
@@ -68,9 +84,11 @@ function pickNextFoe() {
 function rollCatch(wildId, flawless) {
   const sp = getSpecies(wildId);
   if (!sp) return;
-  const chance = wildCatchChance(sp, { flawless: flawless });
+  if (!state.wild.shiny) state.daily.fights += 1;
+  const shiny = state.wild.shiny;
+  const chance = wildCatchChance(sp, { flawless: flawless, shiny: shiny });
   if (state.nets > 0) { state.nets -= 1; toast('🕸️ Catch Net used (' + state.nets + ' left)'); }
-  if (Math.random() >= chance) return;
+  if (Math.random() >= chance) { if (shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
   if (getOwnedIds().indexOf(sp.id) !== -1) {
     state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1);
     toast('🎉 Caught a spare ' + sp.name + '! Sell it in the buddy hub for ' + spareValueOf(sp.id) + ' 💎');

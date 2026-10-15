@@ -48,6 +48,7 @@ function pickGymFoe() {
     const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
     state.wild.id = sp.id;
     state.wild.trainer = GYM_TRAINERS[g.step % GYM_TRAINERS.length];
+    state.wild.shiny = false;
     markDexSeen(sp.id);
     bossLevel = clamp(mine + rnd(0, 2), 1, MAX_LEVEL);
   } else {
@@ -56,6 +57,7 @@ function pickGymFoe() {
     state.currentMonsterIndex = currentMonsterIndex;
     state.wild.id = '';
     state.wild.trainer = '';
+    state.wild.shiny = false;
     bossLevel = clamp(mine + rnd(1, 3), 1, MAX_LEVEL);
     markBossSeen(currentMonsterIndex);
   }

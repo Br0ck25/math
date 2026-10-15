@@ -69,6 +69,7 @@ function updateBattleUI() {
     hint.style.color = 'var(--text-muted)';
   }
 
+  document.getElementById('boss-box').classList.toggle('shiny', !!boss.shiny);
   const region = currentRegion();
   document.getElementById('battle-header-arena').style.setProperty('--region', region.element ? elemColor(region.element) : '');
   if (region.element) hint.innerText = region.icon + ' ' + hint.innerText;           // the land you are in

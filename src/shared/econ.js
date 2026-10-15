@@ -37,6 +37,8 @@ const ECON = {
     levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
     trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250
   },
+  // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
+  daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.

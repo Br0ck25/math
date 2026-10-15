@@ -48,6 +48,12 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Fainted buddies revive only after a boss. Quests that count bosses (`boss`, `flawless`) ignore wild buddies. One free buddy swap per battle (`state.swapUsed`). A boss with `minLevel` only appears for a strong enough buddy (`bossAvailable()`). Boss and wild attack both grow with level (`bossAtk()`, `wildStats()`).
 - Tests start on a boss (`openGame` seeds a save); pass `wildStart: true` for the real start. A test that wins several bosses in a row must set `state.wild.id = ''` and `state.wild.since = 99` so a boss comes next.
 
+## Journey systems (moves, status, roles, map)
+- Moves (`12c-moves.js`): correct answers charge energy (`ultimateCharge`, 0-3); the Moves sheet spends it. Buddies learn moves by level (`MOVES`). Status effects (`12d-status.js`) change scoring, never whether an answer is right; they are not saved. Roles and held items are in `25b-held.js` (roles come from the element).
+- The Map (`24b-map.js`): regions unlock by best buddy level, gyms are trainer battles (never catchable, not counted toward the next boss) and a leader boss; badges and Champion pay once. Use `showStoryModal()` for any story window.
+- The Buddy Dex is the old Collection Book (`30-collection-book.js`, ids still `book-*`): `markDexSeen()` when a buddy is met. Catch Nets, the flawless bonus and the daily rare are in `ECON.wild` / `ECON.daily`.
+- After a new battle system: new saved fields need defaults and a normalizer; run `npm run sim` (energy moves shorten battles: `HITS_PER_BOSS` in the sim).
+
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.
   Never trust data from localStorage or the cloud.

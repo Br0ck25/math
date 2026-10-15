@@ -107,6 +107,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
       if (boss.trainer) gemBonus += ECON.map.trainerGems;
+      if (boss.shiny) gemBonus += ECON.daily.gems;
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();

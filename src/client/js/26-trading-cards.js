@@ -52,10 +52,10 @@ function bossCard(idx, opts) {
 }
 // A wild buddy's card: its stats at the level it has in the arena, how likely you are to catch it, and whether you own it.
 function wildCard(id, level) {
-  const sp = getSpecies(id), st = wildStats(level), owned = getOwnedIds().indexOf(id) !== -1;
+  const sp = getSpecies(id), st = wildStats(level), shiny = state.wild.shiny && state.wild.id === id, owned = getOwnedIds().indexOf(id) !== -1;
   return {
-    name: sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: rarityOf(id), stars: 1,
-    stats: [['❤️', st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp) * 100) + '%', 'Catch']],
+    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
+    stats: [['❤️', shiny ? Math.ceil(st.maxHp * ECON.daily.hpMult) : st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp, { shiny: shiny }) * 100) + '%', 'Catch']],
     line: '⚡ ' + sp.superMove, foot: owned ? '✅ In your collection' + (spareCount(id) ? ' · ' + spareCount(id) + ' spare' + (spareCount(id) > 1 ? 's' : '') : '') : '🆕 Not in your collection yet',
     sleepy: false, stage: 0, gear: { acc: null, armor: null }
   };

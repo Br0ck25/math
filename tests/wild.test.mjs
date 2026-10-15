@@ -184,7 +184,7 @@ test('bad wild and spare data in a save is repaired', async () => {
     NORMALIZERS.forEach((fn) => fn(state));
     return { wild: state.wild, spares: state.spares };
   });
-  assert.deepEqual(r.wild, { id: '', trainer: '', since: 0, next: 8 });
+  assert.deepEqual(r.wild, { id: '', trainer: '', shiny: false, since: 0, next: 8 });
   assert.deepEqual(r.spares, { fox: 99 });
 });
 
@@ -345,5 +345,42 @@ test('a flawless win and a Catch Net raise the catch chance; the net is used up 
   assert.deepEqual(r.full, [5, 1000], 'at most 5 nets, and no gems taken');
   assert.ok(!r.chip0.includes('🕸️') && r.chip2.includes('🕸️'));
 });
+
+test('the daily rare: once a day after 3 wild wins a golden buddy appears, tougher, easier to catch, paying extra; it is the same species all day', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    state.daily = { day: dayKey(), fights: 0, spawned: false }; state.wild.id = ''; state.gym = null;
+    pickNextWild(); out.early = state.wild.shiny;
+    state.daily.fights = 3; pickNextWild(); out.shiny = state.wild.shiny; out.id = state.wild.id; out.want = dailyRareId();
+    const info = getBossInfo(); const plain = wildStats(bossLevel).maxHp;
+    out.hp = [info.maxHp, Math.ceil(plain * ECON.daily.hpMult)]; out.name = info.name.startsWith('✨ ');
+    out.chip = document.getElementById('weak-chip').innerText; updateWeakChip(); out.chip = document.getElementById('weak-chip').innerText;
+    out.cap = wildCatchChance(getSpecies(out.id), { shiny: true });
+    pickNextWild(); out.again = state.wild.shiny;
+    state.daily.day = '2000-01-01'; state.daily.fights = 5; pickNextWild(); out.reset = [state.wild.shiny, state.daily.spawned, state.daily.fights];
+    state.daily.fights = 3; pickNextWild(); out.nextDay = [state.wild.shiny, state.daily.spawned];
+    state.wild.shiny = true; state.gems = 0; bossLevel = 5; state.unlockedPets = ['dog'];
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
+    await new Promise((res) => setTimeout(res, 1500));
+    out.gems = state.gems;
+    state.wild = { id: 'fox', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.keep = state.wild.shiny;
+    state.wild = { id: '', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.drop = state.wild.shiny;
+    return out;
+  });
+  assert.equal(r.early, false, 'not before 3 wild wins');
+  assert.equal(r.shiny, true);
+  assert.equal(r.id, r.want);
+  assert.deepEqual(r.hp[0], r.hp[1]);
+  assert.equal(r.name, true);
+  assert.match(r.chip, /✨ 🫧 Catch \d+%/);
+  assert.ok(r.cap <= 0.6 + 1e-9 || r.cap >= 0, 'capped');
+  assert.equal(r.again, false, 'only once a day');
+  assert.deepEqual(r.reset, [false, false, 0], 'a new day starts the count again');
+  assert.deepEqual(r.nextDay, [true, true], 'and brings a new one');
+  assert.ok(r.gems >= ECON_DAILY_GEMS, 'extra gems: ' + r.gems);
+  assert.equal(r.keep, true);
+  assert.equal(r.drop, false);
+});
+const ECON_DAILY_GEMS = 20;
 
 test('no errors', () => { assert.deepEqual(errors, []); });

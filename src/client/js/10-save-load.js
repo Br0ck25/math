@@ -82,6 +82,10 @@ const NORMALIZERS = [
       s.region = g.region;
     } else s.gym = null;
   },
+  function daily(s) {
+    s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
+    s.daily.fights = asInt(s.daily.fights, 0, 1000, 0);
+  },
   function held(s) {
     const ids = HELD_ITEMS.map(function (i) { return i.id; });
     s.heldOwned = s.heldOwned.filter(function (id, i) { return ids.indexOf(id) !== -1 && s.heldOwned.indexOf(id) === i; });
@@ -101,6 +105,7 @@ const NORMALIZERS = [
     const w = s.wild;
     const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
     w.id = ok ? w.id : '';
+    w.shiny = w.shiny === true && !!w.id && !w.trainer;
     w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
     w.since = asInt(w.since, 0, 50, 0);
     w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);

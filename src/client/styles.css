@@ -1267,3 +1267,7 @@
 .map-row.locked { opacity: 0.6; }
 .map-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex: 0 0 auto; }
 .map-badge { font-size: 1.4rem; }
+
+/* ===== Daily rare: a golden glow ===== */
+.boss-box.shiny::before { opacity: 0.9; background: radial-gradient(circle, #facc15 0%, rgba(250, 204, 21, 0) 68%); }
+.boss-box.shiny .fighter-icon { filter: drop-shadow(0 0 6px #facc15) saturate(1.3); }

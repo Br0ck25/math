@@ -17,8 +17,10 @@ function getBossInfo() {
   if (state.wild.id) {
     const sp = getSpecies(state.wild.id), st = wildStats(bossLevel), trainer = state.wild.trainer;
     if (trainer) st.maxHp = Math.ceil(st.maxHp * ECON.map.trainerHpMult);
+    const shiny = !!state.wild.shiny;
+    if (shiny) st.maxHp = Math.ceil(st.maxHp * ECON.daily.hpMult);
     return {
-      name: trainer ? trainer + "'s " + sp.name : sp.name, trainer: trainer, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
+      name: (shiny ? '✨ ' : '') + (trainer ? trainer + "'s " + sp.name : sp.name), trainer: trainer, shiny: shiny, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
       form: 0, level: bossLevel, maxHp: st.maxHp, atk: st.atk, swapped: false
     };
   }
@@ -108,6 +110,7 @@ function maybeBackupBoss(boss, pet) {
 function pickNextBoss() {
   state.wild.id = '';
   state.wild.trainer = '';
+  state.wild.shiny = false;
   state.wild.since = 0;
   state.wild.next = rnd(ECON.wild.bossEvery[0], ECON.wild.bossEvery[1]);
   if (!state.recentBossTypes) state.recentBossTypes = [];
