@@ -64,6 +64,14 @@ const NORMALIZERS = [
     if (!s.activeArmor || s.unlockedArmor.indexOf(s.activeArmor) === -1) s.activeArmor = 'none';
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
   },
+  function records(s) {
+    const r = s.records;
+    r.fastest = isFinite(r.fastest) ? clamp(r.fastest, 0, 3600) : 0;
+    r.bestStreak = asInt(r.bestStreak, 0, 1000000, 0);
+    r.solved = asInt(r.solved, 0, 100000000, 0);
+    r.attempts = asInt(r.attempts, 0, 100000000, 0);
+    if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
+  },
   function bossBook(s) {
     const book = {};
     Object.keys(s.bossBook || {}).forEach(function (k) {

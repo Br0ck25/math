@@ -1182,3 +1182,8 @@
 .pet-card.locked { opacity: 1; }
 .pet-card.locked .card-pic, .pet-card.locked .icon-wrap { opacity: 0.55; }
 .pet-card.fainted { opacity: 0.75; }
+
+/* Wrong-answer card countdown (disabled by .reduce-motion, the timer still closes it) */
+.miss-bar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 5s linear forwards; }
+@keyframes miss-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }

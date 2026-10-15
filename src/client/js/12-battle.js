@@ -259,6 +259,7 @@ function checkAnswer() {
     if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
 
     state.streak += 1;
+    recordAllTime(opId, true, solveTime, hintUsed);
     questEvent('streak', state.streak);
     if (ultimateCharge < 3) ultimateCharge += 1;
 
@@ -322,11 +323,13 @@ function checkAnswer() {
     bossMistakes += 1;
     const missOp = currentProblem.modeTag;
     recordStat(missOp, false, solveTime, false);
+    recordAllTime(missOp, false, solveTime, false);
     if (currentProblem.challenge) state.adapt.calm[missOp] = true;     // after a missed challenge the next one steps back
     recordAdaptive(missOp, false, false);
     if (!currentProblem.challenge) state.adapt.easy[missOp] = true;     // a quick win right after a miss (a missed challenge already steps back, above)
     buddyReact('wince');
     explainMistake();
+    showMissCard(numVal);
     if (answerBox) answerBox.className = 'answer-box wrong';
 
     if (state.shields > 0) {

@@ -13,6 +13,16 @@ function fillReport() {
   document.getElementById('rep-secrets').innerText = state.unlockedSecrets.length;
   document.getElementById('rep-bosses').innerText = state.monstersDefeated;
   document.getElementById('rep-best').innerText = getBestLevel();
+  const r = state.records;
+  const fastOp = OP_BY_ID[r.fastestOp];
+  const rows = [
+    ['🏅 All-time fastest answer', r.fastest ? r.fastest.toFixed(1) + 's' + (fastOp ? ' (' + fastOp.label + ')' : '') : '--'],
+    ['🔥 Longest streak', r.bestStreak || '--'],
+    ['✅ All-time solved', r.solved],
+    ['🎯 All-time accuracy', r.attempts ? Math.round(r.solved / r.attempts * 100) + '%' : '--'],
+    ['📅 Days played', state.streakCal.total || '--']
+  ];
+  document.getElementById('rep-alltime').innerHTML = rows.map(function (x) { return '<tr><td>' + x[0] + '</td><td>' + escHtml(x[1]) + '</td></tr>'; }).join('');
 }
 function openReportModal() { showModal('report-modal', fillReport); }
 function closeReportModal() { hideModal('report-modal'); }

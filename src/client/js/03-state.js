@@ -25,6 +25,7 @@ function freshState() {
     quests: null,
     streakCal: { count: 0, last: '', total: 0, claimed: [] },
     stats: { days: {} },
+    records: { fastest: 0, bestStreak: 0, solved: 0, attempts: 0, fastestOp: '' },
     parentGoal: { minutes: 20, reward: '', notified: '' },
     parentPinHash: '',
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },

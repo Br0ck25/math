@@ -154,3 +154,42 @@ test('the streak shield costs what the economy says: refused below it, bought at
   assert.deepEqual(r.bought, { shields: 1, gems: 0 });
   assert.equal(r.label, 'Need ' + r.price + ' more 💎', 'out of gems, the button says how many more are needed');
 });
+
+test('a wrong answer opens a card with the right answer that closes by itself after 5 seconds or by the ✕', async () => {
+  await solveWrong();
+  const r = await page.evaluate(() => ({
+    shown: getComputedStyle(document.getElementById('miss-modal')).display,
+    answer: document.getElementById('miss-answer').innerText,
+    want: fmtAns(currentProblem.answer),
+    ms: MISS_CARD_MS,
+    x: !!document.querySelector('#miss-modal .modal-x')
+  }));
+  assert.equal(r.shown, 'flex');
+  assert.equal(r.answer, r.want);
+  assert.equal(r.ms, 5000);
+  assert.ok(r.x, 'sticky exit button');
+  await page.evaluate(() => document.querySelector('#miss-modal .modal-x').click());
+  assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
+  await page.evaluate(() => { inputLocked = false; userInput = String(currentProblem.answer + 7); checkAnswer(); });
+  await page.waitForFunction(() => document.getElementById('miss-modal').style.display === 'none', null, { timeout: 7000 });
+});
+
+test('all-time records keep the fastest answer, longest streak and totals', async () => {
+  await solveCorrectly(); await solveCorrectly(); await solveCorrectly();
+  await solveWrong();
+  const r = await page.evaluate(() => ({ ...state.records }));
+  assert.equal(r.solved, 3);
+  assert.equal(r.attempts, 4);
+  assert.equal(r.bestStreak, 3);
+  assert.ok(r.fastest >= 0);
+  await page.evaluate(() => { state.records.fastest = 'x'; state.records.bestStreak = -4; saveState(); });
+  await page.reload();
+  const n = await page.evaluate(() => ({ ...state.records }));
+  assert.equal(n.fastest, 0);
+  assert.equal(n.bestStreak, 0);
+  await page.evaluate(() => { state.records = { fastest: 1.2, bestStreak: 9, solved: 20, attempts: 25, fastestOp: 'add' }; fillReport(); });
+  const t = await page.evaluate(() => document.getElementById('rep-alltime').innerText);
+  assert.match(t, /1\.2s/);
+  assert.match(t, /9/);
+  assert.match(t, /80%/);
+});
