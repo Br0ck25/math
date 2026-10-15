@@ -7,10 +7,17 @@ function wildPool() {
   return storePets.filter(function (p) { return !p.requiresAllStorePets; }).concat(secretCompanions);
 }
 function isStoreBuddy(sp) { return storePets.indexOf(sp) !== -1; }
+// 1 when your buddy is strong against this one (easier to catch), -1 when weak against it, 0 otherwise.
+function catchMatchup(sp) {
+  const mine = getActivePetDisplay();
+  if (battleElement(mine) === 'shadow') return 0;
+  return getTypeRelation(battleElement(mine), sp.element);
+}
 function wildCatchChance(sp) {
   const W = ECON.wild.catchChance;
   const base = !isStoreBuddy(sp) ? W.secret : sp.cost < 150 ? W.cheap : sp.cost < 800 ? W.mid : W.rare;
-  return Math.min(1, base + Math.min(state.wild.miss, ECON.wild.pityMax) * ECON.wild.pityStep);
+  const rel = catchMatchup(sp);
+  return Math.min(1, base * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1));
 }
 function spareValueOf(id) {
   const sp = getSpecies(id);
@@ -45,8 +52,7 @@ function pickNextFoe() {
 function rollCatch(wildId) {
   const sp = getSpecies(wildId);
   if (!sp) return;
-  if (Math.random() >= wildCatchChance(sp)) { state.wild.miss += 1; return; }
-  state.wild.miss = 0;
+  if (Math.random() >= wildCatchChance(sp)) return;
   if (getOwnedIds().indexOf(sp.id) !== -1) {
     state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1);
     toast('🎉 Caught a spare ' + sp.name + '! Sell it in the buddy hub for ' + spareValueOf(sp.id) + ' 💎');

@@ -92,16 +92,56 @@ test('beating a wild buddy can catch it: a new one joins, one you own becomes a 
   assert.equal(r.count, 1, 'never listed twice');
 });
 
-test('missing a catch makes the next one more likely, and a catch resets it', async () => {
-  const r = await page.evaluate(async () => {
-    state.wild.id = 'fox'; state.wild.miss = 0;
-    const sp = getSpecies('fox'); const base = wildCatchChance(sp);
-    state.wild.miss = 2; const two = wildCatchChance(sp);
-    state.wild.miss = 99; const capped = wildCatchChance(sp);
-    return { base, two, capped, max: base + ECON.wild.pityMax * ECON.wild.pityStep };
+test('catching is easier when your buddy is strong against the wild one, harder when it is weak', async () => {
+  const r = await page.evaluate(() => {
+    state.unlockedPets = ['dog', 'fox']; state.unlockedSecrets = [];
+    const sp = getSpecies('fox');                       // fire
+    state.activePet = 'otter';                          // water beats fire
+    state.unlockedPets = ['dog', 'fox', 'otter'];
+    const strong = wildCatchChance(sp);
+    state.activePet = 'hedgehog'; state.unlockedPets.push('hedgehog');   // nature loses to fire
+    const weak = wildCatchChance(sp);
+    state.activePet = 'fox';
+    const even = wildCatchChance(sp);
+    return { strong, weak, even, base: ECON.wild.catchChance.cheap };
   });
-  assert.ok(r.two > r.base);
-  assert.ok(Math.abs(r.capped - r.max) < 1e-9, 'the bonus is capped');
+  assert.ok(Math.abs(r.even - r.base) < 1e-9);
+  assert.ok(Math.abs(r.strong - r.base * 1.5) < 1e-9);
+  assert.ok(Math.abs(r.weak - r.base * 0.5) < 1e-9);
+});
+
+test('wild buddies get tougher as they level, hit harder, and obey the type chart', async () => {
+  const r = await page.evaluate(() => {
+    const out = { hp: [1, 10, 30, 60].map((l) => wildStats(l).maxHp), atk: [1, 20, 60].map((l) => wildStats(l).atk) };
+    state.wild.id = 'fox'; bossLevel = 30;
+    out.info = [getBossInfo().maxHp, getBossInfo().atk];
+    state.unlockedPets = ['dog', 'fox', 'otter']; state.activePet = 'otter'; updateStatsUI();
+    out.hint = document.getElementById('type-match-hint').innerText;
+    return out;
+  });
+  assert.ok(r.hp.every((v, i) => !i || v > r.hp[i - 1]), 'HP grows with level: ' + r.hp);
+  assert.ok(r.atk[2] > r.atk[0], 'attack grows too: ' + r.atk);
+  assert.deepEqual(r.info, [wildStatsExpect(30)[0], wildStatsExpect(30)[1]]);
+  assert.match(r.hint, /Super effective/);
+});
+function wildStatsExpect(l) { return [3 + Math.floor(l * 0.4), 1 + Math.floor(l / 15)]; }
+
+test('a wild buddy has a card, opened by tapping it in the arena', async () => {
+  const r = await page.evaluate(() => {
+    state.wild.id = 'fox'; bossLevel = 20; state.unlockedPets = ['dog'];
+    openArenaBossCard();
+    const out = { open: document.getElementById('bosscard-modal').style.display, title: document.getElementById('boss-card-title').innerText };
+    const c = wildCard('fox', 20);
+    out.card = [c.name, c.levelText, c.stats.map((s) => s[2]).join(','), c.foot];
+    const cv = document.createElement('canvas'); drawCardFromDesc(cv, c); out.w = cv.width;
+    closeBossCard();
+    return out;
+  });
+  assert.equal(r.open, 'flex');
+  assert.match(r.title, /Wild Buddy Card/);
+  assert.deepEqual(r.card.slice(0, 3), ['Sparky', 'Lv 20', 'HP,Attack,Catch']);
+  assert.match(r.card[3], /Not in your collection/);
+  assert.equal(r.w, 600);
 });
 
 test('spares sell for gems, never below zero spares and never the last copy of a buddy', async () => {
@@ -115,16 +155,17 @@ test('spares sell for gems, never below zero spares and never the last copy of a
     state.spares = { fox: 1, dog: 2 }; state.gems = 0;
     const total = spareValueOf('fox') + 2 * spareValueOf('dog');
     sellAllSpares(); out.all = [state.gems === total, Object.keys(state.spares).length];
-    out.secret = spareValue(false, 0); out.cap = spareValue(true, 100000);
+    out.secret = spareValue(false, 0); out.big = spareValue(true, 3250); out.free = spareValue(true, 0);
     return out;
   });
-  assert.equal(r.value, Math.max(3, Math.round(r.cost * 0.2)));
+  assert.equal(r.value, Math.round(r.cost * 0.2), 'exactly 20% of the shop price');
   assert.ok(r.value < r.cost, 'selling pays far less than buying');
   assert.deepEqual(r.after1, [10 + r.value, 1]);
   assert.deepEqual(r.after3, [10 + 2 * r.value, 0, true]);
   assert.deepEqual(r.all, [true, 0]);
   assert.equal(r.secret, 12);
-  assert.equal(r.cap, 100);
+  assert.equal(r.big, 650, 'no maximum');
+  assert.equal(r.free, 1);
 });
 
 test('the buddy hub offers to sell a spare', async () => {
@@ -138,12 +179,12 @@ test('the buddy hub offers to sell a spare', async () => {
 
 test('bad wild and spare data in a save is repaired', async () => {
   const r = await page.evaluate(() => {
-    state.wild = { id: 'not_a_buddy', since: -4, next: 99, miss: 'x' };
+    state.wild = { id: 'not_a_buddy', since: -4, next: 99, miss: 3 };
     state.spares = { fox: 500, ghost: 3, dog: -1 }; state.unlockedPets = ['dog', 'fox'];
     NORMALIZERS.forEach((fn) => fn(state));
     return { wild: state.wild, spares: state.spares };
   });
-  assert.deepEqual(r.wild, { id: '', since: 0, next: 8, miss: 0 });
+  assert.deepEqual(r.wild, { id: '', since: 0, next: 8 });
   assert.deepEqual(r.spares, { fox: 99 });
 });
 

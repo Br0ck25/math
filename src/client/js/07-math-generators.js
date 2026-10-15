@@ -396,7 +396,11 @@ function updateWeakChip() {
   if (!chip) return;
   const w = getWeakOp();
   const r = state.raid;
-  if (state.wild.id) { chip.innerText = '🫧 Catch chance: ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%'; return; }
+  if (state.wild.id) {
+    const sp = getSpecies(state.wild.id), rel = catchMatchup(sp);
+    chip.innerText = '🫧 Catch chance: ' + Math.round(wildCatchChance(sp) * 100) + '%' + (rel === 1 ? ' ⚡ (strong against it)' : rel === -1 ? ' ⚠️ (weak against it)' : '');
+    return;
+  }
   const head = r ? '👑 RAID phase ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
   chip.innerText = (w || r) ? head + (w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
 }

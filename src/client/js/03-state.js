@@ -42,7 +42,7 @@ function freshState() {
     raid: null,
     raidsCleared: 0,
     lastRaidAt: 0,
-    wild: { id: '', since: 0, next: 6, miss: 0 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat, catch misses in a row
+    wild: { id: '', since: 0, next: 6 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat before the next boss
     spares: {},                                      // buddy id -> extra copies that can be sold
     bossBook: {},
     bossSwapped: false,

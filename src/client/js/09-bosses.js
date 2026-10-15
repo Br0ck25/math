@@ -3,12 +3,16 @@
 // =====================================================================
 function getBossFormIndex(lvl) { return lvl >= 45 ? 2 : (lvl >= 20 ? 1 : 0); }
 const WILD_TAUNTS = ['Let us see what you have got!', 'I will not go down easy!', 'Think you can catch me?', 'Show me your best math!'];
+// A wild buddy's HP and attack grow with its level (ECON.wild), so battles stay even as your buddy levels up.
+function wildStats(level) {
+  return { maxHp: ECON.wild.hpBase + Math.floor(level * ECON.wild.hpPerLevel), atk: 1 + Math.floor(level / ECON.wild.atkPerLevels) };
+}
 function getBossInfo() {
   if (state.wild.id) {
-    const sp = getSpecies(state.wild.id);
+    const sp = getSpecies(state.wild.id), st = wildStats(bossLevel);
     return {
       name: sp.name, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
-      form: 0, level: bossLevel, maxHp: ECON.wild.baseHp + Math.floor(bossLevel / 3), atk: 1, swapped: false
+      form: 0, level: bossLevel, maxHp: st.maxHp, atk: st.atk, swapped: false
     };
   }
   const base = monstersList[currentMonsterIndex];
@@ -18,7 +22,7 @@ function getBossInfo() {
     name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts, slays: base.slays || null,
     form: form, level: bossLevel,
     maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0) + (state.bossSwapped ? ECON.boss.swap.extraHp : 0),
-    atk: 1 + (form === 2 ? 1 : 0) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
+    atk: 1 + (base.atkBonus || 0) + (form === 2 ? 1 : 0) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
     swapped: !!state.bossSwapped
   };
 }

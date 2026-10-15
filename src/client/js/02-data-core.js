@@ -65,7 +65,10 @@ const monstersList = [
   // 3 Buddy Slayers: they fight like any other boss, but each is strong against one ultra-rare buddy (see ECON.boss.slayer)
   { name: "Bovine Bruiser", icon: "🐄", baseHp: 6, element: "nature", slays: "secret_janie", buddy: "boss_cow", taunts: ["Moo-ve over, math cadet!", "I will stampede right over your sums!"] },
   { name: "Harpy Eagle", icon: "🦅", baseHp: 6, element: "electric", slays: "secret_amber", buddy: "boss_harpy", taunts: ["Slow and steady will not save you from my dive!", "Nothing escapes my talons!"] },
-  { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", buddy: "boss_mara", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] }
+  { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", buddy: "boss_mara", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] },
+
+  // The strongest boss of all (more HP and +1 attack), and a slayer of the Bandit: a big pitbull who chases cats
+  { name: "Rocky", icon: "🐕", baseHp: 9, atkBonus: 1, element: "fire", slays: "bandit", buddy: "boss_rocky", taunts: ["Woof! Cats do not get past me!", "I am the biggest, strongest pup on the block!"] }
 ];
 
 const GRADES = [

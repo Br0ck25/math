@@ -78,7 +78,7 @@ const NORMALIZERS = [
     w.id = ok ? w.id : '';
     w.since = asInt(w.since, 0, 50, 0);
     w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
-    w.miss = asInt(w.miss, 0, 50, 0);
+    delete w.miss;                                   // an old catch-streak counter
     const owned = s.unlockedPets.concat(s.unlockedSecrets), spares = {};
     Object.keys(s.spares).forEach(function (id) {
       const n = asInt(s.spares[id], 0, 99, 0);
