@@ -49,3 +49,9 @@ test('the long game: a typical player has goals for months, and a buddy takes we
   assert.ok(g.level100 > 30 && g.level100 < 150, 'level 100 takes ' + g.level100 + ' days');
   assert.ok(simulate(PROFILES.quick).total > 0 && longGame(PROFILES.quick).level100 < 400, 'even a 10 minute player gets there within a year');
 });
+
+test('Champion rematches are a bonus, not a new main income', () => {
+  const c = simulate(PROFILES.champion);
+  assert.ok(c.sources['champion rematches'] / c.total < 0.2, 'rematch share ' + Math.round((c.sources['champion rematches'] / c.total) * 100) + '%');
+  assert.ok(c.total / typical.total < 1.25, 'a Champion earns at most 25% more than a typical day');
+});

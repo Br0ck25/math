@@ -13,7 +13,9 @@ const sessionGoalReward = shared.sessionGoalReward;
 export const PROFILES = {
   quick: { name: 'Quick session (10 min)', problems: 30, accuracy: 0.8, questsDone: 0.5, tournamentRuns: 0, playsDaily: true },
   typical: { name: 'Typical day (25 min)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true },
-  keen: { name: 'Keen day (50 min)', problems: 180, accuracy: 0.9, questsDone: 1, tournamentRuns: 2, playsDaily: true }
+  keen: { name: 'Keen day (50 min)', problems: 180, accuracy: 0.9, questsDone: 1, tournamentRuns: 2, playsDaily: true },
+  // A Champion on a typical day who also does the daily rematches (each is 3 trainers and a leader, about 4 battles).
+  champion: { name: 'Champion (25 min + rematches)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true, rematchLands: 3 }
 };
 // Wild battles: a boss every avg(bossEvery) of them. A caught buddy is a spare (sellable) about half the time once the collection is growing.
 const CATCH_RATE = 0.082, SPARE_SHARE = 0.5, AVG_SPARE_VALUE = 154, AVG_WILD_LEVEL = 9;   // 154: average sale of a caught store or secret buddy (20% of shop price, no maximum)
@@ -54,7 +56,8 @@ export function simulate(p) {
     'session goals': goals,
     'daily quests': quests,
     'streak calendar': calendar,
-    'tournament': tournament
+    'tournament': tournament,
+    'champion rematches': (p.rematchLands || 0) * E.map.rematch.gems
   };
   const total = vals(sources).reduce((a, b) => a + b, 0);
   const sinks = { hints: 3 * E.hint.cost, 'buddy care': E.care.treatCost + E.care.favCost };
@@ -98,7 +101,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   console.log('\nThe long game (days of play at that pace, gems only from play, nothing spent on anything else)');
   Object.keys(PROFILES).forEach((k) => {
     const g = longGame(PROFILES[k]);
-    console.log('  ' + PROFILES[k].name.padEnd(24) + 'buy every buddy ' + String(Math.round(g.buddyDays)).padStart(4) + ' d   all gear ' + String(Math.round(g.gearDays)).padStart(3) + ' d   Lv50 ' + String(g.level50).padStart(4) + ' d   Lv100 ' + String(g.level100).padStart(4) + ' d');
+    console.log('  ' + PROFILES[k].name.padEnd(32) + 'buy every buddy ' + String(Math.round(g.buddyDays)).padStart(4) + ' d   all gear ' + String(Math.round(g.gearDays)).padStart(3) + ' d   Lv50 ' + String(g.level50).padStart(4) + ' d   Lv100 ' + String(g.level100).padStart(4) + ' d');
   });
   console.log('  (shop buddies cost ' + shopTotals().buddies + ' gems in all, gear ' + shopTotals().gear + ')');
   console.log('\nCompetitive modes (tournament) are ' + Math.round((simulate(PROFILES.typical).competitive / simulate(PROFILES.typical).total) * 100) + '% of a typical day. Online duel stakes are zero-sum, so they add nothing to the total.');
