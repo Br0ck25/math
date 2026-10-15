@@ -214,7 +214,7 @@
         <div class="item-card">
           <div>
             <div class="item-name">🕸️ Catch Net</div>
-            <div class="item-desc">Doubles your catch chance on your next wild win. You have <span id="net-count">0</span></div>
+            <div class="item-desc">After a wild win, throw up to 3 at once for a better catch chance. You have <span id="net-count">0</span></div>
           </div>
           <button class="key-btn submit-btn item-btn" id="item-net" onclick="buyItem('net')">-- 💎</button>
         </div>
@@ -438,6 +438,16 @@
         <button class="danger-btn" onclick="openResetModal()">🔄 Reset All Progress</button>
       </details>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+
+  <!-- Catch window: how many Catch Nets to throw after beating a wild buddy -->
+  <div class="modal-overlay" id="catch-modal" data-close="closeCatchModal">
+    <div class="modal-content" style="border-color:#38bdf8;">
+      <div class="loot-icon" id="catch-icon" style="font-size:3rem;">🫧</div>
+      <h2 style="font-size:1.15rem; margin-bottom:2px;" id="catch-title"></h2>
+      <p style="font-size:0.78rem; color:var(--text-muted); margin:2px 0 8px;" id="catch-note"></p>
+      <div class="moves-list" id="catch-options"></div>
     </div>
   </div>
 

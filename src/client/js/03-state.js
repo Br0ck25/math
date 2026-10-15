@@ -11,7 +11,7 @@ function freshState() {
     cloverLeft: 0,
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
-    nets: 0,                                         // Catch Nets in stock: one is used on each wild win
+    nets: 0,                                         // Catch Nets in stock: you choose how many (up to 3) to throw after a wild win
     monstersDefeated: 0,
     currentMonsterIndex: -1,
     bossLevel: 1,

@@ -13,7 +13,6 @@ function catchMatchup(sp) {
   if (battleElement(mine) === 'shadow') return 0;
   return getTypeRelation(battleElement(mine), sp.element);
 }
-// opts.flawless: you won without a mistake. A Catch Net in stock is counted (it is used up by the roll).
 // The species of today's rare: the same for the whole day.
 function dailyRareId() {
   const pool = wildPool(), k = dayKey();
@@ -21,6 +20,7 @@ function dailyRareId() {
   for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) % 100003;
   return pool[h % pool.length].id;
 }
+// opts.flawless: you won without a mistake; opts.shiny: the daily rare; opts.nets: how many Catch Nets are thrown (0-3).
 function wildCatchChance(sp, opts) {
   const W = ECON.wild.catchChance;
   const base = !isStoreBuddy(sp) ? W.secret : sp.cost < 150 ? W.cheap : sp.cost < 800 ? W.mid : W.rare;
@@ -29,7 +29,8 @@ function wildCatchChance(sp, opts) {
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
   if (activeHolds('bait')) chance *= 1.25;
-  if (state.nets > 0) chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult, ECON.wild.net.max));       // a net never lowers a chance
+  const nets = opts && opts.nets ? Math.min(opts.nets, ECON.wild.net.mult.length - 1) : 0;
+  if (nets) chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult[nets], ECON.wild.net.max));       // nets never lower a chance
   if (opts && opts.shiny) chance = Math.min(chance, Math.max(ECON.daily.catchMax, base));
   return Math.min(1, chance);
 }
@@ -80,15 +81,22 @@ function pickNextFoe() {
   else pickNextWild();
 }
 
-// After a wild win: roll to catch it. A buddy you already own becomes a spare.
+// After a wild win: roll to catch it. With Catch Nets in stock the player chooses how many to throw (0-3) first.
+// A buddy you already own becomes a spare.
 function rollCatch(wildId, flawless) {
   const sp = getSpecies(wildId);
   if (!sp) return;
   if (!state.wild.shiny) state.daily.fights += 1;
-  const shiny = state.wild.shiny;
-  const chance = wildCatchChance(sp, { flawless: flawless, shiny: shiny });
-  if (state.nets > 0) { state.nets -= 1; toast('🕸️ Catch Net used (' + state.nets + ' left)'); }
-  if (Math.random() >= chance) { if (shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
+  const data = { id: wildId, flawless: !!flawless, shiny: state.wild.shiny };
+  if (state.nets > 0) { enqueueModal(function () { showCatchModal(data); }); return; }
+  resolveCatch(data, 0);
+}
+function resolveCatch(data, nets) {
+  const sp = getSpecies(data.id);
+  nets = Math.max(0, Math.min(nets, state.nets, ECON.wild.net.mult.length - 1));
+  const chance = wildCatchChance(sp, { flawless: data.flawless, shiny: data.shiny, nets: nets });
+  if (nets) { state.nets -= nets; toast('🕸️ ' + nets + ' Catch Net' + (nets > 1 ? 's' : '') + ' thrown (' + state.nets + ' left)'); }
+  if (Math.random() >= chance) { if (data.shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
   if (getOwnedIds().indexOf(sp.id) !== -1) {
     state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1);
     toast('🎉 Caught a spare ' + sp.name + '! Sell it in the buddy hub for ' + spareValueOf(sp.id) + ' 💎');
@@ -99,6 +107,43 @@ function rollCatch(wildId, flawless) {
   checkEarnedGear();
   enqueueModal(function () { showLootModal(sp, 'wild'); });
 }
+
+// ----- the catch window: you beat a wild buddy, now choose how many nets to throw -----
+let catchData = null;
+function showCatchModal(data) {
+  catchData = data;
+  const sp = getSpecies(data.id), W = ECON.wild.net;
+  document.getElementById('catch-icon').innerHTML = sp.icon;
+  document.getElementById('catch-title').innerText = 'You beat ' + (data.shiny ? '✨ ' : '') + sp.name + '! Catch it?';
+  document.getElementById('catch-note').innerText = 'You have ' + state.nets + ' 🕸️ Catch Net' + (state.nets === 1 ? '' : 's') + '. Throw up to ' + (W.mult.length - 1) + ' for a better chance.' + (data.flawless ? ' No mistakes: bonus chance!' : '');
+  const box = document.getElementById('catch-options');
+  box.innerHTML = '';
+  for (let n = 0; n < W.mult.length; n++) {
+    const pct = Math.round(wildCatchChance(sp, { flawless: data.flawless, shiny: data.shiny, nets: n }) * 100);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'move-btn' + (n > state.nets ? ' off' : '');
+    b.disabled = n > state.nets;
+    b.innerHTML = '<span class="mv-icon">' + (n ? '🕸️' : '🫧') + '</span><span class="mv-main"><b>' + (n ? 'Throw ' + n + ' net' + (n > 1 ? 's' : '') : 'Try without a net') + '</b><small>' + (n > state.nets ? 'You only have ' + state.nets : 'Catch chance ' + pct + '%') + '</small></span><span class="mv-cost">' + pct + '%</span>';
+    b.setAttribute('aria-label', (n ? 'Throw ' + n + ' nets' : 'Try without a net') + ', catch chance ' + pct + ' percent');
+    b.onclick = function () { chooseNets(n); };
+    box.appendChild(b);
+  }
+  document.getElementById('catch-modal').style.display = 'flex';
+}
+function chooseNets(n) {
+  if (!catchData) return;
+  const data = catchData;
+  catchData = null;
+  document.getElementById('catch-modal').style.display = 'none';
+  soundClick();
+  resolveCatch(data, n);
+  saveState();
+  updateStatsUI();
+  modalDone();
+}
+// Closing the window without choosing is a plain try: the catch is never lost by accident.
+function closeCatchModal() { chooseNets(0); }
 
 function spareCount(id) { return state.spares[id] || 0; }
 function sellSpare(id) {

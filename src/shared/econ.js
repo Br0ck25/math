@@ -27,7 +27,8 @@ const ECON = {
     hpBase: 3, hpPerLevel: 0.4, atkPerLevels: 15, gemBase: 4, gemPerLevels: 6, xpBase: 8, bossEvery: [5, 8], storeShare: 0.35,
     catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.03 }, matchup: { strong: 1.5, weak: 0.5 },
     flawless: 1.25,                                   // beating it without a single mistake
-    net: { mult: 2, max: 0.75, stock: 5 }             // a Catch Net doubles the chance (never above `max`) on your next wild win; you can hold `stock`
+    // Catch Nets: after a wild win you choose how many to throw (0-3). `mult[n]` multiplies the chance (never above `max`); you can hold `stock`.
+    net: { mult: [1, 1.5, 2, 2.5], max: 0.75, stock: 9 }
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12 },

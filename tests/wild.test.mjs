@@ -322,28 +322,54 @@ test('the Buddy Dex: a buddy you have only met shows its name, an unmet one is h
   assert.deepEqual(r.cleaned, ['fox']);
 });
 
-test('a flawless win and a Catch Net raise the catch chance; the net is used up by a wild win', async () => {
+test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets, better chance; closing the window is a plain try', async () => {
   const r = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = {};
     const sp = getSpecies('fox'); state.activePet = 'dog'; state.nets = 0;
-    const base = wildCatchChance(sp), flawless = wildCatchChance(sp, { flawless: true });
-    state.nets = 1; const net = wildCatchChance(sp), both = wildCatchChance(sp, { flawless: true });
-    state.unlockedPets = ['dog', 'fox']; state.spares = {}; state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0;
-    const real = Math.random; Math.random = () => 0.99;              // the roll fails, but the net is spent
-    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    const c = [0, 1, 2, 3].map((n) => wildCatchChance(sp, { nets: n }));
+    out.chances = c; out.flawless = wildCatchChance(sp, { flawless: true }) / c[0]; out.cap = wildCatchChance(getSpecies('hedgehog'), { nets: 3, flawless: true });
+    const win = async () => { state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0; monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false); await wait(1500); };
+    state.unlockedPets = ['dog']; state.spares = {}; state.gems = 1000; modalDone();
+    // no nets in stock: no window, the roll just happens
+    const real = Math.random; Math.random = () => 0.99;
+    await win(); out.noWindow = getComputedStyle(document.getElementById('catch-modal')).display;
+    // with nets in stock: the window asks
+    state.nets = 2; await win();
+    out.window = document.getElementById('catch-modal').style.display;
+    const btns = [...document.querySelectorAll('#catch-options .move-btn')];
+    out.buttons = btns.map((b) => [b.disabled, b.querySelector('.mv-cost').innerText]);
+    out.title = document.getElementById('catch-title').innerText;
+    chooseNets(2);                                           // fails the roll (0.99) but the nets are spent
+    out.afterTwo = [state.nets, document.getElementById('catch-modal').style.display];
+    state.nets = 3; await win(); Math.random = () => 0; chooseNets(3);       // a sure catch
+    out.caught = [state.unlockedPets.includes('fox'), state.nets];
+    closeLootModal(false);
+    state.nets = 1; Math.random = () => 0.99; await win(); closeCatchModal(); out.closed = state.nets;
     Math.random = real;
+    chooseNets(1); out.noPending = state.nets;                // nothing pending: nothing happens
+    // buying: up to the stock, no gems taken beyond it
     state.nets = 0; state.gems = 1000; buyItem('net'); const bought = [state.nets, state.gems];
-    state.nets = 5; state.gems = 1000; buyItem('net'); const full = [state.nets, state.gems];
+    state.nets = ECON.wild.net.stock; state.gems = 1000; buyItem('net'); const full = [state.nets, state.gems];
     state.nets = 0; state.wild.id = 'fox'; updateStatsUI(); const chip0 = document.getElementById('weak-chip').innerText;
     state.nets = 2; updateStatsUI();
-    return { base, flawless, net, both, left: state.nets, bought, full, chip0, chip2: document.getElementById('weak-chip').innerText };
+    return { ...out, bought, full, chip0, chip2: document.getElementById('weak-chip').innerText, stock: ECON.wild.net.stock };
   });
-  assert.ok(Math.abs(r.flawless - r.base * 1.25) < 1e-9);
-  assert.ok(Math.abs(r.net - r.base * 2) < 1e-9);
-  assert.ok(r.both > r.net && r.both <= 0.75 + 1e-9);
+  assert.ok(r.chances[0] < r.chances[1] && r.chances[1] < r.chances[2] && r.chances[2] < r.chances[3], 'more nets, better chance: ' + r.chances);
+  assert.ok(Math.abs(r.chances[2] / r.chances[0] - 2) < 1e-9 && Math.abs(r.chances[3] / r.chances[0] - 2.5) < 1e-9);
+  assert.ok(Math.abs(r.flawless - 1.25) < 1e-9);
+  assert.ok(r.cap <= 0.75 + 1e-9, 'never above the cap');
+  assert.equal(r.noWindow, 'none', 'no nets: no window');
+  assert.equal(r.window, 'flex');
+  assert.deepEqual(r.buttons.map((b) => b[0]), [false, false, false, true], 'a third net is not available with 2 in stock');
+  assert.match(r.title, /You beat Sparky/);
+  assert.deepEqual(r.afterTwo, [0, 'none']);
+  assert.deepEqual(r.caught, [true, 0], 'throwing 3 nets can catch it');
+  assert.equal(r.closed, 1, 'closing the window spends no nets');
+  assert.equal(r.noPending, 1);
   assert.deepEqual(r.bought, [1, 970]);
-  assert.deepEqual(r.full, [5, 1000], 'at most 5 nets, and no gems taken');
-  assert.ok(!r.chip0.includes('🕸️') && r.chip2.includes('🕸️'));
+  assert.deepEqual(r.full, [r.stock, 1000], 'no more than the stock, and no gems taken');
+  assert.ok(!r.chip0.includes('🕸️') && r.chip2.includes('🕸️2'));
 });
 
 test('the daily rare: once a day after 3 wild wins a golden buddy appears, tougher, easier to catch, paying extra; it is the same species all day', async () => {

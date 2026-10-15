@@ -403,8 +403,8 @@ function updateWeakChip() {
     return;
   }
   if (state.wild.id) {
-    chip.innerText = (state.wild.shiny ? '✨ ' : '') + '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id), { shiny: state.wild.shiny }) * 100) + '%' + (state.nets > 0 ? ' 🕸️' : '');
-    chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, a Catch Net doubles it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%.';
+    chip.innerText = (state.wild.shiny ? '✨ ' : '') + '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id), { shiny: state.wild.shiny }) * 100) + '%' + (state.nets > 0 ? ' 🕸️' + state.nets : '');
+    chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%. With Catch Nets you choose how many to throw after the win.';
     return;
   }
   const w = getWeakOp();
