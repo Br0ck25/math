@@ -7,6 +7,12 @@ const WILD_TAUNTS = ['Let us see what you have got!', 'I will not go down easy!'
 function wildStats(level) {
   return { maxHp: ECON.wild.hpBase + Math.floor(level * ECON.wild.hpPerLevel), atk: 1 + Math.floor(level / ECON.wild.atkPerLevels) };
 }
+// A boss's attack: grows with its level, +1 as an Alpha, plus its own bonus (Rocky).
+function bossAtk(base, level, form) {
+  return 1 + (base.atkBonus || 0) + (form === 2 ? 1 : 0) + Math.floor(level / ECON.boss.atkPerLevels);
+}
+// Some bosses only appear once your buddy is strong enough (monster.minLevel).
+function bossAvailable(i) { return (monstersList[i].minLevel || 0) <= getBuddyLevel(state.activePet); }
 function getBossInfo() {
   if (state.wild.id) {
     const sp = getSpecies(state.wild.id), st = wildStats(bossLevel);
@@ -22,7 +28,7 @@ function getBossInfo() {
     name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts, slays: base.slays || null,
     form: form, level: bossLevel,
     maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0) + (state.bossSwapped ? ECON.boss.swap.extraHp : 0),
-    atk: 1 + (base.atkBonus || 0) + (form === 2 ? 1 : 0) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
+    atk: bossAtk(base, bossLevel, form) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
     swapped: !!state.bossSwapped
   };
 }
@@ -62,7 +68,7 @@ function wantedBossCopies(candidates) {
 }
 // The partner an Alpha boss calls for: half the time one that beats your buddy (a slayer of it, or an element strong against it), else any other boss.
 function pickBackupBoss(pet) {
-  const others = monstersList.map(function (_, i) { return i; }).filter(function (i) { return i !== currentMonsterIndex; });
+  const others = monstersList.map(function (_, i) { return i; }).filter(function (i) { return i !== currentMonsterIndex && bossAvailable(i); });
   if (Math.random() < ECON.boss.swap.counterChance) {
     const counters = others.filter(function (i) {
       const m = monstersList[i];
@@ -82,6 +88,7 @@ function maybeBackupBoss(boss, pet) {
   currentMonsterIndex = pickBackupBoss(pet);
   state.currentMonsterIndex = currentMonsterIndex;
   state.bossSwapped = true;
+  state.swapUsed = false;
   state.recentBossTypes.push(monstersList[currentMonsterIndex].element);
   if (state.recentBossTypes.length > 10) state.recentBossTypes = state.recentBossTypes.slice(-10);
   markBossSeen(currentMonsterIndex);
@@ -110,9 +117,9 @@ function pickNextBoss() {
   let candidates = [];
   for (let i = 0; i < monstersList.length; i++) {
     if (excludedType && monstersList[i].element === excludedType) continue;
-    if (i !== currentMonsterIndex) candidates.push(i);
+    if (i !== currentMonsterIndex && bossAvailable(i)) candidates.push(i);
   }
-  if (candidates.length === 0) candidates = monstersList.map(function (_, idx) { return idx; });
+  if (candidates.length === 0) candidates = monstersList.map(function (_, idx) { return idx; }).filter(bossAvailable);
   candidates = candidates.concat(wantedBossCopies(candidates));
 
   const nextIdx = candidates[rnd(0, candidates.length - 1)];
@@ -123,6 +130,7 @@ function pickNextBoss() {
 
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-2, 3), 1, MAX_LEVEL);
   state.bossSwapped = false;
+  state.swapUsed = false;
   state.raid = null;
   if (state.monstersDefeated > 0 && state.monstersDefeated % ECON.raid.every === 0 && state.lastRaidAt !== state.monstersDefeated) {
     startRaid();

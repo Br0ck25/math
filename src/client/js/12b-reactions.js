@@ -73,8 +73,8 @@ function updateTeamBar() {
     const resting = state.faintedPets.indexOf(id) !== -1;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'team-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting ? ' resting' : '');
-    b.setAttribute('aria-label', 'Swap to ' + p.name + ', ' + (resting ? 'resting' : mu.mult + ' damage against ' + boss.name));
+    b.className = 'team-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (state.swapUsed && id !== state.activePet) ? ' resting' : '');
+    b.setAttribute('aria-label', 'Swap to ' + p.name + ', ' + (resting ? 'resting' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name));
     b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-mult">' + (resting ? '💤' : mu.icon + mu.mult) + '</span>';
     b.onclick = function () { swapBuddy(id); };
     bar.appendChild(b);
@@ -82,8 +82,10 @@ function updateTeamBar() {
 }
 function swapBuddy(id) {
   if (id === state.activePet) return;
-  if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast(getPetById(id).name + ' is resting! Beat this boss to revive your team.'); return; }
+  if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return; }
+  if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast(getPetById(id).name + ' is resting! Beat a boss to revive your team.'); return; }
   state.activePet = id;
+  state.swapUsed = true;
   soundClick();
   const mu = teamMatchup(id, getBossInfo());
   if (mu.cls === 'good') { soundCorrect(1); showPopup('⚡ GREAT PICK! x1.5 DAMAGE'); }

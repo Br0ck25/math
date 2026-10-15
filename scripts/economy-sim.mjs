@@ -16,7 +16,7 @@ export const PROFILES = {
   keen: { name: 'Keen day (50 min)', problems: 180, accuracy: 0.9, questsDone: 1, tournamentRuns: 2, playsDaily: true }
 };
 // Wild battles: a boss every avg(bossEvery) of them. A caught buddy is a spare (sellable) about half the time once the collection is growing.
-const CATCH_RATE = 0.145, SPARE_SHARE = 0.5, AVG_SPARE_VALUE = 92, AVG_WILD_LEVEL = 9;   // 92: average sale of a caught store or secret buddy (20% of shop price, no maximum)
+const CATCH_RATE = 0.082, SPARE_SHARE = 0.5, AVG_SPARE_VALUE = 154, AVG_WILD_LEVEL = 9;   // 154: average sale of a caught store or secret buddy (20% of shop price, no maximum)
 const SPEED_SHARE = 0.5, STREAK_SHARE = 0.8, HITS_PER_BOSS = 4.5, AVG_BOSS_LEVEL = 10, CLEAR_ROUND = 0.8;
 const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 const vals = (o) => Object.keys(o).map((k) => o[k]);

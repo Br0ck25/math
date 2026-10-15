@@ -36,6 +36,7 @@ function pickNextWild() {
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
   state.bossSwapped = false;
+  state.swapUsed = false;
   state.raid = null;
   monsterCurrentHp = getBossMaxHp();
   partyHp = {};

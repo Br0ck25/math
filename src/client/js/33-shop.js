@@ -154,7 +154,7 @@ function makePetCard(sp, o) {
 function equipPet(id) {
   if (state.faintedPets.indexOf(id) !== -1) {
     soundWrong();
-    toast(`${getPetById(id).name} is resting! Defeat this boss to revive your team.`);
+    toast(`${getPetById(id).name} is resting! Beat a boss to revive your team.`);
     return;
   }
   state.activePet = id;

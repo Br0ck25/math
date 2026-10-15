@@ -194,4 +194,104 @@ test('a saved wild fight survives a reload', async () => {
   assert.deepEqual(await page.evaluate(() => [state.wild.id, getBossInfo().name, getBossInfo().level]), ['fox', 'Sparky', 7]);
 });
 
+test('quests: only bosses count for "defeat bosses" and "flawless", not wild buddies', async () => {
+  const r = await page.evaluate(async () => {
+    state.quests = { day: dayKey(), chestClaimed: false, list: [
+      { id: 'q0', type: 'boss', text: 'x', target: 2, reward: 1, progress: 0, done: false, claimed: false },
+      { id: 'q1', type: 'flawless', text: 'x', target: 1, reward: 1, progress: 0, done: false, claimed: false }
+    ] };
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    const afterWild = state.quests.list.map((q) => q.progress);
+    state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; bossMistakes = 0;
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    return { afterWild, afterBoss: state.quests.list.map((q) => q.progress) };
+  });
+  assert.deepEqual(r.afterWild, [0, 0]);
+  assert.deepEqual(r.afterBoss, [1, 1]);
+});
+
+test('bosses grow stronger with their level, like wild buddies do', async () => {
+  const r = await page.evaluate(() => {
+    state.wild.id = ''; currentMonsterIndex = 0; state.bossSwapped = false; state.raid = null;
+    const atk = [1, 9, 10, 30, 60].map((l) => { bossLevel = l; return getBossInfo().atk; });
+    bossLevel = 60;
+    return { atk, card: bossCard(0, { level: 60 }).stats[1][1], info: getBossInfo().atk, wildAtk: wildStats(60).atk };
+  });
+  assert.ok(r.atk.every((v, i) => !i || v >= r.atk[i - 1]) && r.atk[4] > r.atk[0], 'grows: ' + r.atk);
+  assert.equal(r.atk[1], 1);
+  assert.equal(r.atk[2], 2);
+  assert.equal(r.card, r.info);
+  assert.ok(r.info > r.wildAtk, 'a boss hits harder than a wild buddy of the same level');
+});
+
+test('one buddy swap per battle; a new battle gives a new swap', async () => {
+  const r = await page.evaluate(async () => {
+    const ids = storePets.slice(0, 3).map((s) => s.id);
+    state.unlockedPets = ids; state.team = ids.slice(); state.activePet = ids[0]; state.faintedPets = []; state.swapUsed = false;
+    updateStatsUI();
+    swapBuddy(ids[1]);
+    const out = { first: state.activePet === ids[1], used: state.swapUsed };
+    swapBuddy(ids[2]);
+    out.stayed = state.activePet === ids[1];
+    out.dimmed = [...document.querySelectorAll('#team-bar .team-chip')].filter((c) => c.classList.contains('resting')).length;
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    out.reset = state.swapUsed === false;
+    return out;
+  });
+  assert.equal(r.first, true);
+  assert.equal(r.used, true);
+  assert.equal(r.stayed, true, 'the second swap is refused');
+  assert.equal(r.dimmed, 2, 'the other chips look unavailable');
+  assert.equal(r.reset, true);
+});
+
+test('fainted buddies come back only after a boss, not after a wild win', async () => {
+  const r = await page.evaluate(async () => {
+    state.unlockedPets = ['dog', 'fox']; state.activePet = 'dog'; state.faintedPets = ['fox'];
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    const afterWild = state.faintedPets.slice();
+    state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; state.faintedPets = ['fox'];
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1000));
+    return { afterWild, afterBoss: state.faintedPets.slice() };
+  });
+  assert.deepEqual(r.afterWild, ['fox']);
+  assert.deepEqual(r.afterBoss, []);
+});
+
+test('secret buddies stay a rare find: a low catch chance and a small share of all wild encounters', async () => {
+  const r = await page.evaluate(() => {
+    const sp = wildPool().find((p) => !isStoreBuddy(p));
+    state.activePet = 'dog';
+    const secretShare = 1 - ECON.wild.storeShare;
+    return { chance: wildCatchChance(sp), perFight: secretShare * wildCatchChance(sp) };
+  });
+  assert.ok(r.chance <= 0.05, 'a secret buddy is caught ' + r.chance);
+  assert.ok(r.perFight < 0.03, 'a new secret buddy at most every ~35 battles: ' + r.perFight);
+});
+
+test('Rocky only appears once your buddy is level 50, and never as a pick for a weaker one', async () => {
+  const r = await page.evaluate(() => {
+    const rocky = monstersList.findIndex((m) => m.name === 'Rocky');
+    const picks = (xp) => {
+      state.activePet = 'dog'; state.buddyXp.dog = xp; state.wild.since = 99;
+      const seen = new Set();
+      for (let i = 0; i < 400; i++) { currentMonsterIndex = -1; state.recentBossTypes = []; pickNextBoss(); seen.add(currentMonsterIndex); }
+      return seen.has(rocky);
+    };
+    const out = { weak: picks(xpForLevel(49)), strong: picks(xpForLevel(50)) };
+    state.buddyXp.dog = xpForLevel(10); out.avail = bossAvailable(rocky);
+    state.buddyXp.dog = xpForLevel(50); out.availStrong = bossAvailable(rocky);
+    return out;
+  });
+  assert.equal(r.weak, false);
+  assert.equal(r.strong, true, 'a level 50 buddy can meet him');
+  assert.equal(r.avail, false);
+  assert.equal(r.availStrong, true);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

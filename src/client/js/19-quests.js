@@ -8,7 +8,7 @@ const QUEST_MAKERS = {
     return { type: 'op', op: id, text: 'Solve ' + n + ' ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' problems', target: n, reward: ECON.quest.opBase + n * ECON.quest.opPer };
   },
   streak:   function () { const n = pick([5, 8]); return { type: 'streak', text: 'Reach a streak of ' + n, target: n, reward: ECON.quest.streak[n] }; },
-  boss:     function () { const n = pick([2, 3]); return { type: 'boss', text: 'Win ' + n + ' battles', target: n, reward: ECON.quest.boss[n] }; },
+  boss:     function () { const n = pick([2, 3]); return { type: 'boss', text: 'Defeat ' + n + ' bosses', target: n, reward: ECON.quest.boss[n] }; },
   flawless: function () { return { type: 'flawless', text: 'Beat a boss without a single mistake', target: 1, reward: ECON.quest.flawless }; },
   fast:     function () { const n = pick([5, 8]); return { type: 'fast', text: 'Get ' + n + ' ⚡ Speed Strikes', target: n, reward: ECON.quest.fast[n] }; },
   ult:      function () { const n = pick([2, 3]); return { type: 'ult', text: 'Use your Ultimate ' + n + ' times', target: n, reward: ECON.quest.ult[n] }; }

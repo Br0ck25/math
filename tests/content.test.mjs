@@ -327,6 +327,7 @@ test('the arrival message warns when the new boss is a slayer of your active bud
   const arrive = (buddy, roll) => inPage(async ([buddy, roll]) => {
     if (!state.unlockedSecrets.includes(buddy) && !state.unlockedPets.includes(buddy)) { (buddy === 'bandit' ? state.unlockedPets : state.unlockedSecrets).push(buddy); grantBuddy(buddy); }
     state.activePet = buddy; partyHp = {}; state.monstersDefeated = 0;
+    if (buddy === 'bandit') state.buddyXp.bandit = xpForLevel(60);          // Rocky only appears for a strong buddy
     state.wild.id = ''; state.wild.since = 99;                  // a boss comes next
     state.recentBossTypes = []; const real = Math.random; Math.random = () => roll;
     currentMonsterIndex = 0; monsterCurrentHp = 1; inputLocked = false;
@@ -335,7 +336,7 @@ test('the arrival message warns when the new boss is a slayer of your active bud
     Math.random = real;
     return document.getElementById('toast').innerText;
   }, [buddy, roll]);
-  assert.match(await arrive('secret_papaw', 0.9717), /Māra appeared! ☠️ Strong against Papaw!/);       // the second to last boss
+  assert.match(await arrive('secret_papaw', 0.9999), /Māra appeared! ☠️ Strong against Papaw!/);       // the last boss a low-level buddy can meet
   assert.match(await arrive('bandit', 0.9999), /Rocky appeared! ☠️ Strong against Bandit!/);           // the last boss
 });
 

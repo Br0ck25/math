@@ -91,10 +91,10 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
       soundMonsterDefeated();
       launchConfetti(wild ? 'streak' : 'boss');
       screenShake(!wild);
-      questEvent('boss');
-      if (bossMistakes === 0) questEvent('flawless');
       if (wild) state.wild.since += 1;
       else {
+        questEvent('boss');
+        if (bossMistakes === 0) questEvent('flawless');
         state.monstersDefeated += 1;
         markBossWin(currentMonsterIndex, boss.form);
         checkBossBuddy(currentMonsterIndex, boss.form);
@@ -111,7 +111,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
       awardBuddyXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
 
-      const hadCasualties = state.faintedPets.length > 0;
+      const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {
         state.faintedPets = [];
         showPopup('✨ ALL BUDDIES REVIVED!');

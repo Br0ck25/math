@@ -124,7 +124,7 @@ function renderCare() {
   };
   let h = '<div class="hearts" title="Bond">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.68rem; color:var(--text-muted);">Bond ' + bond + '/' + ECON.care.maxBond + (bond ? ' · +' + Math.round(bond * ECON.care.bondXpBonus * 100) + '% XP for this buddy' : ' · feed the favorite snack to grow it') + '</div>';
-  if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Win a battle to wake everyone up!</div>';
+  if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Beat a boss to wake everyone up!</div>';
   h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + ECON.care.petsPerDay + ' · +' + ECON.care.petXp + ' XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= ECON.care.petsPerDay));
   h += row('🍪 Biscuit', 'A tasty treat · +' + ECON.care.treatXp + ' XP · once a day', btn(c.treat ? 'Eaten' : ECON.care.treatCost + ' 💎', 'careAct(&quot;treat&quot;)', sleepy || c.treat));
   h += row(fav.icon + ' Favorite: ' + fav.name, 'Their very favorite! +1 bond · +' + ECON.care.favXp + ' XP · once a day', btn(c.fav ? 'Eaten' : ECON.care.favCost + ' 💎', 'careAct(&quot;fav&quot;)', sleepy || c.fav));

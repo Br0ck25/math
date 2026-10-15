@@ -7,6 +7,7 @@ const ECON = {
   solve: { gem: 1, speedGem: 1, streakEvery: 3, streakBonus: 2 },
   boss: {
     gemBase: 8, gemPerLevels: 5,
+    atkPerLevels: 10,        // a boss's attack grows by 1 every 10 levels (wild buddies: ECON.wild.atkPerLevels)
     // A "slayer" boss is strong against one buddy: it hits that buddy harder (and may take up to 60% of its max HP in one hit instead of 40%),
     // and that buddy only deals 75% damage to it (no Shadow bonus).
     slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 },
@@ -21,10 +22,10 @@ const ECON = {
   // Wild buddies: most battles. A boss comes after every `bossEvery` [min, max] of them. A wild buddy's HP grows with its level (`hpBase` + `hpPerLevel` per level)
   // and so does its attack (+1 per `atkPerLevels` levels), so fights stay even as your buddy grows. Beating one may catch it: `catchChance` by rarity,
   // times `matchup.strong` when your buddy is strong against it and `matchup.weak` when it is weak against it.
-  // `storeShare`: how often the wild buddy is a store buddy (else a secret one).
+  // `storeShare`: how often the wild buddy is a store buddy (else a secret one; their catch chance is low so secret buddies stay a rare find).
   wild: {
     hpBase: 3, hpPerLevel: 0.4, atkPerLevels: 15, gemBase: 4, gemPerLevels: 6, xpBase: 8, bossEvery: [5, 8], storeShare: 0.35,
-    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.12 }, matchup: { strong: 1.5, weak: 0.5 }
+    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.03 }, matchup: { strong: 1.5, weak: 0.5 }
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12 },
