@@ -641,6 +641,8 @@
     .pet-card.locked   { opacity: 0.55; }
     .pet-card.fainted  { opacity: 0.38; filter: grayscale(1); border-color: #ef4444; }
 
+    .pack-claim { min-height: 44px; margin-left: 6px; text-transform: none; letter-spacing: 0; }
+    .pack-done { color: #6ee7b7; font-size: 0.7rem; margin-left: 6px; text-transform: none; }
     .mystery-section-title {
       font-size: 0.8rem;
       font-weight: 800;

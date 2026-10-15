@@ -101,6 +101,9 @@ const NORMALIZERS = [
     Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });
     s.dexSeen = seen;
   },
+  function packs(s) {
+    s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
+  },
   function wild(s) {
     const w = s.wild;
     const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });

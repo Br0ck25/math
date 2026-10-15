@@ -46,6 +46,8 @@ const ECON = {
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
   // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
   moves: { healShare: 0.4, slots: 4 },
+  // The Buddy Dex: owning every buddy of a pack pays once, per member, plus Catch Nets.
+  dex: { packGemsPer: 8, packNets: 2 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },

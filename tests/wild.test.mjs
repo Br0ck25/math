@@ -322,6 +322,33 @@ test('the Buddy Dex: a buddy you have only met shows its name, an unmet one is h
   assert.deepEqual(r.cleaned, ['fox']);
 });
 
+test('Dex pack rewards: owning every buddy of a pack pays once (gems per member plus Catch Nets); an incomplete or claimed pack pays nothing', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const g = buddyPacks().find((x) => x.pack.id === 'arctic');
+    state.gems = 0; state.nets = 8; state.packClaims = []; bookTab = 'buddy'; bookMissingOnly = false;
+    const first = g.members[0];
+    state.unlockedPets = ['dog', first.id];
+    claimPackReward('arctic'); out.incomplete = [state.gems, state.packClaims.length];
+    renderBook(); out.noButton = !document.getElementById('book-body').innerHTML.includes('claimPackReward');
+    g.members.forEach((m) => { if (!getOwnedIds().includes(m.id)) state.unlockedSecrets.push(m.id); });
+    renderBook(); out.button = document.getElementById('book-body').innerHTML.includes('claimPackReward(&quot;arctic&quot;)');
+    claimPackReward('arctic'); out.paid = [state.gems, state.nets, state.packClaims.join()];
+    claimPackReward('arctic'); out.twice = state.gems;
+    renderBook(); out.done = document.getElementById('book-body').innerHTML.includes('Pack complete');
+    state.packClaims = ['arctic', 'arctic', 'nope', 7]; NORMALIZERS.forEach((fn) => fn(state)); out.clean = state.packClaims.join();
+    out.pay = g.members.length * ECON.dex.packGemsPer;
+    return out;
+  });
+  assert.deepEqual(r.incomplete, [0, 0]);
+  assert.equal(r.noButton, true);
+  assert.equal(r.button, true);
+  assert.deepEqual(r.paid, [r.pay, 9, 'arctic'], 'nets are capped at the stock limit');
+  assert.equal(r.twice, r.pay, 'a pack pays only once');
+  assert.equal(r.done, true);
+  assert.equal(r.clean, 'arctic');
+});
+
 test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets, better chance; closing the window is a plain try', async () => {
   const r = await page.evaluate(async () => {
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));

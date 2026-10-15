@@ -57,7 +57,8 @@ function freshState() {
     spares: {},                                      // buddy id -> extra copies that can be sold
     bossBook: {},
     bossSwapped: false,
-    bookClaims: []
+    bookClaims: [],
+    packClaims: [],                                  // pack ids whose completion reward was claimed
   };
 }
 
