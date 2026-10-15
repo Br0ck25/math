@@ -36,9 +36,10 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Append new rows; never reorder or rename ids (saves refer to ids and, for bosses, to list position; secret buddies get `secret_N` from their position).
   Store buddies stay in price order with the Bandit last. Evolved forms must keep the buddy's own face (use its animal, never a bare symbol): the glow, element badge and aura come from `formMarkup`.
 - Cartoon-cast buddies carry a `show` (names and emoji only, no artwork or quotes). Only kid-friendly shows (rated for children / PG at most): never adult-rated ones. Their themed gear is bought or earned by collecting the cast (`cartoons`, `headliners` counters). Say so in the PR if a new show raises licensing questions; the owner decides about publishing.
+- Every boss in `monstersList` is also a buddy (`bossBuddies`, generated from the list; id `boss_<position>`), won by beating it 3 times in its Alpha form. A new boss needs nothing extra, but boss buddies are placed in packs by element.
 - Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 294 buddies, 53 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 344 buddies, 53 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.

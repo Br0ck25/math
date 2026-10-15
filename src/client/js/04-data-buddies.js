@@ -303,12 +303,24 @@ const papawPet = {
 };
 const ultraPets = [janiePet, amberPet, papawPet];
 
-// Boss buddies: a boss you have beaten ECON.bossBuddy.alphaWins times in its Alpha form joins you. They are ordinary secret-strength buddies.
-const bossBuddies = [
-  { id: 'boss_cow', name: 'Bovine Bruiser', icon: '🐄', element: 'nature', superMove: 'Stampede Slam', secret: true, bossBuddy: true, snack: { icon: '🌾', name: 'fresh hay' } },
-  { id: 'boss_harpy', name: 'Harpy Eagle', icon: '🦅', element: 'electric', superMove: 'Thunder Talon Dive', secret: true, bossBuddy: true },
-  { id: 'boss_mara', name: 'Māra', icon: '😈', element: 'dark', superMove: 'Tempting Trick', secret: true, bossBuddy: true }
-];
+// Boss buddies: every boss can be won as a buddy by beating it ECON.bossBuddy.alphaWins times in its Alpha form (see checkBossBuddy).
+// Ids are 'boss_' + the boss's position in monstersList (the list only ever grows, so ids stay stable); the three slayers have their own ids.
+// They are ordinary-strength secret buddies. `fixed` holds the hand-made details; the rest comes from the boss itself.
+const BOSS_BUDDY_FIXED = {
+  boss_cow: { superMove: 'Stampede Slam', snack: { icon: '🌾', name: 'fresh hay' } },
+  boss_harpy: { superMove: 'Thunder Talon Dive' },
+  boss_mara: { superMove: 'Tempting Trick' }
+};
+const BOSS_MOVE_VERB = { fire: 'Blaze', water: 'Surge', nature: 'Smash', electric: 'Shock', dark: 'Shadow Strike', magic: 'Spell' };
+const bossBuddies = monstersList.map(function (m, i) {
+  if (!m.buddy) m.buddy = 'boss_' + i;
+  const fixed = BOSS_BUDDY_FIXED[m.buddy] || {};
+  const noun = m.name.split(' ').pop();
+  return {
+    id: m.buddy, name: m.name, icon: m.icon, element: m.element, secret: true, bossBuddy: true,
+    superMove: fixed.superMove || noun + ' ' + BOSS_MOVE_VERB[m.element], snack: fixed.snack
+  };
+});
 
 // Completely Unique Secret Companions
 const secretSpecies = [

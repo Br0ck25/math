@@ -235,7 +235,7 @@ function renderSecretPets() {
 
   // The ultra-rare trio, then the boss buddies
   fillBuddyGrid('ultra', ultraPets, 'Janie, Amber and Papaw have not been detected yet. Keep exploring flawless boss runs!', { accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0' });
-  fillBuddyGrid('bossbuddy', bossBuddies, 'Beat a boss ' + ECON.bossBuddy.alphaWins + ' times in its Alpha form to win it as a buddy. Check the Boss tab in the Book!', { accent: '#ef4444', dim: '#7f1d1d', nameColor: '#fecaca' });
+  fillBuddyGrid('bossbuddy', bossBuddies, 'Beat any boss ' + ECON.bossBuddy.alphaWins + ' times in its Alpha form to win it as a buddy. Check the Boss tab in the Book!', { accent: '#ef4444', dim: '#7f1d1d', nameColor: '#fecaca' });
 
   // Regular secrets
   const container = document.getElementById('secret-pet-grid');

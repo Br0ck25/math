@@ -10,13 +10,13 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 294 buddies, 53 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 344 buddies, 53 bosses, 118 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length
   }));
-  assert.deepEqual(c, { buddies: 294, bosses: 53, gear: 118, store: 43, mythic: 36, secret: 209 });
+  assert.deepEqual(c, { buddies: 344, bosses: 53, gear: 118, store: 43, mythic: 36, secret: 209 });
 });
 
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
@@ -343,7 +343,10 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
   const r = await inPage(() => {
     const out = {};
     out.notUltra = bossBuddies.every((b) => !b.ultra && battleElement(b) === b.element);
-    out.packs = bossBuddies.map((b) => packOf(b).id);
+    out.packs = bossBuddies.slice(-3).map((b) => packOf(b).id);
+    out.all = bossBuddies.length === monstersList.length && monstersList.every((m, i) => getSpecies(m.buddy) && getSpecies(m.buddy).name === m.name);
+    out.moves = new Set(bossBuddies.map((b) => b.superMove)).size;
+    out.moveSample = bossBuddies[0].superMove + ' / ' + bossBuddies[50].superMove;
     out.rarity = rarityOf('boss_mara').name;
     state.unlockedSecrets = ['boss_harpy']; state.buddyXp.boss_harpy = 0;
     renderSecretPets();
@@ -357,26 +360,48 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
     return out;
   });
   assert.equal(r.notUltra, true);
-  assert.deepEqual(r.packs, ['farm', 'sky', 'night']);
+  assert.equal(r.all, true, 'every boss has a buddy of the same name');
+  assert.ok(r.moves >= 45, 'buddies have their own ultimates, not one shared move: ' + r.moves);
+  assert.equal(r.moveSample, 'Drake Blaze / Stampede Slam');
+  assert.deepEqual(r.packs, ['boss-nature', 'boss-electric', 'boss-dark']);
   assert.equal(r.rarity, 'BOSS');
-  assert.deepEqual(r.shop, ['1', '3', 1, '0'], 'boss buddies are not counted as ordinary secrets');
+  assert.deepEqual(r.shop, ['1', '53', 1, '0'], 'boss buddies are not counted as ordinary secrets');
   assert.equal(r.book, '{"50":{"wins":0,"form":2,"alpha":0}}');
   assert.match(r.progress, /Alpha 2\/3/);
 });
 
-test('bosses you can still win as buddies come up more often once your buddy can reach Alpha bosses', async () => {
+test('bosses you have started on come back more often once your buddy can reach Alpha bosses', async () => {
   const r = await inPage(() => {
     const all = monstersList.map((_, i) => i);
     state.unlockedSecrets = [];
     state.activePet = 'dog';
+    state.bossBook = { 0: { wins: 1, form: 2, alpha: 1 }, 7: { wins: 2, form: 2, alpha: 2 }, 9: { wins: 1, form: 0, alpha: 0 }, 11: { wins: 5, form: 2, alpha: 3 } };
     state.buddyXp.dog = xpForLevel(10); const low = wantedBossCopies(all).length;
     state.buddyXp.dog = xpForLevel(60); const high = wantedBossCopies(all);
     const count = (i) => high.filter((x) => x === i).length;
-    const per = [count(50), count(51), count(52), count(0)];
-    state.unlockedSecrets = ['boss_cow']; const afterCow = wantedBossCopies(all).filter((x) => x === 50).length;
-    return { low, per, afterCow, weight: ECON.bossBuddy.weight };
+    const per = [count(0), count(7), count(9), count(11), count(20)];
+    state.unlockedSecrets = ['boss_11', 'boss_0']; const afterWin = wantedBossCopies(all).filter((x) => x === 0).length;
+    return { low, per, afterWin, weight: ECON.bossBuddy.weight };
   });
   assert.equal(r.low, 0);
-  assert.deepEqual(r.per, [r.weight - 1, r.weight - 1, r.weight - 1, 0]);
-  assert.equal(r.afterCow, 0, 'a boss you already won stops being favoured');
+  assert.deepEqual(r.per, [r.weight - 1, r.weight - 1, 0, 0, 0], 'only bosses with 1-2 Alpha wins');
+  assert.equal(r.afterWin, 0, 'a boss you already won stops being favoured');
+});
+
+test('any boss can be won as a buddy after 3 Alpha victories, not just the slayers', async () => {
+  const r = await inPage(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    state.buddyXp.dog = xpForLevel(60); state.unlockedSecrets = []; state.bossBook = {}; state.activePet = 'dog';
+    const out = { steps: [] };
+    for (let n = 0; n < 3; n++) {
+      currentMonsterIndex = 0; bossLevel = 50; partyHp = {}; monsterCurrentHp = 1; state.faintedPets = [];
+      triggerMonsterDamage(50, false); await wait(900);
+      out.steps.push([state.bossBook[0].alpha, state.unlockedSecrets.includes('boss_0')]);
+    }
+    out.name = getSpecies('boss_0').name; out.level = getBuddyLevel('boss_0');
+    return out;
+  });
+  assert.deepEqual(r.steps, [[1, false], [2, false], [3, true]]);
+  assert.equal(r.name, 'Fire Drake');
+  assert.equal(r.level, 30);
 });

@@ -11,8 +11,8 @@ const ECON = {
     // and that buddy only deals 75% damage to it (no Shadow bonus).
     slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 }
   },
-  // Beat a boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
-  // While one of those buddies is still to win and your buddy can reach Alpha bosses (level 43+), that boss is picked `weight` times as often.
+  // Beat any boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
+  // A boss you have started on (1 or 2 Alpha wins) is picked `weight` times as often, once your buddy can reach Alpha bosses (level `minLevel`).
   bossBuddy: { alphaWins: 3, weight: 5, minLevel: 43 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,

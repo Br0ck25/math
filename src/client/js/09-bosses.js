@@ -35,14 +35,15 @@ function getTypeRelation(att, def) {
   return 0;
 }
 
-// Extra copies of the bosses whose buddy you can still win, so the Alpha wins come in reasonable time. Only once your buddy can reach Alpha bosses.
+// Extra copies of the bosses you have started on (1 or 2 Alpha wins, buddy not yet won), so the rematches come in reasonable time.
+// Only once your buddy is strong enough to meet Alpha bosses.
 function wantedBossCopies(candidates) {
   const B = ECON.bossBuddy;
   if (getBuddyLevel(state.activePet) < B.minLevel) return [];
   const extra = [];
   candidates.forEach(function (i) {
-    const m = monstersList[i];
-    if (m.buddy && state.unlockedSecrets.indexOf(m.buddy) === -1) for (let k = 1; k < B.weight; k++) extra.push(i);
+    const m = monstersList[i], e = state.bossBook[i];
+    if (m.buddy && e && e.alpha > 0 && e.alpha < B.alphaWins && state.unlockedSecrets.indexOf(m.buddy) === -1) for (let k = 1; k < B.weight; k++) extra.push(i);
   });
   return extra;
 }
