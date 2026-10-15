@@ -367,7 +367,8 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
   assert.equal(r.rarity, 'BOSS');
   assert.deepEqual(r.shop, ['1', '53', 1, '0'], 'boss buddies are not counted as ordinary secrets');
   assert.equal(r.book, '{"50":{"wins":0,"form":2,"alpha":0}}');
-  assert.match(r.progress, /Alpha 2\/3/);
+  assert.match(r.progress, /Alpha wins: 2\/3/);
+  assert.doesNotMatch(r.progress, /Beaten x5/);
 });
 
 test('bosses you have started on come back more often once your buddy can reach Alpha bosses', async () => {

@@ -29,6 +29,18 @@ function checkBossBuddy(idx, form) {
   return sp;
 }
 
+// A boss joins you only through wins against its Alpha form, so that is the one number the card shows.
+function bossHint(m, e) {
+  if (!m.buddy) return e.wins > 0 ? 'Beaten x' + e.wins : 'Met • not beaten yet';
+  if (state.unlockedSecrets.indexOf(m.buddy) !== -1) return '🏆 Won as buddy';
+  if (e.form < 2) return 'Reach Alpha form to start';
+  return '🏆 Alpha wins: ' + Math.min(e.alpha || 0, ECON.bossBuddy.alphaWins) + '/' + ECON.bossBuddy.alphaWins;
+}
+function bossHintColor(m, e) {
+  if (m.buddy) return state.unlockedSecrets.indexOf(m.buddy) !== -1 || e.form >= 2 ? '#fde047' : '#94a3b8';
+  return e.wins > 0 ? '#6ee7b7' : '#fbbf24';
+}
+
 const BOOK_MILESTONES = [
   { at: 10, gems: 20 }, { at: 25, gems: 40 }, { at: 50, gems: 75 }, { at: 100, gems: 150 },
   { at: 150, gems: 250 }, { at: 200, gems: 400 }, { at: 250, gems: 600 }
@@ -134,15 +146,13 @@ function renderBook() {
       const e = state.bossBook[i];
       if (bookMissingOnly && e) return;
       if (!e) { h += bookCard({ locked: true, icon: m.icon, name: '???', hint: 'Not met yet', hintColor: '#94a3b8' }); return; }
-      const best = e.form >= 2 ? 'Alpha' : (e.form === 1 ? 'Elder' : (e.form === 0 ? 'Normal' : null));
       const wk = weakOpForBoss(i);
       h += bookCard({
         icon: m.icon, name: m.name, elem: m.element,
         extra: (wk ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">🎯 Weak: ' + OP_BY_ID[wk].icon + ' ' + OP_BY_ID[wk].label + '</div>' : '') +
           (m.slays ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">☠️ Beats ' + slayerTarget(m) + '</div>' : '') +
-          (m.buddy ? '<div style="font-size:0.62rem; color:#fde047; font-weight:800;">' + (state.unlockedSecrets.indexOf(m.buddy) !== -1 ? '🏆 Won as buddy' : '🏆 Alpha ' + Math.min(e.alpha || 0, ECON.bossBuddy.alphaWins) + '/' + ECON.bossBuddy.alphaWins) + '</div>' : ''),
-        hint: e.wins > 0 ? ('Beaten x' + e.wins + ' • ' + best) : 'Met • not beaten yet',
-        hintColor: e.wins > 0 ? '#6ee7b7' : '#fbbf24',
+          '',
+        hint: bossHint(m, e), hintColor: bossHintColor(m, e),
         click: 'openBossCard(' + i + ')'
       });
     });
