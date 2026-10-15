@@ -10,20 +10,20 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 289 buddies, 50 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 344 buddies, 53 bosses, 118 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length
   }));
-  assert.deepEqual(c, { buddies: 289, bosses: 50, gear: 118, store: 43, mythic: 36, secret: 209 });
+  assert.deepEqual(c, { buddies: 344, bosses: 53, gear: 118, store: 43, mythic: 36, secret: 209 });
 });
 
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
   const bad = await inPage(() => {
     const out = [], seen = new Set();
     const elems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic', 'shadow'];
-    storePets.concat(mythicCompanions, secretCompanions, [janiePet]).forEach((p) => {
+    storePets.concat(mythicCompanions, secretCompanions, ultraPets, bossBuddies).forEach((p) => {
       if (seen.has(p.id)) out.push('duplicate id ' + p.id);
       seen.add(p.id);
       if (elems.indexOf(p.element) === -1) out.push(p.id + ' element ' + p.element);
@@ -193,3 +193,215 @@ test('cartoon cast: kid-friendly shows only, every character complete, and the t
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
+
+test('Janie, Amber and Papaw: three ultra-rare buddies, equally rare and equally strong, each with a favorite food', async () => {
+  const r = await inPage(() => {
+    const out = {};
+    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + p.icon);
+    out.food = ultraPets.map((p) => favSnack(p.id).icon + ' ' + favSnack(p.id).name);
+    // same stats at the same level, and the same damage against every boss element, whatever the element badge says
+    const dmg = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => tourDamage({ element: p.element, ultra: p.ultra, atk: 4 }, { element: e, ultra: false })));
+    out.sameDamage = dmg.every((d) => JSON.stringify(d) === JSON.stringify(dmg[0]));
+    out.shadow = ultraPets.map((p) => battleElement(p));
+    out.incoming = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => getTypeRelation(e, battleElement(p))).join(''));
+    out.elements = ultraPets.map((p) => p.element);
+    out.rarity = ultraPets.map((p) => rarityOf(p.id).name);
+    out.pack = ultraPets.map((p) => packOf(p).id);
+    // one 0.5% slice of the drop roll each
+    out.drops = [0.001, 0.006, 0.011, 0.016].map((roll) => {
+      state.unlockedSecrets = []; state.streak = 5; state.faintedPets = [];
+      const real = Math.random; Math.random = () => roll;
+      checkForSecretLootDrop(false);
+      Math.random = real;
+      return state.unlockedSecrets.filter((id) => ultraPets.some((p) => p.id === id)).join(',');
+    });
+    state.unlockedSecrets = ['secret_janie']; state.streak = 5;
+    const real = Math.random; Math.random = () => 0.001; checkForSecretLootDrop(false); Math.random = real;
+    out.ownedStaysOwned = state.unlockedSecrets.filter((id) => ultraPets.some((p) => p.id === id)).join(',');
+    return out;
+  });
+  assert.deepEqual(r.ids, ['secret_janie:Janie:👽', 'secret_amber:Amber:🦥', 'secret_papaw:Papaw:🧘']);
+  assert.deepEqual(r.food, ['🍞 Hawaiian rolls', '🍟 air fried potatoes', '🍔 hamburgers']);
+  assert.equal(r.sameDamage, true);
+  assert.deepEqual(r.shadow, ['shadow', 'shadow', 'shadow']);
+  assert.deepEqual(r.incoming, ['000000', '000000', '000000'], 'no type weaknesses');
+  assert.deepEqual(r.elements.slice(1), ['nature', 'magic']);
+  assert.deepEqual(r.rarity, ['COSMIC', 'COSMIC', 'COSMIC']);
+  assert.equal(r.pack[1], 'safari');
+  assert.equal(r.pack[2], 'fantasy');
+  assert.deepEqual(r.drops, ['secret_janie', 'secret_amber', 'secret_papaw', ''], 'each ultra has its own 0.5% slice');
+  assert.equal(r.ownedStaysOwned, 'secret_janie', 'an owned ultra is never given twice');
+});
+
+test('the care window shows each ultra buddy\'s own favorite food', async () => {
+  const r = await inPage(() => ultraPets.map((p) => { hubPet = p.id; renderCare(); return document.getElementById('hub-body').innerText; }));
+  assert.match(r[0], /Hawaiian rolls/);
+  assert.match(r[1], /air fried potatoes/);
+  assert.match(r[2], /hamburgers/);
+});
+
+test('found ultra buddies appear in their own shop section and not among the ordinary secrets', async () => {
+  const r = await inPage(() => {
+    state.unlockedSecrets = ['secret_amber', 'secret_papaw']; state.buddyXp.secret_amber = 0; state.buddyXp.secret_papaw = 0;
+    renderSecretPets();
+    return { found: document.getElementById('ultra-found-count').innerText, total: document.getElementById('ultra-total-count').innerText, cards: document.querySelectorAll('#ultra-pet-grid .pet-card').length, regular: document.getElementById('secret-found-count').innerText };
+  });
+  assert.deepEqual(r, { found: '2', total: '3', cards: 2, regular: '0' });
+});
+
+test('three slayer bosses: a cow, a Harpy Eagle and Māra, each strong against one ultra-rare buddy', async () => {
+  const r = await inPage(() => {
+    const list = monstersList.map((m, i) => ({ i, m })).filter((x) => x.m.slays);
+    return list.map((x) => ({ i: x.i, name: x.m.name, icon: x.m.icon, element: x.m.element, slays: x.m.slays, ultra: ultraPets.some((u) => u.id === x.m.slays), hp: x.m.baseHp, taunts: x.m.taunts.length }));
+  });
+  assert.deepEqual(r.map((b) => [b.i, b.slays, b.ultra]), [[50, 'secret_janie', true], [51, 'secret_amber', true], [52, 'secret_papaw', true]], 'appended after the old bosses, so saved boss positions still match');
+  assert.deepEqual(r.map((b) => b.icon), ['🐄', '🦅', '😈']);
+  assert.match(r[1].name, /Harpy Eagle/);
+  assert.equal(r[2].name, 'Māra');
+  r.forEach((b) => { assert.ok(b.hp >= 5 && b.hp <= 6, 'plays like a normal boss'); assert.equal(b.taunts, 2); });
+});
+
+test('a slayer boss hits its buddy harder and takes less damage from it; other bosses are unchanged', async () => {
+  const r = await inPage(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = {};
+    ultraPets.forEach((u) => { state.unlockedSecrets.push(u.id); state.buddyXp[u.id] = xpForLevel(40); });
+    const run = async (buddy, bossIdx) => {
+      state.activePet = buddy; currentMonsterIndex = bossIdx; bossLevel = 1; partyHp = {};
+      monsterCurrentHp = 1000;
+      const maxHp = getPetMaxHp(buddy);
+      setPetHp(buddy, maxHp);
+      triggerMonsterDamage(0, false); await wait(450);
+      const dealt = 1000 - monsterCurrentHp;
+      monsterCurrentHp = 1000;
+      triggerBuddyDamage(); await wait(450);
+      return { dealt, taken: maxHp - getPetHp(buddy) };
+    };
+    out.janieVsCow = await run('secret_janie', 50);
+    out.janieVsDrake = await run('secret_janie', 0);
+    out.amberVsHarpy = await run('secret_amber', 51);
+    out.amberVsCow = await run('secret_amber', 50);
+    out.papawVsMara = await run('secret_papaw', 52);
+    out.papawVsHarpy = await run('secret_papaw', 51);
+    out.hint = (() => { state.activePet = 'secret_papaw'; currentMonsterIndex = 52; updateBattleUI(); return document.getElementById('type-match-hint').innerText; })();
+    return out;
+  });
+  const slay = [r.janieVsCow, r.amberVsHarpy, r.papawVsMara], normal = [r.janieVsDrake, r.amberVsCow, r.papawVsHarpy];
+  slay.forEach((s, i) => { assert.ok(s.taken > normal[i].taken, 'slayer hits harder ' + JSON.stringify([s, normal[i]])); assert.ok(s.dealt < normal[i].dealt, 'slayer takes less ' + JSON.stringify([s, normal[i]])); });
+  assert.match(r.hint, /Strong against Papaw/);
+});
+
+test('boss cards and the book say which buddy a slayer is strong against', async () => {
+  const r = await inPage(() => ({ card: bossCard(52, {}).foot, cow: bossCard(50, {}).foot }));
+  assert.equal(r.card, '☠️ Strong against Papaw');
+  assert.equal(r.cow, '☠️ Strong against Janie');
+});
+
+test('the arrival message warns when the new boss is a slayer of your active buddy', async () => {
+  const msg = await inPage(async () => {
+    state.unlockedSecrets.push('secret_papaw'); grantBuddy('secret_papaw'); state.activePet = 'secret_papaw';
+    state.monstersDefeated = 0; partyHp = {};
+    state.recentBossTypes = []; const real = Math.random; Math.random = () => 0.9999;      // picks the last boss in the list: Māra
+    currentMonsterIndex = 0; monsterCurrentHp = 1; inputLocked = false;
+    triggerMonsterDamage(50, false);
+    await new Promise((res) => setTimeout(res, 1300));
+    Math.random = real;
+    return document.getElementById('toast').innerText;
+  });
+  assert.match(msg, /Māra appeared! ☠️ Strong against Papaw!/);
+});
+
+test('beat a boss 3 times in its Alpha form and it joins you at half your strongest buddy\'s level', async () => {
+  const r = await inPage(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const win = async (form) => {
+      state.activePet = 'dog'; currentMonsterIndex = 50; bossLevel = form === 2 ? 50 : 10; partyHp = {};
+      monsterCurrentHp = 1; state.faintedPets = [];
+      triggerMonsterDamage(50, false); await wait(900);
+    };
+    state.buddyXp.dog = xpForLevel(60);                       // strongest buddy: level 60
+    state.unlockedSecrets = []; state.bossBook = {};
+    const out = { steps: [] };
+    await win(1); await win(0);                               // Elder and normal wins do not count
+    out.alphaAfterOthers = state.bossBook[50].alpha;
+    await win(2); out.steps.push([state.bossBook[50].alpha, state.unlockedSecrets.includes('boss_cow')]);
+    await win(2); out.steps.push([state.bossBook[50].alpha, state.unlockedSecrets.includes('boss_cow')]);
+    await win(2); out.steps.push([state.bossBook[50].alpha, state.unlockedSecrets.includes('boss_cow')]);
+    out.level = getBuddyLevel('boss_cow');
+    out.best = getBuddyLevel('dog');
+    await win(2);
+    out.owned = state.unlockedSecrets.filter((id) => id === 'boss_cow').length;
+    return out;
+  });
+  assert.equal(r.alphaAfterOthers, 0);
+  assert.deepEqual(r.steps, [[1, false], [2, false], [3, true]]);
+  assert.equal(r.level, Math.floor(r.best / 2), 'half of the strongest buddy');
+  assert.equal(r.owned, 1, 'never given twice');
+});
+
+test('boss buddies: ordinary strength, own shop section, boss card progress, and a safe saved book', async () => {
+  const r = await inPage(() => {
+    const out = {};
+    out.notUltra = bossBuddies.every((b) => !b.ultra && battleElement(b) === b.element);
+    out.packs = bossBuddies.slice(-3).map((b) => packOf(b).id);
+    out.all = bossBuddies.length === monstersList.length && monstersList.every((m, i) => getSpecies(m.buddy) && getSpecies(m.buddy).name === m.name);
+    out.moves = new Set(bossBuddies.map((b) => b.superMove)).size;
+    out.moveSample = bossBuddies[0].superMove + ' / ' + bossBuddies[50].superMove;
+    out.rarity = rarityOf('boss_mara').name;
+    state.unlockedSecrets = ['boss_harpy']; state.buddyXp.boss_harpy = 0;
+    renderSecretPets();
+    out.shop = [document.getElementById('bossbuddy-found-count').innerText, document.getElementById('bossbuddy-total-count').innerText, document.querySelectorAll('#bossbuddy-pet-grid .pet-card').length, document.getElementById('secret-found-count').innerText];
+    state.bossBook = { 50: { wins: 'x', form: 99, alpha: -4 }, 999: { wins: 1 }, 51: 7 };
+    NORMALIZERS.forEach((fn) => fn(state));
+    out.book = JSON.stringify(state.bossBook);
+    state.bossBook = { 50: { wins: 5, form: 2, alpha: 2 } };
+    bookTab = 'boss'; renderBook();
+    out.progress = document.getElementById('book-body') ? document.getElementById('book-body').innerText : document.body.innerText;
+    return out;
+  });
+  assert.equal(r.notUltra, true);
+  assert.equal(r.all, true, 'every boss has a buddy of the same name');
+  assert.ok(r.moves >= 45, 'buddies have their own ultimates, not one shared move: ' + r.moves);
+  assert.equal(r.moveSample, 'Drake Blaze / Stampede Slam');
+  assert.deepEqual(r.packs, ['boss-nature', 'boss-electric', 'boss-dark']);
+  assert.equal(r.rarity, 'BOSS');
+  assert.deepEqual(r.shop, ['1', '53', 1, '0'], 'boss buddies are not counted as ordinary secrets');
+  assert.equal(r.book, '{"50":{"wins":0,"form":2,"alpha":0}}');
+  assert.match(r.progress, /Alpha 2\/3/);
+});
+
+test('bosses you have started on come back more often once your buddy can reach Alpha bosses', async () => {
+  const r = await inPage(() => {
+    const all = monstersList.map((_, i) => i);
+    state.unlockedSecrets = [];
+    state.activePet = 'dog';
+    state.bossBook = { 0: { wins: 1, form: 2, alpha: 1 }, 7: { wins: 2, form: 2, alpha: 2 }, 9: { wins: 1, form: 0, alpha: 0 }, 11: { wins: 5, form: 2, alpha: 3 } };
+    state.buddyXp.dog = xpForLevel(10); const low = wantedBossCopies(all).length;
+    state.buddyXp.dog = xpForLevel(60); const high = wantedBossCopies(all);
+    const count = (i) => high.filter((x) => x === i).length;
+    const per = [count(0), count(7), count(9), count(11), count(20)];
+    state.unlockedSecrets = ['boss_11', 'boss_0']; const afterWin = wantedBossCopies(all).filter((x) => x === 0).length;
+    return { low, per, afterWin, weight: ECON.bossBuddy.weight };
+  });
+  assert.equal(r.low, 0);
+  assert.deepEqual(r.per, [r.weight - 1, r.weight - 1, 0, 0, 0], 'only bosses with 1-2 Alpha wins');
+  assert.equal(r.afterWin, 0, 'a boss you already won stops being favoured');
+});
+
+test('any boss can be won as a buddy after 3 Alpha victories, not just the slayers', async () => {
+  const r = await inPage(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    state.buddyXp.dog = xpForLevel(60); state.unlockedSecrets = []; state.bossBook = {}; state.activePet = 'dog';
+    const out = { steps: [] };
+    for (let n = 0; n < 3; n++) {
+      currentMonsterIndex = 0; bossLevel = 50; partyHp = {}; monsterCurrentHp = 1; state.faintedPets = [];
+      triggerMonsterDamage(50, false); await wait(900);
+      out.steps.push([state.bossBook[0].alpha, state.unlockedSecrets.includes('boss_0')]);
+    }
+    out.name = getSpecies('boss_0').name; out.level = getBuddyLevel('boss_0');
+    return out;
+  });
+  assert.deepEqual(r.steps, [[1, false], [2, false], [3, true]]);
+  assert.equal(r.name, 'Fire Drake');
+  assert.equal(r.level, 30);
+});

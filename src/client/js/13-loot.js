@@ -1,6 +1,7 @@
 // =====================================================================
 //  LOOT DROPS
 // =====================================================================
+const ULTRA_CHANCE = 0.005;
 function checkForSecretLootDrop(hadCasualties) {
   if (hadCasualties) return;
   const qualifiesForDrop = (state.streak >= 5) || (state.monstersDefeated % 5 === 0);
@@ -17,10 +18,12 @@ function checkForSecretLootDrop(hadCasualties) {
     enqueueModal(function () { showLootModal(drop, category); });
   };
 
-  // 1. Janie (0.5%)
-  if (state.unlockedSecrets.indexOf('secret_janie') === -1 && roll < 0.005) {
-    giveLoot(janiePet, 'janie');
-    return;
+  // 1. The ultra-rare trio: each has its own 0.5% slice of the roll, so every one is exactly as rare as the others
+  for (let i = 0; i < ultraPets.length; i++) {
+    if (state.unlockedSecrets.indexOf(ultraPets[i].id) === -1 && roll >= i * ULTRA_CHANCE && roll < (i + 1) * ULTRA_CHANCE) {
+      giveLoot(ultraPets[i], 'ultra');
+      return;
+    }
   }
   // 2. Mythic (4%)
   const unownedMythics = mythicCompanions.filter(function (mc) { return state.unlockedSecrets.indexOf(mc.id) === -1; });
@@ -46,13 +49,20 @@ function showLootModal(pet, lootCategory) {
   const subtitle = document.getElementById('loot-modal-subtitle');
   const startLv = getBuddyLevel(pet.id);
 
-  if (lootCategory === 'janie') {
+  if (lootCategory === 'ultra') {
     border.style.borderColor = '#10b981';
     tag.style.background = '#064e3b';
     tag.style.color = '#a7f3d0';
     tag.innerText = '🛸 ULTRA RARE COSMIC ANOMALY!';
-    title.innerText = 'Janie Discovered!';
-    subtitle.innerText = `👽 The Rarest Buddy in the Universe! Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
+    title.innerText = pet.name + ' Discovered!';
+    subtitle.innerText = `${pet.lore} Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
+  } else if (lootCategory === 'boss') {
+    border.style.borderColor = '#ef4444';
+    tag.style.background = '#7f1d1d';
+    tag.style.color = '#fecaca';
+    tag.innerText = '🏆 BOSS BUDDY!';
+    title.innerText = pet.name + ' Joins You!';
+    subtitle.innerText = `💪 Beaten ${ECON.bossBuddy.alphaWins} times as an Alpha! Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
   } else if (lootCategory === 'mythic') {
     border.style.borderColor = '#d946ef';
     tag.style.background = '#701a75';

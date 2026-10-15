@@ -51,7 +51,7 @@ function mkFighter(id, level) {
   const sp = getSpecies(id);
   const stage = getFormIndex(sp, level);
   const f = sp.forms[stage];
-  return { id: id, name: f.name, icon: f.icon, element: sp.element, level: level, stage: stage,
+  return { id: id, name: f.name, icon: f.icon, element: sp.element, ultra: !!sp.ultra, level: level, stage: stage,
     atk: 1 + Math.floor(level / 12) + stage, maxHp: 3 + Math.floor(level / 8) + stage, hp: 0 };
 }
 function tourMakeRound(n, avg) {
@@ -73,7 +73,7 @@ function tourStart() {
   const rewarded = t.runs <= ECON.tournament.rewardedRunsPerDay;
   const mine = team.map(function (id) {
     const d = getPetById(id);
-    return { id: id, name: d.name, icon: d.icon, element: d.element, level: d.level, stage: d.stage,
+    return { id: id, name: d.name, icon: d.icon, element: d.element, ultra: d.ultra, level: d.level, stage: d.stage,
       atk: getPetAttack(id), maxHp: getPetMaxHp(id), hp: getPetMaxHp(id) };
   });
   const avg = Math.round(mine.reduce(function (a, f) { return a + f.level; }, 0) / mine.length);
@@ -102,8 +102,8 @@ function tourRender() {
 }
 function tourDamage(att, def) {
   let dmg = att.atk;
-  const rel = getTypeRelation(att.element, def.element);
-  if (att.element === 'shadow') dmg = Math.ceil(dmg * 1.25);
+  const rel = getTypeRelation(battleElement(att), battleElement(def));
+  if (battleElement(att) === 'shadow') dmg = Math.ceil(dmg * 1.25);
   else if (rel === 1) dmg = Math.ceil(dmg * 1.5);
   else if (rel === -1) dmg = Math.max(1, Math.floor(dmg * 0.5));
   return Math.max(1, dmg);

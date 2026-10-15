@@ -8,8 +8,26 @@ function getCandyCost() {
   return Math.max(20, Math.round((xpForLevel(lvl + 1) - getBuddyXp(state.activePet)) / 6));
 }
 
-function buyItem(type, cost) {
-  if (type === 'candy') cost = getCandyCost();
+// Price of a shop item right now (the candy depends on the active buddy; everything else is in ECON).
+function itemCost(type) { return type === 'candy' ? getCandyCost() : ECON.items[type]; }
+const ITEM_VERBS = { shield: 'Buy', candy: 'Eat', ult: 'Charge', clover: 'Use' };
+// Labels the four item buttons: the price when affordable, otherwise how many more gems are needed (dimmed, but a tap still explains).
+function renderItemButtons() {
+  Object.keys(ITEM_VERBS).forEach(function (type) {
+    const b = document.getElementById('item-' + type);
+    if (!b) return;
+    const cost = itemCost(type);
+    const short = cost - state.gems;
+    const maxed = type === 'candy' && cost === 0;
+    b.innerText = maxed ? 'Max level ⭐' : short > 0 ? 'Need ' + short + ' more 💎' : cost + ' 💎 ' + ITEM_VERBS[type];
+    b.title = maxed ? '' : 'Costs ' + cost + ' gems';
+    b.classList.toggle('cant-afford', maxed || short > 0);
+    b.setAttribute('aria-disabled', maxed || short > 0 ? 'true' : 'false');
+  });
+}
+
+function buyItem(type) {
+  const cost = itemCost(type);
   if (state.gems < cost) {
     soundWrong();
     toast(`You need ${cost - state.gems} more 💎 Gems!`);

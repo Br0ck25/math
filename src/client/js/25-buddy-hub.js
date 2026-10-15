@@ -9,6 +9,8 @@ const SNACKS = [
 const ELEM_COLORS = { fire: '#ef4444', water: '#38bdf8', nature: '#22c55e', electric: '#facc15', dark: '#8b5cf6', magic: '#ec4899', shadow: '#a855f7' };
 
 function favSnack(id) {
+  const sp = getSpecies(id);
+  if (sp && sp.snack) return sp.snack;              // some buddies have a favorite of their own
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
   return SNACKS[h % SNACKS.length];
@@ -32,22 +34,29 @@ function moodOf(id) {
   if (isSleepy(id)) return { icon: '😴', text: 'Sleepy — wakes up after your next boss win' };
   const c = getCare(id);
   if (c.treat || c.fav) return { icon: '😄', text: 'Happy and full!' };
-  const gap = c.last ? Math.round((new Date(dayKey() + 'T12:00:00') - new Date(c.last + 'T12:00:00')) / 86400000) : 9;
+  const gap = c.last ? daysSince(c.last) : 9;
   if (gap >= 2) return { icon: '🥺', text: 'Feeling a bit hungry...' };
   return { icon: '🙂', text: 'Doing fine' };
 }
 
 // arena reactions
+// kind: 'win' (boss beaten), 'cheer' (a right answer: a small hop), 'wince' (a wrong answer).
+const BUDDY_REACTIONS = {
+  win: { el: 'fighter-icon-wrapper', cls: 'happy-bounce', ms: 1000, bubbles: ['🥳', '❤️', '✨'] },
+  cheer: { el: 'pet-fighter-icon', cls: 'buddy-hop', ms: 420, bubbles: null },      // inner icon: the wrapper is busy tackling
+  wince: { el: 'pet-fighter-icon', cls: 'buddy-wince', ms: 500, bubbles: ['😣', '😵', '🥴'] }
+};
 function buddyReact(kind) {
-  const w = document.getElementById('fighter-icon-wrapper');
+  const r = BUDDY_REACTIONS[kind];
+  const w = r && document.getElementById(r.el);
   const b = document.getElementById('mood-bubble');
   if (!w || !b) return;
-  if (kind === 'win') {
-    w.classList.remove('happy-bounce');
-    void w.offsetWidth;
-    w.classList.add('happy-bounce');
-    setTimeout(function () { w.classList.remove('happy-bounce'); }, 1000);
-    b.innerText = pick(['🥳', '❤️', '✨']);
+  w.classList.remove(r.cls);
+  void w.offsetWidth;
+  w.classList.add(r.cls);
+  setTimeout(function () { w.classList.remove(r.cls); }, r.ms);
+  if (r.bubbles) {
+    b.innerText = pick(r.bubbles);
     b.classList.remove('show');
     void b.offsetWidth;
     b.classList.add('show');

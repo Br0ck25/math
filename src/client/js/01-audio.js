@@ -71,10 +71,13 @@ function soundShieldBreak() {
   setTimeout(() => playTone(400, 0.2, 'triangle'), 80);
 }
 
-function soundCorrect() {
-  playTone(523.25, 0.09, 'triangle');
-  setTimeout(() => playTone(659.25, 0.09, 'triangle'), 75);
-  setTimeout(() => playTone(783.99, 0.20, 'triangle'), 150);
+// The little "ding-ding-dong" climbs a semitone for every answer in the combo (up to an octave), so a streak sounds like it is building.
+function comboPitch(streak) { return Math.pow(2, Math.min(12, Math.max(0, (streak || 1) - 1)) / 12); }
+function soundCorrect(streak) {
+  const k = comboPitch(streak);
+  playTone(523.25 * k, 0.09, 'triangle');
+  setTimeout(() => playTone(659.25 * k, 0.09, 'triangle'), 75);
+  setTimeout(() => playTone(783.99 * k, 0.20, 'triangle'), 150);
 }
 
 function soundWrong() {

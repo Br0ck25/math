@@ -17,6 +17,7 @@ function updateBattleUI() {
   const mIcon = document.getElementById('monster-icon');
   mIcon.innerText = boss.icon;
   setStageClass(mIcon, 'boss-stage-', boss.form);
+  mIcon.parentNode.setAttribute('data-element', boss.element);       // each element gives its boss a different glow
   document.getElementById('monster-level').innerText = boss.level;
   const bossHpNow = Math.max(0, monsterCurrentHp);
   document.getElementById('monster-hp-text').innerText = `HP ${bossHpNow}/${boss.maxHp}`;
@@ -33,10 +34,12 @@ function updateBattleUI() {
 
   const gear = activeGear();
   document.getElementById('pet-gear').innerHTML = formMarkup(pet.stage, pet.element) + gearMarkup(gear.acc, gear.armor);
-  document.getElementById('fighter-icon-wrapper').style.setProperty('--evo', elemColor(pet.element));
+  const fw = document.getElementById('fighter-icon-wrapper');
+  fw.style.setProperty('--evo', elemColor(pet.element));
+  pIcon.classList.toggle('buddy-worried', petHp > 0 && petHp / petMax <= 0.34);     // a nervous shiver when health is low
+  fw.classList.toggle('combo-hot', state.streak >= 5);                          // a fiery glow while the combo is hot
 
-  const candyBtn = document.getElementById('candy-btn');
-  if (candyBtn) candyBtn.innerText = getCandyCost() + ' 💎 Eat';
+  renderItemButtons();
 
   const petElemBadge = document.getElementById('pet-elem-badge');
   petElemBadge.innerText = pet.element;
@@ -45,9 +48,12 @@ function updateBattleUI() {
   monsterElemBadge.innerText = boss.element;
   monsterElemBadge.className = `element-pill elem-${boss.element}`;
 
-  const rel = getTypeRelation(pet.element, boss.element);
+  const rel = getTypeRelation(battleElement(pet), boss.element);
   const hint = document.getElementById('type-match-hint');
-  if (pet.element === 'shadow') {
+  if (slaysBuddy(boss, pet)) {
+    hint.innerText = '☠️ Strong against ' + pet.baseName + '!';
+    hint.style.color = '#f87171';
+  } else if (battleElement(pet) === 'shadow') {
     hint.innerText = '🌟 Shadow: x1.25 damage';
     hint.style.color = '#d946ef';
   } else if (rel === 1) {
@@ -75,7 +81,7 @@ function updateBattleUI() {
   document.getElementById('shield-display').innerText = state.shields;
   document.getElementById('session-count-text').innerText = sessionStats.solved;
   document.getElementById('session-goal-text').innerText = sessionStats.goal;
-  document.getElementById('session-badge').innerText = `🎁 Reward at ${sessionStats.goal}`;
+  document.getElementById('session-badge').innerText = `🎁 ${sessionStats.goal}`;       // the gem reward arrives at this many solves
 
   const cloverTag = document.getElementById('clover-status');
   if (state.cloverLeft > 0) {
@@ -87,9 +93,28 @@ function updateBattleUI() {
 }
 
 function updatePracticeRow() {
-  document.getElementById('grade-chip').innerText = '📚 ' + GRADES[state.grade].long;
+  document.getElementById('grade-chip').innerText = '📚 ' + GRADES[state.grade].label;
   const icons = getActiveOps().map(function (id) { return OP_BY_ID[id].icon; });
   document.getElementById('ops-chip').innerText = icons.slice(0, 5).join(' ') + (icons.length > 5 ? ' +' + (icons.length - 5) : '');
+}
+
+// One friendly line about what is close: the next evolution, or the next buddy in the Sanctuary.
+function nextGoalText() {
+  const pet = getActivePetDisplay();
+  const sp = getSpecies(pet.id);
+  const nextForm = sp && sp.forms[pet.stage + 1];
+  const toEvolve = nextForm ? nextForm.minLevel - pet.level : 0;
+  const owned = getOwnedIds();
+  const nextBuddy = storePets.find(function (b) { return b.cost > 0 && owned.indexOf(b.id) === -1; });
+  if (nextForm && toEvolve > 0 && (toEvolve <= 5 || !nextBuddy)) {
+    return '✨ ' + (toEvolve === 1 ? '1 level' : toEvolve + ' levels') + ' to evolve';
+  }
+  if (nextBuddy) {
+    return state.gems >= nextBuddy.cost
+      ? '🐾 You can unlock ' + nextBuddy.name + ' ' + nextBuddy.icon + ' in the Sanctuary!'
+      : '🐾 ' + (nextBuddy.cost - state.gems) + ' 💎 to unlock ' + nextBuddy.name + ' ' + nextBuddy.icon;
+  }
+  return '';
 }
 
 function updateStatsUI() {
@@ -113,6 +138,7 @@ function updateStatsUI() {
     document.getElementById('xp-bar').style.width = `${Math.min(100, Math.round(((xp - base) / (next - base)) * 100))}%`;
     document.getElementById('xp-text').innerText = `${xp - base}/${next - base}`;
   }
+  document.getElementById('next-goal').innerText = nextGoalText();
   document.getElementById('rank-display').innerText = pet.name + (pet.stage > 0 ? '  ' + (pet.stage === 1 ? '★' : '★★') : '');
   updatePracticeRow();
   updateBattleUI();
@@ -121,6 +147,25 @@ function updateStatsUI() {
 function setBossTaunt() {
   const boss = getBossInfo();
   document.getElementById('boss-taunt-box').innerText = `${boss.name}: "${pick(boss.taunts)}"`;
+}
+
+// A small "+5 💎" that floats up from a stat so players see where their reward went. Skipped when motion is reduced.
+function floatGain(text, anchorId, delay) {
+  if (motionReduced()) return;
+  const anchor = document.getElementById(anchorId);
+  if (!anchor) return;
+  setTimeout(function () {
+    const r = anchor.getBoundingClientRect();
+    if (!r.width) return;
+    const el = document.createElement('div');
+    el.className = 'float-gain';
+    el.setAttribute('aria-hidden', 'true');
+    el.innerText = text;
+    el.style.left = Math.round(r.left + r.width / 2) + 'px';
+    el.style.top = Math.round(r.top) + 'px';
+    document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 1000);
+  }, delay || 0);
 }
 
 function showPopup(text) {

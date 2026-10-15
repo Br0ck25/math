@@ -5,11 +5,25 @@
 // =====================================================================
 const ECON = {
   solve: { gem: 1, speedGem: 1, streakEvery: 3, streakBonus: 2 },
-  boss: { gemBase: 8, gemPerLevels: 5 },
+  boss: {
+    gemBase: 8, gemPerLevels: 5,
+    // A "slayer" boss is strong against one buddy: it hits that buddy harder (and may take up to 60% of its max HP in one hit instead of 40%),
+    // and that buddy only deals 75% damage to it (no Shadow bonus).
+    slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 },
+    // Backup: an Alpha boss under `below` of its health may swap out for another boss at full health. The new boss is what you must beat
+    // (the first one never counts as a win). It is tougher (+HP, +attack) and pays a bonus. `counterChance`: how often the partner is one that
+    // beats your buddy (a slayer of it, or one whose element is strong against it).
+    swap: { chance: 0.2, below: 0.25, counterChance: 0.5, extraHp: 2, extraAtk: 1, bonusGems: 5 }
+  },
+  // Beat any boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
+  // A boss you have started on (1 or 2 Alpha wins) is picked `weight` times as often, once your buddy can reach Alpha bosses (level `minLevel`).
+  bossBuddy: { alphaWins: 3, weight: 5, minLevel: 43 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
+  // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
+  items: { shield: 100, ult: 33, clover: 25 },
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,

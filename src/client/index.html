@@ -32,11 +32,13 @@
       </div>
     </div>
 
-    <!-- Active Session Tracker -->
+    <!-- Active Session Tracker + practice settings chip (one row) -->
     <div class="session-info-row">
-      <span style="color:#38bdf8;">🎯 Session: <span id="session-count-text">0</span> / <span id="session-goal-text">25</span> Solved</span>
+      <span class="session-line" title="Session goal: solve problems to earn a bonus">🎯 <span id="session-count-text">0</span>/<span id="session-goal-text">25</span> <span id="session-badge">🎁 25</span></span>
       <span id="clover-status" style="color:#4ade80; display:none;">🍀 2x Gems (0)</span>
-      <span id="session-badge" style="color:var(--accent);">🎁 Reward at 25</span>
+      <button class="practice-chip" onclick="openSettings()" aria-label="Practice settings: grade and math types">
+        <span id="grade-chip">📚 3–5</span><span id="ops-chip">➕</span><span class="practice-gear">⚙️</span>
+      </button>
     </div>
 
     <div class="xp-section">
@@ -47,13 +49,7 @@
       <div class="xp-bar-bg">
         <div id="xp-bar" class="xp-bar-fill"></div>
       </div>
-    </div>
-
-    <!-- Practice settings shortcut -->
-    <div class="practice-row" onclick="openSettings()">
-      <span id="grade-chip">📚 Grades 3–5</span>
-      <span id="ops-chip">➕ ➖ ✖️ ➗</span>
-      <span class="practice-gear">⚙️</span>
+      <div class="next-goal" id="next-goal"></div>
     </div>
 
     <!-- Battle Arena -->
@@ -83,8 +79,7 @@
             </div>
           </div>
           <div class="hp-line" title="Buddy HP">
-            <div class="hp-bar-bg"><div id="pet-hp-bar" class="hp-bar-fill hp-bar-pet"></div></div>
-            <span class="hp-num" id="pet-hp-text">HP 3/3</span>
+            <div class="hp-bar-bg"><div id="pet-hp-bar" class="hp-bar-fill hp-bar-pet"></div><span class="hp-num" id="pet-hp-text">HP 3/3</span></div>
           </div>
           <div class="battle-fx" id="pet-attack-fx">⚡</div>
         </div>
@@ -100,8 +95,7 @@
             </div>
           </div>
           <div class="hp-line" title="Boss HP">
-            <div class="hp-bar-bg"><div id="monster-hp-bar" class="hp-bar-fill hp-bar-monster"></div></div>
-            <span class="hp-num" id="monster-hp-text">HP 4/4</span>
+            <div class="hp-bar-bg"><div id="monster-hp-bar" class="hp-bar-fill hp-bar-monster"></div><span class="hp-num" id="monster-hp-text">HP 4/4</span></div>
           </div>
           <div class="battle-fx" id="monster-attack-fx">💥</div>
         </div>
@@ -118,8 +112,8 @@
 
     <!-- Arena Container (Zero-Scroll Flex Mount) -->
     <div class="arena">
-      <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)" aria-label="Open drawing pad">✏️</button>
-      <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Hint: spend 1 gem to see the first step" aria-label="Hint, costs 1 gem">💡<span class="hint-cost">1💎</span></button>
+      <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)" aria-label="Open drawing pad">✏️<span class="tool-label">Pad</span></button>
+      <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Hint: spend 1 gem to see the first step" aria-label="Hint, costs 1 gem">💡<span class="tool-label">Hint</span><span class="hint-cost">1💎</span></button>
       <div class="streak-banner" id="streak-msg">READY TO SOLVE?</div>
       <div class="floating-popup" id="floating-popup">CRITICAL HIT! 💥</div>
       
@@ -154,7 +148,7 @@
 
     <div class="bottom-bar">
       <button class="btn-secondary" onclick="openShop()">
-        🐾 Sanctuary <span id="comp-count-badge" style="background:#6366f1;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
+        🐾 Sanctuary <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
       </button>
       <button class="btn-secondary" onclick="openQuests()">
         📜 Quests<span class="notif-dot" id="quest-badge">0</span>
@@ -175,54 +169,50 @@
   <div class="modal-overlay" id="shop-modal" data-close="closeShop">
     <div class="modal-content">
       <h2 style="margin-bottom: 4px; font-size: 1.3rem;">🐾 Companion Sanctuary</h2>
-      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">
-        Adopt companions, customize body gear, or buy boosters! You have <b style="color:#38bdf8;">💎 <span id="shop-gems">0</span></b>
-      </p>
+      <div class="shop-wallet" aria-live="polite">You have <b>💎 <span id="shop-gems">0</span></b></div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Adopt companions, customize body gear, or buy boosters!</p>
 
-      <button class="grade-btn" style="width:100%; margin-bottom:8px;" onclick="closeShop(); openHub()">💖 Buddy care · 🃏 Trading cards · 🏆 Tournament</button>
+      <button class="shop-link" onclick="closeShop(); openHub()"><span>💖 Buddy care · 🃏 Cards · 🏆 Tournament</span><span aria-hidden="true">›</span></button>
 
-      <!-- Consumables (All Increased by 30%) -->
-      <div style="font-size:0.75rem; font-weight:800; color:#38bdf8; text-align:left; text-transform:uppercase; margin-bottom:4px;">🧪 Battle Supplies &amp; Items</div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
-        <div style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:6px; text-align:left; display:flex; flex-direction:column; justify-content:space-between;">
+      <!-- Battle supplies. Prices come from ECON.items (the candy from the buddy's level); renderItemButtons() fills the labels. -->
+      <div class="shop-title" style="color:#38bdf8;">🧪 Battle Supplies &amp; Items</div>
+      <div class="item-grid">
+        <div class="item-card">
           <div>
-            <div style="font-weight:800; font-size:0.8rem;">🛡️ Streak Shield</div>
-            <div style="font-size:0.68rem; color:var(--text-muted);">Blocks 1 mistake</div>
+            <div class="item-name">🛡️ Streak Shield</div>
+            <div class="item-desc">Blocks 1 mistake. Worth saving up for!</div>
           </div>
-          <button class="key-btn submit-btn" style="padding:4px; font-size:0.8rem; height:36px; margin-top:4px;" onclick="buyItem('shield', 20)">20 💎 Buy</button>
+          <button class="key-btn submit-btn item-btn" id="item-shield" onclick="buyItem('shield')">-- 💎</button>
         </div>
-
-        <div style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:6px; text-align:left; display:flex; flex-direction:column; justify-content:space-between;">
+        <div class="item-card">
           <div>
-            <div style="font-weight:800; font-size:0.8rem;">🍬 Rare Candy</div>
-            <div style="font-size:0.68rem; color:var(--text-muted);">Active buddy gains +1 level</div>
+            <div class="item-name">🍬 Rare Candy</div>
+            <div class="item-desc">Active buddy gains +1 level</div>
           </div>
-          <button class="key-btn submit-btn" style="padding:4px; font-size:0.8rem; height:36px; margin-top:4px;" id="candy-btn" onclick="buyItem('candy', 0)">-- 💎 Eat</button>
+          <button class="key-btn submit-btn item-btn" id="item-candy" onclick="buyItem('candy')">-- 💎</button>
         </div>
-
-        <div style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:6px; text-align:left; display:flex; flex-direction:column; justify-content:space-between;">
+        <div class="item-card">
           <div>
-            <div style="font-weight:800; font-size:0.8rem;">⚡ Ult Battery</div>
-            <div style="font-size:0.68rem; color:var(--text-muted);">Fills Ultimate (3/3) instantly</div>
+            <div class="item-name">⚡ Ult Battery</div>
+            <div class="item-desc">Fills Ultimate (3/3) instantly</div>
           </div>
-          <button class="key-btn submit-btn" style="padding:4px; font-size:0.8rem; height:36px; margin-top:4px;" onclick="buyItem('ult', 33)">33 💎 Charge</button>
+          <button class="key-btn submit-btn item-btn" id="item-ult" onclick="buyItem('ult')">-- 💎</button>
         </div>
-
-        <div style="background:#0f172a; border:1px solid #334155; border-radius:10px; padding:6px; text-align:left; display:flex; flex-direction:column; justify-content:space-between;">
+        <div class="item-card">
           <div>
-            <div style="font-weight:800; font-size:0.8rem;">🍀 Lucky Clover</div>
-            <div style="font-size:0.68rem; color:var(--text-muted);">2x Gems + 50% XP for 8 solves</div>
+            <div class="item-name">🍀 Lucky Clover</div>
+            <div class="item-desc">2x Gems + 50% XP for 8 solves</div>
           </div>
-          <button class="key-btn submit-btn" style="padding:4px; font-size:0.8rem; height:36px; margin-top:4px;" onclick="buyItem('clover', 25)">25 💎 Use</button>
+          <button class="key-btn submit-btn item-btn" id="item-clover" onclick="buyItem('clover')">-- 💎</button>
         </div>
       </div>
 
       <!-- Body Armor (adds bonus HP) -->
-      <div style="font-size:0.75rem; font-weight:800; color:#7dd3fc; text-align:left; text-transform:uppercase;">🛡️ Body Armor (bonus HP for every buddy)</div>
+      <div class="shop-title" style="color:#7dd3fc;">🛡️ Body Armor (bonus HP for every buddy)</div>
       <div class="pet-grid" id="armor-grid"></div>
 
       <!-- Wearable Gear & Body Accessories Grid -->
-      <div style="font-size:0.75rem; font-weight:800; color:#fbbf24; text-align:left; text-transform:uppercase;">🎩 Accessories (cosmetic)</div>
+      <div class="shop-title" style="color:#fbbf24;">🎩 Accessories (cosmetic)</div>
       <div class="pet-grid" id="accessories-grid"></div>
 
       <!-- Exactly 25 Store Buddies with Rebuy Support -->
@@ -230,7 +220,7 @@
       <div class="pet-grid" id="pet-grid"></div>
 
       <!-- Super-Rare Mythic Lore Section -->
-      <div class="mystery-section-title" style="color:#d946ef;">
+      <div class="mystery-section-title" style="color:#e879f9;">
         ⚡ Mythic Legends: Potter &amp; Storybook (<span id="mythic-found-count">0</span> / <span id="mythic-total-count">22</span> Found)
       </div>
       <div style="font-size:0.68rem; color:var(--text-muted); text-align:left; margin-bottom:6px; line-height:1.3;">
@@ -238,14 +228,23 @@
       </div>
       <div class="pet-grid" id="mythic-pet-grid"></div>
 
-      <!-- Ultra-Rare Anomaly: Janie -->
+      <!-- Ultra-Rare Anomalies: Janie, Amber and Papaw -->
       <div class="mystery-section-title" style="color:#10b981;">
-        🛸 Cosmic Anomaly: Janie (<span id="janie-found-count">0</span> / 1 Found)
+        🛸 Cosmic Anomalies: Janie, Amber &amp; Papaw (<span id="ultra-found-count">0</span> / <span id="ultra-total-count">3</span> Found)
       </div>
       <div style="font-size:0.68rem; color:var(--text-muted); text-align:left; margin-bottom:6px; line-height:1.3;">
-        👽 <em>Lowest drop rate in the game (0.5% rate)! The ultimate extraterrestrial secret!</em>
+        👽🦥🧘 <em>Lowest drop rate in the game (0.5% each)! The ultimate secrets, and the strongest buddies of all!</em>
       </div>
-      <div class="pet-grid" id="janie-pet-grid"></div>
+      <div class="pet-grid" id="ultra-pet-grid"></div>
+
+      <!-- Boss buddies: won by beating a boss 3 times in its Alpha form -->
+      <div class="mystery-section-title" style="color:#f87171;">
+        🏆 Boss Buddies (<span id="bossbuddy-found-count">0</span> / <span id="bossbuddy-total-count">53</span> Won)
+      </div>
+      <div style="font-size:0.68rem; color:var(--text-muted); text-align:left; margin-bottom:6px; line-height:1.3;">
+        🏆 <em>Beat any boss 3 times in its Alpha form and it joins you!</em>
+      </div>
+      <div class="pet-grid" id="bossbuddy-pet-grid"></div>
 
       <div class="mystery-section-title">
         ✨ Secret Rescued Companions (<span id="secret-found-count">0</span> / <span id="secret-total-count">150</span> Found)
@@ -322,6 +321,16 @@
     </div>
   </div>
 
+  <!-- Welcome back after a break -->
+  <div class="modal-overlay" id="welcome-modal" data-close="closeWelcome">
+    <div class="modal-content" style="border-color:#38bdf8;">
+      <div style="font-size:2.6rem; margin-bottom:4px;">👋</div>
+      <h2 style="color:#facc15; margin-bottom:4px; font-size:1.3rem;">Welcome back!</h2>
+      <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.4; margin-bottom:12px;" id="welcome-text"></p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeWelcome()">Let's play!</button>
+    </div>
+  </div>
+
   <!-- Rare Companion Loot Drop Modal -->
   <div class="modal-overlay" id="loot-modal">
     <div class="modal-content" id="loot-modal-border" style="border-color: #818cf8;">
@@ -369,15 +378,17 @@
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">⚙️ Settings</h2>
 
-      <div class="settings-label">📚 Grade level</div>
+      <details class="set-sec" open><summary class="settings-label">📚 Grade level</summary>
       <div class="grade-grid" id="grade-grid"></div>
       <div class="settings-hint">Picking a grade also switches on the math types that fit that level. You can change them below.</div>
 
-      <div class="settings-label">🧮 Math types</div>
+      </details>
+      <details class="set-sec" open><summary class="settings-label">🧮 Math types</summary>
       <div class="ops-grid" id="ops-grid"></div>
       <div class="settings-hint">Tap a type to turn it on or off. Higher grades unlock more types.</div>
 
-      <div class="settings-label">🔧 Options</div>
+      </details>
+      <details class="set-sec" open><summary class="settings-label">🔧 Options</summary>
       <div class="grade-grid" style="grid-template-columns: 1fr 1fr;">
         <button class="grade-btn" onclick="toggleMute()"><span id="sound-icon">🔊</span> Sound</button>
         <button class="grade-btn" id="motion-btn" onclick="toggleMotion()">✨ Motion: Full</button>
@@ -385,10 +396,12 @@
       </div>
       <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>
 
-      <div class="settings-label">☁️ Account (optional)</div>
+      </details>
+      <details class="set-sec"><summary class="settings-label">☁️ Account (optional)</summary>
       <div id="acct-box"></div>
 
-      <div class="settings-label">⚔️ Type chart</div>
+      </details>
+      <details class="set-sec"><summary class="settings-label">⚔️ Type chart</summary>
       <div class="type-chart">
         🔥 Fire &gt; 🌿 Nature &nbsp;•&nbsp; 💧 Water &gt; 🔥 Fire<br>
         🌿 Nature &gt; 💧 Water, ⚡ Electric &nbsp;•&nbsp; ⚡ Electric &gt; 💧 Water, 🔮 Magic<br>
@@ -396,7 +409,10 @@
         🌟 Shadow deals x1.25 damage to everything<br>🛡️ Resisted hits do less damage; super-effective hits do +1 (never more than 40% of max HP)
       </div>
 
-      <button class="danger-btn" onclick="openResetModal()">🔄 Reset All Progress</button>
+      </details>
+      <details class="set-sec"><summary class="settings-label">⚠️ Reset</summary>
+        <button class="danger-btn" onclick="openResetModal()">🔄 Reset All Progress</button>
+      </details>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeSettings()">Done</button>
     </div>
   </div>
@@ -515,6 +531,7 @@
       <div class="settings-label">🎯 Accuracy by math type</div>
       <div id="par-types"></div>
       <div class="settings-label">🔍 Weak spots</div>
+      <div id="par-strong" style="font-size:0.8rem; text-align:left; margin-bottom:4px;"></div>
       <div id="par-weak" style="font-size:0.8rem; text-align:left;"></div>
       <div class="settings-label">🏆 Daily reward goal</div>
       <div class="par-goal">

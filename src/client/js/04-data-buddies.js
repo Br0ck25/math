@@ -264,7 +264,9 @@ const mythicSpecies = [
 
 const mythicCompanions = mythicSpecies.map(m => ({ ...m, element: m.elem, secret: true }));
 
-// Ultra-Rare Cosmic Alien Janie (Lowest Drop Rate: 0.5%)
+// The ultra-rare trio (lowest drop rate in the game: 0.5% each). All three fight with Shadow power whatever their element badge
+// says (x1.25 damage, no type weaknesses; see battleElement), so they are exactly as strong as each other.
+// `snack` is the favorite food shown in Buddy care; `lore` is the line on the discovery window.
 const janiePet = {
   id: 'secret_janie',
   name: 'Janie',
@@ -272,8 +274,53 @@ const janiePet = {
   element: 'shadow',
   superMove: 'Cosmic Abduction',
   secret: true,
-  isJanie: true
+  isJanie: true,
+  ultra: true,
+  snack: { icon: '🍞', name: 'Hawaiian rolls' },
+  lore: '👽 The Rarest Buddy in the Universe!'
 };
+const amberPet = {
+  id: 'secret_amber',
+  name: 'Amber',
+  icon: '🦥',
+  element: 'nature',
+  superMove: 'Slow-Mo Slam',
+  secret: true,
+  ultra: true,
+  snack: { icon: '🍟', name: 'air fried potatoes' },
+  lore: '🦥 So slow, so strong! Never rushed, never beaten.'
+};
+const papawPet = {
+  id: 'secret_papaw',
+  name: 'Papaw',
+  icon: '🧘',
+  element: 'magic',
+  superMove: 'Inner Peace Blast',
+  secret: true,
+  ultra: true,
+  snack: { icon: '🍔', name: 'hamburgers' },
+  lore: '🧘 Calm, wise and unstoppable.'
+};
+const ultraPets = [janiePet, amberPet, papawPet];
+
+// Boss buddies: every boss can be won as a buddy by beating it ECON.bossBuddy.alphaWins times in its Alpha form (see checkBossBuddy).
+// Ids are 'boss_' + the boss's position in monstersList (the list only ever grows, so ids stay stable); the three slayers have their own ids.
+// They are ordinary-strength secret buddies. `fixed` holds the hand-made details; the rest comes from the boss itself.
+const BOSS_BUDDY_FIXED = {
+  boss_cow: { superMove: 'Stampede Slam', snack: { icon: '🌾', name: 'fresh hay' } },
+  boss_harpy: { superMove: 'Thunder Talon Dive' },
+  boss_mara: { superMove: 'Tempting Trick' }
+};
+const BOSS_MOVE_VERB = { fire: 'Blaze', water: 'Surge', nature: 'Smash', electric: 'Shock', dark: 'Shadow Strike', magic: 'Spell' };
+const bossBuddies = monstersList.map(function (m, i) {
+  if (!m.buddy) m.buddy = 'boss_' + i;
+  const fixed = BOSS_BUDDY_FIXED[m.buddy] || {};
+  const noun = m.name.split(' ').pop();
+  return {
+    id: m.buddy, name: m.name, icon: m.icon, element: m.element, secret: true, bossBuddy: true,
+    superMove: fixed.superMove || noun + ' ' + BOSS_MOVE_VERB[m.element], snack: fixed.snack
+  };
+});
 
 // Completely Unique Secret Companions
 const secretSpecies = [

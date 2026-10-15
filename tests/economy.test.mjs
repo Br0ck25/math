@@ -35,3 +35,9 @@ test('economy numbers are sane', () => {
   assert.ok(chests.every((d) => d <= ECON.calendar.length));
   assert.ok(chests.includes(ECON.calendar.length), 'the last day of the calendar has a chest');
 });
+
+test('a streak shield is expensive enough to be a real decision, yet reachable within a day of play', () => {
+  assert.equal(ECON.items.shield, 100);
+  assert.ok(ECON.items.shield > simulate(PROFILES.quick).total / 4, 'dearer than a quarter of a short session');
+  assert.ok(ECON.items.shield < typical.total / 3, 'under a third of a typical day');
+});

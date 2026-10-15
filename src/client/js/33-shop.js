@@ -37,7 +37,7 @@ function renderArmor() {
     card.className = 'pet-card' + (isEquipped ? ' selected' : '') + (!isUnlocked ? ' locked' : '');
     card.onclick = function () { selectOrBuyArmor(ar); };
     card.innerHTML = `
-      <div style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${ar.icon}</div>
+      <div class="card-pic" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${ar.icon}</div>
       <div class="card-name">${ar.name}</div>
       <div class="armor-hp">${ar.hp > 0 ? '+' + ar.hp + ' HP' : 'No bonus'}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
@@ -84,7 +84,7 @@ function renderAccessories() {
     card.className = `pet-card ${isEquipped ? 'selected' : ''} ${!isUnlocked ? 'locked' : ''}`;
     card.onclick = function () { selectOrBuyAccessory(acc); };
     card.innerHTML = `
-      <div style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${acc.icon}</div>
+      <div class="card-pic" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">${acc.icon}</div>
       <div style="font-weight: 700; font-size: 0.78rem;">${acc.name}</div>
       <div style="font-size: 0.7rem; color: ${isUnlocked ? '#10b981' : '#f59e0b'}; font-weight: 700;">
         ${isEquipped ? 'Worn' : isUnlocked ? 'Equip' : gearLockText(acc)}
@@ -207,6 +207,18 @@ function selectOrBuyPet(pet) {
   rerenderShop();
 }
 
+// Fills "<name>-pet-grid" with the owned buddies of a short list and "<name>-found-count" / "<name>-total-count" with the totals.
+function fillBuddyGrid(name, list, emptyNote, look) {
+  const box = document.getElementById(name + '-pet-grid');
+  box.innerHTML = '';
+  const found = list.filter(function (u) { return state.unlockedSecrets.indexOf(u.id) !== -1; });
+  document.getElementById(name + '-found-count').innerText = found.length;
+  document.getElementById(name + '-total-count').innerText = list.length;
+  if (!found.length) { box.innerHTML = '<div class="empty-note">' + emptyNote + '</div>'; return; }
+  found.forEach(function (u) {
+    box.appendChild(makePetCard(u, { owned: true, accent: look.accent, dim: look.dim, nameColor: look.nameColor, onclick: function () { equipPet(u.id); } }));
+  });
+}
 function renderSecretPets() {
   // Mythic
   const mythicContainer = document.getElementById('mythic-pet-grid');
@@ -221,21 +233,14 @@ function renderSecretPets() {
     });
   }
 
-  // Janie
-  const janieContainer = document.getElementById('janie-pet-grid');
-  janieContainer.innerHTML = '';
-  const janieFound = state.unlockedSecrets.indexOf('secret_janie') !== -1;
-  document.getElementById('janie-found-count').innerText = janieFound ? 1 : 0;
-  if (!janieFound) {
-    janieContainer.innerHTML = '<div class="empty-note">Janie has not been detected yet. Keep exploring flawless boss runs!</div>';
-  } else {
-    janieContainer.appendChild(makePetCard(janiePet, { owned: true, accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0', onclick: function () { equipPet('secret_janie'); } }));
-  }
+  // The ultra-rare trio, then the boss buddies
+  fillBuddyGrid('ultra', ultraPets, 'Janie, Amber and Papaw have not been detected yet. Keep exploring flawless boss runs!', { accent: '#10b981', dim: '#064e3b', nameColor: '#a7f3d0' });
+  fillBuddyGrid('bossbuddy', bossBuddies, 'Beat any boss ' + ECON.bossBuddy.alphaWins + ' times in its Alpha form to win it as a buddy. Check the Boss tab in the Book!', { accent: '#ef4444', dim: '#7f1d1d', nameColor: '#fecaca' });
 
   // Regular secrets
   const container = document.getElementById('secret-pet-grid');
   container.innerHTML = '';
-  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && id.indexOf('secret_janie') !== 0; });
+  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.concat(bossBuddies).some(function (u) { return u.id === id; }); });
   document.getElementById('secret-found-count').innerText = regular.length;
   if (regular.length === 0) {
     container.innerHTML = '<div class="empty-note">Defeat bosses in battle to discover rare secret creatures!</div>';

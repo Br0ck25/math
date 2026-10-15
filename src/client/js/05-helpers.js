@@ -27,6 +27,8 @@ function lastDayKeys(count, skip) {
   for (let i = (skip || 0) + count - 1; i >= (skip || 0); i--) out.push(daysAgoKey(i));
   return out;
 }
+// Whole days from a saved day key (see dayKey) to today.
+function daysSince(key) { return Math.round((new Date(dayKey() + 'T12:00:00') - new Date(key + 'T12:00:00')) / 86400000); }
 function fmtAns(a) { return Number.isInteger(a) ? String(a) : String(+a.toFixed(2)); }
 
 // Pays out gems with the usual celebration, then saves and refreshes the gem displays.

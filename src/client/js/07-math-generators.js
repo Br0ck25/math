@@ -350,7 +350,7 @@ function streakMilestone(n) {
   const m = MILESTONES[n];
   state.gems += ECON.milestoneGems[n];
   soundFanfare(n >= 10);
-  for (let i = 0; i < (n >= 25 ? 4 : n >= 10 ? 2 : 1); i++) setTimeout(launchConfetti, i * 220);
+  for (let i = 0; i < (n >= 25 ? 4 : n >= 10 ? 2 : 1); i++) setTimeout(function () { launchConfetti('streak'); }, i * 220);
   const ov = document.getElementById('milestone-overlay');
   document.getElementById('milestone-big').innerText = m.text;
   document.getElementById('milestone-sub').innerText = m.sub + ' +' + ECON.milestoneGems[n] + ' 💎';

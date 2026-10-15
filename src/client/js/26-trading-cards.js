@@ -1,7 +1,8 @@
 // ----- trading card -----
 function rarityOf(id) {
   const sp = getSpecies(id) || {};
-  if (sp.isJanie) return { name: 'COSMIC', col: '#e879f9' };
+  if (sp.bossBuddy) return { name: 'BOSS', col: '#f87171' };
+  if (sp.ultra) return { name: 'COSMIC', col: '#e879f9' };
   if (sp.mythic) return { name: 'MYTHIC', col: '#f43f5e' };
   if (sp.secret) return { name: 'LEGENDARY', col: '#fbbf24' };
   if ((sp.cost || 0) >= 400) return { name: 'EPIC', col: '#a78bfa' };
@@ -37,15 +38,16 @@ function bossCard(idx, opts) {
   const form = opts.level ? getBossFormIndex(opts.level) : Math.max(0, seen.form);
   const raid = !!opts.raid;
   const weak = opts.level && currentMonsterIndex === idx ? getWeakOp() : weakOpForBoss(idx);
-  const hp = base.baseHp + (opts.level ? Math.floor(opts.level / 3) : 0) + form * 2 + (raid ? 2 : 0);
+  const tough = !!(opts.level && currentMonsterIndex === idx && state.bossSwapped);       // a backup boss is tougher
+  const hp = base.baseHp + (opts.level ? Math.floor(opts.level / 3) : 0) + form * 2 + (raid ? 2 : 0) + (tough ? ECON.boss.swap.extraHp : 0);
   return {
     name: (raid ? '👑 ' : '') + (form === 2 ? 'Alpha ' : form === 1 ? 'Elder ' : '') + base.name,
     levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: base.icon, element: base.element,
     rarity: raid ? { name: 'RAID BOSS', col: '#ef4444' } : [null, null, null, { name: 'COMMON', col: '#94a3b8' }, { name: 'RARE', col: '#38bdf8' }, { name: 'EPIC', col: '#a78bfa' }, { name: 'LEGENDARY', col: '#fbbf24' }][clamp(base.baseHp, 3, 6)],
     stars: form + 1,
-    stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', 1 + (form === 2 ? 1 : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
+    stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', 1 + (form === 2 ? 1 : 0) + (tough ? ECON.boss.swap.extraAtk : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
     line: '"' + base.taunts[0] + '"',
-    foot: weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
+    foot: base.slays ? '☠️ Strong against ' + slayerTarget(base) : weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
   };
 }
 function drawCardFromDesc(cv, c) {

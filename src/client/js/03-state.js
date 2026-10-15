@@ -29,7 +29,7 @@ function freshState() {
     parentPinHash: '',
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
-    seen: { hub: false },
+    seen: { hub: false, welcome: '' },
     care: {},
     duelStat: { day: '', count: 0 },
     duelsOnline: true,
@@ -42,6 +42,7 @@ function freshState() {
     raidsCleared: 0,
     lastRaidAt: 0,
     bossBook: {},
+    bossSwapped: false,
     bookClaims: []
   };
 }

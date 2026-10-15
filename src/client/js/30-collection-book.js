@@ -3,7 +3,7 @@
 // =====================================================================
 function markBossSeen(i) {
   if (i === undefined || i < 0 || !state.bossBook) return;
-  if (!state.bossBook[i]) state.bossBook[i] = { wins: 0, form: -1 };
+  if (!state.bossBook[i]) state.bossBook[i] = { wins: 0, form: -1, alpha: 0 };
 }
 function markBossWin(i, form) {
   if (i === undefined || i < 0) return;
@@ -11,6 +11,22 @@ function markBossWin(i, form) {
   const b = state.bossBook[i];
   b.wins += 1;
   b.form = Math.max(b.form, form || 0);
+  if (form === 2) b.alpha = (b.alpha || 0) + 1;
+}
+// After a boss win: counts Alpha wins toward the boss's buddy and hands it over at the target. Returns the buddy when it just joined.
+function checkBossBuddy(idx, form) {
+  const m = monstersList[idx];
+  if (!m || !m.buddy || form !== 2) return null;
+  const sp = getSpecies(m.buddy);
+  if (!sp || state.unlockedSecrets.indexOf(sp.id) !== -1) return null;
+  const n = state.bossBook[idx].alpha, need = ECON.bossBuddy.alphaWins;
+  if (n < need) { toast('🏆 Alpha ' + m.name + ' beaten ' + n + '/' + need + ': ' + (need - n) + ' more and it joins you!'); return null; }
+  grantBuddy(sp.id);
+  state.unlockedSecrets.push(sp.id);
+  checkEarnedGear();
+  saveState();
+  enqueueModal(function () { showLootModal(sp, 'boss'); });
+  return sp;
 }
 
 const BOOK_MILESTONES = [
@@ -23,7 +39,7 @@ function toggleBookFilter() { soundClick(); bookMissingOnly = !bookMissingOnly; 
 function bookOpenBuddy(id) { closeBook(); openHub(); hubPet = id; renderHub(); }
 
 function bookCounts() {
-  const buddyTotal = storePets.length + mythicCompanions.length + 1 + secretCompanions.length;
+  const buddyTotal = allBuddies().length;
   const buddyFound = getOwnedIds().length;
   const bossFound = Object.keys(state.bossBook).filter(function (k) { return monstersList[k]; }).length;
   const gearTotal = (accessoriesList.length - 1) + (armorList.length - 1);
@@ -50,7 +66,7 @@ function setBookTab(t) { soundClick(); bookTab = t; renderBook(); }
 function bookCard(o) {
   return '<div class="pet-card' + (o.locked ? ' locked' : '') + '"' + (o.style ? ' style="' + o.style + '"' : '') + (o.click ? ' onclick="' + o.click + '"' : '') + '>' +
     (o.rarity ? '<div class="rar-badge" style="color:' + o.rarity.col + '; border-color:' + o.rarity.col + ';">' + o.rarity.name + '</div>' : '') +
-    '<div class="' + (o.locked ? 'silhouette' : '') + '" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">' + o.icon + '</div>' +
+    '<div class="card-pic ' + (o.locked ? 'silhouette' : '') + '" style="font-size: 1.9rem; min-height: 36px; display: flex; align-items: center; justify-content: center;">' + o.icon + '</div>' +
     '<div class="card-name">' + o.name + '</div>' +
     (o.elem ? '<div style="margin: 1px 0;"><span class="element-pill elem-' + o.elem + '">' + o.elem + '</span></div>' : '') +
     (o.extra || '') +
@@ -109,7 +125,7 @@ function renderBook() {
     };
     // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
     const tierHint = function (sp) {
-      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.isJanie ? 'Rarest of all...' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
     };
     buddyPacks().forEach(function (g) { h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint); });
   } else if (bookTab === 'boss') {
@@ -122,7 +138,9 @@ function renderBook() {
       const wk = weakOpForBoss(i);
       h += bookCard({
         icon: m.icon, name: m.name, elem: m.element,
-        extra: wk ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">🎯 Weak: ' + OP_BY_ID[wk].icon + ' ' + OP_BY_ID[wk].label + '</div>' : '',
+        extra: (wk ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">🎯 Weak: ' + OP_BY_ID[wk].icon + ' ' + OP_BY_ID[wk].label + '</div>' : '') +
+          (m.slays ? '<div style="font-size:0.62rem; color:#fca5a5; font-weight:800;">☠️ Beats ' + slayerTarget(m) + '</div>' : '') +
+          (m.buddy ? '<div style="font-size:0.62rem; color:#fde047; font-weight:800;">' + (state.unlockedSecrets.indexOf(m.buddy) !== -1 ? '🏆 Won as buddy' : '🏆 Alpha ' + Math.min(e.alpha || 0, ECON.bossBuddy.alphaWins) + '/' + ECON.bossBuddy.alphaWins) + '</div>' : ''),
         hint: e.wins > 0 ? ('Beaten x' + e.wins + ' • ' + best) : 'Met • not beaten yet',
         hintColor: e.wins > 0 ? '#6ee7b7' : '#fbbf24',
         click: 'openBossCard(' + i + ')'
