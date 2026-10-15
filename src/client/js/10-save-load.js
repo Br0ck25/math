@@ -73,6 +73,15 @@ const NORMALIZERS = [
     r.attempts = asInt(r.attempts, 0, 100000000, 0);
     if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
   },
+  function map(s) {
+    s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
+    if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
+    const g = s.gym;
+    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && s.badges.indexOf(g.region) === -1) {
+      s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
+      s.region = g.region;
+    } else s.gym = null;
+  },
   function held(s) {
     const ids = HELD_ITEMS.map(function (i) { return i.id; });
     s.heldOwned = s.heldOwned.filter(function (id, i) { return ids.indexOf(id) !== -1 && s.heldOwned.indexOf(id) === i; });
@@ -92,6 +101,7 @@ const NORMALIZERS = [
     const w = s.wild;
     const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
     w.id = ok ? w.id : '';
+    w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
     w.since = asInt(w.since, 0, 50, 0);
     w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
     delete w.miss;                                   // an old catch-streak counter

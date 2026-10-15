@@ -151,19 +151,22 @@
 
     <div class="bottom-bar">
       <button class="btn-secondary" onclick="openShop()">
-        🐾 Sanctuary <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
+        🐾 <span class="lbl-long">Sanctuary</span><span class="lbl-short">Pets</span> <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
       </button>
       <button class="btn-secondary" onclick="openQuests()">
         📜 Quests<span class="notif-dot" id="quest-badge">0</span>
       </button>
       <button class="btn-secondary" onclick="openCal()">
-        📅 Calendar<span class="notif-dot" id="cal-badge">0</span>
+        📅 <span class="lbl-long">Calendar</span><span class="lbl-short">Days</span><span class="notif-dot" id="cal-badge">0</span>
       </button>
       <button class="btn-secondary" onclick="openBook()">
         📖 Dex
       </button>
+      <button class="btn-secondary" onclick="openMap()">
+        🗺️ Map
+      </button>
       <button class="btn-secondary" onclick="openSettings()">
-        ⚙️ Settings
+        ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
       </button>
     </div>
   </div>
@@ -628,6 +631,16 @@
       <div class="book-tabs" id="book-tabs"></div>
       <div id="book-body"></div>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeBook()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Map: regions, gyms and badges -->
+  <div class="modal-overlay" id="map-modal" data-close="closeMap">
+    <div class="modal-content">
+      <h2 style="font-size:1.3rem; margin-bottom:2px;">🗺️ Number Kingdom Map</h2>
+      <div class="book-progress" id="map-progress"></div>
+      <div id="map-body"></div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>
     </div>
   </div>
 

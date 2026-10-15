@@ -94,7 +94,8 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       soundMonsterDefeated();
       launchConfetti(wild ? 'streak' : 'boss');
       screenShake(!wild);
-      if (wild) state.wild.since += 1;
+      const leaderFight = !wild && inGymLeaderFight();
+      if (wild) { if (!state.gym) state.wild.since += 1; }       // gym battles do not count toward the next boss
       else {
         questEvent('boss');
         if (bossMistakes === 0) questEvent('flawless');
@@ -105,6 +106,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       buddyReact('win');
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      if (boss.trainer) gemBonus += ECON.map.trainerGems;
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();
@@ -120,7 +122,8 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         showPopup('✨ ALL BUDDIES REVIVED!');
       }
 
-      if (wild) rollCatch(wildId, bossMistakes === 0); else checkForSecretLootDrop(hadCasualties);
+      const gymWin = state.gym ? advanceGym(leaderFight) : null;
+      if (wild) { if (!boss.trainer) rollCatch(wildId, bossMistakes === 0); } else checkForSecretLootDrop(hadCasualties);
       showPopup(`VICTORY! +${gemBonus} 💎`);
 
       const shouldTriggerVault = !wild && (state.monstersDefeated % 2 === 0);
@@ -131,7 +134,9 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         saveState();
         if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
         const nb = getBossInfo();
-        toast((nb.wild ? '' : '⚠️ BOSS TIME! ') + `A wild Lv ${nb.level} ${nb.name} appeared!` + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
+        const lead = nb.trainer ? '🏟️ ' : nb.wild ? '' : state.gym ? '🏟️ GYM LEADER! ' : '⚠️ BOSS TIME! ';
+        toast(lead + (nb.trainer ? `${nb.name} (Lv ${nb.level}) wants to battle!` : `A wild Lv ${nb.level} ${nb.name} appeared!`) + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
+        if (gymWin) enqueueModal(function () { showBadgeStory(gymWin); });
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);

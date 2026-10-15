@@ -31,6 +31,12 @@ const ECON = {
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12 },
+  // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
+  // Winning the gym gives a badge and gems; all six badges make you Champion.
+  map: {
+    levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
+    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250
+  },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.

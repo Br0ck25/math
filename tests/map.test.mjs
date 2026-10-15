@@ -1,0 +1,171 @@
+// The map: regions, gyms, badges, rival.
+import { test, before, after, beforeEach } from 'node:test';
+import assert from 'node:assert/strict';
+import { launch, loadWorker, fakeKV, openGame } from './helpers.mjs';
+
+let browser, worker, env, page, errors;
+before(async () => {
+  browser = await launch();
+  worker = await loadWorker();
+  env = { MATH_KV: fakeKV() };
+  ({ page, errors } = await openGame(browser, worker, env, { fast: true, wildStart: true }));
+});
+after(async () => { await browser.close(); });
+beforeEach(async () => {
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  errors.length = 0;
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; });
+});
+
+const beat = () => page.evaluate(async () => {
+  monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
+  triggerMonsterDamage(99, false);
+  await new Promise((res) => setTimeout(res, 1500));
+  document.getElementById('raid-modal').style.display = 'none'; modalDone();
+});
+
+test('the map lists seven lands; the others open by level and travelling to a locked one is refused', async () => {
+  const r = await page.evaluate(() => {
+    state.buddyXp.dog = xpForLevel(10);
+    openMap();
+    const rows = document.querySelectorAll('#map-body .map-row').length;
+    const locked = document.querySelectorAll('#map-body .map-row.locked').length;
+    const text = document.getElementById('map-body').innerText;
+    travelTo('tide'); const refused = state.region;
+    travelTo('ember'); const ok = state.region;
+    state.buddyXp.dog = xpForLevel(50);
+    return { rows, locked, refused, ok, text, unlocked: REGIONS.filter(regionUnlocked).map((x) => x.id), prog: document.getElementById('map-progress').innerText };
+  });
+  assert.equal(r.rows, 7);
+  assert.equal(r.locked, 5, 'at level 10 only the meadow and Ember Hills are open');
+  assert.match(r.text, /Reach Lv 16/);
+  assert.equal(r.refused, 'meadow');
+  assert.equal(r.ok, 'ember');
+  assert.deepEqual(r.unlocked, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']);
+  assert.match(r.prog, /Badges 0\/6/);
+});
+
+test('travelling makes that land\'s type more common, and tints the arena', async () => {
+  const r = await page.evaluate(() => {
+    state.buddyXp.dog = xpForLevel(30); state.region = 'tide';
+    const real = Math.random; const counts = { water: 0, other: 0 };
+    for (let i = 0; i < 60; i++) { state.wild.id = ''; pickNextWild(); (getSpecies(state.wild.id).element === 'water' ? counts.water++ : counts.other++); }
+    Math.random = real;
+    updateBattleUI();
+    return { counts, tint: document.getElementById('battle-header-arena').style.getPropertyValue('--region'), hint: document.getElementById('type-match-hint').innerText };
+  });
+  assert.ok(r.counts.water > 40, 'mostly water buddies: ' + JSON.stringify(r.counts));
+  assert.ok(r.tint.length > 0);
+  assert.ok(r.hint.startsWith('🌊'), r.hint);
+});
+
+test('a gym: three trainers (the second is your rival, none can be caught), then a leader of that type; the badge pays and ends the gym', async () => {
+  const r = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = {};
+    state.buddyXp.dog = xpForLevel(30); state.unlockedPets = ['dog', 'fox'];
+    startGym('ember');
+    document.getElementById('raid-modal').style.display = 'none'; modalDone();
+    out.start = [JSON.stringify(state.gym), state.region, getBossInfo().trainer, getBossInfo().element, document.getElementById('weak-chip').innerText];
+    out.since0 = state.wild.since;
+    return out;
+  });
+  assert.equal(r.start[0], '{"region":"ember","step":0}');
+  assert.equal(r.start[1], 'ember');
+  assert.equal(r.start[2], 'Scout Mia');
+  assert.equal(r.start[3], 'fire');
+  assert.match(r.start[4], /🏟️ 1\/4 · Trainer/);
+  const names = [];
+  for (let i = 0; i < 3; i++) {
+    names.push(await page.evaluate(() => getBossInfo().name));
+    const before = await page.evaluate(() => [Object.keys(state.spares).length, state.unlockedPets.length, state.wild.since, state.gems]);
+    await page.evaluate(() => { const real = Math.random; Math.random = () => 0; window.__r = real; });
+    await beat();
+    await page.evaluate(() => { Math.random = window.__r; });
+    const after = await page.evaluate(() => [Object.keys(state.spares).length, state.unlockedPets.length, state.wild.since, state.gems]);
+    assert.equal(after[0], before[0], 'no spare from a trainer');
+    assert.equal(after[1], before[1], 'no catch from a trainer');
+    assert.equal(after[2], before[2], 'gym battles do not count toward the next boss');
+    assert.ok(after[3] > before[3], 'trainers pay');
+  }
+  assert.ok(names[1].startsWith('Rival Riley'), names.join('|'));
+  const leader = await page.evaluate(() => ({ wild: getBossInfo().wild, element: getBossInfo().element, slays: getBossInfo().slays, step: state.gym.step, chip: document.getElementById('weak-chip').innerText }));
+  assert.equal(leader.wild, undefined, 'a boss');
+  assert.equal(leader.element, 'fire');
+  assert.equal(leader.slays, null);
+  assert.equal(leader.step, 3);
+  assert.match(leader.chip, /🏟️ 4\/4 Leader/);
+  const g0 = await page.evaluate(() => state.gems);
+  await beat();
+  const done = await page.evaluate(() => ({ badges: state.badges.slice(), gym: state.gym, gems: state.gems, wild: !!getBossInfo().wild, story: document.getElementById('raid-title').innerText }));
+  assert.deepEqual(done.badges, ['ember']);
+  assert.equal(done.gym, null);
+  assert.ok(done.gems - g0 >= 60, 'badge reward');
+  assert.match(done.story, /Ember Hills Badge/);
+});
+
+test('leaving a gym ends it; a won gym cannot be started again; one gym at a time', async () => {
+  const r = await page.evaluate(() => {
+    state.buddyXp.dog = xpForLevel(50);
+    startGym('ember'); document.getElementById('raid-modal').style.display = 'none'; modalDone();
+    const a = state.gym && state.gym.region;
+    startGym('tide'); const still = state.gym.region;
+    travelTo('tide'); const blocked = state.region;
+    leaveGym(); const left = state.gym;
+    state.badges = ['ember']; startGym('ember'); const again = state.gym;
+    return { a, still, blocked, left, again };
+  });
+  assert.equal(r.a, 'ember');
+  assert.equal(r.still, 'ember');
+  assert.equal(r.blocked, 'ember', 'cannot travel away mid-gym');
+  assert.equal(r.left, null);
+  assert.equal(r.again, null);
+});
+
+test('all six badges make you Champion once, with a bonus', async () => {
+  const r = await page.evaluate(() => {
+    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom']; state.gems = 0; state.gym = { region: 'mystic', step: 3 };
+    const res = advanceGym(true);
+    const again = (state.gym = { region: 'mystic', step: 3 }, state.badges = state.badges.filter((b) => b !== 'mystic'), advanceGym(true));
+    return { champ: res.champion, gems: state.gems, badges: state.badges.length, again: again && again.champion };
+  });
+  assert.equal(r.champ, true);
+  assert.equal(r.badges, 6);
+  assert.equal(r.again, false, 'the Champion bonus is paid once');
+});
+
+test('map data in a save is repaired', async () => {
+  const r = await page.evaluate(() => {
+    state.region = 'nowhere'; state.badges = ['volt', 'volt', 'meadow', 'zzz']; state.gym = { region: 'ember', step: 99 };
+    NORMALIZERS.forEach((fn) => fn(state));
+    const a = { region: state.region, badges: state.badges.slice(), gym: state.gym };
+    state.gym = { region: 'volt', step: 1 };                       // already has the badge
+    NORMALIZERS.forEach((fn) => fn(state));
+    const b = state.gym;
+    state.wild = { id: '', trainer: 'Hacker', since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state));
+    return { a, b, trainer: state.wild.trainer };
+  });
+  assert.equal(r.a.region, 'ember', 'a gym in progress keeps you in its land');
+  assert.deepEqual(r.a.badges, ['volt']);
+  assert.deepEqual(r.a.gym, { region: 'ember', step: 3 }, 'step is capped');
+  assert.equal(r.b, null);
+  assert.equal(r.trainer, '');
+});
+
+test('the first time the map opens, the journey story shows once; new lands announce themselves', async () => {
+  const r = await page.evaluate(() => {
+    state.storySeen = {}; openMap();
+    const first = document.getElementById('raid-modal').style.display === 'flex' && /Number Kingdom Map/.test(document.getElementById('raid-title').innerText);
+    document.getElementById('raid-modal').style.display = 'none'; closeMap();
+    openMap(); const second = document.getElementById('raid-modal').style.display;
+    closeMap();
+    state.buddyXp.dog = xpForLevel(9); checkRegionUnlocks(); const msg = document.getElementById('toast').innerText;
+    return { first, second, msg };
+  });
+  assert.equal(r.first, true);
+  assert.equal(r.second, 'none');
+  assert.match(r.msg, /New land open: 🌋 Ember Hills/);
+});
+
+test('no errors', () => { assert.deepEqual(errors, []); });

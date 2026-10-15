@@ -69,6 +69,10 @@ function updateBattleUI() {
     hint.style.color = 'var(--text-muted)';
   }
 
+  const region = currentRegion();
+  document.getElementById('battle-header-arena').style.setProperty('--region', region.element ? elemColor(region.element) : '');
+  if (region.element) hint.innerText = region.icon + ' ' + hint.innerText;           // the land you are in
+
   document.getElementById('ult-bar').style.width = `${Math.round((ultimateCharge / 3) * 100)}%`;
   const ultBtn = document.getElementById('ult-btn');
   if (ultimateCharge >= 3) {

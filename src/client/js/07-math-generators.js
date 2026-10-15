@@ -396,14 +396,20 @@ function updateWeakChip() {
   const chip = document.getElementById('weak-chip');
   if (!chip) return;
   const r = state.raid;
+  const gym = state.gym ? '🏟️ ' + Math.min(state.gym.step + 1, ECON.map.trainers + 1) + '/' + (ECON.map.trainers + 1) : '';
+  if (state.wild.id && state.wild.trainer) {
+    chip.innerText = gym + ' · Trainer';
+    chip.title = 'A gym trainer: beat all of them, then the leader. Trainer buddies cannot be caught.';
+    return;
+  }
   if (state.wild.id) {
     chip.innerText = '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%' + (state.nets > 0 ? ' 🕸️' : '');
     chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, a Catch Net doubles it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%.';
     return;
   }
   const w = getWeakOp();
-  const head = r ? '👑 ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
-  chip.innerText = (w || r) ? head + (w ? '🎯 Weak: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
+  const head = (gym ? gym + ' Leader' + (w ? ' · ' : '') : '') + (r ? '👑 ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '');
+  chip.innerText = (w || r || gym) ? head + (w ? '🎯 Weak: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
   chip.title = w ? 'Weak point: solve ' + OP_BY_ID[w].label + ' problems to hit harder' + (r ? ' (raid phase ' + (r.phase + 1) + ' of ' + r.total + ')' : '') : '';
 }
 

@@ -55,7 +55,7 @@ function wildCard(id, level) {
   const sp = getSpecies(id), st = wildStats(level), owned = getOwnedIds().indexOf(id) !== -1;
   return {
     name: sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: rarityOf(id), stars: 1,
-    stats: [['❤️', st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', Math.round(wildCatchChance(sp) * 100) + '%', 'Catch']],
+    stats: [['❤️', st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp) * 100) + '%', 'Catch']],
     line: '⚡ ' + sp.superMove, foot: owned ? '✅ In your collection' + (spareCount(id) ? ' · ' + spareCount(id) + ' spare' + (spareCount(id) > 1 ? 's' : '') : '') : '🆕 Not in your collection yet',
     sleepy: false, stage: 0, gear: { acc: null, armor: null }
   };

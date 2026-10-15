@@ -32,13 +32,19 @@ function spareValueOf(id) {
 
 function pickNextWild() {
   const pool = wildPool();
-  const store = pool.filter(isStoreBuddy), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
+  let store = pool.filter(isStoreBuddy), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
+  const region = currentRegion();
+  if (region.element && Math.random() < ECON.map.regionShare) {          // the land you are in: more of its type
+    const ofType = function (list) { const l = list.filter(function (p) { return p.element === region.element; }); return l.length ? l : list; };
+    store = ofType(store); secret = ofType(secret);
+  }
   let sp;
   for (let tries = 0; tries < 5; tries++) {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);
     if (sp.id !== state.wild.id) break;
   }
   state.wild.id = sp.id;
+  state.wild.trainer = '';
   markDexSeen(sp.id);
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
@@ -52,6 +58,7 @@ function pickNextWild() {
 }
 // Picks what comes next: a wild buddy, or a boss once enough wild buddies have been beaten.
 function pickNextFoe() {
+  if (state.gym) { pickGymFoe(); return; }
   const w = state.wild;
   if (w.since >= w.next) pickNextBoss();
   else pickNextWild();

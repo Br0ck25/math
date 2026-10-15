@@ -110,6 +110,7 @@ function awardBuddyXp(amount) {
     launchConfetti('level');
     const learned = movesBetween(before.level, after.level);
     toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!' + (learned.length ? ' ✨ Learned ' + learned.map(function (m) { return moveName(m, after); }).join(', ') + '!' : ''));
+    checkRegionUnlocks();
     if (after.stage > before.stage) {
       state.gems += ECON.evolveGems;
       enqueueModal(function () { openEvoModal(before, after); });
