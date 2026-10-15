@@ -99,6 +99,15 @@ function updateTeamBar() {
     bar.appendChild(b);
   });
 }
+// Every way of changing your fighter (team chips, the Sanctuary, a new catch) shares the one free swap of each battle.
+// Returns true when the swap happened; a refusal says why.
+function useSwap(id) {
+  if (id === state.activePet) return false;
+  if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return false; }
+  state.activePet = id;
+  state.swapUsed = true;
+  return true;
+}
 function swapBuddy(id) {
   if (id === state.activePet) return;
   if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return; }

@@ -148,4 +148,36 @@ test('pressing and holding a team chip opens the team picker; a quick tap still 
   assert.match(r.heading, /Your team: pick up to 3 buddies/);
 });
 
+test('the Sanctuary, a new catch and the team chips share one swap per battle', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    const ids = storePets.slice(0, 3).map((x) => x.id);
+    state.unlockedPets = ids; state.team = ids.slice(); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; state.gems = 100000;
+    equipPet(ids[1]); out.shop = [state.activePet === ids[1], state.swapUsed];
+    equipPet(ids[2]); out.shopAgain = state.activePet === ids[1];
+    swapBuddy(ids[0]); out.chip = state.activePet === ids[1];
+    equipPet(ids[1]); out.same = state.swapUsed;
+    // a new catch only becomes your fighter while the swap is free
+    pendingLootPet = getSpecies(ids[0]); closeLootModal(true); out.loot = state.activePet === ids[1];
+    state.swapUsed = false; pendingLootPet = getSpecies(ids[2]); closeLootModal(true); out.lootFree = [state.activePet === ids[2], state.swapUsed];
+    // adopting from the shop while the swap is used does not take over
+    state.swapUsed = true; const buy = storePets.find((x) => x.cost > 0 && !x.requiresAllStorePets && !ids.includes(x.id) && state.unlockedPets.indexOf(x.id) === -1);
+    state.activePet = ids[0]; selectOrBuyPet(buy);
+    out.adopt = [state.unlockedPets.includes(buy.id), state.activePet === ids[0]];
+    // a new battle gives a new swap
+    monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
+    await new Promise((res) => setTimeout(res, 1500));
+    out.fresh = state.swapUsed === false;
+    return out;
+  });
+  assert.deepEqual(r.shop, [true, true], 'the Sanctuary equip uses the swap');
+  assert.equal(r.shopAgain, true, 'a second Sanctuary swap is refused');
+  assert.equal(r.chip, true, 'and so is a team chip swap');
+  assert.equal(r.same, true);
+  assert.equal(r.loot, true, 'a caught buddy does not take over once the swap is used');
+  assert.deepEqual(r.lootFree, [true, true]);
+  assert.deepEqual(r.adopt, [true, true], 'adopted but not equipped');
+  assert.equal(r.fresh, true);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

@@ -157,7 +157,7 @@ function equipPet(id) {
     toast(`${getPetById(id).name} is resting! Beat a boss to revive your team.`);
     return;
   }
-  state.activePet = id;
+  if (id !== state.activePet && !useSwap(id)) return;
   soundClick();
   saveState();
   rerenderShop();
@@ -199,10 +199,10 @@ function selectOrBuyPet(pet) {
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);
   checkEarnedGear();
-  state.activePet = pet.id;
+  const fights = !state.swapUsed && useSwap(pet.id);             // a new buddy only takes over if this battle's swap is still free
   soundLevelUp();
   launchConfetti();
-  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!`);
+  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' You can switch to it in the next battle.'));
   saveState();
   rerenderShop();
 }

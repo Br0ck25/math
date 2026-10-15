@@ -93,10 +93,7 @@ function showLootModal(pet, lootCategory) {
 
 function closeLootModal(equipNow) {
   soundClick();
-  if (equipNow && pendingLootPet) {
-    state.activePet = pendingLootPet.id;
-    saveState();
-  }
+  if (equipNow && pendingLootPet && useSwap(pendingLootPet.id)) saveState();
   document.getElementById('loot-modal').style.display = 'none';
   pendingLootPet = null;
   updateStatsUI();
