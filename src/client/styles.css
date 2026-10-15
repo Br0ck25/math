@@ -1082,7 +1082,8 @@
   .fighter-top { gap: 6px; }
   .fighter-card { padding: 5px 6px; }
   .fighter-card .fighter-name { font-size: 0.76rem; }
-  .fighter-tag .element-pill, .lv-pill { font-size: 0.56rem; padding: 1px 4px; }
+  .fighter-tag { gap: 2px; }
+  .fighter-tag .element-pill, .lv-pill { font-size: 0.56rem; padding: 1px 3px; letter-spacing: 0.2px; }     /* tight on purpose: wider fonts (DejaVu on CI, iPhone) must keep the row on one line */
 }
 
 /* ===== close button that stays in view while a window scrolls ===== */
