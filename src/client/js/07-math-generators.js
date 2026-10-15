@@ -439,6 +439,7 @@ function generateProblem() {
   questionStartTime = Date.now();
   padReset();
   renderEquationUI();
+  holdForSwitch();
 }
 
 function renderEquationUI() {

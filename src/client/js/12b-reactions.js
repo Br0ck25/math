@@ -61,6 +61,33 @@ function teamMatchup(id, boss) {
   if (rel === -1) return { icon: '⚠️', mult: 'x0.5', cls: 'bad' };
   return { icon: '', mult: 'x1', cls: '' };
 }
+// ----- a fainted fighter must be replaced by a teammate who can still fight -----
+function needsSwitch() { return state.faintedPets.indexOf(state.activePet) !== -1; }
+function aliveTeamIds() { return getTeam().filter(function (id) { return state.faintedPets.indexOf(id) === -1; }); }
+function sendInReplacement(id) {
+  state.activePet = id;
+  const p = getPetById(id);
+  soundClick();
+  showPopup('🎒 ' + p.name.toUpperCase() + ', GO!');
+  inputLocked = false;
+  generateProblem();
+  document.getElementById('feedback-msg').innerText = 'Go, ' + p.name + '!';
+  buddyReact('cheer');
+  saveState();
+  updateStatsUI();
+}
+// Called whenever a new problem is made: if the fighter is fainted, wait for a teammate, or (no teammate left) bring in the strongest buddy that can fight.
+function holdForSwitch() {
+  if (!needsSwitch()) return;
+  if (aliveTeamIds().length) {
+    inputLocked = true;
+    document.getElementById('feedback-msg').innerText = getActivePetDisplay().name + ' needs rest! Tap a teammate to send in.';
+    return;
+  }
+  const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
+  if (alive.length) { alive.sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }); state.activePet = alive[0]; }
+  else { state.faintedPets = []; partyHp = {}; }
+}
 const LONG_PRESS_MS = 500;
 // The team picker is the Cup tab of the buddy hub.
 function openTeamPicker() {
@@ -74,6 +101,8 @@ function updateTeamBar() {
   const ids = getTeam();
   if (ids.length < 2) { bar.innerHTML = ''; return; }
   const boss = getBossInfo();
+  const picking = needsSwitch();
+  bar.classList.toggle('pick', picking);
   if (getOwnedIds().length >= 4 && !state.storySeen.teamHint) {          // one-time tip
     state.storySeen.teamHint = 1;
     toast('💡 Tip: press and hold a buddy under the arena to change your team');
@@ -84,8 +113,8 @@ function updateTeamBar() {
     const resting = state.faintedPets.indexOf(id) !== -1;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (state.swapUsed && id !== state.activePet) ? ' resting' : '');
-    const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
+    b.className = 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (!picking && state.swapUsed && id !== state.activePet) ? ' resting' : '');
+    const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : picking ? 'send it in' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
     b.setAttribute('aria-label', label);
     b.title = label + ' (press and hold to change your team)';
     b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-badge" aria-hidden="true">' + (resting ? '💤' : mu.icon) + '</span>';
@@ -103,6 +132,11 @@ function updateTeamBar() {
 // Returns true when the swap happened; a refusal says why.
 function useSwap(id) {
   if (id === state.activePet) return false;
+  if (needsSwitch()) {                                           // your fighter fainted: a teammate must take over (this is not the battle's free swap)
+    if (aliveTeamIds().indexOf(id) === -1) { soundWrong(); toast('Pick a buddy from your team to send in.'); return false; }
+    sendInReplacement(id);
+    return true;
+  }
   if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return false; }
   state.activePet = id;
   state.swapUsed = true;
@@ -110,8 +144,9 @@ function useSwap(id) {
 }
 function swapBuddy(id) {
   if (id === state.activePet) return;
-  if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return; }
   if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast(getPetById(id).name + ' is resting! Beat a boss to revive your team.'); return; }
+  if (needsSwitch()) { useSwap(id); return; }
+  if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return; }
   state.activePet = id;
   state.swapUsed = true;
   soundClick();

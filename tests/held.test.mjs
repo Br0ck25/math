@@ -180,4 +180,60 @@ test('the Sanctuary, a new catch and the team chips share one swap per battle', 
   assert.equal(r.fresh, true);
 });
 
+test('when your fighter faints and a teammate can still fight, you choose who comes next, and answering waits', async () => {
+  const r = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = {};
+    const ids = storePets.slice(0, 4).map((x) => x.id);
+    state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.faintedPets = []; state.swapUsed = false; state.shields = 0;
+    state.buddyXp[ids[0]] = xpForLevel(30);
+    state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 60; partyHp = {}; clearBuddyStatus(); guardUp = false; heldUsed = {};
+    setPetHp(ids[0], 1); monsterCurrentHp = 99; inputLocked = false;
+    const real = Math.random; Math.random = () => 0.99;
+    userInput = String(currentProblem.answer + 7); checkAnswer();
+    await wait(1500); Math.random = real;
+    out.fainted = [state.faintedPets.includes(ids[0]), state.activePet === ids[0], needsSwitch(), inputLocked];
+    out.msg = document.getElementById('feedback-msg').innerText;
+    out.pick = document.getElementById('team-bar').classList.contains('pick');
+    userInput = '5'; const before = monsterCurrentHp; pressKey('5'); checkAnswer(); out.blocked = monsterCurrentHp === before;
+    swapBuddy(ids[0]); out.restingRefused = state.activePet === ids[0];
+    equipPet(ids[3]); out.nonTeam = state.activePet === ids[0];          // not on the team: refused
+    swapBuddy(ids[2]);
+    out.sent = [state.activePet === ids[2], inputLocked, state.swapUsed, needsSwitch()];
+    // the battle's free swap is still there afterwards
+    swapBuddy(ids[1]); out.stillFree = state.activePet === ids[1];
+    return out;
+  });
+  assert.deepEqual(r.fainted, [true, true, true, true], 'fainted, not replaced, and waiting');
+  assert.match(r.msg, /Tap a teammate/);
+  assert.equal(r.pick, true, 'the team chips glow');
+  assert.equal(r.blocked, true, 'cannot answer until a teammate is chosen');
+  assert.equal(r.restingRefused, true);
+  assert.equal(r.nonTeam, true, 'only team members can come in');
+  assert.deepEqual(r.sent, [true, false, false, false], 'the teammate is in, answering works, and the free swap is untouched');
+  assert.equal(r.stillFree, true);
+});
+
+test('when no teammate can fight any more, the strongest buddy that can fight comes in; when everyone has fainted the team is revived', async () => {
+  const r = await page.evaluate(async () => {
+    const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+    const out = {};
+    const ids = storePets.slice(0, 3).map((x) => x.id);
+    state.unlockedPets = ids; state.team = ids.slice(0, 2); state.activePet = ids[0]; state.faintedPets = [ids[1]]; state.shields = 0;
+    state.buddyXp[ids[2]] = xpForLevel(20);
+    state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 60; partyHp = {}; setPetHp(ids[0], 1); monsterCurrentHp = 99; inputLocked = false;
+    const real = Math.random; Math.random = () => 0.99;
+    userInput = String(currentProblem.answer + 7); checkAnswer();
+    await wait(2500);
+    out.auto = [state.activePet === ids[2], state.faintedPets.includes(ids[0]), needsSwitch()];
+    state.faintedPets = [ids[0], ids[1]]; state.activePet = ids[2]; partyHp = {}; setPetHp(ids[2], 1); inputLocked = false;
+    userInput = String(currentProblem.answer + 7); checkAnswer();
+    await wait(2500); Math.random = real;
+    out.revived = [state.faintedPets.length, needsSwitch()];
+    return out;
+  });
+  assert.deepEqual(r.auto, [true, true, false], 'no teammate left: the strongest buddy that can fight comes in');
+  assert.deepEqual(r.revived, [0, false], 'everyone fainted: revived');
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

@@ -234,6 +234,14 @@ function triggerBuddyDamage() {
     toast('💤 ' + pet.name + ' is sleepy and needs a rest');
     if (state.faintedPets.indexOf(id) === -1) state.faintedPets.push(id);
 
+    if (aliveTeamIds().length) {          // a teammate can still fight: the player chooses who goes next, and answering waits for that
+      showPopup(`💔 ${pet.name} FAINTED!`);
+      document.getElementById('feedback-msg').innerText = `${pet.name} needs rest! Tap a teammate to send in.`;
+      updateStatsUI();
+      saveState();
+      return;
+    }
+
     const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
     if (alive.length === 0) {
       state.faintedPets = [];
