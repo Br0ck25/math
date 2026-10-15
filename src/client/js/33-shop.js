@@ -157,7 +157,11 @@ function equipPet(id) {
     toast(`${getPetById(id).name} is resting! Beat a boss to revive your team.`);
     return;
   }
-  if (id !== state.activePet && !useSwap(id)) return;
+  if (getTeam().indexOf(id) === -1) {                              // not on the team yet: join if there is room, otherwise choose who it replaces
+    if (!joinTeamIfRoom(id)) { openReplaceModal(id); return; }
+    toast('🎒 ' + getPetById(id).name + ' joined your team!');
+  }
+  if (id !== state.activePet && !useSwap(id)) { saveState(); rerenderShop(); return; }
   soundClick();
   saveState();
   rerenderShop();
@@ -202,9 +206,10 @@ function selectOrBuyPet(pet) {
   const fights = !state.swapUsed && joinTeamIfRoom(pet.id) && useSwap(pet.id);    // a new buddy fights only if the team has room and this battle's swap is still free
   soundLevelUp();
   launchConfetti();
-  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' It is in your collection: put it on your team to fight with it.'));
+  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' Your team is full: choose who it replaces, or leave it in your collection.'));
   saveState();
   rerenderShop();
+  if (getTeam().indexOf(pet.id) === -1) openReplaceModal(pet.id);          // the team is full: offer to swap it in
 }
 
 // Fills "<name>-pet-grid" with the owned buddies of a short list and "<name>-found-count" / "<name>-total-count" with the totals.

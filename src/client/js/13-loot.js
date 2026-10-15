@@ -94,9 +94,10 @@ function showLootModal(pet, lootCategory) {
 function closeLootModal(equipNow) {
   soundClick();
   if (equipNow && pendingLootPet && joinTeamIfRoom(pendingLootPet.id) && useSwap(pendingLootPet.id)) saveState();
-  else if (equipNow && pendingLootPet && getTeam().indexOf(pendingLootPet.id) === -1) toast('Your team is full: put ' + pendingLootPet.name + ' on your team to fight with it.');
   document.getElementById('loot-modal').style.display = 'none';
+  const offer = equipNow && pendingLootPet && getTeam().indexOf(pendingLootPet.id) === -1 ? pendingLootPet.id : '';
   pendingLootPet = null;
   updateStatsUI();
   modalDone();
+  if (offer) openReplaceModal(offer);                  // the team is full: choose who the new buddy replaces
 }

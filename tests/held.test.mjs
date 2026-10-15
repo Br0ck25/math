@@ -236,7 +236,9 @@ test('only team members can fight: the Sanctuary refuses an outsider, the picker
     const out = {};
     const ids = storePets.slice(0, 5).map((x) => x.id);
     state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; state.gems = 100000;
-    equipPet(ids[4]); out.outsider = [state.activePet === ids[0], state.swapUsed, document.getElementById('toast').innerText];
+    equipPet(ids[4]); out.outsider = [state.activePet === ids[0], state.swapUsed, document.getElementById('replace-modal').style.display];     // a full team: it asks who to replace
+    closeReplace();
+    swapBuddy(ids[4]); out.chipOutsider = [state.activePet === ids[0], state.swapUsed];
     equipPet(ids[1]); out.member = state.activePet === ids[1];
     // the fighter stays on the team
     hubPet = ids[1]; toggleTeam(ids[1]); out.stay = getTeam().includes(ids[1]);
@@ -248,11 +250,11 @@ test('only team members can fight: the Sanctuary refuses an outsider, the picker
     out.room = [joinTeamIfRoom('x1'), joinTeamIfRoom(ids[1]), getTeam().length];
     state.team = ids.slice(0, 3); out.full = joinTeamIfRoom(ids[3]);
     state.activePet = ids[0]; state.swapUsed = false; pendingLootPet = getSpecies(ids[4]); closeLootModal(true);
-    out.loot = [state.activePet === ids[0], document.getElementById('toast').innerText];
+    out.loot = [state.activePet === ids[0], document.getElementById('replace-modal').style.display]; closeReplace();
     return out;
   });
-  assert.deepEqual(r.outsider.slice(0, 2), [true, false], 'an outsider cannot be equipped, and no swap is used');
-  assert.match(r.outsider[2], /Only your team can fight/);
+  assert.deepEqual(r.outsider, [true, false, 'flex'], 'an outsider does not fight; the Sanctuary asks who it should replace');
+  assert.deepEqual(r.chipOutsider, [true, false]);
   assert.equal(r.member, true);
   assert.equal(r.stay, true, 'the fighter cannot be taken off the team');
   assert.deepEqual(r.replaced, [3, true, true, false], 'a full team drops the oldest buddy that is not the fighter');
@@ -260,7 +262,48 @@ test('only team members can fight: the Sanctuary refuses an outsider, the picker
   assert.deepEqual(r.room.slice(1), [true, 2]);
   assert.equal(r.full, false);
   assert.deepEqual([r.loot[0]], [true]);
-  assert.match(r.loot[1], /team is full/);
+  assert.equal(r.loot[1], 'flex', 'a full team asks who the new buddy replaces');
+});
+
+test('the Sanctuary: a buddy that is not on a full team asks which team buddy it replaces', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const ids = storePets.slice(0, 5).map((x) => x.id);
+    const reset = () => { state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; document.getElementById('replace-modal').style.display = 'none'; };
+    reset();
+    equipPet(ids[3]);
+    const btns = () => [...document.querySelectorAll('#replace-options .move-btn')];
+    out.asks = [document.getElementById('replace-modal').style.display, document.getElementById('replace-title').innerText, btns().length, btns().map((b) => b.disabled).join()];
+    btns()[1].click();                                    // replace the second team buddy (not fighting)
+    out.second = [JSON.stringify(getTeam()) === JSON.stringify([ids[0], ids[3], ids[2]]), state.activePet === ids[0], state.swapUsed, document.getElementById('replace-modal').style.display];
+    // replacing the fighter: the new buddy takes over and uses the swap
+    reset(); equipPet(ids[3]); btns()[0].click();
+    out.fighter = [state.activePet === ids[3], state.swapUsed, getTeam().includes(ids[0]), getTeam().includes(ids[3])];
+    // the swap is used: the fighter cannot be replaced; a resting buddy cannot be replaced
+    reset(); state.swapUsed = true; state.faintedPets = [ids[2]]; equipPet(ids[3]);
+    out.locked = btns().map((b) => b.disabled).join();
+    btns()[0].click(); out.stillTeam = JSON.stringify(getTeam()) === JSON.stringify([ids[0], ids[1], ids[2]]);
+    closeReplace();
+    // room on the team: it joins and takes over (the swap is free)
+    reset(); state.team = [ids[0], ids[1]]; equipPet(ids[3]);
+    out.room = [getTeam().includes(ids[3]), state.activePet === ids[3], document.getElementById('replace-modal').style.display];
+    // a resting team buddy stays on the team in the picker too
+    reset(); state.faintedPets = [ids[1]]; hubPet = ids[0]; toggleTeam(ids[1]); out.pickerResting = getTeam().includes(ids[1]);
+    // keep my team
+    reset(); equipPet(ids[3]); closeReplace(); out.kept = [getTeam().includes(ids[3]), document.getElementById('replace-modal').style.display];
+    return out;
+  });
+  assert.equal(r.asks[0], 'flex');
+  assert.match(r.asks[1], /Which buddy should .* replace\?/);
+  assert.equal(r.asks[2], 3);
+  assert.equal(r.asks[3], 'false,false,false', 'all three can be replaced (nobody is resting, the swap is free)');
+  assert.deepEqual(r.second, [true, true, false, 'none'], 'a team buddy was replaced; the fighter and the swap are untouched');
+  assert.deepEqual(r.fighter, [true, true, false, true], 'replacing the fighter puts the new buddy in the fight and uses the swap');
+  assert.equal(r.locked, 'true,false,true', 'the fighter (swap used) and the resting buddy cannot be replaced');
+  assert.equal(r.stillTeam, true);
+  assert.deepEqual(r.room, [true, true, 'none']);
+  assert.equal(r.pickerResting, true);
+  assert.deepEqual(r.kept, [false, 'none']);
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

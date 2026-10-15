@@ -144,6 +144,7 @@ function useSwap(id) {
 }
 function swapBuddy(id) {
   if (id === state.activePet) return;
+  if (getTeam().indexOf(id) === -1) { soundWrong(); return; }               // only team buddies can fight
   if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast(getPetById(id).name + ' is resting! Beat a boss to revive your team.'); return; }
   if (needsSwitch()) { useSwap(id); return; }
   if (state.swapUsed) { soundWrong(); toast('You already swapped buddies in this battle.'); return; }
