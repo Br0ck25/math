@@ -1244,3 +1244,12 @@
 .mood-bubble { top: 2px; right: 2px; }
 .boss-box .boss-bubble { left: 2px; right: auto; }
 .fighter-icon-wrapper.napping::after { top: 0; right: 0; }
+
+/* ===== Moves sheet ===== */
+.moves-list { display: flex; flex-direction: column; gap: 6px; }
+.move-btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 6px 10px; text-align: left; background: #0f172a; border: 2px solid #6366f1; border-radius: 12px; color: var(--text); font: inherit; cursor: pointer; }
+.move-btn .mv-icon { font-size: 1.6rem; flex: 0 0 auto; }
+.move-btn .mv-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.move-btn .mv-main small { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; }
+.move-btn .mv-cost { flex: 0 0 auto; font-weight: 900; color: #fde047; }
+.move-btn.off { opacity: 0.5; border-color: var(--card-border); cursor: default; }

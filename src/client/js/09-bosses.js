@@ -131,6 +131,7 @@ function pickNextBoss() {
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-2, 3), 1, MAX_LEVEL);
   state.bossSwapped = false;
   state.swapUsed = false;
+  resetBattleEffects();
   state.raid = null;
   if (state.monstersDefeated > 0 && state.monstersDefeated % ECON.raid.every === 0 && state.lastRaidAt !== state.monstersDefeated) {
     startRaid();

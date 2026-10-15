@@ -38,6 +38,7 @@ function pickNextWild() {
   state.bossLevel = bossLevel;
   state.bossSwapped = false;
   state.swapUsed = false;
+  resetBattleEffects();
   state.raid = null;
   monsterCurrentHp = getBossMaxHp();
   partyHp = {};

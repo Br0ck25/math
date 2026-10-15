@@ -29,7 +29,8 @@ function screenShake(strong) {
   setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
 }
 
-function triggerMonsterDamage(extraDamage, weakHit, fast) {
+function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
+  const weakened = hasStatus('weak');               // read now: the status may run out at the end of this answer
   extraDamage = extraDamage || 0;
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterIcon = document.getElementById('monster-icon');
@@ -73,6 +74,8 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
       damage = Math.max(damage + 1, Math.ceil(damage * 1.5));
       showPopup('🎯 WEAK POINT! 💥');
     }
+    if (dmgMult && dmgMult < 1) damage = Math.max(1, Math.floor(damage * dmgMult));
+    if (weakened) damage = Math.max(1, damage - 1);
     monsterCurrentHp -= damage;
     if (monsterCurrentHp > 0) bossReact(fast ? 'fast' : (weakHit || rel === 1) ? 'wow' : monsterCurrentHp <= boss.maxHp / 4 ? 'angry' : 'flinch');
 
@@ -157,6 +160,18 @@ function triggerBuddyDamage() {
   const boss = getBossInfo();
   const pet = getActivePetDisplay();
   const id = pet.id;
+  const burned = hasStatus('burn');                // read now: the status may run out at the end of this answer
+  if (guardUp) {                                   // Guard blocks this hit completely (the combo still ends)
+    guardUp = false;
+    state.streak = 0;
+    soundShieldBreak();
+    showPopup('🛡️ BLOCKED! NO DAMAGE');
+    document.getElementById('feedback-msg').innerText = 'Guard held! ' + missLine(parseFloat(userInput), currentProblem.answer);
+    updateStatsUI();
+    saveState();
+    scheduleNextProblem(1300, 'Nice guard — try again!');
+    return;
+  }
   const monsterIcon = document.getElementById('monster-icon');
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterFx = document.getElementById('monster-attack-fx');
@@ -180,7 +195,7 @@ function triggerBuddyDamage() {
     screenShake(false);
     bossReact('laugh');
 
-    let incoming = boss.atk;
+    let incoming = boss.atk + (burned ? 1 : 0);
     const rel = getTypeRelation(boss.element, battleElement(pet));
     if (rel === 1) incoming += 1;
     else if (rel === -1) incoming = Math.max(1, incoming - 1);
@@ -192,6 +207,7 @@ function triggerBuddyDamage() {
 
     setPetHp(id, getPetHp(id) - incoming);
     state.streak = 0;
+    if (getPetHp(id) > 0) maybeInflictStatus(boss);
     ultimateCharge = 0;
 
     if (getPetHp(id) > 0) {
@@ -289,7 +305,9 @@ function checkAnswer() {
     recordAdaptive(opId, true, isFast);
     awardBuddyXp(xpEarned);
 
-    triggerMonsterDamage(0, opId === getWeakOp(), isFast);
+    const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
+    if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
+    triggerMonsterDamage(0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
     let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
     if (state.cloverLeft > 0) {
@@ -321,6 +339,7 @@ function checkAnswer() {
       }, 800);
     }
 
+    tickStatus();
     updateStatsUI();
     saveState();
     scheduleNextProblem(500, 'Ready for the next one!');
@@ -353,5 +372,6 @@ function checkAnswer() {
       triggerBuddyDamage();
       saveState();
     }
+    tickStatus();
   }
 }

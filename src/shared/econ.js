@@ -29,6 +29,10 @@ const ECON = {
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12 },
+  // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
+  status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
+  // Moves (12c-moves.js): Recover heals this share of max HP.
+  moves: { healShare: 0.4 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },

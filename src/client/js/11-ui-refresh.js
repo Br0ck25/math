@@ -41,6 +41,7 @@ function updateBattleUI() {
 
   renderItemButtons();
   updateTeamBar();
+  renderStatus();
 
   const petElemBadge = document.getElementById('pet-elem-badge');
   petElemBadge.innerText = pet.element;
@@ -72,10 +73,10 @@ function updateBattleUI() {
   const ultBtn = document.getElementById('ult-btn');
   if (ultimateCharge >= 3) {
     ultBtn.className = 'ult-btn ready';
-    ultBtn.innerText = `🔥 ${pet.superMove}!`;
+    ultBtn.innerHTML = '<span class="ult-word">MOVES </span>⚡3/3';
   } else {
     ultBtn.className = 'ult-btn';
-    ultBtn.innerHTML = `<span class="ult-word">CHARGING </span>(${ultimateCharge}/3)`;       // the word steps aside on narrow phones
+    ultBtn.innerHTML = `<span class="ult-word">MOVES </span>⚡${ultimateCharge}/3`;       // the word steps aside on narrow phones
   }
 
   document.getElementById('comp-count-badge').innerText = getOwnedIds().length;

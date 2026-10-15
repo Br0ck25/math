@@ -76,7 +76,7 @@
             </div>
             <div class="fighter-info">
               <div class="fighter-name" id="pet-fighter-name">Pup</div>
-              <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span></div>
+              <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span><span class="status-pill" id="pet-status" style="display:none;"></span></div>
             </div>
           </div>
           <div class="hp-line" title="Buddy HP">
@@ -109,7 +109,7 @@
         <div class="ult-bar-bg">
           <div id="ult-bar" class="ult-bar-fill"></div>
         </div>
-        <button id="ult-btn" class="ult-btn" onclick="triggerSuperMove()">LOCKED (0/3)</button>
+        <button id="ult-btn" class="ult-btn" onclick="openMoves()" aria-label="Moves: spend energy on a move">MOVES</button>
       </div>
     </div>
 
@@ -433,6 +433,17 @@
         <button class="danger-btn" onclick="openResetModal()">🔄 Reset All Progress</button>
       </details>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+
+  <!-- Moves: spend the energy that correct answers charge -->
+  <div class="modal-overlay" id="moves-modal" data-close="closeMoves">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:2px;">⚔️ Moves</h2>
+      <div style="font-size:0.85rem; font-weight:800; color:#fde047; margin-bottom:8px;" id="moves-head"></div>
+      <div class="moves-list" id="moves-list"></div>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;">Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!</p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeMoves()">Back to Game</button>
     </div>
   </div>
 
