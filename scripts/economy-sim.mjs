@@ -58,7 +58,7 @@ export function simulate(p) {
     'streak calendar': calendar,
     'tournament': tournament,
     'champion rematches': (p.rematchLands || 0) * E.map.rematch.gems,
-    'legend hunt': (p.legendHunts || 0) * E.legend.gems
+    'legend hunt': (p.legendHunts || 0) * (E.legend.gems + E.legend.raceGems / 7)       // the race bonus is paid about once a week
   };
   const total = vals(sources).reduce((a, b) => a + b, 0);
   const sinks = { hints: 3 * E.hint.cost, 'buddy care': E.care.treatCost + E.care.favCost };

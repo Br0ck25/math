@@ -111,8 +111,97 @@ test('a legend fight in a save survives a reload; a tampered one is dropped; wee
   assert.deepEqual(r.kept, [true, true]);
   assert.deepEqual(r.fake, ['fox', false], 'a normal buddy keeps its place but is not a legend');
   assert.equal(r.plain, '', 'legends never appear as ordinary wild buddies');
-  assert.equal(r.legend, '{"week":-1,"day":"","caught":false,"misses":20}');
+  assert.equal(r.legend, '{"week":-1,"day":"","caught":false,"misses":20,"race":"","wins":0}');
   assert.equal(r.pool, false);
+});
+
+test('Riley\'s race: the deadline is fixed by the week (never random), and the map shows it', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const days = new Set(); for (let w = 0; w < 12; w++) { const real = weekNumber; weekNumber = () => 3000 + w; days.add(rileyDay()); weekNumber = real; }
+    out.range = [Math.min(...days) >= ECON.legend.riley.firstDay, Math.max(...days) <= ECON.legend.riley.lastDay, days.size > 1];
+    out.stable = rileyDay() === rileyDay();
+    state.storySeen.champion = 1;
+    const real = rileyDay;
+    rileyDay = () => weekDay() + 2; openMap(); out.ahead = document.querySelector('#map-body .legend-row .d').innerText; closeMap();
+    rileyDay = () => weekDay(); openMap(); out.behind = document.querySelector('#map-body .legend-row .d').innerText; closeMap();
+    rileyDay = real;
+    out.weekDay = weekDay(new Date(2026, 9, 12)) + ',' + weekDay(new Date(2026, 9, 18));
+    return out;
+  });
+  assert.deepEqual(r.range, [true, true, true]);
+  assert.equal(r.stable, true);
+  assert.match(r.ahead, /Race Riley: 2 days left for \+40/);
+  assert.match(r.behind, /Riley already caught it/);
+  assert.equal(r.weekDay, '0,6', 'Monday is day 0, Sunday day 6');
+});
+
+test('beating Riley to the legend pays a bonus once and is counted; losing the race pays nothing and is kind', async () => {
+  const r = await page.evaluate(() => {
+    const out = {}, real = Math.random, realEnq = enqueueModal, realDay = rileyDay;
+    const queue = []; enqueueModal = (f) => queue.push(f);
+    Math.random = () => 0;
+    state.storySeen.champion = 1; state.buddyXp.dog = xpForLevel(50); state.gems = 0; state.nets = 0; state.unlockedSecrets = [];
+    const sp = legendOfWeek();
+    const catchIt = () => resolveCatch({ id: sp.id, flawless: false, shiny: false }, 0);
+    // a win: Riley is still 2 days away
+    rileyDay = () => weekDay() + 2;
+    catchIt();
+    out.won = [state.gems, legendState().race, legendState().wins, getOwnedIds().includes(sp.id), queue.length];
+    queue[queue.length - 1](); out.wonStory = [document.getElementById('raid-title').innerText, document.getElementById('raid-panels').innerText, document.getElementById('raid-note').innerText];
+    openMap(); out.wonRow = document.querySelector('#map-body .legend-row .d').innerText; closeMap();
+    // the same week again: a spare, no second bonus
+    const g = state.gems; catchIt(); out.again = [state.gems - g - 0 >= 0 && state.gems === g, legendState().wins, state.spares[sp.id]];
+    // a new week, Riley is already ahead
+    state.legend.week = weekNumber() - 1; rileyDay = () => weekDay() - 1; state.unlockedSecrets = state.unlockedSecrets.filter((id) => id !== sp.id); state.spares = {};
+    const g2 = state.gems; queue.length = 0; catchIt();
+    out.lost = [state.gems - g2, legendState().race, legendState().wins, getOwnedIds().includes(sp.id)];
+    queue[queue.length - 1](); out.lostStory = [document.getElementById('raid-title').innerText, document.getElementById('raid-panels').innerText, document.getElementById('raid-btn').innerText];
+    openMap(); out.lostRow = document.querySelector('#map-body .legend-row .d').innerText; closeMap();
+    // a new week clears the race but keeps the tally
+    state.legend.week = weekNumber() - 1; out.newWeek = [legendState().race, legendState().caught, legendState().wins];
+    Math.random = real; enqueueModal = realEnq; rileyDay = realDay;
+    return out;
+  });
+  assert.deepEqual(r.won.slice(0, 4), [40, 'won', 1, true]);
+  assert.equal(r.won[4], 2, 'the loot window, then the race story');
+  assert.equal(r.wonStory[0], '🏁 You beat Riley!');
+  assert.match(r.wonStory[1], /Race bonus: \+40 gems/);
+  assert.match(r.wonStory[2], /Races won against Riley: 1/);
+  assert.match(r.wonRow, /You beat Riley/);
+  assert.deepEqual(r.again, [true, 1, 1], 'no second bonus in the same week');
+  assert.deepEqual(r.lost, [0, 'lost', 1, true], 'losing the race pays nothing, takes nothing, and you still get the legend');
+  assert.equal(r.lostStory[0], '🧢 Riley got there first');
+  assert.match(r.lostStory[1], /No harm done/);
+  assert.doesNotMatch(r.lostStory[1] + r.lostStory[2], /lose|lost|fail|sorry/i, 'kind copy');
+  assert.match(r.lostRow, /Riley got there first/);
+  assert.deepEqual(r.newWeek, ['', false, 1]);
+});
+
+test('the hunt story tells you how long Riley needs, and a saved race is repaired', async () => {
+  const r = await page.evaluate(() => {
+    const out = {}, realDay = rileyDay;
+    state.storySeen.champion = 1; state.buddyXp.dog = xpForLevel(50);
+    rileyDay = () => weekDay() + 1; startLegendHunt();
+    out.ahead = document.getElementById('raid-panels').innerText;
+    document.getElementById('raid-modal').style.display = 'none'; modalDone();
+    state.wild.legend = false; state.legend.day = ''; state.wild.id = 'fox';
+    rileyDay = () => weekDay() - 1; startLegendHunt();
+    out.behind = document.getElementById('raid-panels').innerText;
+    rileyDay = realDay;
+    state.legend = { week: 5, day: '', caught: false, misses: 0, race: 'won', wins: -2 }; NORMALIZERS.forEach((fn) => fn(state));
+    out.a = JSON.stringify(state.legend);
+    state.legend = { week: 5, day: '', caught: true, misses: 0, race: 'hacked', wins: 4 }; NORMALIZERS.forEach((fn) => fn(state));
+    out.b = state.legend.race;
+    state.legend = { week: 5, day: '', caught: true, misses: 0, race: 'lost', wins: 4 }; NORMALIZERS.forEach((fn) => fn(state));
+    out.c = state.legend.race;
+    return out;
+  });
+  assert.match(r.ahead, /It catches it in 1 day\. Be first for a bonus!/);
+  assert.match(r.behind, /Riley (already caught|has|found)/);
+  assert.equal(r.a, '{"week":5,"day":"","caught":false,"misses":0,"race":"","wins":0}');
+  assert.equal(r.b, '');
+  assert.equal(r.c, 'lost');
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

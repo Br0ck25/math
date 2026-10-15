@@ -118,6 +118,8 @@ const NORMALIZERS = [
     l.day = typeof l.day === 'string' ? l.day.slice(0, 12) : '';
     l.caught = l.caught === true;
     l.misses = asInt(l.misses, 0, 20, 0);
+    l.race = l.caught && (l.race === 'won' || l.race === 'lost') ? l.race : '';
+    l.wins = asInt(l.wins, 0, 1e6, 0);
   },
   function packs(s) {
     s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });

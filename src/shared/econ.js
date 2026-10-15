@@ -51,7 +51,9 @@ const ECON = {
   moves: { healShare: 0.4, slots: 4 },
   // The Legend hunt (24c-legend.js): after becoming Champion, one legendary buddy a week (a different type each week) can be hunted once a day.
   // It is a wild fight: HP x hpMult, `levels` above your buddy, and a win always pays `gems`. The catch chance starts at `catchChance` and grows by `pity` for every miss that week.
-  legend: { hpMult: 2.5, levels: 5, catchChance: 0.3, pity: 0.1, gems: 60 },
+  // Riley (the rival) hunts the same legend: Riley catches it on day `firstDay`..`lastDay` of the week (0 = Monday; it varies by week, never by chance).
+  // Catch it before then and you beat Riley: `raceGems` once. Losing the race costs nothing: you can still catch it.
+  legend: { hpMult: 2.5, levels: 5, catchChance: 0.3, pity: 0.1, gems: 60, raceGems: 40, riley: { firstDay: 2, lastDay: 5 } },
   // The Buddy Dex: owning every buddy of a pack pays once, per member, plus Catch Nets.
   dex: { packGemsPer: 8, packNets: 2 },
   levelUpGemsPerLevel: 3,
