@@ -37,7 +37,7 @@ test('an Alpha boss under 25% health can swap out for a tougher boss at full hea
   assert.equal(r.swappedFlag, true);
   assert.equal(r.hp, r.max, 'the new boss starts at full health');
   const nb = await page.evaluate(() => getBossInfo());
-  assert.equal(nb.atk, 1 + 1 + 1, 'Alpha attack plus the backup bonus');
+  assert.equal(nb.atk, 1 + 5 + 1 + 1, 'base, +1 per 10 levels, Alpha, and the backup bonus');
   assert.equal(before.swapped, false);
   assert.equal(nb.swapped, true);
 });
@@ -99,7 +99,7 @@ test('beating the swapped-in boss gives the win and a bonus; the next boss is a 
 });
 
 test('the swap flag survives a reload and bad saves are repaired', async () => {
-  await page.evaluate(() => { state.bossSwapped = true; state.currentMonsterIndex = 7; state.bossLevel = 50; state.recentBossTypes = ['water']; saveState(); });
+  await page.evaluate(() => { state.wild.id = ''; state.bossSwapped = true; state.currentMonsterIndex = 7; state.bossLevel = 50; state.recentBossTypes = ['water']; saveState(); });
   await page.reload();
   assert.deepEqual(await page.evaluate(() => [state.bossSwapped, currentMonsterIndex, getBossInfo().swapped]), [true, 7, true]);
   await page.evaluate(() => { state.bossSwapped = 'yes'; NORMALIZERS.forEach((fn) => fn(state)); });

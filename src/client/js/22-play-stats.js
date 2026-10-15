@@ -24,6 +24,15 @@ function recordStat(op, correct, secs, weakHit) {
   o[0] += 1;
   if (correct) o[1] += 1;
 }
+// All-time records (never pruned). Hinted answers do not count toward the fastest time.
+function recordAllTime(op, correct, secs, hinted) {
+  const r = state.records;
+  r.attempts += 1;
+  if (!correct) return;
+  r.solved += 1;
+  if (state.streak > r.bestStreak) r.bestStreak = state.streak;
+  if (!hinted && secs > 0.3 && (!r.fastest || secs < r.fastest)) { r.fastest = Math.round(secs * 10) / 10; r.fastestOp = op; }
+}
 function minutesToday() {
   const d = state.stats.days[dayKey()];
   return d ? d.ms / 60000 : 0;

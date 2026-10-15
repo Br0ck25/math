@@ -72,8 +72,11 @@ function getPetById(id) {
 function getActivePetDisplay() { return getPetById(state.activePet); }
 
 function getArmorHp() { return getArmor(state.activeArmor).hp; }
-function getPetMaxHp(id) { const p = getPetById(id); return 3 + Math.floor(p.level / 8) + p.stage + getArmorHp(); }
-function getPetAttack(id) { const p = getPetById(id); return 1 + Math.floor(p.level / 12) + p.stage; }
+// HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
+function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
+function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
+function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage); }
+function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }
 function setPetHp(id, v) { partyHp[id] = Math.max(0, v); }
@@ -105,7 +108,9 @@ function awardBuddyXp(amount) {
     partyHp[id] = Math.min(newMax, curHp + (newMax - oldMax));
     soundLevelUp();
     launchConfetti('level');
-    toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!');
+    const learned = movesBetween(before.level, after.level);
+    toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!' + (learned.length ? ' ✨ Learned ' + learned.map(function (m) { return moveName(m, after); }).join(', ') + '!' : ''));
+    checkRegionUnlocks();
     if (after.stage > before.stage) {
       state.gems += ECON.evolveGems;
       enqueueModal(function () { openEvoModal(before, after); });
@@ -121,8 +126,11 @@ function openEvoModal(before, after) {
   document.getElementById('evo-from').innerHTML = avatarHtml(before, 72);
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
   document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)';
+  const learned = movesBetween(before.level, after.level);
   document.getElementById('evo-stats').innerText =
-    'Lv ' + after.level + '  •  ❤️ HP ' + getPetMaxHp(after.id) + '  •  ⚔️ ATK ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove;
+    'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
+    '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove +
+    (learned.length ? '  •  ✨ New move: ' + learned.map(function (m) { return moveName(m, after); }).join(', ') : '');
   const m = document.getElementById('evo-modal');
   const row = m.querySelector('.evo-row');
   row.classList.remove('go'); void row.offsetWidth; row.classList.add('go');

@@ -29,7 +29,8 @@ function screenShake(strong) {
   setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
 }
 
-function triggerMonsterDamage(extraDamage, weakHit) {
+function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
+  const weakened = hasStatus('weak');               // read now: the status may run out at the end of this answer
   extraDamage = extraDamage || 0;
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterIcon = document.getElementById('monster-icon');
@@ -62,7 +63,7 @@ function triggerMonsterDamage(extraDamage, weakHit) {
     } else if (battleElement(pet) === 'shadow') {
       damage = Math.ceil(damage * 1.25);
     } else if (rel === 1) {
-      damage = Math.ceil(damage * 1.5);
+      damage = Math.ceil(damage * 1.5) + (activeHolds('charm') ? 1 : 0);
       showPopup('SUPER EFFECTIVE! 💥');
     } else if (rel === -1) {
       damage = Math.max(1, Math.floor(damage * 0.5));
@@ -73,7 +74,10 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       damage = Math.max(damage + 1, Math.ceil(damage * 1.5));
       showPopup('🎯 WEAK POINT! 💥');
     }
+    if (dmgMult && dmgMult < 1) damage = Math.max(1, Math.floor(damage * dmgMult));
+    if (weakened) damage = Math.max(1, damage - 1);
     monsterCurrentHp -= damage;
+    if (monsterCurrentHp > 0) bossReact(fast ? 'fast' : (weakHit || rel === 1) ? 'wow' : monsterCurrentHp <= boss.maxHp / 4 ? 'angry' : 'flinch');
 
     if (monsterCurrentHp <= 0 && state.raid && state.raid.phase < state.raid.total - 1) {
       state.raid.phase += 1;
@@ -86,16 +90,24 @@ function triggerMonsterDamage(extraDamage, weakHit) {
       updateStatsUI();
       saveState();
     } else if (monsterCurrentHp <= 0) {
+      const wild = !!boss.wild, wildId = state.wild.id;
       soundMonsterDefeated();
-      launchConfetti('boss');
-      screenShake(true);
-      state.monstersDefeated += 1;
-      questEvent('boss');
-      if (bossMistakes === 0) questEvent('flawless');
-      markBossWin(currentMonsterIndex, boss.form);
-      checkBossBuddy(currentMonsterIndex, boss.form);
+      launchConfetti(wild ? 'streak' : 'boss');
+      screenShake(!wild);
+      const leaderFight = !wild && inGymLeaderFight();
+      if (wild) { if (!state.gym) state.wild.since += 1; }       // gym battles do not count toward the next boss
+      else {
+        questEvent('boss');
+        if (bossMistakes === 0) questEvent('flawless');
+        state.monstersDefeated += 1;
+        markBossWin(currentMonsterIndex, boss.form);
+        checkBossBuddy(currentMonsterIndex, boss.form);
+      }
       buddyReact('win');
-      let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
+        : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      if (boss.trainer) gemBonus += ECON.map.trainerGems;
+      if (boss.shiny) gemBonus += ECON.daily.gems;
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();
@@ -103,26 +115,29 @@ function triggerMonsterDamage(extraDamage, weakHit) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBuddyXp(Math.round(20 + boss.level * 2 * ratio));
+      awardBuddyXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
 
-      const hadCasualties = state.faintedPets.length > 0;
+      const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {
         state.faintedPets = [];
         showPopup('✨ ALL BUDDIES REVIVED!');
       }
 
-      checkForSecretLootDrop(hadCasualties);
+      const gymWin = state.gym ? advanceGym(leaderFight) : null;
+      if (wild) { if (!boss.trainer) rollCatch(wildId, bossMistakes === 0); } else checkForSecretLootDrop(hadCasualties);
       showPopup(`VICTORY! +${gemBonus} 💎`);
 
-      const shouldTriggerVault = (state.monstersDefeated % 2 === 0);
+      const shouldTriggerVault = !wild && (state.monstersDefeated % 2 === 0);
       setTimeout(function () {
-        pickNextBoss();
+        pickNextFoe();
         setBossTaunt();
         updateStatsUI();
         saveState();
         if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
         const nb = getBossInfo();
-        toast(`A wild Lv ${nb.level} ${nb.name} appeared!` + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
+        const lead = nb.trainer ? '🏟️ ' : nb.wild ? '' : state.gym ? '🏟️ GYM LEADER! ' : '⚠️ BOSS TIME! ';
+        toast(lead + (nb.trainer ? `${nb.name} (Lv ${nb.level}) wants to battle!` : `A wild Lv ${nb.level} ${nb.name} appeared!`) + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
+        if (gymWin) enqueueModal(function () { showBadgeStory(gymWin); });
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);
@@ -151,6 +166,19 @@ function triggerBuddyDamage() {
   const boss = getBossInfo();
   const pet = getActivePetDisplay();
   const id = pet.id;
+  const burned = hasStatus('burn');
+  const shellBlock = holds(id, 'shell') && !heldUsed.shell;      // Hard Shell: the first hit of each battle                // read now: the status may run out at the end of this answer
+  if (guardUp || shellBlock) {                     // Guard (or a Hard Shell) blocks this hit completely (the combo still ends)
+    if (guardUp) guardUp = false; else heldUsed.shell = true;
+    state.streak = 0;
+    soundShieldBreak();
+    showPopup('🛡️ BLOCKED! NO DAMAGE');
+    document.getElementById('feedback-msg').innerText = 'Guard held! ' + missLine(parseFloat(userInput), currentProblem.answer);
+    updateStatsUI();
+    saveState();
+    scheduleNextProblem(1300, 'Nice guard — try again!');
+    return;
+  }
   const monsterIcon = document.getElementById('monster-icon');
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterFx = document.getElementById('monster-attack-fx');
@@ -172,8 +200,9 @@ function triggerBuddyDamage() {
     petIconWrapper.classList.add('hurt-flash');
     soundHitSlash();
     screenShake(false);
+    bossReact('laugh');
 
-    let incoming = boss.atk;
+    let incoming = boss.atk + (burned ? 1 : 0);
     const rel = getTypeRelation(boss.element, battleElement(pet));
     if (rel === 1) incoming += 1;
     else if (rel === -1) incoming = Math.max(1, incoming - 1);
@@ -181,10 +210,17 @@ function triggerBuddyDamage() {
     const slayer = slaysBuddy(boss, pet);
     if (slayer) incoming += ECON.boss.slayer.extraDamage;
     incoming = Math.max(1, Math.min(incoming, Math.ceil(getPetMaxHp(id) * (slayer ? ECON.boss.slayer.maxHpShare : 0.4))));
+    if (roleOf(pet).name === 'Tank') incoming = Math.max(1, incoming - 1);
     showPopup(slayer ? `☠️ STRONG AGAINST ${pet.baseName.toUpperCase()}! -${incoming} HP 💔` : rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
 
     setPetHp(id, getPetHp(id) - incoming);
     state.streak = 0;
+    if (getPetHp(id) > 0) maybeInflictStatus(boss);
+    if (getPetHp(id) > 0 && holds(id, 'berry') && !heldUsed.berry && getPetHp(id) <= getPetMaxHp(id) / 3) {
+      heldUsed.berry = true;
+      setPetHp(id, Math.min(getPetMaxHp(id), getPetHp(id) + ECON.held.berryHeal));
+      toast('🫐 ' + pet.baseName + ' ate its Oran Berry!');
+    }
     ultimateCharge = 0;
 
     if (getPetHp(id) > 0) {
@@ -198,24 +234,22 @@ function triggerBuddyDamage() {
     toast('💤 ' + pet.name + ' is sleepy and needs a rest');
     if (state.faintedPets.indexOf(id) === -1) state.faintedPets.push(id);
 
-    const alive = getOwnedIds().filter(function (pid) { return state.faintedPets.indexOf(pid) === -1; });
-    if (alive.length === 0) {
-      state.faintedPets = [];
-      partyHp = {};
-      monsterCurrentHp = getBossMaxHp();
-      showPopup('💀 ALL BUDDIES FAINTED! PARTY REVIVED!');
-      document.getElementById('feedback-msg').innerText = 'All buddies fell in battle! Full team revived!';
+    if (aliveTeamIds().length) {          // a teammate can still fight: the player chooses who goes next, and answering waits for that
+      showPopup(`💔 ${pet.name} FAINTED!`);
+      document.getElementById('feedback-msg').innerText = `${pet.name} needs rest! Tap a teammate to send in.`;
       updateStatsUI();
-      scheduleNextProblem(1500, 'Try again — you can do it!');
-    } else {
-      alive.sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
-      state.activePet = alive[0];
-      const next = getActivePetDisplay();
-      showPopup(`💔 ${pet.name} FAINTED! ${next.name} enters!`);
-      document.getElementById('feedback-msg').innerText = `${pet.name} needs rest! ${next.name} enters!`;
-      updateStatsUI();
-      scheduleNextProblem(1400, 'Ready for the next one!');
+      saveState();
+      return;
     }
+
+    // the whole team has fainted: everyone is revived and the battle goes on
+    state.faintedPets = [];
+    partyHp = {};
+    monsterCurrentHp = getBossMaxHp();
+    showPopup('💀 YOUR TEAM FAINTED! EVERYONE IS REVIVED!');
+    document.getElementById('feedback-msg').innerText = 'Your whole team fell in battle! Everyone is revived, try again!';
+    updateStatsUI();
+    scheduleNextProblem(1500, 'Try again — you can do it!');
     saveState();
   }, 200);
 }
@@ -245,7 +279,7 @@ function checkAnswer() {
 
   if (Math.abs(numVal - currentProblem.answer) < 0.0001) {
     soundCorrect(state.streak + 1);
-    buddyReact('cheer');
+    buddyReact(state.streak >= 2 && (state.streak + 1) % 3 === 0 ? 'streak' : 'cheer');
     if (answerBox) answerBox.className = 'answer-box correct';
 
     sessionStats.solved += 1;
@@ -259,12 +293,15 @@ function checkAnswer() {
     if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
 
     state.streak += 1;
+    recordAllTime(opId, true, solveTime, hintUsed);
     questEvent('streak', state.streak);
     if (ultimateCharge < 3) ultimateCharge += 1;
 
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
+    if (activeRole('Speedster')) speedLimit *= 1.25;
     const isFast = !hintUsed && solveTime <= speedLimit;
+    answerBonuses(isFast);
     let speedBonusGems = 0;
     if (isFast) {
       speedBonusGems = ECON.solve.speedGem;
@@ -281,7 +318,9 @@ function checkAnswer() {
     recordAdaptive(opId, true, isFast);
     awardBuddyXp(xpEarned);
 
-    triggerMonsterDamage(0, opId === getWeakOp());
+    const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
+    if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
+    triggerMonsterDamage(isFast && activeRole('Attacker') ? 1 : 0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
     let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
     if (state.cloverLeft > 0) {
@@ -313,6 +352,7 @@ function checkAnswer() {
       }, 800);
     }
 
+    tickStatus();
     updateStatsUI();
     saveState();
     scheduleNextProblem(500, 'Ready for the next one!');
@@ -322,11 +362,13 @@ function checkAnswer() {
     bossMistakes += 1;
     const missOp = currentProblem.modeTag;
     recordStat(missOp, false, solveTime, false);
+    recordAllTime(missOp, false, solveTime, false);
     if (currentProblem.challenge) state.adapt.calm[missOp] = true;     // after a missed challenge the next one steps back
     recordAdaptive(missOp, false, false);
     if (!currentProblem.challenge) state.adapt.easy[missOp] = true;     // a quick win right after a miss (a missed challenge already steps back, above)
     buddyReact('wince');
     explainMistake();
+    showMissCard(numVal);
     if (answerBox) answerBox.className = 'answer-box wrong';
 
     if (state.shields > 0) {
@@ -343,5 +385,6 @@ function checkAnswer() {
       triggerBuddyDamage();
       saveState();
     }
+    tickStatus();
   }
 }

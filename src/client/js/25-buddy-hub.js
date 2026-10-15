@@ -44,7 +44,9 @@ function moodOf(id) {
 const BUDDY_REACTIONS = {
   win: { el: 'fighter-icon-wrapper', cls: 'happy-bounce', ms: 1000, bubbles: ['🥳', '❤️', '✨'] },
   cheer: { el: 'pet-fighter-icon', cls: 'buddy-hop', ms: 420, bubbles: null },      // inner icon: the wrapper is busy tackling
-  wince: { el: 'pet-fighter-icon', cls: 'buddy-wince', ms: 500, bubbles: ['😣', '😵', '🥴'] }
+  wince: { el: 'pet-fighter-icon', cls: 'buddy-wince', ms: 500, bubbles: ['😣', '😵', '🥴'] },
+  streak: { el: 'fighter-icon-wrapper', cls: 'happy-bounce', ms: 900, bubbles: ['🔥', '🎉', '💪', '⭐'] },   // every third answer in a row
+  wake: { el: 'pet-fighter-icon', cls: 'buddy-hop', ms: 420, bubbles: ['😄', '👋'] }
 };
 function buddyReact(kind) {
   const r = BUDDY_REACTIONS[kind];
@@ -84,8 +86,8 @@ function renderHub() {
   const gear = hubPet === state.activePet ? activeGear() : { acc: null, armor: null };
   ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
-  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
-  const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel']];
+  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
+  const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold']];
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
@@ -98,6 +100,7 @@ function renderHub() {
   if (hubTab === 'care') renderCare();
   else if (hubTab === 'card') renderCardTab();
   else if (hubTab === 'duel') renderDuelTab();
+  else if (hubTab === 'hold') renderHoldTab();
   else renderTourTab();
 }
 
@@ -107,6 +110,7 @@ function heartsHtml(n) {
   for (let i = 0; i < ECON.care.maxBond; i++) h += i < n ? '❤️' : '🤍';
   return h;
 }
+function name0(id) { return getPetById(id).baseName; }
 function renderCare() {
   const id = hubPet;
   const c = getCare(id);
@@ -125,6 +129,9 @@ function renderCare() {
   h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + ECON.care.petsPerDay + ' · +' + ECON.care.petXp + ' XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= ECON.care.petsPerDay));
   h += row('🍪 Biscuit', 'A tasty treat · +' + ECON.care.treatXp + ' XP · once a day', btn(c.treat ? 'Eaten' : ECON.care.treatCost + ' 💎', 'careAct(&quot;treat&quot;)', sleepy || c.treat));
   h += row(fav.icon + ' Favorite: ' + fav.name, 'Their very favorite! +1 bond · +' + ECON.care.favXp + ' XP · once a day', btn(c.fav ? 'Eaten' : ECON.care.favCost + ' 💎', 'careAct(&quot;fav&quot;)', sleepy || c.fav));
+  const mine = spareCount(id), all = Object.keys(state.spares).reduce(function (a, k) { return a + state.spares[k]; }, 0);
+  if (mine) h += row('🎒 Spare ' + name0(id) + ' x' + mine, 'Extra copies from wild battles. Your buddy stays safe!', btn('Sell +' + spareValueOf(id) + ' 💎', 'sellSpare(&quot;' + id + '&quot;)'));
+  if (all > mine) h += row('🎒 All spares (' + all + ')', 'Sell every extra copy at once.', btn('Sell all', 'sellAllSpares()'));
   h += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">You have 💎 ' + state.gems + '</div>';
   document.getElementById('hub-body').innerHTML = h;
 }

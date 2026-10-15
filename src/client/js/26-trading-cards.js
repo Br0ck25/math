@@ -45,9 +45,19 @@ function bossCard(idx, opts) {
     levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: base.icon, element: base.element,
     rarity: raid ? { name: 'RAID BOSS', col: '#ef4444' } : [null, null, null, { name: 'COMMON', col: '#94a3b8' }, { name: 'RARE', col: '#38bdf8' }, { name: 'EPIC', col: '#a78bfa' }, { name: 'LEGENDARY', col: '#fbbf24' }][clamp(base.baseHp, 3, 6)],
     stars: form + 1,
-    stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', 1 + (form === 2 ? 1 : 0) + (tough ? ECON.boss.swap.extraAtk : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
+    stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', bossAtk(base, opts.level || 0, form) + (tough ? ECON.boss.swap.extraAtk : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
     line: '"' + base.taunts[0] + '"',
     foot: base.slays ? '☠️ Strong against ' + slayerTarget(base) : weak ? '🎯 Weak point: ' + OP_BY_ID[weak].icon + ' ' + OP_BY_ID[weak].label : '', sleepy: false, gear: { acc: null, armor: null }
+  };
+}
+// A wild buddy's card: its stats at the level it has in the arena, how likely you are to catch it, and whether you own it.
+function wildCard(id, level) {
+  const sp = getSpecies(id), st = wildStats(level), shiny = state.wild.shiny && state.wild.id === id, owned = getOwnedIds().indexOf(id) !== -1;
+  return {
+    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
+    stats: [['❤️', shiny ? Math.ceil(st.maxHp * ECON.daily.hpMult) : st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp, { shiny: shiny }) * 100) + '%', 'Catch']],
+    line: '⚡ ' + sp.superMove, foot: owned ? '✅ In your collection' + (spareCount(id) ? ' · ' + spareCount(id) + ' spare' + (spareCount(id) > 1 ? 's' : '') : '') : '🆕 Not in your collection yet',
+    sleepy: false, stage: 0, gear: { acc: null, armor: null }
   };
 }
 function drawCardFromDesc(cv, c) {
@@ -168,16 +178,23 @@ function cardShare(canvasId, slug, title) {
 // ----- boss cards: tap the boss in the arena, or a met boss in the collection book -----
 let bossCardArgs = { idx: 0, opts: {} };
 function renderBossCard() {
-  const c = bossCard(bossCardArgs.idx, bossCardArgs.opts);
+  const wildId = bossCardArgs.wild;
+  const c = wildId ? wildCard(wildId, bossCardArgs.opts.level) : bossCard(bossCardArgs.idx, bossCardArgs.opts);
+  document.getElementById('boss-card-title').innerText = wildId ? '🫧 Wild Buddy Card' : '👾 Boss Card';
   drawCardFromDesc(document.getElementById('boss-canvas'), c);
   document.getElementById('boss-card-rarity').innerText = '◆ ' + c.rarity.name + ' card';
   document.getElementById('boss-card-rarity').style.color = c.rarity.col;
 }
 function openBossCard(idx, opts) {
-  bossCardArgs = { idx: idx, opts: opts || {} };
+  bossCardArgs = { idx: idx, opts: opts || {}, wild: '' };
   showModal('bosscard-modal', renderBossCard);
 }
 function openArenaBossCard() {
+  if (state.wild.id) {
+    bossCardArgs = { idx: -1, opts: { level: bossLevel }, wild: state.wild.id };
+    showModal('bosscard-modal', renderBossCard);
+    return;
+  }
   openBossCard(currentMonsterIndex, { level: bossLevel, raid: !!state.raid });
 }
 function closeBossCard() { hideModal('bosscard-modal'); }

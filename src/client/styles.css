@@ -493,7 +493,7 @@
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(4, 1fr);
       gap: 6px;
-      height: clamp(165px, 26vh, 220px);
+      height: clamp(150px, 26vh, 196px);
       flex-shrink: 0;
     }
 
@@ -579,10 +579,6 @@
       .arena { padding: 4px 8px; margin-bottom: 5px; }
       .streak-banner { min-height: 14px; font-size: 0.7rem; }
       .feedback-msg { min-height: 14px; font-size: 0.72rem; }
-      .equation-vertical { font-size: clamp(1.4rem, 3.8vh, 1.9rem); line-height: 1.05; letter-spacing: 2px; }
-      .equation-inline { font-size: clamp(1.4rem, 3.8vh, 1.9rem); }
-      .vertical-op { font-size: clamp(1.2rem, 3.4vh, 1.7rem); }
-      .answer-box { min-width: 80px; height: clamp(30px, 4.5vh, 36px); font-size: clamp(1.3rem, 3.6vh, 1.7rem); border-bottom-width: 3px; }
       .vertical-row.bottom-row { border-bottom-width: 2.5px; padding-bottom: 1px; margin-bottom: 2px; gap: 10px; }
       .keypad { height: clamp(140px, 24vh, 175px); gap: 5px; }
       .key-btn { font-size: 1.35rem; border-radius: 10px; box-shadow: 0 3px 0 #090d16; }
@@ -895,7 +891,7 @@
     .hint-box { min-height: 0; font-size: 0.8rem; font-weight: 700; color: #fde68a; text-align: center; padding: 0 12px; }
     .hint-box:empty { display: none; }
 
-    .bottom-bar { grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .bottom-bar { grid-template-columns: repeat(6, 1fr); gap: 3px; }
     .bottom-bar .btn-secondary { font-size: 0.66rem; padding: 4px 1px; gap: 2px; min-height: 44px; flex-direction: column; line-height: 1.1; white-space: normal; }
     .fighter-icon-wrapper { cursor: pointer; }
     .mood-bubble { position: absolute; top: -12px; right: -8px; font-size: 1.1rem; pointer-events: none; opacity: 0; z-index: 4; }
@@ -1095,8 +1091,8 @@
 
 /* iPhone SE and other short screens: the arena (equation + answer box) must always fit, so the decorative rows give way first */
 .modal-content { min-width: 0; box-sizing: border-box; overflow-x: hidden; }
-@media (max-height: 700px) { .boss-taunt-box, .battle-goal-hint { display: none; } }
-@media (max-height: 660px) { .session-info-row { display: none; } .weak-chip:empty { display: none; } }
+@media (max-height: 700px) { .boss-taunt-box { display: none; } }
+@media (max-height: 660px) { .session-info-row { display: none; } .top-bar { grid-template-columns: repeat(5, 1fr); } .goal-pill { display: flex; } }
 @media (max-height: 600px) { .xp-section { display: none; } .keypad { height: clamp(120px, 22vh, 140px); } .battle-header { padding: 3px 6px; margin-bottom: 3px; } }
 .modal-x-row + .hub-head { padding-top: 10px; }   /* the ‹ › arrows sit below the ✕ */
 
@@ -1174,7 +1170,10 @@
 /* grid tracks may shrink below their content, so long words wrap instead of widening the window */
 .cal-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .cal-cell { min-width: 0; overflow: hidden; }
-.bottom-bar { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.bottom-bar { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.bottom-bar .btn-secondary { font-size: 0.62rem; }
+.lbl-short { display: none; }
+@media (max-width: 360px) { .lbl-long { display: none; } .lbl-short { display: inline; } }
 .hub-tabs, .team-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tour-opts, .acct-btns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .par-tiles, .book-tabs, .grade-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1182,3 +1181,102 @@
 .pet-card.locked { opacity: 1; }
 .pet-card.locked .card-pic, .pet-card.locked .icon-wrap { opacity: 0.55; }
 .pet-card.fainted { opacity: 0.75; }
+
+/* Wrong-answer card countdown (disabled by .reduce-motion, the timer still closes it) */
+.miss-bar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 5s linear forwards; }
+@keyframes miss-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* Boss and buddy reactions */
+.boss-box { position: relative; }
+.boss-box .boss-bubble { right: auto; left: -8px; }
+@keyframes bossFlinch { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(5px) rotate(6deg); } 75% { transform: translateX(-3px) rotate(-4deg); } }
+@keyframes bossLaugh { 0%, 100% { transform: translateY(0); } 20%, 60% { transform: translateY(-5px) rotate(-5deg); } 40%, 80% { transform: translateY(-5px) rotate(5deg); } }
+@keyframes bossAngry { 0%, 100% { transform: scale(1); filter: none; } 30% { transform: scale(1.14); filter: drop-shadow(0 0 8px #ef4444) saturate(1.6); } }
+.boss-flinch { animation: bossFlinch 0.4s ease-out; }
+.boss-laugh { animation: bossLaugh 0.6s ease-in-out; }
+.boss-angry { animation: bossAngry 0.6s ease-out; }
+@keyframes napBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+.fighter-icon-wrapper.napping #pet-fighter-icon { filter: brightness(0.8); animation: napBob 2.4s ease-in-out infinite; }
+.fighter-icon-wrapper.napping::after { content: '💤'; position: absolute; top: -10px; right: -6px; font-size: 1rem; pointer-events: none; z-index: 4; animation: moodFloat 2.4s ease-out infinite; }
+/* the battle team chips (sizes and the ultimate row are in the layout block below) */
+.swap-chip { display: flex; align-items: center; border-radius: 12px; border: 2px solid var(--card-border); background: rgba(255,255,255,0.05); color: inherit; font: inherit; cursor: pointer; }
+.swap-chip .tc-icon { line-height: 1; }
+.swap-chip.active { border-color: #38bdf8; background: rgba(56,189,248,0.15); }
+.swap-chip.good { box-shadow: 0 0 8px 1px rgba(74,222,128,0.7); }
+.swap-chip.resting { opacity: 0.55; }
+
+/* ===== Layout that fits any phone: rows share the space, and the equation is sized by the room it actually has ===== */
+/* 1. The answer area sizes its content from its own height (container units), so extra rows above it can never make the equation overlap the text below. */
+.arena { container: arena / size; }
+#equation-mount { container: eq / size; }
+#equation-mount .equation-vertical { --fs: clamp(1.05rem, calc((100cqh - 10px) / 3.5), 2.3rem); font-size: var(--fs); }
+#equation-mount .equation-inline { --fs: clamp(1.1rem, calc(100cqh / 1.6), 2.5rem); font-size: var(--fs); }
+#equation-mount .equation-stack { --fs: clamp(0.95rem, calc((100cqh - 8px) / 4), 1.7rem); }     /* room for a two-line expression */
+.equation-vertical .vertical-op { font-size: calc(var(--fs) * 0.85); }
+.answer-box { font-size: var(--fs, 1.6rem); height: calc(var(--fs, 1.6rem) * 1.35); min-width: calc(var(--fs, 1.6rem) * 3.2); border-bottom-width: 3px; }
+.eq-expr, .eq-ans { font-size: var(--fs, 1.2rem); }
+/* When the area is short, the least useful lines step aside first (kept in the page for screen readers and tests): banner, then feedback. */
+@container arena (max-height: 150px) { .streak-banner { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; min-height: 0; margin: 0; } }
+@container arena (max-height: 118px) { .feedback-msg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-height: 0; margin: 0; } }
+.hint-box { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.hint-box:empty { display: none; }
+@container arena (max-height: 150px) { .hint-box { -webkit-line-clamp: 1; line-clamp: 1; } }
+
+/* 2. The battle panel: type hint and chip share one row; the team chips sit on the ultimate row. */
+.battle-title-row { justify-content: space-between; margin-bottom: 3px; }
+.battle-goal-hint { text-align: left; }
+.weak-chip { flex: 0 1 auto; min-width: 0; margin: 0; font-size: 0.68rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.weak-chip:empty { display: none; }
+.ultimate-container { flex-wrap: wrap; row-gap: 4px; }
+.ult-bar-bg { min-width: 36px; }
+.ult-label { font-size: 0.72rem; font-weight: 800; color: #f59e0b; }
+.ult-label { display: none; }
+@media (max-width: 400px) { .ult-word { display: none; } }
+.swap-bar { display: flex; gap: 4px; margin: 0; flex: 0 0 auto; }
+.swap-bar:empty { display: none; }
+.swap-chip { position: relative; justify-content: center; min-width: 44px; min-height: 44px; padding: 0; }
+.swap-chip .tc-icon { font-size: 1.5rem; }
+.swap-chip .tc-badge { position: absolute; top: -3px; right: -3px; font-size: 0.7rem; line-height: 1; pointer-events: none; }
+.top-bar .goal-pill { display: none; }
+@media (max-height: 660px) { .top-bar .goal-pill { display: flex; } }
+/* 3. On tall phones there is room for the unlock hint; on shorter ones it steps aside (kept for screen readers). */
+@media (max-height: 820px) { .next-goal { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); margin: 0; } }
+
+/* 4. Bubbles and the nap marker stay inside their own card, so they never cover the row beside it. */
+.mood-bubble { top: 2px; right: 2px; }
+.boss-box .boss-bubble { left: 2px; right: auto; }
+.fighter-icon-wrapper.napping::after { top: 0; right: 0; }
+
+/* ===== Moves sheet ===== */
+.moves-list { display: flex; flex-direction: column; gap: 6px; }
+.move-btn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 54px; padding: 6px 10px; text-align: left; background: #0f172a; border: 2px solid #6366f1; border-radius: 12px; color: var(--text); font: inherit; cursor: pointer; }
+.move-btn .mv-icon { font-size: 1.6rem; flex: 0 0 auto; }
+.move-btn .mv-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+.move-btn .mv-main small { color: var(--text-muted); font-size: 0.72rem; font-weight: 700; }
+.move-btn .mv-cost { flex: 0 0 auto; font-weight: 900; color: #fde047; }
+.move-btn.off { opacity: 0.5; border-color: var(--card-border); cursor: default; }
+
+.hub-tabs { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.hub-tabs .grade-btn { padding-left: 2px; padding-right: 2px; font-size: 0.7rem; }
+
+/* ===== Map ===== */
+.battle-header { border-color: var(--region, var(--card-border)); }
+.map-row { align-items: center; gap: 8px; }
+.map-row.here { border-color: #38bdf8; }
+.map-row.locked { opacity: 0.6; }
+.map-actions { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; flex: 0 0 auto; }
+.map-badge { font-size: 1.4rem; }
+
+/* ===== Daily rare: a golden glow ===== */
+.boss-box.shiny::before { opacity: 0.9; background: radial-gradient(circle, #facc15 0%, rgba(250, 204, 21, 0) 68%); }
+.boss-box.shiny .fighter-icon { filter: drop-shadow(0 0 6px #facc15) saturate(1.3); }
+
+/* ===== A fainted fighter: the available teammates glow until one is chosen ===== */
+.swap-bar.pick .swap-chip:not(.resting) { animation: pickGlow 0.9s ease-in-out infinite alternate; border-color: #fde047; }
+@keyframes pickGlow { from { box-shadow: 0 0 0 0 rgba(253, 224, 71, 0.2); } to { box-shadow: 0 0 10px 3px rgba(253, 224, 71, 0.8); } }
+
+/* Type chart in settings */
+.type-chart .tc-row { display: flex; flex-direction: column; margin: 0 0 6px; padding-bottom: 5px; border-bottom: 1px solid var(--card-border); }
+.type-chart .tc-row b { font-size: 0.9rem; }
+.type-chart .tc-row span { font-size: 0.8rem; color: var(--text-muted); }

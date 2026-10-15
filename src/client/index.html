@@ -30,6 +30,9 @@
       <div class="stat-pill" title="Streak Shields Owned">
         <span>🛡️ <span id="shield-display">0</span></span>
       </div>
+      <div class="stat-pill goal-pill" title="Session goal: solve problems to earn a bonus">
+        <span>🎯 <span id="goal-pill-text">0/25</span></span>
+      </div>
     </div>
 
     <!-- Active Session Tracker + practice settings chip (one row) -->
@@ -55,15 +58,13 @@
     <!-- Battle Arena -->
     <div class="battle-header" id="battle-header-arena">
       <div class="battle-title-row">
-        <span class="battle-title-badge">⚔️ Monster Arena</span>
-        <span class="battle-goal-hint" id="type-match-hint">Elemental Match: Normal</span>
+        <span class="battle-goal-hint" id="type-match-hint">Neutral matchup</span>
+        <span class="weak-chip" id="weak-chip"></span>
       </div>
 
       <div class="boss-taunt-box" id="boss-taunt-box">
         Fire Drake: "You cannot calculate my flames!"
       </div>
-
-      <div class="weak-chip" id="weak-chip"></div>
 
       <div class="versus-row">
         <div class="fighter-card">
@@ -75,7 +76,7 @@
             </div>
             <div class="fighter-info">
               <div class="fighter-name" id="pet-fighter-name">Pup</div>
-              <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span></div>
+              <div class="fighter-tag"><span id="pet-elem-badge" class="element-pill elem-nature">Nature</span><span class="lv-pill">Lv <span id="pet-level">1</span></span><span class="status-pill" id="pet-status" style="display:none;"></span></div>
             </div>
           </div>
           <div class="hp-line" title="Buddy HP">
@@ -88,6 +89,7 @@
           <div class="fighter-top">
             <div class="boss-box" id="boss-box">
               <button class="fighter-icon boss-btn" id="monster-icon" onclick="openArenaBossCard()" aria-label="Boss card">🐲</button>
+              <span class="mood-bubble boss-bubble" id="boss-bubble" aria-hidden="true"></span>
             </div>
             <div class="fighter-info">
               <div class="fighter-name" id="monster-name">Fire Drake</div>
@@ -102,11 +104,12 @@
       </div>
 
       <div class="ultimate-container">
-        <div style="font-size:0.72rem; font-weight:800; color:#f59e0b;">ULTIMATE</div>
+        <div class="swap-bar" id="team-bar" role="group" aria-label="Your team: tap to swap buddies"></div>
+        <div class="ult-label">ULTIMATE</div>
         <div class="ult-bar-bg">
           <div id="ult-bar" class="ult-bar-fill"></div>
         </div>
-        <button id="ult-btn" class="ult-btn" onclick="triggerSuperMove()">LOCKED (0/3)</button>
+        <button id="ult-btn" class="ult-btn" onclick="openMoves()" aria-label="Moves: spend energy on a move">MOVES</button>
       </div>
     </div>
 
@@ -148,19 +151,22 @@
 
     <div class="bottom-bar">
       <button class="btn-secondary" onclick="openShop()">
-        🐾 Sanctuary <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
+        🐾 <span class="lbl-long">Sanctuary</span><span class="lbl-short">Pets</span> <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
       </button>
       <button class="btn-secondary" onclick="openQuests()">
         📜 Quests<span class="notif-dot" id="quest-badge">0</span>
       </button>
       <button class="btn-secondary" onclick="openCal()">
-        📅 Calendar<span class="notif-dot" id="cal-badge">0</span>
+        📅 <span class="lbl-long">Calendar</span><span class="lbl-short">Days</span><span class="notif-dot" id="cal-badge">0</span>
       </button>
       <button class="btn-secondary" onclick="openBook()">
-        📖 Book
+        📖 Dex
+      </button>
+      <button class="btn-secondary" onclick="openMap()">
+        🗺️ Map
       </button>
       <button class="btn-secondary" onclick="openSettings()">
-        ⚙️ Settings
+        ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
       </button>
     </div>
   </div>
@@ -204,6 +210,13 @@
             <div class="item-desc">2x Gems + 50% XP for 8 solves</div>
           </div>
           <button class="key-btn submit-btn item-btn" id="item-clover" onclick="buyItem('clover')">-- 💎</button>
+        </div>
+        <div class="item-card">
+          <div>
+            <div class="item-name">🕸️ Catch Net</div>
+            <div class="item-desc">After a wild win, throw up to 3 at once for a better catch chance. You have <span id="net-count">0</span></div>
+          </div>
+          <button class="key-btn submit-btn item-btn" id="item-net" onclick="buyItem('net')">-- 💎</button>
         </div>
       </div>
 
@@ -282,6 +295,21 @@
     </div>
   </div>
 
+  <!-- Wrong-answer card: shows the right answer for 5 seconds -->
+  <div class="modal-overlay" id="miss-modal" data-close="closeMissCard">
+    <div class="modal-content" style="border-color:#f59e0b;" role="alert">
+      <div style="font-size:2rem;">🤔</div>
+      <h2 style="margin-bottom:2px; font-size:1.2rem;">Not quite!</h2>
+      <div id="miss-eq" style="font-size:1.1rem; color:var(--text-muted);"></div>
+      <div id="miss-said" style="font-size:0.85rem; color:var(--text-muted); margin:4px 0;"></div>
+      <div style="font-size:0.85rem;">The answer is</div>
+      <div id="miss-answer" style="font-size:2.4rem; font-weight:800; color:#4ade80;"></div>
+      <div id="miss-how" style="font-size:0.85rem; color:var(--text-muted); margin:6px 0; line-height:1.3;"></div>
+      <div class="miss-bar-track"><div id="miss-bar"></div></div>
+      <button class="key-btn submit-btn" style="width:100%; height:44px; margin-top:8px; font-size:1rem;" onclick="closeMissCard()">Got it!</button>
+    </div>
+  </div>
+
   <!-- Session Report Card Modal -->
   <div class="modal-overlay" id="report-modal" data-close="closeReportModal">
     <div class="modal-content">
@@ -297,6 +325,7 @@
         <tr><td>Secret Creatures Found</td><td id="rep-secrets">0</td></tr>
         <tr><td>Bosses Defeated</td><td id="rep-bosses">0</td></tr>
         <tr><td>Highest Buddy Level</td><td id="rep-best">1</td></tr>
+        <tbody id="rep-alltime"></tbody>
       </table>
 
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; height: 44px; font-size:1rem;" onclick="closeReportModal()">Keep Practicing!</button>
@@ -402,18 +431,44 @@
 
       </details>
       <details class="set-sec"><summary class="settings-label">⚔️ Type chart</summary>
-      <div class="type-chart">
-        🔥 Fire &gt; 🌿 Nature &nbsp;•&nbsp; 💧 Water &gt; 🔥 Fire<br>
-        🌿 Nature &gt; 💧 Water, ⚡ Electric &nbsp;•&nbsp; ⚡ Electric &gt; 💧 Water, 🔮 Magic<br>
-        🌑 Dark &gt; 🌿 Nature &nbsp;•&nbsp; 🔮 Magic &gt; 🌑 Dark, 🔥 Fire<br>
-        🌟 Shadow deals x1.25 damage to everything<br>🛡️ Resisted hits do less damage; super-effective hits do +1 (never more than 40% of max HP)
-      </div>
+      <div class="type-chart" id="type-chart"></div>
 
       </details>
       <details class="set-sec"><summary class="settings-label">⚠️ Reset</summary>
         <button class="danger-btn" onclick="openResetModal()">🔄 Reset All Progress</button>
       </details>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeSettings()">Done</button>
+    </div>
+  </div>
+
+  <!-- Replace a team member: the team is full and a new buddy wants in -->
+  <div class="modal-overlay" id="replace-modal" data-close="closeReplace">
+    <div class="modal-content">
+      <h2 style="font-size:1.15rem; margin-bottom:6px;" id="replace-title"></h2>
+      <div class="moves-list" id="replace-options"></div>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;">Your team has up to 3 buddies. Only team buddies can fight.</p>
+      <button class="key-btn action-btn" style="width:100%; height:44px; font-size:0.95rem;" onclick="closeReplace()">Keep my team</button>
+    </div>
+  </div>
+
+  <!-- Catch window: how many Catch Nets to throw after beating a wild buddy -->
+  <div class="modal-overlay" id="catch-modal" data-close="closeCatchModal">
+    <div class="modal-content" style="border-color:#38bdf8;">
+      <div class="loot-icon" id="catch-icon" style="font-size:3rem;">🫧</div>
+      <h2 style="font-size:1.15rem; margin-bottom:2px;" id="catch-title"></h2>
+      <p style="font-size:0.78rem; color:var(--text-muted); margin:2px 0 8px;" id="catch-note"></p>
+      <div class="moves-list" id="catch-options"></div>
+    </div>
+  </div>
+
+  <!-- Moves: spend the energy that correct answers charge -->
+  <div class="modal-overlay" id="moves-modal" data-close="closeMoves">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:2px;">⚔️ Moves</h2>
+      <div style="font-size:0.85rem; font-weight:800; color:#fde047; margin-bottom:8px;" id="moves-head"></div>
+      <div class="moves-list" id="moves-list"></div>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;">Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!</p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeMoves()">Back to Game</button>
     </div>
   </div>
 
@@ -471,7 +526,7 @@
   <!-- Boss card -->
   <div class="modal-overlay" id="bosscard-modal" data-close="closeBossCard">
     <div class="modal-content">
-      <h2 style="font-size: 1.2rem;">👾 Boss Card</h2>
+      <h2 style="font-size: 1.2rem;" id="boss-card-title">👾 Boss Card</h2>
       <canvas class="card-canvas" id="boss-canvas"></canvas>
       <div style="font-size:0.72rem; font-weight:800;" id="boss-card-rarity"></div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
@@ -582,15 +637,25 @@
     </div>
   </div>
 
-  <!-- Collection Book Modal -->
+  <!-- Buddy Dex Modal (was the Collection Book) -->
   <div class="modal-overlay" id="book-modal" data-close="closeBook">
     <div class="modal-content">
-      <h2 style="font-size: 1.3rem;">📖 Collection Book</h2>
+      <h2 style="font-size: 1.3rem;">📖 Buddy Dex</h2>
       <div class="book-progress" id="book-progress">0 / 0 discovered</div>
       <div class="ms-row" id="book-milestones"></div>
       <div class="book-tabs" id="book-tabs"></div>
       <div id="book-body"></div>
       <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeBook()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Map: regions, gyms and badges -->
+  <div class="modal-overlay" id="map-modal" data-close="closeMap">
+    <div class="modal-content">
+      <h2 style="font-size:1.3rem; margin-bottom:2px;">🗺️ Number Kingdom Map</h2>
+      <div class="book-progress" id="map-progress"></div>
+      <div id="map-body"></div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>
     </div>
   </div>
 

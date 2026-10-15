@@ -39,7 +39,20 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Every boss in `monstersList` is also a buddy (`bossBuddies`, generated from the list; id `boss_<position>`), won by beating it 3 times in its Alpha form. A new boss needs nothing extra, but boss buddies are placed in packs by element.
 - Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 344 buddies, 53 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 345 buddies, 54 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+
+## Battles: wild buddies and bosses
+- Most battles are against a wild buddy (`13b-wild.js`, numbers in `ECON.wild` / `ECON.sell`); a boss comes after every 5-8 of them. `state.wild.id` is the wild buddy being fought, `''` means a boss. Only bosses count toward `monstersDefeated`, raids, the Alpha buddy rule and the golden vault.
+- `getBossInfo()` returns the foe for both; check `.wild` before using boss-only data (`currentMonsterIndex`, weak point, `bossBook`). Pick the next foe with `pickNextFoe()`, never `pickNextBoss()` directly.
+- A caught buddy you already own is a spare (`state.spares`); `sellSpare()` / `spareValue()` pay far less than the shop price. Only store and secret buddies appear wild (mythic, ultra and boss buddies keep their own ways).
+- Fainted buddies revive only after a boss. Quests that count bosses (`boss`, `flawless`) ignore wild buddies. One free buddy swap per battle (`state.swapUsed`): every way of changing the fighter (team chips, Sanctuary equip, adopting, a caught buddy's Equip Now) must go through `useSwap()`. Only team members can fight (`getTeam()` always includes the fighter; `useSwap()` refuses outsiders; a new buddy joins only if `joinTeamIfRoom()`, otherwise the Sanctuary, adopting and Equip Now ask which team buddy it replaces with `openReplaceModal()`; resting buddies cannot be replaced). When the whole team has fainted everyone is revived. When the fighter faints and a team member can still fight, nothing is replaced automatically: answering waits until the player taps a teammate (`needsSwitch()`, `holdForSwitch()`; the forced switch is not the free swap). A boss with `minLevel` only appears for a strong enough buddy (`bossAvailable()`). Boss and wild attack both grow with level (`bossAtk()`, `wildStats()`).
+- Tests start on a boss (`openGame` seeds a save); pass `wildStart: true` for the real start. A test that wins several bosses in a row must set `state.wild.id = ''` and `state.wild.since = 99` so a boss comes next.
+
+## Journey systems (moves, status, roles, map)
+- Moves (`12c-moves.js`): correct answers charge energy (`ultimateCharge`, 0-3); the Moves sheet spends it. Buddies learn moves by level (`MOVES`). Status effects (`12d-status.js`) change scoring, never whether an answer is right; they are not saved. Roles and held items are in `25b-held.js` (roles come from the element).
+- The Map (`24b-map.js`): regions unlock by best buddy level, gyms are trainer battles (never catchable, not counted toward the next boss) and a leader boss; badges and Champion pay once. Use `showStoryModal()` for any story window.
+- The Buddy Dex is the old Collection Book (`30-collection-book.js`, ids still `book-*`): `markDexSeen()` when a buddy is met. Catch Nets, the flawless bonus and the daily rare are in `ECON.wild` / `ECON.daily`.
+- After a new battle system: new saved fields need defaults and a normalizer; run `npm run sim` (energy moves shorten battles: `HITS_PER_BOSS` in the sim).
 
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.
@@ -69,6 +82,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Respect reduced motion (`.reduce-motion`, `motionReduced()`); new animations are disabled by that class automatically, new canvas/particle effects must check it.
 - Small text needs 4.5:1 contrast. Use the CSS variables in `:root`, not new one-off colours.
 - Short iPhones (SE: 375x548 to 647) are the tightest case: decorative rows hide by height in `styles.css` so the equation and answer box never clip. Windows need `min-width:0` and must stay inside the screen with wide letters; `tests/windows.test.mjs` checks both.
+- The answer area (`.arena`, `#equation-mount`) is a size container: the equation is sized from the room it has (`cqh`), and banner then feedback step aside when it is short. Add rows above it freely, but run `tests/layout.test.mjs` (worst case at six phone sizes). Battle team chips are `.swap-chip` (`.team-chip` is the tournament picker).
 - Look at your change: screenshot at 360x640 and 420x800 before calling UI work done.
 
 ## Tests

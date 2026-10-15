@@ -37,20 +37,29 @@ function startRaid() {
   state.lastRaidAt = state.monstersDefeated;
   state.raid = { phase: 0, total: ECON.raid.phases, weaks: weaks, chapter: state.raidsCleared % RAID_STORY.length, introSeen: false };
 }
+// One story window for raids and the map: {chapter, title, panels:[{icon,text}], note, btn, cleared}
+function showStoryModal(o) {
+  document.getElementById('raid-chapter').innerText = o.chapter;
+  document.getElementById('raid-title').innerText = o.title;
+  document.getElementById('raid-panels').innerHTML = o.panels.map(function (pn) {
+    return '<div class="comic-panel"><span class="comic-icon">' + pn.icon + '</span><span class="comic-text">' + escHtml(pn.text) + '</span></div>';
+  }).join('');
+  document.getElementById('raid-note').innerText = o.note || '';
+  document.getElementById('raid-btn').innerText = o.btn;
+  soundFanfare(!!o.cleared);
+  document.getElementById('raid-modal').style.display = 'flex';
+}
 function showRaidStory(mode, chapter) {
   const st = RAID_STORY[chapter % RAID_STORY.length];
   const intro = mode === 'intro';
   if (intro && state.raid) { state.raid.introSeen = true; saveState(); }
-  document.getElementById('raid-chapter').innerText = 'Chapter ' + (chapter + 1) + (intro ? ' · Raid!' : ' · Cleared!');
-  document.getElementById('raid-title').innerText = intro ? st.title : '🎉 Raid Cleared!';
-  const panels = intro ? st.panels : [{ icon: '🏆', text: st.outro }, { icon: '💎', text: 'Raid bonus: +' + ECON.raid.bonusGems + ' gems!' }];
-  document.getElementById('raid-panels').innerHTML = panels.map(function (pn) {
-    return '<div class="comic-panel"><span class="comic-icon">' + pn.icon + '</span><span class="comic-text">' + escHtml(pn.text) + '</span></div>';
-  }).join('');
-  document.getElementById('raid-note').innerText = intro ? 'Raid bosses have 3 phases — and a new weak point each phase!' : 'Raids cleared: ' + state.raidsCleared;
-  document.getElementById('raid-btn').innerText = intro ? '⚔️ To battle!' : 'Hooray!';
-  soundFanfare(!intro ? true : false);
-  document.getElementById('raid-modal').style.display = 'flex';
+  showStoryModal({
+    chapter: 'Chapter ' + (chapter + 1) + (intro ? ' · Raid!' : ' · Cleared!'),
+    title: intro ? st.title : '🎉 Raid Cleared!',
+    panels: intro ? st.panels : [{ icon: '🏆', text: st.outro }, { icon: '💎', text: 'Raid bonus: +' + ECON.raid.bonusGems + ' gems!' }],
+    note: intro ? 'Raid bosses have 3 phases — and a new weak point each phase!' : 'Raids cleared: ' + state.raidsCleared,
+    btn: intro ? '⚔️ To battle!' : 'Hooray!', cleared: !intro
+  });
 }
 function closeRaidModal() {
   soundClick();

@@ -7,6 +7,7 @@ const ECON = {
   solve: { gem: 1, speedGem: 1, streakEvery: 3, streakBonus: 2 },
   boss: {
     gemBase: 8, gemPerLevels: 5,
+    atkPerLevels: 10,        // a boss's attack grows by 1 every 10 levels (wild buddies: ECON.wild.atkPerLevels)
     // A "slayer" boss is strong against one buddy: it hits that buddy harder (and may take up to 60% of its max HP in one hit instead of 40%),
     // and that buddy only deals 75% damage to it (no Shadow bonus).
     slayer: { extraDamage: 2, maxHpShare: 0.6, yourDamage: 0.75 },
@@ -18,12 +19,39 @@ const ECON = {
   // Beat any boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
   // A boss you have started on (1 or 2 Alpha wins) is picked `weight` times as often, once your buddy can reach Alpha bosses (level `minLevel`).
   bossBuddy: { alphaWins: 3, weight: 5, minLevel: 43 },
+  // Wild buddies: most battles. A boss comes after every `bossEvery` [min, max] of them. A wild buddy's HP grows with its level (`hpBase` + `hpPerLevel` per level)
+  // and so does its attack (+1 per `atkPerLevels` levels), so fights stay even as your buddy grows. Beating one may catch it: `catchChance` by rarity,
+  // times `matchup.strong` when your buddy is strong against it and `matchup.weak` when it is weak against it.
+  // `storeShare`: how often the wild buddy is a store buddy (else a secret one; their catch chance is low so secret buddies stay a rare find).
+  wild: {
+    hpBase: 3, hpPerLevel: 0.4, atkPerLevels: 15, gemBase: 4, gemPerLevels: 6, xpBase: 8, bossEvery: [5, 8], storeShare: 0.35,
+    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.03 }, matchup: { strong: 1.5, weak: 0.5 },
+    flawless: 1.25,                                   // beating it without a single mistake
+    // Catch Nets: after a wild win you choose how many to throw (0-3). `mult[n]` multiplies the chance (never above `max`); you can hold `stock`.
+    net: { mult: [1, 1.5, 2, 2.5], max: 0.75, stock: 9 }
+  },
+  // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
+  sell: { storeShare: 0.2, secret: 12 },
+  // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
+  // Winning the gym gives a badge and gems; all six badges make you Champion.
+  map: {
+    levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
+    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250
+  },
+  // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
+  daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
+  // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
+  held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
+  // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
+  status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
+  // Moves (12c-moves.js): Recover heals this share of max HP.
+  moves: { healShare: 0.4 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
-  items: { shield: 100, ult: 33, clover: 25 },
+  items: { shield: 100, ult: 33, clover: 25, net: 30 },
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,
@@ -50,6 +78,11 @@ const ECON = {
 // Gems for reaching a session goal of `solved` problems (grows with the goal, but is capped).
 function sessionGoalReward(solved) {
   return Math.min(ECON.sessionGoal.maxReward, Math.round(solved / ECON.sessionGoal.rewardDiv) + ECON.sessionGoal.rewardBase);
+}
+
+// What a spare buddy sells for.
+function spareValue(isStore, cost) {
+  return isStore ? Math.max(1, Math.round(cost * ECON.sell.storeShare)) : ECON.sell.secret;
 }
 
 // A stake is allowed when it is on the list and the player holds at least `stakeCoverage` times as many gems.

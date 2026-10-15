@@ -63,6 +63,31 @@ function explainMistake() {
   document.getElementById('hint-box').innerText = '📘 How to: ' + text;
   explainHold = 2600;
 }
+// The "not quite" card: the right answer for 5 seconds, or until the player taps the ✕ / outside / Escape.
+// It does not use showModal() on purpose: that pauses the problem clock, and the next problem is already running.
+const MISS_CARD_MS = 5000;
+let missCardTimer = null;
+function showMissCard(said) {
+  const p = currentProblem;
+  const eq = p.expr ? p.expr.replace(/<[^>]+>/g, '') : p.num1 + ' ' + p.operator + ' ' + p.num2;
+  document.getElementById('miss-eq').innerText = eq + ' = ?';
+  document.getElementById('miss-said').innerText = 'You said ' + fmtAns(said);
+  document.getElementById('miss-answer').innerText = fmtAns(p.answer);
+  const how = hintFor(p, false);
+  document.getElementById('miss-how').innerText = how ? '📘 ' + how : '';
+  const bar = document.getElementById('miss-bar');
+  bar.style.animation = 'none';
+  void bar.offsetWidth;
+  bar.style.animation = '';
+  bar.style.animationDuration = MISS_CARD_MS / 1000 + 's';
+  document.getElementById('miss-modal').style.display = 'flex';
+  clearTimeout(missCardTimer);
+  missCardTimer = setTimeout(closeMissCard, MISS_CARD_MS);
+}
+function closeMissCard() {
+  clearTimeout(missCardTimer);
+  document.getElementById('miss-modal').style.display = 'none';
+}
 function useHint() {
   if (hintUsed || inputLocked) return;
   if (state.gems < ECON.hint.cost) { toast('You need ' + ECON.hint.cost + ' 💎 for a hint'); return; }

@@ -15,7 +15,9 @@ export const PROFILES = {
   typical: { name: 'Typical day (25 min)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true },
   keen: { name: 'Keen day (50 min)', problems: 180, accuracy: 0.9, questsDone: 1, tournamentRuns: 2, playsDaily: true }
 };
-const SPEED_SHARE = 0.5, STREAK_SHARE = 0.8, HITS_PER_BOSS = 4.5, AVG_BOSS_LEVEL = 10, CLEAR_ROUND = 0.8;
+// Wild battles: a boss every avg(bossEvery) of them. A caught buddy is a spare (sellable) about half the time once the collection is growing.
+const CATCH_RATE = 0.082, SPARE_SHARE = 0.5, AVG_SPARE_VALUE = 154, AVG_WILD_LEVEL = 9;   // 154: average sale of a caught store or secret buddy (20% of shop price, no maximum)
+const SPEED_SHARE = 0.5, STREAK_SHARE = 0.8, HITS_PER_BOSS = 4,   /* energy moves add a little damage, so a battle takes about 4 answers */ AVG_BOSS_LEVEL = 10, CLEAR_ROUND = 0.8;
 const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
 const vals = (o) => Object.keys(o).map((k) => o[k]);
 
@@ -23,7 +25,10 @@ export function simulate(p) {
   const E = ECON;
   const correct = p.problems * p.accuracy;
   const perCorrect = E.solve.gem + SPEED_SHARE * E.solve.speedGem + STREAK_SHARE * (E.solve.streakBonus / E.solve.streakEvery);
-  const bosses = correct / HITS_PER_BOSS;
+  const fights = correct / HITS_PER_BOSS;
+  const perBoss = avg(E.wild.bossEvery);
+  const bosses = fights / (perBoss + 1);
+  const wildFights = fights - bosses;
 
   let goals = 0;
   for (let g = E.sessionGoal.start; g <= p.problems; g += E.sessionGoal.step) goals += sessionGoalReward(g);
@@ -43,6 +48,8 @@ export function simulate(p) {
   const sources = {
     'solving problems': correct * perCorrect,
     'boss victories': bosses * (E.boss.gemBase + Math.floor(AVG_BOSS_LEVEL / E.boss.gemPerLevels)),
+    'wild battles': wildFights * (E.wild.gemBase + Math.floor(AVG_WILD_LEVEL / E.wild.gemPerLevels)),
+    'selling spares': wildFights * CATCH_RATE * SPARE_SHARE * AVG_SPARE_VALUE,
     'raid bonuses': (bosses / E.raid.every) * CLEAR_ROUND * E.raid.bonusGems,
     'session goals': goals,
     'daily quests': quests,

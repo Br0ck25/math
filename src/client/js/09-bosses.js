@@ -2,7 +2,28 @@
 //  BOSSES: LEVELS + EVOLVED FORMS
 // =====================================================================
 function getBossFormIndex(lvl) { return lvl >= 45 ? 2 : (lvl >= 20 ? 1 : 0); }
+const WILD_TAUNTS = ['Let us see what you have got!', 'I will not go down easy!', 'Think you can catch me?', 'Show me your best math!'];
+// A wild buddy's HP and attack grow with its level (ECON.wild), so battles stay even as your buddy levels up.
+function wildStats(level) {
+  return { maxHp: ECON.wild.hpBase + Math.floor(level * ECON.wild.hpPerLevel), atk: 1 + Math.floor(level / ECON.wild.atkPerLevels) };
+}
+// A boss's attack: grows with its level, +1 as an Alpha, plus its own bonus (Rocky).
+function bossAtk(base, level, form) {
+  return 1 + (base.atkBonus || 0) + (form === 2 ? 1 : 0) + Math.floor(level / ECON.boss.atkPerLevels);
+}
+// Some bosses only appear once your buddy is strong enough (monster.minLevel).
+function bossAvailable(i) { return (monstersList[i].minLevel || 0) <= getBuddyLevel(state.activePet); }
 function getBossInfo() {
+  if (state.wild.id) {
+    const sp = getSpecies(state.wild.id), st = wildStats(bossLevel), trainer = state.wild.trainer;
+    if (trainer) st.maxHp = Math.ceil(st.maxHp * ECON.map.trainerHpMult);
+    const shiny = !!state.wild.shiny;
+    if (shiny) st.maxHp = Math.ceil(st.maxHp * ECON.daily.hpMult);
+    return {
+      name: (shiny ? '✨ ' : '') + (trainer ? trainer + "'s " + sp.name : sp.name), trainer: trainer, shiny: shiny, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
+      form: 0, level: bossLevel, maxHp: st.maxHp, atk: st.atk, swapped: false
+    };
+  }
   const base = monstersList[currentMonsterIndex];
   const form = getBossFormIndex(bossLevel);
   const name = form === 2 ? 'Alpha ' + base.name : (form === 1 ? 'Elder ' + base.name : base.name);
@@ -10,7 +31,7 @@ function getBossInfo() {
     name: state.raid ? '👑 ' + name : name, icon: base.icon, element: base.element, taunts: base.taunts, slays: base.slays || null,
     form: form, level: bossLevel,
     maxHp: base.baseHp + Math.floor(bossLevel / 3) + form * 2 + (state.raid ? 2 : 0) + (state.bossSwapped ? ECON.boss.swap.extraHp : 0),
-    atk: 1 + (form === 2 ? 1 : 0) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
+    atk: bossAtk(base, bossLevel, form) + (state.bossSwapped ? ECON.boss.swap.extraAtk : 0),
     swapped: !!state.bossSwapped
   };
 }
@@ -20,11 +41,11 @@ function slayerTarget(boss) { const sp = boss.slays && getSpecies(boss.slays); r
 function getBossMaxHp() { return getBossInfo().maxHp; }
 
 const TYPE_STRONG = {
-  fire: ['nature'],
-  water: ['fire'],
+  fire: ['nature', 'dark'],
+  water: ['fire', 'magic'],
   nature: ['water', 'electric'],
   electric: ['water', 'magic'],
-  dark: ['nature'],
+  dark: ['nature', 'electric'],
   magic: ['dark', 'fire']
 };
 // The element a fighter battles with: ultra-rare buddies always use Shadow power, whatever element badge they show.
@@ -50,7 +71,7 @@ function wantedBossCopies(candidates) {
 }
 // The partner an Alpha boss calls for: half the time one that beats your buddy (a slayer of it, or an element strong against it), else any other boss.
 function pickBackupBoss(pet) {
-  const others = monstersList.map(function (_, i) { return i; }).filter(function (i) { return i !== currentMonsterIndex; });
+  const others = monstersList.map(function (_, i) { return i; }).filter(function (i) { return i !== currentMonsterIndex && bossAvailable(i); });
   if (Math.random() < ECON.boss.swap.counterChance) {
     const counters = others.filter(function (i) {
       const m = monstersList[i];
@@ -70,6 +91,7 @@ function maybeBackupBoss(boss, pet) {
   currentMonsterIndex = pickBackupBoss(pet);
   state.currentMonsterIndex = currentMonsterIndex;
   state.bossSwapped = true;
+  state.swapUsed = false;
   state.recentBossTypes.push(monstersList[currentMonsterIndex].element);
   if (state.recentBossTypes.length > 10) state.recentBossTypes = state.recentBossTypes.slice(-10);
   markBossSeen(currentMonsterIndex);
@@ -86,6 +108,11 @@ function maybeBackupBoss(boss, pet) {
   return true;
 }
 function pickNextBoss() {
+  state.wild.id = '';
+  state.wild.trainer = '';
+  state.wild.shiny = false;
+  state.wild.since = 0;
+  state.wild.next = rnd(ECON.wild.bossEvery[0], ECON.wild.bossEvery[1]);
   if (!state.recentBossTypes) state.recentBossTypes = [];
   let excludedType = null;
   const len = state.recentBossTypes.length;
@@ -95,9 +122,9 @@ function pickNextBoss() {
   let candidates = [];
   for (let i = 0; i < monstersList.length; i++) {
     if (excludedType && monstersList[i].element === excludedType) continue;
-    if (i !== currentMonsterIndex) candidates.push(i);
+    if (i !== currentMonsterIndex && bossAvailable(i)) candidates.push(i);
   }
-  if (candidates.length === 0) candidates = monstersList.map(function (_, idx) { return idx; });
+  if (candidates.length === 0) candidates = monstersList.map(function (_, idx) { return idx; }).filter(bossAvailable);
   candidates = candidates.concat(wantedBossCopies(candidates));
 
   const nextIdx = candidates[rnd(0, candidates.length - 1)];
@@ -108,6 +135,8 @@ function pickNextBoss() {
 
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-2, 3), 1, MAX_LEVEL);
   state.bossSwapped = false;
+  state.swapUsed = false;
+  resetBattleEffects();
   state.raid = null;
   if (state.monstersDefeated > 0 && state.monstersDefeated % ECON.raid.every === 0 && state.lastRaidAt !== state.monstersDefeated) {
     startRaid();

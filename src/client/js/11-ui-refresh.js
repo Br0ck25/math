@@ -40,6 +40,8 @@ function updateBattleUI() {
   fw.classList.toggle('combo-hot', state.streak >= 5);                          // a fiery glow while the combo is hot
 
   renderItemButtons();
+  updateTeamBar();
+  renderStatus();
 
   const petElemBadge = document.getElementById('pet-elem-badge');
   petElemBadge.innerText = pet.element;
@@ -67,20 +69,26 @@ function updateBattleUI() {
     hint.style.color = 'var(--text-muted)';
   }
 
+  document.getElementById('boss-box').classList.toggle('shiny', !!boss.shiny);
+  const region = currentRegion();
+  document.getElementById('battle-header-arena').style.setProperty('--region', region.element ? elemColor(region.element) : '');
+  if (region.element) hint.innerText = region.icon + ' ' + hint.innerText;           // the land you are in
+
   document.getElementById('ult-bar').style.width = `${Math.round((ultimateCharge / 3) * 100)}%`;
   const ultBtn = document.getElementById('ult-btn');
   if (ultimateCharge >= 3) {
     ultBtn.className = 'ult-btn ready';
-    ultBtn.innerText = `🔥 ${pet.superMove}!`;
+    ultBtn.innerHTML = '<span class="ult-word">MOVES </span>⚡3/3';
   } else {
     ultBtn.className = 'ult-btn';
-    ultBtn.innerText = `CHARGING (${ultimateCharge}/3)`;
+    ultBtn.innerHTML = `<span class="ult-word">MOVES </span>⚡${ultimateCharge}/3`;       // the word steps aside on narrow phones
   }
 
   document.getElementById('comp-count-badge').innerText = getOwnedIds().length;
   document.getElementById('shield-display').innerText = state.shields;
   document.getElementById('session-count-text').innerText = sessionStats.solved;
   document.getElementById('session-goal-text').innerText = sessionStats.goal;
+  document.getElementById('goal-pill-text').innerText = sessionStats.solved + '/' + sessionStats.goal;
   document.getElementById('session-badge').innerText = `🎁 ${sessionStats.goal}`;       // the gem reward arrives at this many solves
 
   const cloverTag = document.getElementById('clover-status');

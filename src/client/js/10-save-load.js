@@ -55,6 +55,7 @@ function fillDefaults(target, defaults) {
 const NORMALIZERS = [
   function core(s) {
     s.gems = isFinite(s.gems) ? Math.max(0, s.gems) : 0;
+    s.nets = asInt(s.nets, 0, ECON.wild.net.stock, 0);
     s.grade = clamp(parseInt(s.grade, 10) || 0, 0, GRADES.length - 1);
     if (!s.enabledOps.length) s.enabledOps = GRADE_DEFAULT_OPS[s.grade].slice();
     if (s.unlockedPets.indexOf('dog') === -1) s.unlockedPets.unshift('dog');
@@ -63,6 +64,58 @@ const NORMALIZERS = [
     if (!s.unlockedArmor.length) s.unlockedArmor = ['none'];
     if (!s.activeArmor || s.unlockedArmor.indexOf(s.activeArmor) === -1) s.activeArmor = 'none';
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
+  },
+  function records(s) {
+    const r = s.records;
+    r.fastest = isFinite(r.fastest) ? clamp(r.fastest, 0, 3600) : 0;
+    r.bestStreak = asInt(r.bestStreak, 0, 1000000, 0);
+    r.solved = asInt(r.solved, 0, 100000000, 0);
+    r.attempts = asInt(r.attempts, 0, 100000000, 0);
+    if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
+  },
+  function map(s) {
+    s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
+    if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
+    const g = s.gym;
+    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && s.badges.indexOf(g.region) === -1) {
+      s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
+      s.region = g.region;
+    } else s.gym = null;
+  },
+  function daily(s) {
+    s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
+    s.daily.fights = asInt(s.daily.fights, 0, 1000, 0);
+  },
+  function held(s) {
+    const ids = HELD_ITEMS.map(function (i) { return i.id; });
+    s.heldOwned = s.heldOwned.filter(function (id, i) { return ids.indexOf(id) !== -1 && s.heldOwned.indexOf(id) === i; });
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), taken = {}, held = {};
+    Object.keys(s.held).forEach(function (b) {
+      const item = s.held[b];
+      if (owned.indexOf(b) !== -1 && s.heldOwned.indexOf(item) !== -1 && !taken[item]) { held[b] = item; taken[item] = true; }
+    });
+    s.held = held;
+  },
+  function dex(s) {
+    const seen = {};
+    Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });
+    s.dexSeen = seen;
+  },
+  function wild(s) {
+    const w = s.wild;
+    const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
+    w.id = ok ? w.id : '';
+    w.shiny = w.shiny === true && !!w.id && !w.trainer;
+    w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
+    w.since = asInt(w.since, 0, 50, 0);
+    w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
+    delete w.miss;                                   // an old catch-streak counter
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), spares = {};
+    Object.keys(s.spares).forEach(function (id) {
+      const n = asInt(s.spares[id], 0, 99, 0);
+      if (n > 0 && owned.indexOf(id) !== -1) spares[id] = n;
+    });
+    s.spares = spares;
   },
   function bossBook(s) {
     const book = {};
@@ -138,13 +191,15 @@ function loadState() {
   normalizeState();
 
   partyHp = {};
-  if (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel) {
-    currentMonsterIndex = state.currentMonsterIndex;
+  markDexSeen(state.wild.id);
+  const wildFight = !!state.wild.id && !!state.bossLevel;
+  if (wildFight || (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel)) {
+    currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
     bossLevel = clamp(state.bossLevel, 1, MAX_LEVEL);
     monsterCurrentHp = getBossMaxHp();
   } else {
     currentMonsterIndex = -1;
-    pickNextBoss();
+    pickNextFoe();
   }
   bossMistakes = 0;
   markBossSeen(currentMonsterIndex);
