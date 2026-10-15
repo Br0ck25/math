@@ -323,6 +323,17 @@ const bossBuddies = monstersList.map(function (m, i) {
   };
 });
 
+// Legendary buddies: one per type, hunted once a week by Champions (24c-legend.js). They are only ever won that way.
+// Append new ones; their order sets which type comes up in which week.
+const legendPets = [
+  { id: 'legend_fire', name: 'Solaris', icon: '🌞', element: 'fire', superMove: 'Sun Crown Blast', lore: 'Born in the heart of the Ember Hills, Solaris lights every sunrise.' },
+  { id: 'legend_water', name: 'Tsunara', icon: '🐋', element: 'water', superMove: 'Great Wave', lore: 'Tsunara sings in the deepest part of Tide Bay and the tides listen.' },
+  { id: 'legend_nature', name: 'Sylvara', icon: '🦌', element: 'nature', superMove: 'Ancient Bloom', lore: 'Flowers grow wherever Sylvara walks in Leaf Grove.' },
+  { id: 'legend_electric', name: 'Stormara', icon: '🌩️', element: 'electric', superMove: 'Skyfall Bolt', lore: 'Stormara rides the lightning above Volt Valley.' },
+  { id: 'legend_dark', name: 'Umbra', icon: '🌑', element: 'dark', superMove: 'Eclipse', lore: 'Umbra drifts through Gloom Marsh and hides the moon when it is shy.' },
+  { id: 'legend_magic', name: 'Lumina', icon: '🌟', element: 'magic', superMove: 'Starfall', lore: 'Lumina sleeps on Mystic Peak and dreams the stars into the sky.' }
+].map(function (l) { return { ...l, secret: true, legend: true }; });
+
 // Completely Unique Secret Companions
 const secretSpecies = [
   { name: 'Leo', icon: '🦁', elem: 'nature', superMove: 'Sovereign Roar' },

@@ -95,7 +95,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       launchConfetti(wild ? 'streak' : 'boss');
       screenShake(!wild);
       const leaderFight = !wild && inGymLeaderFight();
-      if (wild) { if (!state.gym) state.wild.since += 1; }       // gym battles do not count toward the next boss
+      if (wild) { if (!state.gym && !state.wild.legend) state.wild.since += 1; }       // gym battles do not count toward the next boss
       else {
         questEvent('boss');
         if (bossMistakes === 0) questEvent('flawless');
@@ -108,6 +108,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
       if (boss.trainer) gemBonus += ECON.map.trainerGems;
       if (boss.shiny) gemBonus += ECON.daily.gems;
+      if (boss.legend) gemBonus += ECON.legend.gems;
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();

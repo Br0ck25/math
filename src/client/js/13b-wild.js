@@ -25,7 +25,7 @@ function wildCatchChance(sp, opts) {
   const W = ECON.wild.catchChance;
   const base = !isStoreBuddy(sp) ? W.secret : sp.cost < 150 ? W.cheap : sp.cost < 800 ? W.mid : W.rare;
   const rel = catchMatchup(sp);
-  let chance = base * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
+  let chance = (sp.legend ? ECON.legend.catchChance + ECON.legend.pity * legendState().misses : base) * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
   if (activeHolds('bait')) chance *= 1.25;
@@ -36,7 +36,7 @@ function wildCatchChance(sp, opts) {
 }
 function spareValueOf(id) {
   const sp = getSpecies(id);
-  return sp ? spareValue(isStoreBuddy(sp), sp.cost) : 0;
+  return sp ? spareValue(isStoreBuddy(sp), sp.cost, sp.legend) : 0;
 }
 
 function pickNextWild() {
@@ -60,6 +60,7 @@ function pickNextWild() {
     state.wild.shiny = true;
     toast('✨ A rare golden buddy appeared! It only comes once a day.');
   } else state.wild.shiny = false;
+  state.wild.legend = false;
   state.wild.id = sp.id;
   state.wild.trainer = '';
   markDexSeen(sp.id);
@@ -86,7 +87,7 @@ function pickNextFoe() {
 function rollCatch(wildId, flawless) {
   const sp = getSpecies(wildId);
   if (!sp) return;
-  if (!state.wild.shiny) state.daily.fights += 1;
+  if (!state.wild.shiny && !state.wild.legend) state.daily.fights += 1;
   const data = { id: wildId, flawless: !!flawless, shiny: state.wild.shiny };
   if (state.nets > 0) { enqueueModal(function () { showCatchModal(data); }); return; }
   resolveCatch(data, 0);
@@ -96,7 +97,9 @@ function resolveCatch(data, nets) {
   nets = Math.max(0, Math.min(nets, state.nets, ECON.wild.net.mult.length - 1));
   const chance = wildCatchChance(sp, { flawless: data.flawless, shiny: data.shiny, nets: nets });
   if (nets) { state.nets -= nets; toast('🕸️ ' + nets + ' Catch Net' + (nets > 1 ? 's' : '') + ' thrown (' + state.nets + ' left)'); }
+  if (sp.legend && Math.random() >= chance) { legendMiss(sp); return; }
   if (Math.random() >= chance) { if (data.shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
+  if (sp.legend) legendState().caught = true;
   if (data.shiny && !state.shinies[sp.id]) toast('✨ A shiny ' + sp.name + '! It will glow from now on.');
   if (getOwnedIds().indexOf(sp.id) !== -1) {
     if (data.shiny) state.shinies[sp.id] = 1;
@@ -108,7 +111,7 @@ function resolveCatch(data, nets) {
   (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id);
   if (data.shiny) state.shinies[sp.id] = 1;
   checkEarnedGear();
-  enqueueModal(function () { showLootModal(sp, 'wild'); });
+  enqueueModal(function () { showLootModal(sp, sp.legend ? 'legend' : 'wild'); });
 }
 
 // ----- the catch window: you beat a wild buddy, now choose how many nets to throw -----

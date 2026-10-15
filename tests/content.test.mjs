@@ -10,20 +10,20 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 345 buddies, 54 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 351 buddies, 54 bosses, 118 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
-    store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length
+    store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length, legend: legendPets.length
   }));
-  assert.deepEqual(c, { buddies: 345, bosses: 54, gear: 118, store: 43, mythic: 36, secret: 209 });
+  assert.deepEqual(c, { buddies: 351, bosses: 54, gear: 118, store: 43, mythic: 36, secret: 209, legend: 6 });
 });
 
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
   const bad = await inPage(() => {
     const out = [], seen = new Set();
     const elems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic', 'shadow'];
-    storePets.concat(mythicCompanions, secretCompanions, ultraPets, bossBuddies).forEach((p) => {
+    storePets.concat(mythicCompanions, secretCompanions, ultraPets, bossBuddies, legendPets).forEach((p) => {
       if (seen.has(p.id)) out.push('duplicate id ' + p.id);
       seen.add(p.id);
       if (elems.indexOf(p.element) === -1) out.push(p.id + ' element ' + p.element);

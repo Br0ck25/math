@@ -31,7 +31,7 @@ const ECON = {
     net: { mult: [1, 1.5, 2, 2.5], max: 0.75, stock: 9 }
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
-  sell: { storeShare: 0.2, secret: 12 },
+  sell: { storeShare: 0.2, secret: 12, legend: 100 },
   // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
   // Winning the gym gives a badge and gems; all six badges make you Champion.
   map: {
@@ -49,6 +49,9 @@ const ECON = {
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
   // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
   moves: { healShare: 0.4, slots: 4 },
+  // The Legend hunt (24c-legend.js): after becoming Champion, one legendary buddy a week (a different type each week) can be hunted once a day.
+  // It is a wild fight: HP x hpMult, `levels` above your buddy, and a win always pays `gems`. The catch chance starts at `catchChance` and grows by `pity` for every miss that week.
+  legend: { hpMult: 2.5, levels: 5, catchChance: 0.3, pity: 0.1, gems: 60 },
   // The Buddy Dex: owning every buddy of a pack pays once, per member, plus Catch Nets.
   dex: { packGemsPer: 8, packNets: 2 },
   levelUpGemsPerLevel: 3,
@@ -86,7 +89,8 @@ function sessionGoalReward(solved) {
 }
 
 // What a spare buddy sells for.
-function spareValue(isStore, cost) {
+function spareValue(isStore, cost, isLegend) {
+  if (isLegend) return ECON.sell.legend;
   return isStore ? Math.max(1, Math.round(cost * ECON.sell.storeShare)) : ECON.sell.secret;
 }
 

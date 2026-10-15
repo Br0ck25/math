@@ -39,7 +39,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Every boss in `monstersList` is also a buddy (`bossBuddies`, generated from the list; id `boss_<position>`), won by beating it 3 times in its Alpha form. A new boss needs nothing extra, but boss buddies are placed in packs by element.
 - Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 345 buddies, 54 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 351 buddies, 54 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
 ## Battles: wild buddies and bosses
 - Most battles are against a wild buddy (`13b-wild.js`, numbers in `ECON.wild` / `ECON.sell`); a boss comes after every 5-8 of them. `state.wild.id` is the wild buddy being fought, `''` means a boss. Only bosses count toward `monstersDefeated`, raids, the Alpha buddy rule and the golden vault.
@@ -49,6 +49,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Tests start on a boss (`openGame` seeds a save); pass `wildStart: true` for the real start. A test that wins several bosses in a row must set `state.wild.id = ''` and `state.wild.since = 99` so a boss comes next.
 
 ## Journey systems (moves, status, roles, map)
+- Moves take `ECON.moves.slots` slots per buddy (`equippedMoves()`, saved in `state.moveSet`); a new move marked `optional` is never in the default set. Champions can rematch gyms (`ECON.map.rematch`) and hunt the weekly legend (`24c-legend.js`, `ECON.legend`; `legendPets` are won only that way, a wild fight with `state.wild.legend`). Completing a Dex pack pays once (`ECON.dex`). Catching the golden daily rare sets `state.shinies`.
 - Moves (`12c-moves.js`): correct answers charge energy (`ultimateCharge`, 0-3); the Moves sheet spends it. Buddies learn moves by level (`MOVES`). Status effects (`12d-status.js`) change scoring, never whether an answer is right; they are not saved. Roles and held items are in `25b-held.js` (roles come from the element).
 - The Map (`24b-map.js`): regions unlock by best buddy level, gyms are trainer battles (never catchable, not counted toward the next boss) and a leader boss; badges and Champion pay once. Use `showStoryModal()` for any story window.
 - The Buddy Dex is the old Collection Book (`30-collection-book.js`, ids still `book-*`): `markDexSeen()` when a buddy is met. Catch Nets, the flawless bonus and the daily rare are in `ECON.wild` / `ECON.daily`.

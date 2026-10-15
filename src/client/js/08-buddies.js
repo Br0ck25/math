@@ -29,11 +29,12 @@ function secretForms(p) {
 ultraPets.concat(bossBuddies).forEach(function (p) { p.forms = secretForms(p); });
 mythicCompanions.forEach(function (p) { p.forms = secretForms(p); });
 secretCompanions.forEach(function (p) { p.forms = secretForms(p); });
+legendPets.forEach(function (p) { p.forms = secretForms(p); });
 
 function getSpecies(id) {
   const ultra = ultraPets.find(function (p) { return p.id === id; });
   if (ultra) return ultra;
-  const bb = bossBuddies.find(function (p) { return p.id === id; });
+  const bb = bossBuddies.find(function (p) { return p.id === id; }) || legendPets.find(function (p) { return p.id === id; });
   if (bb) return bb;
   return storePets.find(function (p) { return p.id === id; }) ||
          mythicCompanions.find(function (p) { return p.id === id; }) ||

@@ -184,7 +184,7 @@ test('bad wild and spare data in a save is repaired', async () => {
     NORMALIZERS.forEach((fn) => fn(state));
     return { wild: state.wild, spares: state.spares };
   });
-  assert.deepEqual(r.wild, { id: '', trainer: '', shiny: false, since: 0, next: 8 });
+  assert.deepEqual(r.wild, { id: '', trainer: '', shiny: false, legend: false, since: 0, next: 8 });
   assert.deepEqual(r.spares, { fox: 99 });
 });
 

@@ -43,7 +43,7 @@ test('packs are a sensible size and the cartoon packs match their shows', async 
     allBuddies().filter((b) => b.show).forEach((b) => { if (!packOf(b).shows) out.wrongShow.push(b.name + ' left its show'); });
     return { small: out.small, big: out.big, wrongShow: out.wrongShow, dupe: out.dupe, count: buddyPacks().length };
   });
-  assert.deepEqual(r, { small: [], big: [], wrongShow: [], dupe: [], count: 33 });
+  assert.deepEqual(r, { small: [], big: [], wrongShow: [], dupe: [], count: 34 });
 });
 
 test('the book groups buddies by pack with found / total counts, keeping the same cards', async () => {
@@ -56,8 +56,8 @@ test('the book groups buddies by pack with found / total counts, keeping the sam
     const pets = titles.find((t) => t.includes('pet shop pack')), woods = titles.find((t) => t.includes('woodland pack')), bluey = titles.find((t) => t.includes('bluey pack'));
     return { sections: titles.length, cards, allCardsHaveBadge: cards === badges, pets, woods, bluey, first: titles[0] };
   });
-  assert.equal(r.sections, 33);
-  assert.equal(r.cards, 345);
+  assert.equal(r.sections, 34);
+  assert.equal(r.cards, 351);
   assert.equal(r.allCardsHaveBadge, true);
   assert.match(r.pets, /\(1 \/ 13\)/);
   assert.match(r.woods, /\(1 \/ 22\)/);

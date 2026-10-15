@@ -29,8 +29,8 @@ test('the map lists seven lands; the others open by level and travelling to a lo
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const rows = document.querySelectorAll('#map-body .map-row').length;
-    const locked = document.querySelectorAll('#map-body .map-row.locked').length;
+    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row)').length;
+    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row)').length;
     const text = document.getElementById('map-body').innerText;
     travelTo('tide'); const refused = state.region;
     travelTo('ember'); const ok = state.region;

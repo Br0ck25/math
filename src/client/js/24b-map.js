@@ -62,6 +62,7 @@ function pickGymFoe() {
     state.wild.id = sp.id;
     state.wild.trainer = GYM_TRAINERS[g.step % GYM_TRAINERS.length];
     state.wild.shiny = false;
+    state.wild.legend = false;
     markDexSeen(sp.id);
     bossLevel = clamp(mine + rnd(0, 2) + bonus, 1, MAX_LEVEL);
   } else {
@@ -71,6 +72,7 @@ function pickGymFoe() {
     state.wild.id = '';
     state.wild.trainer = '';
     state.wild.shiny = false;
+    state.wild.legend = false;
     bossLevel = clamp(mine + rnd(1, 3) + bonus, 1, MAX_LEVEL);
     markBossSeen(currentMonsterIndex);
   }
@@ -159,7 +161,7 @@ function leaveGym() {
 function renderMap() {
   const best = getBestLevel(), total = gymRegions().length;
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '');
-  let h = '';
+  let h = legendRowHtml();
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
     const need = regionLevel(r);

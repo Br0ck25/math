@@ -14,8 +14,8 @@ export const PROFILES = {
   quick: { name: 'Quick session (10 min)', problems: 30, accuracy: 0.8, questsDone: 0.5, tournamentRuns: 0, playsDaily: true },
   typical: { name: 'Typical day (25 min)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true },
   keen: { name: 'Keen day (50 min)', problems: 180, accuracy: 0.9, questsDone: 1, tournamentRuns: 2, playsDaily: true },
-  // A Champion on a typical day who also does the daily rematches (each is 3 trainers and a leader, about 4 battles).
-  champion: { name: 'Champion (25 min + rematches)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true, rematchLands: 3 }
+  // A Champion on a typical day who also does the daily rematches (each is 3 trainers and a leader, about 4 battles) and hunts the weekly legend every day.
+  champion: { name: 'Champion (25 min + rematches)', problems: 80, accuracy: 0.85, questsDone: 0.8, tournamentRuns: 2, playsDaily: true, rematchLands: 3, legendHunts: 1 }
 };
 // Wild battles: a boss every avg(bossEvery) of them. A caught buddy is a spare (sellable) about half the time once the collection is growing.
 const CATCH_RATE = 0.082, SPARE_SHARE = 0.5, AVG_SPARE_VALUE = 154, AVG_WILD_LEVEL = 9;   // 154: average sale of a caught store or secret buddy (20% of shop price, no maximum)
@@ -57,7 +57,8 @@ export function simulate(p) {
     'daily quests': quests,
     'streak calendar': calendar,
     'tournament': tournament,
-    'champion rematches': (p.rematchLands || 0) * E.map.rematch.gems
+    'champion rematches': (p.rematchLands || 0) * E.map.rematch.gems,
+    'legend hunt': (p.legendHunts || 0) * E.legend.gems
   };
   const total = vals(sources).reduce((a, b) => a + b, 0);
   const sinks = { hints: 3 * E.hint.cost, 'buddy care': E.care.treatCost + E.care.favCost };

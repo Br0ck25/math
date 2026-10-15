@@ -245,7 +245,7 @@ function renderSecretPets() {
   // Regular secrets
   const container = document.getElementById('secret-pet-grid');
   container.innerHTML = '';
-  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.concat(bossBuddies).some(function (u) { return u.id === id; }); });
+  const regular = state.unlockedSecrets.filter(function (id) { return id.indexOf('mythic_') !== 0 && !ultraPets.concat(bossBuddies, legendPets).some(function (u) { return u.id === id; }); });
   document.getElementById('secret-found-count').innerText = regular.length;
   if (regular.length === 0) {
     container.innerHTML = '<div class="empty-note">Defeat bosses in battle to discover rare secret creatures!</div>';

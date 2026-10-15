@@ -112,13 +112,21 @@ const NORMALIZERS = [
     Object.keys(s.shinies || {}).forEach(function (id) { if (s.shinies[id] && owned.indexOf(id) !== -1) shiny[id] = 1; });
     s.shinies = shiny;
   },
+  function legend(s) {
+    const l = s.legend;
+    l.week = asInt(l.week, -1, 1e6, -1);
+    l.day = typeof l.day === 'string' ? l.day.slice(0, 12) : '';
+    l.caught = l.caught === true;
+    l.misses = asInt(l.misses, 0, 20, 0);
+  },
   function packs(s) {
     s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
   },
   function wild(s) {
     const w = s.wild;
-    const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
+    const ok = w.id && (wildPool().some(function (p) { return p.id === w.id; }) || (w.legend === true && legendPets.some(function (p) { return p.id === w.id; })));
     w.id = ok ? w.id : '';
+    w.legend = w.legend === true && !!w.id && !w.trainer && legendPets.some(function (p) { return p.id === w.id; });
     w.shiny = w.shiny === true && !!w.id && !w.trainer;
     w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
     w.since = asInt(w.since, 0, 50, 0);

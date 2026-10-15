@@ -31,6 +31,7 @@ const PACKS = [
   { id: 'peppa', name: 'Peppa Pig Pack', icon: '🐷', shows: ['Peppa Pig'] },
   { id: 'simpsons', name: 'Simpsons Pack', icon: '🍩', shows: ['The Simpsons'] },
   { id: 'looney', name: 'Looney Tunes Pack', icon: '🥕', shows: ['Looney Tunes'] },
+  { id: 'legends-hunt', name: 'Legend Hunt Pack', icon: '🌟', ids: ['legend_fire', 'legend_water', 'legend_nature', 'legend_electric', 'legend_dark', 'legend_magic'] },
   { id: 'boss-fire', name: 'Fire Boss Pack', icon: '🔥', bossElem: 'fire' },
   { id: 'boss-water', name: 'Water Boss Pack', icon: '💧', bossElem: 'water' },
   { id: 'boss-nature', name: 'Nature Boss Pack', icon: '🌿', bossElem: 'nature' },
@@ -43,7 +44,7 @@ const PACK_BY_ID = {};
 PACKS.forEach(function (p) { PACK_BY_ID[p.id] = p; });
 
 // Every buddy in the game, in one list: store, mythic, the ultra-rare trio, the boss buddies, then secret creatures.
-function allBuddies() { return storePets.concat(mythicCompanions, ultraPets, bossBuddies, secretCompanions); }
+function allBuddies() { return storePets.concat(mythicCompanions, ultraPets, bossBuddies, secretCompanions, legendPets); }
 
 let packCache = null;
 function packOf(sp) {
