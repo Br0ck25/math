@@ -2,7 +2,15 @@
 //  BOSSES: LEVELS + EVOLVED FORMS
 // =====================================================================
 function getBossFormIndex(lvl) { return lvl >= 45 ? 2 : (lvl >= 20 ? 1 : 0); }
+const WILD_TAUNTS = ['Let us see what you have got!', 'I will not go down easy!', 'Think you can catch me?', 'Show me your best math!'];
 function getBossInfo() {
+  if (state.wild.id) {
+    const sp = getSpecies(state.wild.id);
+    return {
+      name: sp.name, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
+      form: 0, level: bossLevel, maxHp: ECON.wild.baseHp + Math.floor(bossLevel / 3), atk: 1, swapped: false
+    };
+  }
   const base = monstersList[currentMonsterIndex];
   const form = getBossFormIndex(bossLevel);
   const name = form === 2 ? 'Alpha ' + base.name : (form === 1 ? 'Elder ' + base.name : base.name);
@@ -86,6 +94,9 @@ function maybeBackupBoss(boss, pet) {
   return true;
 }
 function pickNextBoss() {
+  state.wild.id = '';
+  state.wild.since = 0;
+  state.wild.next = rnd(ECON.wild.bossEvery[0], ECON.wild.bossEvery[1]);
   if (!state.recentBossTypes) state.recentBossTypes = [];
   let excludedType = null;
   const len = state.recentBossTypes.length;

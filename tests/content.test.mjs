@@ -301,6 +301,7 @@ test('the arrival message warns when the new boss is a slayer of your active bud
   const msg = await inPage(async () => {
     state.unlockedSecrets.push('secret_papaw'); grantBuddy('secret_papaw'); state.activePet = 'secret_papaw';
     state.monstersDefeated = 0; partyHp = {};
+    state.wild.id = ''; state.wild.since = 99;                  // a boss comes next
     state.recentBossTypes = []; const real = Math.random; Math.random = () => 0.9999;      // picks the last boss in the list: Māra
     currentMonsterIndex = 0; monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
@@ -315,7 +316,7 @@ test('beat a boss 3 times in its Alpha form and it joins you at half your strong
   const r = await inPage(async () => {
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
     const win = async (form) => {
-      state.activePet = 'dog'; currentMonsterIndex = 50; bossLevel = form === 2 ? 50 : 10; partyHp = {};
+      state.wild.id = ''; state.activePet = 'dog'; currentMonsterIndex = 50; bossLevel = form === 2 ? 50 : 10; partyHp = {};
       monsterCurrentHp = 1; state.faintedPets = [];
       triggerMonsterDamage(50, false); await wait(900);
     };
@@ -395,7 +396,7 @@ test('any boss can be won as a buddy after 3 Alpha victories, not just the slaye
     state.buddyXp.dog = xpForLevel(60); state.unlockedSecrets = []; state.bossBook = {}; state.activePet = 'dog';
     const out = { steps: [] };
     for (let n = 0; n < 3; n++) {
-      currentMonsterIndex = 0; bossLevel = 50; partyHp = {}; monsterCurrentHp = 1; state.faintedPets = [];
+      state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 50; partyHp = {}; monsterCurrentHp = 1; state.faintedPets = [];
       triggerMonsterDamage(50, false); await wait(900);
       out.steps.push([state.bossBook[0].alpha, state.unlockedSecrets.includes('boss_0')]);
     }

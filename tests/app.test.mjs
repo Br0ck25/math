@@ -372,7 +372,7 @@ test('raid: appears after the 10th boss, has phases with new weak points, pays a
     const wait = (ms) => new Promise((res) => setTimeout(res, ms * 6));   // game timers run 20x faster in tests
     startGoldenVault = function () { modalDone(); };      // keep the golden vault out of the way
     state.enabledOps = ['add', 'sub', 'mul', 'div'];
-    state.monstersDefeated = 9; monsterCurrentHp = 1;
+    state.wild.id = ''; state.wild.since = 99; state.monstersDefeated = 9; monsterCurrentHp = 1;      // a boss is next after this win
     generateProblem(); inputLocked = false; userInput = String(currentProblem.answer); checkAnswer();
     await wait(300);
     const out = { raid: !!state.raid, total: state.raid && state.raid.total, weaks: state.raid && new Set(state.raid.weaks).size > 1 };

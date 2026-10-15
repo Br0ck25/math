@@ -382,6 +382,7 @@ function weakOpForBoss(idx) {
   return pool[idx % pool.length];
 }
 function getWeakOp() {
+  if (state.wild.id) return null;                       // wild buddies have no weak point; only bosses do
   const r = state.raid;
   if (r) {
     const ops = getActiveOps();
@@ -395,6 +396,7 @@ function updateWeakChip() {
   if (!chip) return;
   const w = getWeakOp();
   const r = state.raid;
+  if (state.wild.id) { chip.innerText = '🫧 Catch chance: ' + Math.round(wildCatchChance(getSpecies(state.wild.id)) * 100) + '%'; return; }
   const head = r ? '👑 RAID phase ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '';
   chip.innerText = (w || r) ? head + (w ? '🎯 Weak point: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
 }

@@ -72,6 +72,20 @@ const NORMALIZERS = [
     r.attempts = asInt(r.attempts, 0, 100000000, 0);
     if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
   },
+  function wild(s) {
+    const w = s.wild;
+    const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
+    w.id = ok ? w.id : '';
+    w.since = asInt(w.since, 0, 50, 0);
+    w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
+    w.miss = asInt(w.miss, 0, 50, 0);
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), spares = {};
+    Object.keys(s.spares).forEach(function (id) {
+      const n = asInt(s.spares[id], 0, 99, 0);
+      if (n > 0 && owned.indexOf(id) !== -1) spares[id] = n;
+    });
+    s.spares = spares;
+  },
   function bossBook(s) {
     const book = {};
     Object.keys(s.bossBook || {}).forEach(function (k) {
@@ -146,13 +160,14 @@ function loadState() {
   normalizeState();
 
   partyHp = {};
-  if (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel) {
-    currentMonsterIndex = state.currentMonsterIndex;
+  const wildFight = !!state.wild.id && !!state.bossLevel;
+  if (wildFight || (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel)) {
+    currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
     bossLevel = clamp(state.bossLevel, 1, MAX_LEVEL);
     monsterCurrentHp = getBossMaxHp();
   } else {
     currentMonsterIndex = -1;
-    pickNextBoss();
+    pickNextFoe();
   }
   bossMistakes = 0;
   markBossSeen(currentMonsterIndex);

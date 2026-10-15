@@ -178,6 +178,7 @@ function openBossCard(idx, opts) {
   showModal('bosscard-modal', renderBossCard);
 }
 function openArenaBossCard() {
+  if (state.wild.id) { toast('A wild ' + getBossInfo().name + '! Beat it for a chance to catch it.'); return; }
   openBossCard(currentMonsterIndex, { level: bossLevel, raid: !!state.raid });
 }
 function closeBossCard() { hideModal('bosscard-modal'); }

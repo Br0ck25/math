@@ -99,7 +99,7 @@ test('beating the swapped-in boss gives the win and a bonus; the next boss is a 
 });
 
 test('the swap flag survives a reload and bad saves are repaired', async () => {
-  await page.evaluate(() => { state.bossSwapped = true; state.currentMonsterIndex = 7; state.bossLevel = 50; state.recentBossTypes = ['water']; saveState(); });
+  await page.evaluate(() => { state.wild.id = ''; state.bossSwapped = true; state.currentMonsterIndex = 7; state.bossLevel = 50; state.recentBossTypes = ['water']; saveState(); });
   await page.reload();
   assert.deepEqual(await page.evaluate(() => [state.bossSwapped, currentMonsterIndex, getBossInfo().swapped]), [true, 7, true]);
   await page.evaluate(() => { state.bossSwapped = 'yes'; NORMALIZERS.forEach((fn) => fn(state)); });

@@ -43,6 +43,10 @@ export async function openGame(browser, worker, env, opts = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  // New players start with a wild buddy; most tests were written for a boss, so a game with no save starts on one (opts.wildStart keeps the real start).
+  if (!opts.wildStart) await page.addInitScript(() => {
+    try { if (!localStorage.getItem('math_quest_save')) localStorage.setItem('math_quest_save', JSON.stringify({ v: 1, currentMonsterIndex: 0, bossLevel: 5, recentBossTypes: ['fire'] })); } catch (e) { /* no storage */ }
+  });
   if (opts.init) await page.addInitScript(opts.init);          // runs before the game loads
   if (opts.fast) {
     await page.addInitScript(() => {

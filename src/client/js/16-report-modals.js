@@ -50,7 +50,7 @@ function confirmReset() {
   partyHp = {};
   ultimateCharge = 0;
   currentMonsterIndex = -1;
-  pickNextBoss();
+  pickNextFoe();
   sessionStats.solved = 0;
   sessionStats.attempts = 0;
   sessionStats.goal = ECON.sessionGoal.start;

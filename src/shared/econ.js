@@ -18,6 +18,14 @@ const ECON = {
   // Beat any boss this many times in its Alpha form and it joins you as a buddy (at half your strongest buddy's level).
   // A boss you have started on (1 or 2 Alpha wins) is picked `weight` times as often, once your buddy can reach Alpha bosses (level `minLevel`).
   bossBuddy: { alphaWins: 3, weight: 5, minLevel: 43 },
+  // Wild buddies: most battles. A boss comes after every `bossEvery` [min, max] of them. Beating a wild buddy may catch it (`catchChance` by rarity;
+  // each miss in a row adds `pityStep`, up to `pityMax` misses). `storeShare`: how often the wild buddy is a store buddy (else a secret one).
+  wild: {
+    baseHp: 3, gemBase: 4, gemPerLevels: 6, xpBase: 8, bossEvery: [5, 8], storeShare: 0.35,
+    catchChance: { cheap: 0.3, mid: 0.2, rare: 0.1, secret: 0.12 }, pityStep: 0.05, pityMax: 5
+  },
+  // A spare (a caught buddy you already own) sells for a share of a store buddy's price, or a flat amount for a secret one. Always far below the buying price.
+  sell: { storeShare: 0.2, min: 3, max: 100, secret: 12 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
@@ -50,6 +58,12 @@ const ECON = {
 // Gems for reaching a session goal of `solved` problems (grows with the goal, but is capped).
 function sessionGoalReward(solved) {
   return Math.min(ECON.sessionGoal.maxReward, Math.round(solved / ECON.sessionGoal.rewardDiv) + ECON.sessionGoal.rewardBase);
+}
+
+function clampSell(v) { return Math.min(ECON.sell.max, Math.max(ECON.sell.min, v)); }
+// What a spare buddy sells for.
+function spareValue(isStore, cost) {
+  return isStore ? clampSell(Math.round(cost * ECON.sell.storeShare)) : ECON.sell.secret;
 }
 
 // A stake is allowed when it is on the list and the player holds at least `stakeCoverage` times as many gems.

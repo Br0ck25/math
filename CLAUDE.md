@@ -41,6 +41,12 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
 - Sizes are asserted in `tests/content.test.mjs` (currently 344 buddies, 53 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
+## Battles: wild buddies and bosses
+- Most battles are against a wild buddy (`13b-wild.js`, numbers in `ECON.wild` / `ECON.sell`); a boss comes after every 5-8 of them. `state.wild.id` is the wild buddy being fought, `''` means a boss. Only bosses count toward `monstersDefeated`, raids, the Alpha buddy rule and the golden vault.
+- `getBossInfo()` returns the foe for both; check `.wild` before using boss-only data (`currentMonsterIndex`, weak point, `bossBook`). Pick the next foe with `pickNextFoe()`, never `pickNextBoss()` directly.
+- A caught buddy you already own is a spare (`state.spares`); `sellSpare()` / `spareValue()` pay far less than the shop price. Only store and secret buddies appear wild (mythic, ultra and boss buddies keep their own ways).
+- Tests start on a boss (`openGame` seeds a save); pass `wildStart: true` for the real start. A test that wins several bosses in a row must set `state.wild.id = ''` and `state.wild.since = 99` so a boss comes next.
+
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.
   Never trust data from localStorage or the cloud.

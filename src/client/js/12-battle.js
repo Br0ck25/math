@@ -87,16 +87,21 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
       updateStatsUI();
       saveState();
     } else if (monsterCurrentHp <= 0) {
+      const wild = !!boss.wild, wildId = state.wild.id;
       soundMonsterDefeated();
-      launchConfetti('boss');
-      screenShake(true);
-      state.monstersDefeated += 1;
+      launchConfetti(wild ? 'streak' : 'boss');
+      screenShake(!wild);
       questEvent('boss');
       if (bossMistakes === 0) questEvent('flawless');
-      markBossWin(currentMonsterIndex, boss.form);
-      checkBossBuddy(currentMonsterIndex, boss.form);
+      if (wild) state.wild.since += 1;
+      else {
+        state.monstersDefeated += 1;
+        markBossWin(currentMonsterIndex, boss.form);
+        checkBossBuddy(currentMonsterIndex, boss.form);
+      }
       buddyReact('win');
-      let gemBonus = ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
+        : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();
@@ -104,7 +109,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBuddyXp(Math.round(20 + boss.level * 2 * ratio));
+      awardBuddyXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
 
       const hadCasualties = state.faintedPets.length > 0;
       if (hadCasualties) {
@@ -112,18 +117,18 @@ function triggerMonsterDamage(extraDamage, weakHit, fast) {
         showPopup('✨ ALL BUDDIES REVIVED!');
       }
 
-      checkForSecretLootDrop(hadCasualties);
+      if (wild) rollCatch(wildId); else checkForSecretLootDrop(hadCasualties);
       showPopup(`VICTORY! +${gemBonus} 💎`);
 
-      const shouldTriggerVault = (state.monstersDefeated % 2 === 0);
+      const shouldTriggerVault = !wild && (state.monstersDefeated % 2 === 0);
       setTimeout(function () {
-        pickNextBoss();
+        pickNextFoe();
         setBossTaunt();
         updateStatsUI();
         saveState();
         if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
         const nb = getBossInfo();
-        toast(`A wild Lv ${nb.level} ${nb.name} appeared!` + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
+        toast((nb.wild ? '' : '⚠️ BOSS TIME! ') + `A wild Lv ${nb.level} ${nb.name} appeared!` + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);
