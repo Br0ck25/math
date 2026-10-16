@@ -127,4 +127,4 @@ These are sold in the shop rather than found, so the game does not tag them with
 
 Total: 71 characters (67 above plus these 4).
 
-Note: Arthur, Robin, Alice, Sinbad, Aladdin and Dorothy come from older folk tales and storybooks, so you may find that they need no licence at all.
+Note: Arthur, Robin, Alice, Sinbad, Aladdin and Dorothy come from older folk tales and storybooks (public domain). Original pictures for these six were drawn in the house style and are already in `art/buddies/`; replace them any time with your own.

@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Royal Red Cape (Shoulders) -->
+  <path d="M 12 94 C 14 76 30 68 50 68 C 70 68 86 76 88 94 Z" fill="#B91C1C" stroke="#7F1D1D" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- White Fur Collar with Dark Spots -->
+  <path d="M 28 72 Q 50 86 72 72 L 68 64 Q 50 76 32 64 Z" fill="#F8FAFC" stroke="#64748B" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="40" cy="72" r="1.4" fill="#1E293B"/>
+  <circle cx="50" cy="76" r="1.4" fill="#1E293B"/>
+  <circle cx="60" cy="72" r="1.4" fill="#1E293B"/>
+
+  <!-- Long Silver Hair (behind head) -->
+  <ellipse cx="50" cy="48" rx="31" ry="31" fill="#CBD5E1" stroke="#475569" stroke-width="3"/>
+
+  <!-- Kind Weathered Face -->
+  <ellipse cx="50" cy="46" rx="21" ry="23" fill="#F7C9A1" stroke="#5B3A29" stroke-width="3"/>
+
+  <!-- Full Silver Beard -->
+  <path d="M 29 52 C 29 72 40 82 50 82 C 60 82 71 72 71 52 C 66 62 58 64 50 64 C 42 64 34 62 29 52 Z" fill="#E2E8F0" stroke="#475569" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Mustache -->
+  <path d="M 36 57 Q 43 52 50 58 Q 57 52 64 57 Q 57 64 50 60 Q 43 64 36 57 Z" fill="#F1F5F9" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Warm Smile -->
+  <path d="M 45 66 Q 50 70 55 66" fill="none" stroke="#7F1D1D" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Eyes -->
+  <ellipse cx="41" cy="44" rx="4.8" ry="5.6" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
+  <circle cx="41.6" cy="45" r="2.7" fill="#1E293B"/>
+  <circle cx="40.6" cy="43.6" r="0.9" fill="#FFFFFF"/>
+  <ellipse cx="59" cy="44" rx="4.8" ry="5.6" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
+  <circle cx="58.4" cy="45" r="2.7" fill="#1E293B"/>
+  <circle cx="57.4" cy="43.6" r="0.9" fill="#FFFFFF"/>
+
+  <!-- Bushy Silver Brows -->
+  <path d="M 34 37 Q 41 33 47 38" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+  <path d="M 66 37 Q 59 33 53 38" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Nose -->
+  <path d="M 50 46 Q 54 52 49 54" fill="none" stroke="#B9835A" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Golden Crown with Jewels -->
+  <polygon points="30,30 31,12 41,22 50,8 59,22 69,12 70,30" fill="#FACC15" stroke="#92400E" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="30" y="27" width="40" height="7" rx="2" fill="#FDE047" stroke="#92400E" stroke-width="2.5"/>
+  <circle cx="50" cy="30.5" r="2.4" fill="#DC2626" stroke="#7F1D1D" stroke-width="1"/>
+  <circle cx="39" cy="30.5" r="1.9" fill="#3B82F6" stroke="#1E3A8A" stroke-width="1"/>
+  <circle cx="61" cy="30.5" r="1.9" fill="#3B82F6" stroke="#1E3A8A" stroke-width="1"/>
+</svg>

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Long Golden Hair (behind) -->
+  <path d="M 18 58 C 14 26 34 10 50 10 C 66 10 86 26 82 58 C 82 72 84 80 88 88 L 70 82 L 30 82 L 12 88 C 16 80 18 72 18 58 Z" fill="#FDE68A" stroke="#B45309" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Lavender Dress (Shoulders with puffed sleeves) -->
+  <path d="M 14 94 C 16 78 30 72 50 72 C 70 72 84 78 86 94 Z" fill="#A78BFA" stroke="#5B21B6" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="22" cy="80" r="8" fill="#C4B5FD" stroke="#5B21B6" stroke-width="2.5"/>
+  <circle cx="78" cy="80" r="8" fill="#C4B5FD" stroke="#5B21B6" stroke-width="2.5"/>
+
+  <!-- White Pinafore Apron -->
+  <path d="M 36 94 L 38 76 Q 50 81 62 76 L 64 94 Z" fill="#FFFFFF" stroke="#94A3B8" stroke-width="2.5" stroke-linejoin="round"/>
+  <line x1="38" y1="76" x2="36" y2="72" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+  <line x1="62" y1="76" x2="64" y2="72" stroke="#94A3B8" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Face -->
+  <ellipse cx="50" cy="48" rx="19" ry="21" fill="#FDDCC0" stroke="#5B3A29" stroke-width="3"/>
+
+  <!-- Bangs -->
+  <path d="M 31 42 C 36 25 64 25 69 42 C 62 35 54 38 50 42 C 46 38 38 35 31 42 Z" fill="#FDE68A" stroke="#B45309" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Black Headband with Bow -->
+  <path d="M 30 36 Q 50 18 70 36" fill="none" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 36 29 L 25 23 L 27 35 Z" fill="#111827" stroke="#111827" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M 36 29 L 47 23 L 45 35 Z" fill="#111827" stroke="#111827" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="36" cy="29" r="3" fill="#374151"/>
+
+  <!-- Big Curious Blue Eyes -->
+  <ellipse cx="41" cy="50" rx="5.2" ry="6.2" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
+  <circle cx="41.4" cy="51" r="3.6" fill="#60A5FA"/>
+  <circle cx="41.4" cy="51" r="1.9" fill="#1E293B"/>
+  <circle cx="40" cy="49" r="1" fill="#FFFFFF"/>
+  <ellipse cx="59" cy="50" rx="5.2" ry="6.2" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
+  <circle cx="58.6" cy="51" r="3.6" fill="#60A5FA"/>
+  <circle cx="58.6" cy="51" r="1.9" fill="#1E293B"/>
+  <circle cx="57.2" cy="49" r="1" fill="#FFFFFF"/>
+
+  <!-- Wondering Eyebrows -->
+  <path d="M 35 42 Q 41 39 47 42" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M 65 42 Q 59 39 53 42" fill="none" stroke="#B45309" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Blush, Nose and Little Smile -->
+  <circle cx="33" cy="60" r="3.6" fill="#FB7185" opacity="0.4"/>
+  <circle cx="67" cy="60" r="3.6" fill="#FB7185" opacity="0.4"/>
+  <path d="M 50 54 Q 52 58 49 58" fill="none" stroke="#C9926A" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M 44 63 Q 50 68 56 63" fill="none" stroke="#9F1239" stroke-width="2.2" stroke-linecap="round"/>
+</svg>
