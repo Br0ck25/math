@@ -111,14 +111,18 @@ function controlsBox(k, i) {
   const grades = GRADES.map(function (g) { return '<option value="' + g.id + '"' + (g.id === c.minGrade ? ' selected' : '') + '>' + escHtml(g.long) + '</option>'; }).join('');
   const ops = MATH_OPS.map(function (o) {
     const on = !c.ops || c.ops.indexOf(o.id) !== -1;
-    return '<label class="portal-op"><input type="checkbox" data-op="' + escHtml(o.id) + '"' + (on ? ' checked' : '') + '> ' + o.icon + ' ' + escHtml(o.label) + '</label>';
+    const above = o.minGrade > k.grade;
+    return '<label class="portal-op"><input type="checkbox" data-op="' + escHtml(o.id) + '"' + (on ? ' checked' : '') + '> ' + o.icon + ' ' + escHtml(o.label) + (above ? ' <span class="portal-up" title="Above ' + escHtml(k.child) + '\'s current level">↑</span>' : '') + '</label>';
   }).join('');
   return '<details class="portal-ctl" id="ctl-' + i + '" open><summary>⚙️ Settings for ' + escHtml(k.child) + '</summary>' +
     '<div class="settings-label">🔒 Lowest grade level</div>' +
     '<select class="acct-input" data-ctl="grade" aria-label="Lowest grade level">' + grades + '</select>' +
     '<div class="portal-sub">' + escHtml(k.child) + ' can play this level or higher, never lower, so easy problems cannot be used to farm gems. Tap Save settings to lock it.</div>' +
-    '<details class="portal-more"><summary>🧮 Math types allowed' + (c.ops ? ' (' + c.ops.length + ' of ' + MATH_OPS.length + ')' : ' (all)') + '</summary><div class="portal-ops">' + ops + '</div>' +
-    '<div class="portal-sub">A type only shows up once its level is reached.</div></details>' +
+    '<div class="settings-label">🧮 Which math types</div>' +
+    '<div class="portal-sub">Choose what ' + escHtml(k.child) + ' practises: addition, multiplication, percents and so on. ' + (c.ops ? 'Only the ticked types are asked.' : 'Nothing is chosen yet, so ' + escHtml(k.child) + ' picks their own.') + ' Tick every type to give the choice back to ' + escHtml(k.child) + '.</div>' +
+    '<div class="acct-btns"><button class="grade-btn" onclick="portalOpsPreset(' + i + ', \'all\')">Tick all</button><button class="grade-btn" onclick="portalOpsPreset(' + i + ', \'basic\')">Just + − × ÷</button></div>' +
+    '<div class="portal-ops">' + ops + '</div>' +
+    '<div class="portal-sub">↑ = above ' + escHtml(k.child) + '\'s current level. If you tick it, they get that type\'s easiest problems.</div>' +
     '<div class="settings-label">⏳ Daily math time goal</div>' +
     '<select class="acct-input" data-ctl="goal" aria-label="Daily math time goal">' + goals + '</select>' +
     '<input class="acct-input" data-ctl="reward" type="text" maxlength="' + ECON.parents.goal.maxRewardChars + '" placeholder="Reward, e.g. ice cream trip" value="' + escHtml(c.goalReward) + '" aria-label="Reward for reaching the goal">' +
@@ -129,6 +133,14 @@ function controlsBox(k, i) {
     '<label class="portal-op"><input type="checkbox" data-ctl="duels"' + (c.duelsOnline ? ' checked' : '') + '> Let ' + escHtml(k.child) + ' challenge friends by player name</label>' +
     '<button class="grade-btn" style="width:100%; margin-top:10px;" onclick="portalSaveControls(' + i + ')">Save settings</button>' +
     '<div class="portal-sub">They reach ' + escHtml(k.child) + '\'s device the next time the game opens or saves. Tip: set a Parent PIN on that device (Parent Report) so settings cannot be undone by unlinking or signing out.</div></details>';
+}
+// Quick picks for the math types list on a child's settings form.
+function portalOpsPreset(i, kind) {
+  const box = document.getElementById('ctl-' + i);
+  if (!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll('input[data-op]'), function (el) {
+    el.checked = kind === 'all' || ['add', 'sub', 'mul', 'div'].indexOf(el.dataset.op) !== -1;
+  });
 }
 // Sends a child's full settings to the server and reloads the page's list. `done` is the message shown on success.
 async function portalSendControls(k, ctl, done) {

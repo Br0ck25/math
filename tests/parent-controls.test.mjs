@@ -6,6 +6,7 @@ let browser, worker, env;
 before(async () => { browser = await launch(); worker = await loadWorker(); env = { MATH_KV: fakeKV() }; });
 after(async () => { await browser.close(); });
 const c = (p, m, b, t) => call(worker, env, p, m, b, t);
+const until = async (fn) => { for (let i = 0; i < 100; i++) { if (await fn()) return; await new Promise((r) => setTimeout(r, 50)); } assert.fail('timed out waiting for the saved value'); };
 
 // A signed-in child (grade band 1) with a primary parent linked; returns both and the parent's token.
 async function family(kidName, parentName) {
@@ -42,13 +43,13 @@ test('the lowest level, math types and duels a parent sets are enforced on the c
   });
   assert.equal(r.grade, 2, 'the level was raised to the parent\'s lowest level');
   assert.equal(r.duels, false);
-  assert.ok(r.ops.every((id) => allowed.includes(id)), 'only allowed types stay on');
   assert.equal(r.afterLower, 2); assert.equal(r.afterOne, 2);
   assert.equal(r.afterHigher, 3, 'a higher level is free');
   assert.deepEqual(r.lockedButtons.slice(0, 3), [true, true, false]);
   assert.match(r.note, /lowest level is Grades 6–8/);
+  assert.equal(r.shownOps.length, allowed.length, 'the settings list shows the parent\'s types, locked on');
   assert.ok(!r.shownOps.some((l) => /Derivative|Integral/.test(l)));
-  assert.ok(r.activeOps.every((id) => allowed.includes(id)));
+  assert.deepEqual(r.activeOps.sort(), [...allowed].sort(), 'exactly the parent\'s types are asked');
 
   // "easier" warm-up problems never go below the parent's lowest level
   const seen = await p.evaluate(() => {
@@ -104,7 +105,6 @@ test('a parent changes the settings from the parent page', async () => {
   await g.page.click('text=Sign in');
   await g.page.waitForSelector('.portal-kid');
   await g.page.selectOption('.portal-ctl select', '2');
-  await g.page.click('.portal-more summary');
   await g.page.uncheck('.portal-ctl input[data-op="deriv"]');
   await g.page.uncheck('.portal-ctl input[data-ctl="duels"]');
   await g.page.click('button:has-text("Save settings")');
@@ -254,7 +254,7 @@ test('weak spots have one-tap extra practice buttons that change what the child 
   await g.page.waitForFunction(() => /\+30% practice/.test(document.querySelector('.portal-kid').innerText));
   assert.equal(await g.page.locator('.boost-btn[data-boost="div"]').first().isDisabled(), true, 'no more than 30% for one type');
   assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 30 });
-  await g.page.click('text=−');
+  await g.page.click('.boost-btn[aria-label^="Remove"]');
   await g.page.waitForFunction(() => /\+20% practice/.test(document.querySelector('.portal-kid').innerText));
   assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 20 });
   // saving the other settings keeps the boost
@@ -295,5 +295,70 @@ test('the challenge form takes the gems per answer and shows the prize', async (
   await kid.page.evaluate(() => acctStartup());
   await kid.page.waitForFunction(() => chal && chal.gems === 50);
   assert.match(await kid.page.innerText('#chal-bar'), /10 in 15 min = 50 💎/);
+  await kid.context.close(); await g.context.close();
+});
+
+test('a parent picks exactly which math types are asked, even ones above the child\'s grade, and can hand the choice back', async () => {
+  const { kid, mom } = await family('kid_types', 'mom_types');
+  const p = kid.page;
+  await p.evaluate(() => { state.grade = 0; state.enabledOps = ['add', 'sub']; saveState(); });
+  // percents and multiplication only, for a child in grades K-2
+  assert.equal((await c('/api/parent/controls', 'POST', { child: 'kid_types', minGrade: 0, ops: ['pct', 'mul'], duelsOnline: true }, mom)).status, 200);
+  await p.evaluate(() => acctStartup());
+  const r = await p.evaluate(() => {
+    const out = { active: getActiveOps().slice().sort(), enabled: state.enabledOps.slice() };
+    out.made = Array.from({ length: 60 }, () => { generateProblem(); return currentProblem.modeTag; });
+    out.grades = [];
+    const gen = OP_BY_ID.pct.gen; OP_BY_ID.pct.gen = (g) => { out.grades.push(g); return gen(g); };
+    for (let i = 0; i < 40; i++) generateProblem();
+    OP_BY_ID.pct.gen = gen;
+    toggleOp('add'); out.afterToggle = state.enabledOps.slice();
+    openSettings();
+    out.shown = Array.from(document.querySelectorAll('#ops-grid .op-lb')).map((b) => b.innerText).sort();
+    out.locked = Array.from(document.querySelectorAll('#ops-grid .op-toggle')).every((b) => b.classList.contains('locked') && b.classList.contains('on'));
+    out.note = document.getElementById('ctl-note').innerText;
+    out.hint = document.getElementById('ops-hint').innerText;
+    out.chip = document.getElementById('ops-chip').innerText;
+    closeSettings();
+    out.mcq = Array.from({ length: 30 }, () => makeMcq().op);
+    return out;
+  });
+  assert.deepEqual(r.active, ['mul', 'pct']);
+  assert.deepEqual([...new Set(r.made)].sort(), ['mul', 'pct'], 'only the chosen types come up, never a fallback to addition');
+  assert.ok(r.grades.length && r.grades.every((g) => g >= 2), 'percents start at their own level, not below it: ' + r.grades);
+  assert.deepEqual(r.enabled, ['add', 'sub'], 'the child\'s own choices are kept untouched');
+  assert.deepEqual(r.afterToggle, ['add', 'sub'], 'the child cannot change them');
+  assert.deepEqual(r.shown, ['Multiplication', 'Percents']);
+  assert.equal(r.locked, true);
+  assert.match(r.hint, /A parent picked these math types/);
+  assert.match(r.note, /picked the math types \((Multiplication, Percents|Percents, Multiplication)\)/);
+  assert.ok(r.mcq.every((o) => ['mul', 'pct'].includes(o)), 'duels and tournaments use them too');
+
+  // ticking every type hands the choice back, and the child's own list returns
+  assert.equal((await c('/api/parent/controls', 'POST', { child: 'kid_types', minGrade: 0, ops: null, duelsOnline: true }, mom)).status, 200);
+  await p.evaluate(() => acctStartup());
+  assert.deepEqual(await p.evaluate(() => getActiveOps().slice().sort()), ['add', 'sub']);
+  await kid.context.close();
+});
+
+test('the math types section on the parent page is visible, with quick picks and a marker for types above the child\'s level', async () => {
+  const { kid } = await family('kid_pick', 'mom_pick');
+  const g = await openGame(browser, worker, env, { fast: true });
+  await g.page.goto('http://localhost/parent');
+  await g.page.fill('#portal-name', 'mom_pick'); await g.page.fill('#portal-pass', 'secret1');
+  await g.page.click('text=Sign in');
+  await g.page.waitForSelector('.portal-kid');
+  assert.equal(await g.page.locator('input[data-op="mul"]').isVisible(), true, 'no folded section to open');
+  assert.equal(await g.page.locator('input[data-op="pct"]').isVisible(), true);
+  assert.match(await g.page.innerText('label:has(input[data-op="pct"])'), /↑/, 'percents are above a grade 3-5 child');
+  assert.doesNotMatch(await g.page.innerText('label:has(input[data-op="mul"])'), /↑/);
+  await g.page.click('button:has-text("Just + − × ÷")');
+  assert.deepEqual(await g.page.$$eval('input[data-op]:checked', (els) => els.map((e) => e.dataset.op)), ['add', 'sub', 'mul', 'div']);
+  await g.page.check('input[data-op="pct"]');
+  await g.page.click('button:has-text("Save settings")');
+  await until(async () => JSON.stringify((await env.MATH_KV.get('ctl:kid_pick', 'json') || {}).ops) === JSON.stringify(['add', 'sub', 'mul', 'div', 'pct']));
+  await g.page.click('button:has-text("Tick all")');
+  await g.page.click('button:has-text("Save settings")');
+  await until(async () => (await env.MATH_KV.get('ctl:kid_pick', 'json')).ops === null);   // all ticked leaves the choice with the child
   await kid.context.close(); await g.context.close();
 });

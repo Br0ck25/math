@@ -21,7 +21,7 @@ function genEasy(id) {
   }
   return best;
 }
-function genChallenge(id) { return OP_BY_ID[id].gen(Math.min(state.grade + 1, GRADES.length - 1)); }
+function genChallenge(id) { return OP_BY_ID[id].gen(Math.max(OP_BY_ID[id].minGrade, Math.min(state.grade + 1, GRADES.length - 1))); }
 
 function opTier(op) { return state.adapt.on ? (state.adapt.tier[op] || 0) : 0; }
 function canChallenge() { return state.grade < GRADES.length - 1; }
@@ -119,5 +119,5 @@ function pickNextProblem(lastOp) {
   else if (a.calm[id]) { delete a.calm[id]; }
   else if (opTier(id) < 0) kind = 'easier';
   else if (opTier(id) > 0 && canChallenge() && challengeBudgetLeft()) kind = 'challenge';
-  return { op: id, kind: kind, make: function () { return kind === 'warmup' || kind === 'easier' ? genEasy(id) : kind === 'challenge' ? genChallenge(id) : OP_BY_ID[id].gen(state.grade); } };
+  return { op: id, kind: kind, make: function () { return kind === 'warmup' || kind === 'easier' ? genEasy(id) : kind === 'challenge' ? genChallenge(id) : OP_BY_ID[id].gen(opGrade(OP_BY_ID[id])); } };
 }

@@ -1,7 +1,7 @@
 // =====================================================================
 //  SETTINGS A PARENT SETS FROM THEIR OWN PHONE  (see 35-parent-portal.js and src/server/15-parents.js)
 //  { minGrade, ops, duelsOnline, goalMinutes, goalReward, adaptive }: the lowest level the player may use (so nobody can drop
-//  to easy problems to farm gems), the math types they may use (null = all), whether online duels are allowed, the daily
+//  to easy problems to farm gems), the math types they are asked (null = the player picks; a list is used exactly, even for types above their grade), whether online duels are allowed, the daily
 //  time goal and whether difficulty follows each math type (null = the player decides those two). The server sends them with every save;
 //  the last ones are kept on this device so they also hold offline. A parent can lift them from their phone, and the
 //  player can end them only by signing out, which asks for the parent PIN while they are on.
@@ -38,7 +38,7 @@ function cleanCtl(c) {
 })();
 
 function ctlFloor() { return parentCtl ? parentCtl.minGrade : 0; }
-function allowedOp(id) { return !parentCtl || !parentCtl.ops || parentCtl.ops.indexOf(id) !== -1; }
+function opsLocked() { return !!parentCtl && !!parentCtl.ops; }
 function duelsLocked() { return !!parentCtl && !parentCtl.duelsOnline; }
 function goalLocked() { return !!parentCtl && parentCtl.goalMinutes !== null; }
 function adaptiveLocked() { return !!parentCtl && parentCtl.adaptive !== null; }
@@ -58,10 +58,6 @@ function applyControls() {
     state.enabledOps = GRADE_DEFAULT_OPS[state.grade].slice();
     changed = true;
   }
-  if (parentCtl.ops) {
-    const keep = state.enabledOps.filter(allowedOp);
-    if (keep.length !== state.enabledOps.length) { state.enabledOps = keep; changed = true; }
-  }
   if (duelsLocked() && state.duelsOnline) { state.duelsOnline = false; changed = true; }
   if (adaptiveLocked() && state.adapt.on !== parentCtl.adaptive) { state.adapt.on = parentCtl.adaptive; changed = true; }
   if (goalLocked() && (state.parentGoal.minutes !== parentCtl.goalMinutes || state.parentGoal.reward !== parentCtl.goalReward)) { applyGoal(parentCtl.goalMinutes, parentCtl.goalReward); changed = true; }
@@ -76,7 +72,7 @@ function ctlNote() {
   if (!ctlActive()) return '';
   const bits = [];
   if (parentCtl.minGrade > 0) bits.push('the lowest level is ' + GRADES[parentCtl.minGrade].long);
-  if (parentCtl.ops) bits.push('only some math types are allowed');
+  if (parentCtl.ops) bits.push('a parent picked the math types (' + parentCtl.ops.filter(function (id) { return OP_BY_ID[id]; }).map(function (id) { return OP_BY_ID[id].label; }).join(', ') + ')');
   if (duelsLocked()) bits.push('online duels are off');
   if (goalLocked()) bits.push('the daily goal is ' + parentCtl.goalMinutes + ' minutes');
   if (adaptiveLocked()) bits.push('difficulty matching is ' + (parentCtl.adaptive ? 'on' : 'off'));
