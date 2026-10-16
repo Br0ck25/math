@@ -1,66 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
   <!-- Background badge base -->
-  <rect width="100" height="100" rx="24" fill="#FCE7F3" />
-
   <!-- Cockapoo Fluffy Floppy Ears (Behind head) -->
   <!-- Left Ear -->
-  <path d="M 28 36 C 14 42 12 66 18 78 C 22 84 30 84 34 76 C 36 70 34 50 32 38 Z" fill="#D97706" stroke="#92400E" stroke-width="3" stroke-linejoin="round" />
+  <path d="M 28 36 C 14 42 12 66 18 78 C 22 84 30 84 34 76 C 36 70 34 50 32 38 Z" fill="#D97706" stroke="#92400E" stroke-width="3" stroke-linejoin="round"/>
   <!-- Right Ear -->
-  <path d="M 72 36 C 86 42 88 66 82 78 C 78 84 70 84 66 76 C 64 70 66 50 68 38 Z" fill="#D97706" stroke="#92400E" stroke-width="3" stroke-linejoin="round" />
-
+  <path d="M 72 36 C 86 42 88 66 82 78 C 78 84 70 84 66 76 C 64 70 66 50 68 38 Z" fill="#D97706" stroke="#92400E" stroke-width="3" stroke-linejoin="round"/>
   <!-- Main Head Shape (Golden Cream / Honey Cockapoo) -->
-  <rect x="22" y="24" width="56" height="58" rx="18" fill="#FDE68A" stroke="#92400E" stroke-width="3.5" />
-
+  <rect x="22" y="24" width="56" height="58" rx="18" fill="#FDE68A" stroke="#92400E" stroke-width="3.5"/>
   <!-- Pilot Helmet / Flight Cap (Bright Magenta Pink) -->
-  <path d="M 22 36 C 22 17 78 17 78 36 C 78 40 76 43 72 43 C 68 35 32 35 28 43 C 24 43 22 40 22 36 Z" fill="#EC4899" stroke="#9D174D" stroke-width="3" stroke-linejoin="round" />
-
+  <path d="M 22 36 C 22 17 78 17 78 36 C 78 40 76 43 72 43 C 68 35 32 35 28 43 C 24 43 22 40 22 36 Z" fill="#EC4899" stroke="#9D174D" stroke-width="3" stroke-linejoin="round"/>
   <!-- Aviator Flight Goggles mounted on forehead -->
   <!-- Goggle Strap -->
-  <line x1="22" y1="31" x2="78" y2="31" stroke="#9D174D" stroke-width="3" />
-
+  <line x1="22" y1="31" x2="78" y2="31" stroke="#9D174D" stroke-width="3"/>
   <!-- Left Lens -->
-  <rect x="26" y="22" width="20" height="15" rx="5" fill="#38BDF8" stroke="#F43F5E" stroke-width="2.5" />
-  <line x1="29" y1="25" x2="33" y2="33" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
-
+  <rect x="26" y="22" width="20" height="15" rx="5" fill="#38BDF8" stroke="#F43F5E" stroke-width="2.5"/>
+  <line x1="29" y1="25" x2="33" y2="33" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
   <!-- Center Goggle Bridge -->
-  <rect x="46" y="27" width="8" height="4" rx="1" fill="#F43F5E" />
-
+  <rect x="46" y="27" width="8" height="4" rx="1" fill="#F43F5E"/>
   <!-- Right Lens -->
-  <rect x="54" y="22" width="20" height="15" rx="5" fill="#38BDF8" stroke="#F43F5E" stroke-width="2.5" />
-  <line x1="57" y1="25" x2="61" y2="33" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.8" />
-
+  <rect x="54" y="22" width="20" height="15" rx="5" fill="#38BDF8" stroke="#F43F5E" stroke-width="2.5"/>
+  <line x1="57" y1="25" x2="61" y2="33" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" opacity="0.8"/>
   <!-- Forehead Tuft / Fluffy Hair Accent -->
-  <path d="M 44 42 Q 50 36 56 42" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round" />
-
+  <path d="M 44 42 Q 50 36 56 42" fill="none" stroke="#D97706" stroke-width="2.2" stroke-linecap="round"/>
   <!-- Flirty Eyelashes -->
-  <line x1="29" y1="41" x2="25" y2="38" stroke="#92400E" stroke-width="1.8" stroke-linecap="round" />
-  <line x1="31" y1="38" x2="28" y2="34" stroke="#92400E" stroke-width="1.8" stroke-linecap="round" />
-  <line x1="71" y1="41" x2="75" y2="38" stroke="#92400E" stroke-width="1.8" stroke-linecap="round" />
-  <line x1="69" y1="38" x2="72" y2="34" stroke="#92400E" stroke-width="1.8" stroke-linecap="round" />
-
+  <line x1="29" y1="41" x2="25" y2="38" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="31" y1="38" x2="28" y2="34" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="71" y1="41" x2="75" y2="38" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="69" y1="38" x2="72" y2="34" stroke="#92400E" stroke-width="1.8" stroke-linecap="round"/>
   <!-- Big Puppy Eyes (Skye's Signature Magenta/Pink Irises) -->
-  <ellipse cx="36" cy="47" rx="6.5" ry="8.5" fill="#FFFFFF" stroke="#92400E" stroke-width="2" />
-  <circle cx="37" cy="47" r="4" fill="#DB2777" />
-  <circle cx="37" cy="47" r="2.3" fill="#0F172A" />
-  <circle cx="35" cy="44.5" r="1.3" fill="#FFFFFF" />
-
-  <ellipse cx="64" cy="47" rx="6.5" ry="8.5" fill="#FFFFFF" stroke="#92400E" stroke-width="2" />
-  <circle cx="63" cy="47" r="4" fill="#DB2777" />
-  <circle cx="63" cy="47" r="2.3" fill="#0F172A" />
-  <circle cx="61" cy="44.5" r="1.3" fill="#FFFFFF" />
-
+  <ellipse cx="36" cy="47" rx="6.5" ry="8.5" fill="#FFFFFF" stroke="#92400E" stroke-width="2"/>
+  <circle cx="37" cy="47" r="4" fill="#DB2777"/>
+  <circle cx="37" cy="47" r="2.3" fill="#0F172A"/>
+  <circle cx="35" cy="44.5" r="1.3" fill="#FFFFFF"/>
+  <ellipse cx="64" cy="47" rx="6.5" ry="8.5" fill="#FFFFFF" stroke="#92400E" stroke-width="2"/>
+  <circle cx="63" cy="47" r="4" fill="#DB2777"/>
+  <circle cx="63" cy="47" r="2.3" fill="#0F172A"/>
+  <circle cx="61" cy="44.5" r="1.3" fill="#FFFFFF"/>
   <!-- Rosy Cheeks -->
-  <circle cx="28" cy="56" r="3.5" fill="#F472B6" opacity="0.5" />
-  <circle cx="72" cy="56" r="3.5" fill="#F472B6" opacity="0.5" />
-
+  <circle cx="28" cy="56" r="3.5" fill="#F472B6" opacity="0.5"/>
+  <circle cx="72" cy="56" r="3.5" fill="#F472B6" opacity="0.5"/>
   <!-- Pale Cream Muzzle -->
-  <rect x="30" y="53" width="40" height="25" rx="12" fill="#FEF9C3" stroke="#92400E" stroke-width="2.5" />
-
+  <rect x="30" y="53" width="40" height="25" rx="12" fill="#FEF9C3" stroke="#92400E" stroke-width="2.5"/>
   <!-- Brown Dog Nose -->
-  <ellipse cx="50" cy="59" rx="6.5" ry="4.5" fill="#78350F" />
-  <ellipse cx="48.5" cy="57.5" rx="1.8" ry="1.1" fill="#FBBF24" />
-
+  <ellipse cx="50" cy="59" rx="6.5" ry="4.5" fill="#78350F"/>
+  <ellipse cx="48.5" cy="57.5" rx="1.8" ry="1.1" fill="#FBBF24"/>
   <!-- Cheerful Smile with Tongue -->
-  <path d="M 43 67 Q 50 74 57 67" fill="#881337" stroke="#92400E" stroke-width="2" />
-  <path d="M 46 70 Q 50 67 54 70" fill="#FB7185" />
+  <path d="M 43 67 Q 50 74 57 67" fill="#881337" stroke="#92400E" stroke-width="2"/>
+  <path d="M 46 70 Q 50 67 54 70" fill="#FB7185"/>
 </svg>
