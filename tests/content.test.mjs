@@ -31,7 +31,6 @@ test('every buddy and boss is an animal, creature or monster, never an object; o
   const exceptions = { toon_spongebob: 'a sea sponge', mythic_patrick: 'a sea star', secret_papaw: 'a family buddy: the owner decides' };    // no emoji exists for these animals
   const bad = [];
   r.buddies.forEach((b) => {
-    if (b.icon.trim().startsWith('<')) return;                   // the Bandit is drawn
     const c = cp(b.icon);
     if (animal(c) || creature.has(c) || exceptions[b.id] || (b.person && person(c))) return;
     bad.push(b.name + ' ' + b.icon);

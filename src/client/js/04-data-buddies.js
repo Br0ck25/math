@@ -1,41 +1,3 @@
-const banditSvg = `
-  <svg viewBox="0 0 36 36" width="36" height="36" style="display: block; margin: 0 auto;">
-    <polygon fill="#18181b" stroke="#818cf8" stroke-width="1.2" points="7,12 2,1 13,6"/>
-    <polygon fill="#18181b" stroke="#818cf8" stroke-width="1.2" points="29,12 34,1 23,6"/>
-    <polygon fill="#fb7185" points="7,10 4,3 12,7"/>
-    <polygon fill="#fb7185" points="29,10 32,3 24,7"/>
-    <circle cx="18" cy="18" r="12" fill="#18181b" stroke="#818cf8" stroke-width="1.2"/>
-    <path d="M12 18 C12 13 24 13 24 18 C24 24 12 24 12 18 Z" fill="#ffffff"/>
-    <ellipse cx="13.5" cy="15" rx="2.4" ry="2.8" fill="#10b981"/>
-    <ellipse cx="22.5" cy="15" rx="2.4" ry="2.8" fill="#10b981"/>
-    <circle cx="13.5" cy="15" r="1.2" fill="#000000"/>
-    <circle cx="22.5" cy="15" r="1.2" fill="#000000"/>
-    <circle cx="12.8" cy="14.3" r="0.6" fill="#ffffff"/>
-    <circle cx="21.8" cy="14.3" r="0.6" fill="#ffffff"/>
-    <polygon fill="#f43f5e" points="18,19.5 16.5,17.5 19.5,17.5"/>
-    <path d="M16 20.5 Q18 22.5 20 20.5" stroke="#18181b" stroke-width="1.1" fill="none"/>
-    <line x1="10" y1="18" x2="4" y2="17" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="10" y1="20" x2="4" y2="21" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="26" y1="18" x2="32" y2="17" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="26" y1="20" x2="32" y2="21" stroke="#e2e8f0" stroke-width="1.1"/>
-  </svg>
-`;
-
-const banditEvoSvg = `
-  <svg viewBox="0 0 36 36" width="36" height="36" style="display: block; margin: 0 auto;">
-    <polygon fill="#312e81" stroke="#a5b4fc" stroke-width="1.2" points="7,12 2,1 13,6"/>
-    <polygon fill="#312e81" stroke="#a5b4fc" stroke-width="1.2" points="29,12 34,1 23,6"/>
-    <circle cx="18" cy="18" r="12" fill="#09090b" stroke="#a5b4fc" stroke-width="1.2"/>
-    <rect x="5" y="12" width="26" height="7" fill="#6366f1" rx="2"/>
-    <ellipse cx="13" cy="15.5" rx="2.6" ry="2.8" fill="#facc15"/>
-    <ellipse cx="23" cy="15.5" rx="2.6" ry="2.8" fill="#facc15"/>
-    <circle cx="13" cy="15.5" r="1.3" fill="#000000"/>
-    <circle cx="23" cy="15.5" r="1.3" fill="#000000"/>
-    <polygon fill="#f43f5e" points="18,22 16.5,20 19.5,20"/>
-    <path d="M16 23 Q18 25 20 23" stroke="#ffffff" stroke-width="1.2" fill="none"/>
-  </svg>
-`;
-
 // Store Companions: All unique names
 const storePets = [
   { id: 'dog', name: 'Pup', icon: '🐶', cost: 0, element: 'nature', superMove: 'Bark Strike', evoLevel: 30, evoName: 'Thunder Wolf', evoIcon: '🐺' },
@@ -80,7 +42,7 @@ const storePets = [
   { id: 'toon_peppa', name: 'Peppa Pig', icon: '🐷', cost: 3140, element: 'water', superMove: 'Muddy Puddle Splash', evoLevel: 100, evoName: 'Puddle Queen Peppa', evoIcon: '🐷', show: 'Peppa Pig' },
   { id: 'toon_bugs', name: 'Bugs Bunny', icon: '🐰', cost: 3170, element: 'magic', superMove: 'Carrot Trick Shot', evoLevel: 100, evoName: 'Wascally Bugs', evoIcon: '🐰', show: 'Looney Tunes' },
   { id: 'toon_homer', name: 'Homer', icon: '👨‍🦲', cost: 3200, element: 'electric', superMove: 'Donut Overload', evoLevel: 100, evoName: 'Power Plant Homer', evoIcon: '👨‍🦲', show: 'The Simpsons' },
-  { id: 'bandit', name: 'Bandit', icon: banditSvg, cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: banditEvoSvg, requiresAllStorePets: true }
+  { id: 'bandit', name: 'Bandit', icon: '🐈‍⬛', cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: '🐈‍⬛', requiresAllStorePets: true }
 ];
 
 // Wearable Gear & Accessories
