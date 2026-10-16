@@ -59,7 +59,13 @@ async function authenticate(request, kv, ns) {
   const m = h.match(/^Bearer\s+(.+)$/i);
   if (!m) return null;
   const rec = await kv.get((ns || KID_NS).sess + await sha256Hex(m[1]), 'json');
-  return rec && rec.name ? { name: rec.name, tokenHash: await sha256Hex(m[1]) } : null;
+  if (!rec || !rec.name) return null;
+  if (ns === PARENT_NS) {
+    // a deleted parent's sign-ins on other devices must not carry over to a new account that reuses the name
+    const a = await kv.get(ns.acct + rec.name, 'json');
+    if (!a || a.created > rec.at) return null;
+  }
+  return { name: rec.name, tokenHash: await sha256Hex(m[1]) };
 }
 async function checkPassword(kv, name, password, ns) {
   const acct = await kv.get((ns || KID_NS).acct + name, 'json');

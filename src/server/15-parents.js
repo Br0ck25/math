@@ -90,19 +90,29 @@ async function handleLink(path, request, kv, who, body) {
 
 // ---- the parent's settings for a child -----------------------------------------
 function isPrimaryLink(grant, linkId) { return !!grant && grant.links.some(function (l) { return l.id === linkId && l.primary; }); }
+// The settings as the child's device and the parents see them (records written before a field existed read as "not set").
+function controlsOf(ctl) {
+  return {
+    minGrade: ctl.minGrade, ops: ctl.ops, duelsOnline: ctl.duelsOnline,
+    goalMinutes: ctl.goalMinutes === undefined ? null : ctl.goalMinutes, goalReward: ctl.goalReward || '',
+    adaptive: typeof ctl.adaptive === 'boolean' ? ctl.adaptive : null
+  };
+}
 function liveControls(ctl, grant) {
-  if (!ctl || !isPrimaryLink(grant, ctl.linkId)) return null;
-  return { minGrade: ctl.minGrade, ops: ctl.ops, duelsOnline: ctl.duelsOnline };
+  return ctl && isPrimaryLink(grant, ctl.linkId) ? controlsOf(ctl) : null;
 }
 // What the parents have set for a child: { controls, challenge }, each null when absent or no longer from the primary link.
 // The common case (nothing set) costs two reads.
 async function parentState(kv, child) {
   const first = await Promise.all([kv.get('ctl:' + child, 'json'), kv.get('chall:' + child, 'json')]);
   if (!first[0] && !first[1]) return { controls: null, challenge: null };
-  const more = await Promise.all([kv.get('grant:' + child, 'json'), first[1] ? kv.get('cprog:' + child, 'json') : null]);
+  const ids = [first[0], first[1]].filter(Boolean).map(function (x) { return x.linkId; }).filter(function (id, i, a) { return a.indexOf(id) === i; });
+  const more = await Promise.all([kv.get('grant:' + child, 'json'), first[1] ? kv.get('cprog:' + child, 'json') : null].concat(ids.map(function (id) { return kv.get('plink:' + id, 'json'); })));
+  // a settings record counts while its parent's link is the primary one AND that parent has not stopped watching or left
+  const alive = function (id) { const rec = more[2 + ids.indexOf(id)]; return isPrimaryLink(more[0], id) && !(rec && rec.gone); };
   return {
-    controls: liveControls(first[0], more[0]),
-    challenge: first[1] && isPrimaryLink(more[0], first[1].linkId) ? challengeView(first[1], more[1], Date.now()) : null
+    controls: first[0] && alive(first[0].linkId) ? controlsOf(first[0]) : null,
+    challenge: first[1] && alive(first[1].linkId) ? challengeView(first[1], more[1], Date.now()) : null
   };
 }
 // The parent's own link to a child, when that link is the primary one. Returns { k, grant } or { res }.
@@ -133,7 +143,16 @@ function cleanControls(b) {
     }
   }
   if (typeof b.duelsOnline !== 'boolean') return null;
-  return { minGrade: minGrade, ops: ops, duelsOnline: b.duelsOnline };
+  // the daily time goal and adaptive practice are optional: absent or null means "the player decides"
+  let goalMinutes = null;
+  if (b.goalMinutes !== null && b.goalMinutes !== undefined) {
+    goalMinutes = Number(b.goalMinutes);
+    if (!Number.isInteger(goalMinutes) || goalMinutes < ECON.parents.goal.minMinutes || goalMinutes > ECON.parents.goal.maxMinutes) return null;
+  }
+  const goalReward = b.goalReward === undefined || b.goalReward === null ? '' : b.goalReward;
+  if (typeof goalReward !== 'string' || goalReward.length > ECON.parents.goal.maxRewardChars || /[\u0000-\u001f<>]/.test(goalReward)) return null;
+  if (b.adaptive !== undefined && b.adaptive !== null && typeof b.adaptive !== 'boolean') return null;
+  return { minGrade: minGrade, ops: ops, duelsOnline: b.duelsOnline, goalMinutes: goalMinutes, goalReward: goalReward.trim(), adaptive: typeof b.adaptive === 'boolean' ? b.adaptive : null };
 }
 
 // ---- the parent's side ---------------------------------------------------
@@ -224,6 +243,21 @@ async function handleParent(path, request, kv, body) {
   }
 
   if (path === '/api/parent/challenge' && request.method === 'POST') return setChallenge(kv, parent, body);
+
+  if (path === '/api/parent/delete' && request.method === 'POST') {
+    if (!(await checkPassword(kv, parent, String(body.password || ''), PARENT_NS))) return json({ error: 'Wrong password.' }, 401);
+    const mine = (await kv.get('plinks:' + parent, 'json')) || { kids: [] };
+    for (let i = 0; i < mine.kids.length; i++) {
+      const k = mine.kids[i];
+      // tell the child the link ended, and remove what this parent wrote for them
+      await kv.put('plink:' + k.linkId, JSON.stringify({ gone: true }), { expirationTtl: CODE_TTL });
+      const rows = await Promise.all([kv.get('ctl:' + k.child, 'json'), kv.get('chall:' + k.child, 'json')]);
+      if (rows[0] && rows[0].linkId === k.linkId) await kv.delete('ctl:' + k.child);
+      if (rows[1] && rows[1].linkId === k.linkId) await kv.delete('chall:' + k.child);
+    }
+    await Promise.all(['plinks:' + parent, 'cfail:' + parent, PARENT_NS.acct + parent, PARENT_NS.fail + parent, PARENT_NS.sess + who.tokenHash].map(function (key) { return kv.delete(key); }));
+    return json({ ok: true });
+  }
 
   if (path === '/api/parent/unlink' && request.method === 'POST') {
     const mine = (await kv.get('plinks:' + parent, 'json')) || { kids: [] };

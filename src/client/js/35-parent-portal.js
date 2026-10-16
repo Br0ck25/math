@@ -96,10 +96,17 @@ function portalSignedOut() {
 }
 // The settings form for one child. Only the first linked parent (primary) can change them; anyone else just sees them.
 function controlsBox(k, i) {
-  const c = k.controls || { minGrade: 0, ops: null, duelsOnline: true };
+  const c = cleanCtl(k.controls) || { minGrade: 0, ops: null, duelsOnline: true, goalMinutes: null, goalReward: '', adaptive: null };
   if (!k.primary) {
-    return '<div class="portal-sub">Settings (set by the first parent linked): lowest level ' + escHtml(GRADES[c.minGrade].long) + (c.ops ? ', ' + c.ops.length + ' math types' : ', all math types') + ', online duels ' + (c.duelsOnline ? 'on' : 'off') + '.</div>';
+    return '<div class="portal-sub">Settings (set by the first parent linked): lowest level ' + escHtml(GRADES[c.minGrade].long) + (c.ops ? ', ' + c.ops.length + ' math types' : ', all math types') + ', online duels ' + (c.duelsOnline ? 'on' : 'off') +
+      (c.goalMinutes ? ', daily goal ' + c.goalMinutes + ' min' : '') + (c.adaptive === null ? '' : ', difficulty matching ' + (c.adaptive ? 'on' : 'off')) + '.</div>';
   }
+  const goals = [null, 10, 15, 20, 30, 45, 60].concat(c.goalMinutes && [10, 15, 20, 30, 45, 60].indexOf(c.goalMinutes) === -1 ? [c.goalMinutes] : []).map(function (m) {
+    return '<option value="' + (m === null ? '' : m) + '"' + (m === c.goalMinutes ? ' selected' : '') + '>' + (m === null ? escHtml(k.child) + ' decides' : m + ' minutes') + '</option>';
+  }).join('');
+  const adapt = [['', escHtml(k.child) + ' decides'], ['on', 'On'], ['off', 'Off']].map(function (o) {
+    return '<option value="' + o[0] + '"' + (o[0] === (c.adaptive === null ? '' : (c.adaptive ? 'on' : 'off')) ? ' selected' : '') + '>' + o[1] + '</option>';
+  }).join('');
   const grades = GRADES.map(function (g) { return '<option value="' + g.id + '"' + (g.id === c.minGrade ? ' selected' : '') + '>' + escHtml(g.long) + '</option>'; }).join('');
   const ops = MATH_OPS.map(function (o) {
     const on = !c.ops || c.ops.indexOf(o.id) !== -1;
@@ -111,6 +118,12 @@ function controlsBox(k, i) {
     '<div class="portal-sub">' + escHtml(k.child) + ' can play this level or higher, never lower, so easy problems cannot be used to farm gems.</div>' +
     '<div class="settings-label">🧮 Math types allowed</div><div class="portal-ops">' + ops + '</div>' +
     '<div class="portal-sub">A type only shows up once its level is reached.</div>' +
+    '<div class="settings-label">⏳ Daily math time goal</div>' +
+    '<select class="acct-input" data-ctl="goal" aria-label="Daily math time goal">' + goals + '</select>' +
+    '<input class="acct-input" data-ctl="reward" type="text" maxlength="' + ECON.parents.goal.maxRewardChars + '" placeholder="Reward, e.g. ice cream trip" value="' + escHtml(c.goalReward) + '" aria-label="Reward for reaching the goal">' +
+    '<div class="settings-label">🎚️ Match difficulty to each math type</div>' +
+    '<select class="acct-input" data-ctl="adaptive" aria-label="Match difficulty to each math type">' + adapt + '</select>' +
+    '<div class="portal-sub">Picking a value locks it on ' + escHtml(k.child) + '\'s device; "' + escHtml(k.child) + ' decides" leaves it free.</div>' +
     '<div class="settings-label">🌍 Online duels</div>' +
     '<label class="portal-op"><input type="checkbox" data-ctl="duels"' + (c.duelsOnline ? ' checked' : '') + '> Let ' + escHtml(k.child) + ' challenge friends by player name</label>' +
     '<button class="grade-btn" style="width:100%; margin-top:10px;" onclick="portalSaveControls(' + i + ')">Save settings</button>' +
@@ -127,7 +140,10 @@ async function portalSaveControls(i) {
       child: k.child,
       minGrade: parseInt(box.querySelector('select[data-ctl="grade"]').value, 10),
       ops: checked.length === MATH_OPS.length ? null : checked,
-      duelsOnline: box.querySelector('input[data-ctl="duels"]').checked
+      duelsOnline: box.querySelector('input[data-ctl="duels"]').checked,
+      goalMinutes: box.querySelector('select[data-ctl="goal"]').value === '' ? null : parseInt(box.querySelector('select[data-ctl="goal"]').value, 10),
+      goalReward: box.querySelector('input[data-ctl="reward"]').value.trim(),
+      adaptive: { '': null, on: true, off: false }[box.querySelector('select[data-ctl="adaptive"]').value]
     });
     if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not save the settings.', 'err');
     setPortalMsg('Saved settings for ' + k.child + '.', 'ok');
@@ -204,7 +220,24 @@ function renderPortal() {
     '<button class="grade-btn" style="width:100%; margin-top:6px;" onclick="portalLoad()">🔄 Refresh</button>' +
     '<div class="acct-msg ' + portalMsg.kind + '" id="portal-msg" role="status">' + escHtml(portalMsg.text) + '</div>' +
     (portalKids === null ? '<div class="portal-sub">Loading…</div>' : (kids.length ? kids.map(kidCard).join('') : '<div class="portal-sub">No children yet. Add one with a code.</div>')) +
+    '<div id="portal-delete-area"><button class="danger-btn" style="margin-top:12px;" onclick="portalShowDelete()">Delete my parent account</button></div>' +
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';
+}
+function portalShowDelete() {
+  document.getElementById('portal-delete-area').innerHTML =
+    '<div class="settings-hint">This deletes your parent account and ends your link to every child, along with the settings and challenges you set for them. Your children\'s game progress is not touched.</div>' +
+    '<input class="acct-input" id="portal-del-pass" type="password" placeholder="Enter your password to confirm" autocomplete="current-password">' +
+    '<div class="acct-btns"><button class="grade-btn" onclick="renderPortal()">Cancel</button><button class="danger-btn" style="margin-top:0;" onclick="portalDelete()">Delete</button></div>';
+}
+async function portalDelete() {
+  const p = document.getElementById('portal-del-pass');
+  if (!p || !p.value) return setPortalMsg('Enter your password to confirm.', 'err');
+  try {
+    const r = await portalApi('/api/parent/delete', 'POST', { password: p.value });
+    if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not delete the account.', 'err');
+    portalLogout();
+    setPortalMsg('Your parent account was deleted.', 'ok');
+  } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
 }
 async function portalAuth(kind) {
   const name = document.getElementById('portal-name').value.trim().toLowerCase();

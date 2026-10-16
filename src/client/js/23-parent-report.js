@@ -26,7 +26,10 @@ function setDuelsOnline(on) {
   if (duelsLocked()) { toast('🔒 Online duels are switched off from a parent\'s phone.'); renderParent(); return; }
   state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off');
 }
-function setAdaptive(on) { state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent(); }
+function setAdaptive(on) {
+  if (adaptiveLocked()) { toast('🔒 Difficulty matching is set from a parent\'s phone.'); renderParent(); return; }
+  state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent();
+}
 function parentLocked() { return !!state.parentPinHash && !parentUnlocked; }
 // 4-digit PIN stored only as a SHA-256 hash (a light lock against little fingers, not real security).
 async function hashPin(pin) {
@@ -144,6 +147,9 @@ function renderParent() {
   document.getElementById('par-duels').disabled = duelsLocked();
   document.getElementById('par-ctl-note').innerText = ctlNote();
   document.getElementById('par-adaptive').checked = state.adapt.on;
+  document.getElementById('par-adaptive').disabled = adaptiveLocked();
+  document.getElementById('par-minutes').disabled = goalLocked();
+  document.getElementById('par-reward').disabled = goalLocked();
   const lv = getActiveOps().filter(function (op) { return state.adapt.on ? true : false; }).map(function (op) {
     const t = opTier(op), acc = recentAccuracy(op);
     const col = t > 0 ? '#fde047' : (t < 0 ? '#86efac' : 'var(--text-muted)');
@@ -173,11 +179,16 @@ function renderParent() {
     ? '🎉 Goal reached today!' + (g.reward ? ' Time for: ' + g.reward : '')
     : Math.floor(mins) + ' of ' + g.minutes + ' minutes today' + (g.reward ? ' — reward: ' + g.reward : '');
 }
-function setParentGoal() {
+// Sets the daily time goal (also used when a parent sets it from their phone).
+function applyGoal(minutes, reward) {
   const g = state.parentGoal;
-  g.minutes = clamp(parseInt(document.getElementById('par-minutes').value, 10) || 20, 5, 240);
-  g.reward = document.getElementById('par-reward').value.slice(0, 60);
+  g.minutes = clamp(parseInt(minutes, 10) || 20, ECON.parents.goal.minMinutes, ECON.parents.goal.maxMinutes);
+  g.reward = String(reward || '').slice(0, ECON.parents.goal.maxRewardChars);
   g.notified = minutesToday() >= g.minutes ? dayKey() : '';
+}
+function setParentGoal() {
+  if (goalLocked()) { toast('🔒 The daily goal is set from a parent\'s phone.'); renderParent(); return; }
+  applyGoal(document.getElementById('par-minutes').value, document.getElementById('par-reward').value);
   saveState();
   renderParent();
 }

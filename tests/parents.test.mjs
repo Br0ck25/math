@@ -113,7 +113,7 @@ test('only the primary parent can change settings, and they are checked', async 
   }
   const ok = await c('/api/parent/controls', 'POST', ctl({ ops: ['add', 'add', 'sub'], duelsOnline: false }), mom);
   assert.equal(ok.status, 200);
-  assert.deepEqual(ok.data.controls, { minGrade: 1, ops: ['add', 'sub'], duelsOnline: false });
+  assert.deepEqual(ok.data.controls, { minGrade: 1, ops: ['add', 'sub'], duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null });
   assert.deepEqual((await c('/api/parent/kids', 'GET', null, mom)).data.kids[0].controls, ok.data.controls);
   assert.equal((await c('/api/parent/kids', 'GET', null, dad)).data.kids[0].controls.minGrade, 1, 'the second parent can see them');
 });
@@ -123,7 +123,7 @@ test('the child receives the settings, and the cloud save never holds a lower le
   await link(c, kid, mom);
   assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null);
   await c('/api/parent/controls', 'POST', ctl({ minGrade: 2, duelsOnline: false }), mom);
-  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, { minGrade: 2, ops: null, duelsOnline: false });
+  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, { minGrade: 2, ops: null, duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null });
   const put = await c('/api/save', 'PUT', { state: { ...save, grade: 0, duelsOnline: true }, baseVersion: 1, force: true }, kid);
   assert.equal(put.data.controls.minGrade, 2, 'every save tells the device the settings');
   const stored = (await c('/api/save', 'GET', null, kid)).data.save.state;
@@ -132,7 +132,7 @@ test('the child receives the settings, and the cloud save never holds a lower le
   const high = await c('/api/save', 'PUT', { state: { ...save, grade: 4 }, baseVersion: put.data.version }, kid);
   assert.equal((await c('/api/save', 'GET', null, kid)).data.save.state.grade, 4, 'a higher level is never lowered');
   assert.ok(high.data.ok);
-  assert.deepEqual((await c('/api/login', 'POST', { name: 'kiddo', password: 'secret1' })).data.controls, { minGrade: 2, ops: null, duelsOnline: false });
+  assert.deepEqual((await c('/api/login', 'POST', { name: 'kiddo', password: 'secret1' })).data.controls.minGrade, 2);
 });
 
 test('settings stop applying when the parent who set them is no longer the primary link', async () => {
@@ -146,4 +146,50 @@ test('settings stop applying when the parent who set them is no longer the prima
   assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null, 'mom\'s settings lapse with her link');
   assert.equal((await c('/api/parent/controls', 'POST', ctl({ minGrade: 2 }), dad)).status, 200);
   assert.equal((await c('/api/save', 'GET', null, kid)).data.controls.minGrade, 2, 'dad\'s own settings apply');
+});
+
+test('the daily time goal and adaptive practice can be set, and are checked', async () => {
+  const { c, kid, mom } = await setup();
+  await link(c, kid, mom);
+  for (const bad of [{ goalMinutes: 4 }, { goalMinutes: 241 }, { goalMinutes: 'x' }, { goalMinutes: 20.5 }, { goalReward: 'x'.repeat(61) }, { goalReward: '<b>' }, { goalReward: 5 }, { adaptive: 'maybe' }]) {
+    assert.equal((await c('/api/parent/controls', 'POST', ctl(bad), mom)).status, 400, JSON.stringify(bad));
+  }
+  const ok = await c('/api/parent/controls', 'POST', ctl({ goalMinutes: 30, goalReward: '  ice cream trip ', adaptive: false }), mom);
+  assert.deepEqual([ok.data.controls.goalMinutes, ok.data.controls.goalReward, ok.data.controls.adaptive], [30, 'ice cream trip', false]);
+  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, ok.data.controls);
+  const unset = await c('/api/parent/controls', 'POST', ctl({ goalMinutes: null, adaptive: null }), mom);
+  assert.deepEqual([unset.data.controls.goalMinutes, unset.data.controls.adaptive], [null, null], 'the player decides again');
+});
+
+test('a parent who stops watching ends their settings and challenge at once', async () => {
+  const { c, kid, mom } = await setup();
+  await link(c, kid, mom);
+  await c('/api/parent/controls', 'POST', ctl({ minGrade: 2 }), mom);
+  await c('/api/parent/challenge', 'POST', { child: 'kiddo', problems: 5, minutes: 5 }, mom);
+  let s = (await c('/api/save', 'GET', null, kid)).data;
+  assert.equal(s.controls.minGrade, 2); assert.equal(s.challenge.state, 'ready');
+  await c('/api/parent/unlink', 'POST', { child: 'kiddo' }, mom);
+  s = (await c('/api/save', 'GET', null, kid)).data;
+  assert.equal(s.controls, null); assert.equal(s.challenge, null);
+});
+
+test('deleting a parent account needs the password and removes everything they set', async () => {
+  const { env, c, kid, mom, dad } = await setup();
+  await link(c, kid, mom);
+  await link(c, kid, dad);
+  await c('/api/parent/controls', 'POST', ctl({ minGrade: 2 }), mom);
+  const otherPhone = (await c('/api/parent/login', 'POST', { name: 'mom_one', password: 'secret1' })).data.token;   // a second sign-in
+  assert.equal((await c('/api/parent/delete', 'POST', { password: 'wrong!!' }, mom)).status, 401);
+  assert.equal((await c('/api/parent/delete', 'POST', { password: 'secret1' }, mom)).status, 200);
+  assert.equal((await c('/api/parent/kids', 'GET', null, mom)).status, 401, 'her sign-in is gone');
+  assert.equal((await c('/api/parent/login', 'POST', { name: 'mom_one', password: 'secret1' })).status, 401);
+  assert.equal(await env.MATH_KV.get('ctl:kiddo'), null, 'the settings she wrote are removed');
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null);
+  const list = (await c('/api/link/list', 'GET', null, kid)).data.links;
+  assert.deepEqual(list.map((l) => [l.parent, l.primary]), [['dad_one', true]], 'the child sees her link end and dad takes over');
+  // someone else may take the name later, but the old sign-in does not come with it
+  const again = (await c('/api/parent/register', 'POST', { name: 'mom_one', password: 'another1' })).data.token;
+  assert.equal((await c('/api/parent/kids', 'GET', null, mom)).status, 401, 'the old token stays dead');
+  assert.equal((await c('/api/parent/kids', 'GET', null, otherPhone)).status, 401, 'a sign-in on another phone does not carry over to the new account');
+  assert.equal((await c('/api/parent/kids', 'GET', null, again)).status, 200);
 });

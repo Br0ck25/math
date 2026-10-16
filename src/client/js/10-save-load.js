@@ -171,7 +171,7 @@ const NORMALIZERS = [
     sc.total = asInt(sc.total, 0, 1e6, 0);
   },
   function parent(s) {
-    s.parentGoal.minutes = asInt(s.parentGoal.minutes, 5, 240, 20);
+    s.parentGoal.minutes = asInt(s.parentGoal.minutes, ECON.parents.goal.minMinutes, ECON.parents.goal.maxMinutes, 20);
     s.parentGoal.reward = String(s.parentGoal.reward || '').slice(0, 60);
     if (!/^[0-9a-f]{64}$|^$/.test(s.parentPinHash)) s.parentPinHash = '';
   },
