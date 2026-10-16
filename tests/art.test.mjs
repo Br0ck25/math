@@ -32,6 +32,7 @@ const withArt = () => page.evaluate(async () => {
   const c = cv.getContext('2d'); c.fillStyle = '#3b82f6'; c.fillRect(0, 0, 64, 48);
   window.__uri = cv.toDataURL('image/png');
   applyBuddyArt({ [window.__free]: window.__uri, [window.__free2]: window.__uri });
+  artImage(window.__free); artImage(window.__free2);                  // pictures for the trading card load on request
   await new Promise((res) => { const im = new Image(); im.onload = res; im.src = window.__uri; setTimeout(res, 500); });
   await new Promise((res) => setTimeout(res, 100));
 });
@@ -147,7 +148,7 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
   assert.match(Buffer.from(uri.split(',')[1], 'base64').toString(), /width="160" height="80"/);
   const r = await page.evaluate(async (uri) => {
     const F = allBuddies().filter((b) => !BUDDY_ART[b.id] && !b.emoji && b.id !== 'dog' && b.id !== 'fox' && typeof b.icon === 'string' && !b.icon.startsWith('<'))[0].id;
-    applyBuddyArt({ [F]: uri });
+    applyBuddyArt({ [F]: uri }); artImage(F);
     await new Promise((res) => setTimeout(res, 300));
     const im = ART_IMGS[F], calls = [], real = CanvasRenderingContext2D.prototype.drawImage;
     CanvasRenderingContext2D.prototype.drawImage = function (i, x, y, w, h) { calls.push([w, h]); return real.apply(this, arguments); };
@@ -169,6 +170,7 @@ test('a boss with art (Rocky, Tyson) shows the picture in the fight, the Dex and
     currentMonsterIndex = t; bossLevel = 10; state.bossSwapped = false; state.raid = null; monsterCurrentHp = 5; updateBattleUI();
     out.fight = document.getElementById('monster-icon').querySelector('.buddy-img') !== null && !/<img|data:image/.test(document.getElementById('monster-icon').innerText);
     bookTab = 'boss'; openBook(); out.dex = document.querySelectorAll('#book-body .buddy-img').length >= 2; closeBook();
+    artImage(monstersList[t].buddy);
     await new Promise((res) => setTimeout(res, 300));
     const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
     CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
@@ -183,6 +185,25 @@ test('a boss with art (Rocky, Tyson) shows the picture in the fight, the Dex and
   assert.equal(r.dex, true, 'the boss tab of the Dex');
   assert.equal(r.card, 1, 'the boss card');
   assert.equal(r.text, true);
+});
+
+test('pictures are cheap: no image is decoded at load (200 of them made every page slow), a card asks for its picture and is redrawn when it arrives', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    out.atLoad = [Object.keys(BUDDY_ART).length > 100, Object.keys(ART_IMGS).length];
+    const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
+    CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
+    const id = Object.keys(BUDDY_ART).find((k) => k.startsWith('secret_') && getSpecies(k));
+    state.unlockedSecrets.push(id); state.buddyXp[id] = xpForLevel(10);
+    openHub(); hubPet = id; hubTab = 'card'; renderHub(); out.first = calls.length;                                 // the picture is not here yet: the emoji card is drawn
+    await new Promise((res) => setTimeout(res, 400));
+    out.after = [calls.length >= 1, Object.keys(ART_IMGS).join() === id];
+    CanvasRenderingContext2D.prototype.drawImage = real;
+    return out;
+  });
+  assert.deepEqual(r.atLoad, [true, 0]);
+  assert.equal(r.first, 0);
+  assert.deepEqual(r.after, [true, true], 'redrawn with the picture once it loaded, and only that one image was made');
 });
 
 test('every file in art/buddies belongs to a real buddy', async () => {

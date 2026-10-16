@@ -15,7 +15,7 @@ function updateBattleUI() {
   document.getElementById('monster-name').innerText = boss.name;
   updateWeakChip();
   const mIcon = document.getElementById('monster-icon');
-  mIcon.innerHTML = boss.icon;                                      // an emoji, or an <img> when the foe has licensed art
+  setIconHtml(mIcon, boss.icon);                                    // an emoji, or an <img> when the foe has licensed art
   setStageClass(mIcon, 'boss-stage-', boss.form);
   mIcon.parentNode.setAttribute('data-element', boss.element);       // each element gives its boss a different glow
   document.getElementById('monster-level').innerText = boss.level;
@@ -27,7 +27,7 @@ function updateBattleUI() {
   document.getElementById('pet-hp-bar').style.width = `${Math.round((petHp / petMax) * 100)}%`;
 
   const pIcon = document.getElementById('pet-fighter-icon');
-  pIcon.innerHTML = pet.icon;
+  setIconHtml(pIcon, pet.icon);
   setStageClass(pIcon, 'stage-', pet.stage);
   document.getElementById('pet-fighter-name').innerText = pet.name;
   document.getElementById('pet-level').innerText = pet.level;

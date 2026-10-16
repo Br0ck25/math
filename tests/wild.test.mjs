@@ -24,7 +24,7 @@ const beat = (random) => page.evaluate(async (rnd) => {
   if (rnd !== undefined) Math.random = () => rnd;
   monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
   triggerMonsterDamage(50, false);
-  await new Promise((res) => setTimeout(res, 1000));
+  await new Promise((res) => setTimeout(res, 2000));
   Math.random = real;
 }, random);
 
@@ -58,7 +58,7 @@ test('a wild win pays wild gems, counts no boss, and the boss counter is untouch
     state.gems = 0; state.monstersDefeated = 0; state.wild.since = 0; const lvl = bossLevel;      // (an earlier test's late save may have been reloaded)
     monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { gems: state.gems, want: ECON.wild.gemBase + Math.floor(lvl / ECON.wild.gemPerLevels), bosses: state.monstersDefeated, since: state.wild.since };
   });
   assert.ok(r.gems >= r.want, `${r.gems} >= ${r.want}`);
@@ -72,14 +72,14 @@ test('beating a wild buddy can catch it: a new one joins, one you own becomes a 
     state.wild.id = 'fox'; bossLevel = 5; state.unlockedPets = ['dog'];
     const real = Math.random; Math.random = () => 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     Math.random = real;
     out.owned = state.unlockedPets.includes('fox'); out.spares1 = spareCount('fox'); out.modal = document.getElementById('loot-modal').style.display;
     out.tag = document.getElementById('loot-modal-tag').innerText;
     closeLootModal(false);
     state.wild.id = 'fox'; bossLevel = 5; Math.random = () => 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     Math.random = real;
     out.spares2 = spareCount('fox'); out.count = state.unlockedPets.filter((x) => x === 'fox').length;
     return out;
@@ -201,11 +201,11 @@ test('quests: only bosses count for "defeat bosses" and "flawless", not wild bud
       { id: 'q1', type: 'flawless', text: 'x', target: 1, reward: 1, progress: 0, done: false, claimed: false }
     ] };
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     const afterWild = state.quests.list.map((q) => q.progress);
     state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; bossMistakes = 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { afterWild, afterBoss: state.quests.list.map((q) => q.progress) };
   });
   assert.deepEqual(r.afterWild, [0, 0]);
@@ -237,7 +237,7 @@ test('one buddy swap per battle; a new battle gives a new swap', async () => {
     out.stayed = state.activePet === ids[1];
     out.dimmed = [...document.querySelectorAll('#team-bar .swap-chip')].filter((c) => c.classList.contains('resting')).length;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     out.reset = state.swapUsed === false;
     return out;
   });
@@ -252,11 +252,11 @@ test('fainted buddies come back only after a boss, not after a wild win', async 
   const r = await page.evaluate(async () => {
     state.unlockedPets = ['dog', 'fox']; state.activePet = 'dog'; state.faintedPets = ['fox'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     const afterWild = state.faintedPets.slice();
     state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; state.faintedPets = ['fox'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { afterWild, afterBoss: state.faintedPets.slice() };
   });
   assert.deepEqual(r.afterWild, ['fox']);
@@ -444,7 +444,7 @@ test('the daily rare: once a day after 3 wild wins a golden buddy appears, tough
     state.daily.fights = 3; pickNextWild(); out.nextDay = [state.wild.shiny, state.daily.spawned];
     state.wild.shiny = true; state.gems = 0; bossLevel = 5; state.unlockedPets = ['dog'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.gems = state.gems;
     state.wild = { id: 'fox', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.keep = state.wild.shiny;
     state.wild = { id: '', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.drop = state.wild.shiny;

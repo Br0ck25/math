@@ -45,12 +45,12 @@ test('the Moves sheet spends energy: a damage move hits, guard blocks the next h
     closeMoves();
     ultimateCharge = 1; const hp0 = monsterCurrentHp;
     useMove('strike');
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.strike = [hp0 - monsterCurrentHp > 0, ultimateCharge];
     ultimateCharge = 1; useMove('guard'); out.guard = [guardUp, ultimateCharge];
     inputLocked = false; state.shields = 0; const petHp = getPetHp('dog');
     userInput = String(currentProblem.answer + 7); checkAnswer();
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.blocked = [getPetHp('dog') === petHp, guardUp];
     inputLocked = false; setPetHp('dog', 1); ultimateCharge = 2; useMove('heal');
     out.heal = [getPetHp('dog') > 1, ultimateCharge];

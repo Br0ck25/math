@@ -98,7 +98,7 @@ function updateTeamBar() {
   const bar = document.getElementById('team-bar');
   if (!bar) return;
   const ids = getTeam();
-  if (ids.length < 2) { bar.innerHTML = ''; return; }
+  if (ids.length < 2) { bar.innerHTML = ''; bar._sig = ''; return; }
   const boss = getBossInfo();
   const picking = needsSwitch();
   bar.classList.toggle('pick', picking);
@@ -106,17 +106,29 @@ function updateTeamBar() {
     state.storySeen.teamHint = 1;
     toast('💡 Tip: press and hold a buddy under the arena to change your team');
   }
-  bar.innerHTML = '';
-  ids.forEach(function (id) {
+  // What each chip shows. When nothing changed the bar is left alone: rebuilding it re-creates every picture, and pictures are not free.
+  const chips = ids.map(function (id) {
     const p = getPetById(id), mu = teamMatchup(id, boss);
     const resting = state.faintedPets.indexOf(id) !== -1;
+    const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : picking ? 'send it in' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
+    return {
+      id: id, label: label,
+      cls: 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (!picking && state.swapUsed && id !== state.activePet) ? ' resting' : ''),
+      html: '<span class="tc-icon">' + p.icon + '</span><span class="tc-badge" aria-hidden="true">' + (resting ? '💤' : mu.icon) + '</span>'
+    };
+  });
+  const sig = JSON.stringify(chips);
+  if (bar._sig === sig && bar.childElementCount === chips.length) return;
+  bar._sig = sig;
+  bar.innerHTML = '';
+  chips.forEach(function (c) {
+    const id = c.id;
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'swap-chip ' + mu.cls + (id === state.activePet ? ' active' : '') + (resting || (!picking && state.swapUsed && id !== state.activePet) ? ' resting' : '');
-    const label = 'Swap to ' + p.name + ', ' + (resting ? 'resting' : picking ? 'send it in' : state.swapUsed ? 'swap already used this battle' : mu.mult + ' damage against ' + boss.name);
-    b.setAttribute('aria-label', label);
-    b.title = label + ' (press and hold to change your team)';
-    b.innerHTML = '<span class="tc-icon">' + p.icon + '</span><span class="tc-badge" aria-hidden="true">' + (resting ? '💤' : mu.icon) + '</span>';
+    b.className = c.cls;
+    b.setAttribute('aria-label', c.label);
+    b.title = c.label + ' (press and hold to change your team)';
+    b.innerHTML = c.html;
     // a quick tap swaps; pressing and holding opens the team picker
     let pressTimer = null, held = false;
     const stop = function () { clearTimeout(pressTimer); };

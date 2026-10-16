@@ -242,7 +242,7 @@ test('no errors', () => { assert.deepEqual(errors, []); });
 test('Janie, Amber and Papaw: three ultra-rare buddies, equally rare and equally strong, each with a favorite food', async () => {
   const r = await inPage(() => {
     const out = {};
-    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + p.icon);
+    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + (p.emoji || p.icon));
     out.food = ultraPets.map((p) => favSnack(p.id).icon + ' ' + favSnack(p.id).name);
     // same stats at the same level, and the same damage against every boss element, whatever the element badge says
     const dmg = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => tourDamage({ element: p.element, ultra: p.ultra, atk: 4 }, { element: e, ultra: false })));
@@ -354,7 +354,7 @@ test('the arrival message warns when the new boss is a slayer of your active bud
     const real = Math.random; Math.random = () => roll;
     currentMonsterIndex = 0; monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1300));
+    await new Promise((res) => setTimeout(res, 2600));
     Math.random = real;
     return document.getElementById('toast').innerText;
   }, [buddy, roll]);

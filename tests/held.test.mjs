@@ -131,7 +131,7 @@ test('pressing and holding a team chip opens the team picker; a quick tap still 
     out.tip = document.getElementById('toast').innerText; state.storySeen.teamHint = state.storySeen.teamHint;
     const chip = () => document.querySelectorAll('#team-bar .swap-chip')[1];
     chip().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     chip().dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); chip().click();
     out.hub = [document.getElementById('hub-modal').style.display, hubTab, state.activePet === ids[0], state.swapUsed];
     document.getElementById('hub-modal').style.display = 'none'; modalDone();
@@ -166,7 +166,7 @@ test('the Sanctuary, a new catch and the team chips share one swap per battle', 
     out.adopt = [state.unlockedPets.includes(buy.id), state.activePet === ids[0]];
     // a new battle gives a new swap
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.fresh = state.swapUsed === false;
     return out;
   });

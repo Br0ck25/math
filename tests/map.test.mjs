@@ -21,7 +21,7 @@ beforeEach(async () => {
 const beat = () => page.evaluate(async () => {
   monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
   triggerMonsterDamage(99, false);
-  await new Promise((res) => setTimeout(res, 1500));
+  await new Promise((res) => setTimeout(res, 3000));
   document.getElementById('raid-modal').style.display = 'none'; modalDone();
 });
 

@@ -71,7 +71,7 @@ test('winning pays gems, does not move the boss counter, and a miss raises the n
     const since = state.wild.since;
     Math.random = () => 0.999;                                      // the catch fails
     monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
-    triggerMonsterDamage(99, false); await wait(1500);
+    triggerMonsterDamage(99, false); await wait(3000);
     document.getElementById('raid-modal').style.display = 'none'; modalDone();
     Math.random = real;
     out.win = [state.gems >= ECON.legend.gems, state.wild.since === since, state.wild.legend, getOwnedIds().includes(sp.id)];
