@@ -24,11 +24,14 @@ beforeEach(async () => {
 });
 
 // A small picture made in the page, so the tests need no files.
+// The buddy used as the test subject is one without real art (real files keep arriving), chosen in the page as window.__free; its emoji is kept in window.__emoji.
 const withArt = () => page.evaluate(async () => {
+  const free = allBuddies().filter((b) => !BUDDY_ART[b.id] && !b.emoji && b.id !== 'dog' && b.id !== 'fox' && typeof b.icon === 'string' && !b.icon.startsWith('<'));
+  window.__free = free[0].id; window.__free2 = free[1].id; window.__emoji = free[0].icon; window.__pack = packOf(free[0]).id;
   const cv = document.createElement('canvas'); cv.width = 64; cv.height = 48;
   const c = cv.getContext('2d'); c.fillStyle = '#3b82f6'; c.fillRect(0, 0, 64, 48);
   window.__uri = cv.toDataURL('image/png');
-  applyBuddyArt({ toon_bluey: window.__uri, toon_homer: window.__uri });
+  applyBuddyArt({ [window.__free]: window.__uri, [window.__free2]: window.__uri });
   await new Promise((res) => { const im = new Image(); im.onload = res; im.src = window.__uri; setTimeout(res, 500); });
   await new Promise((res) => setTimeout(res, 100));
 });
@@ -36,42 +39,42 @@ const withArt = () => page.evaluate(async () => {
 test('a buddy with art shows the picture where its emoji was; the emoji stays for text; buddies without art are untouched; applying twice changes nothing', async () => {
   await withArt();
   const r = await page.evaluate(() => {
-    const out = {}, sp = getSpecies('toon_bluey'), plain = getSpecies('fox');
-    out.icon = [sp.icon.startsWith('<img class="buddy-img"'), sp.emoji, sp.forms.every((f) => f.icon === sp.icon && f.emoji)];
-    const d = getPetById('toon_bluey');
-    out.pet = [d.icon === sp.icon, d.emoji];
+    const out = {}, sp = getSpecies(window.__free), plain = getSpecies('fox');
+    out.icon = [sp.icon.startsWith('<img class="buddy-img"'), sp.emoji === window.__emoji, sp.forms.every((f) => f.icon === sp.icon && f.emoji)];
+    const d = getPetById(window.__free);
+    out.pet = [d.icon === sp.icon, d.emoji === window.__emoji];
     out.plain = [plain.icon, plain.emoji === undefined];
     out.avatar = avatarHtml(d, 40).includes('<img class="buddy-img"') && !avatarHtml(getPetById('fox'), 40).includes('<img');
-    const before = sp.icon; applyBuddyArt({ toon_bluey: window.__uri }); out.twice = sp.icon === before && sp.emoji === '🐕';
-    out.pack = packOf(sp).id;
-    out.emojiOf = [emojiOf(sp), emojiOf(plain)];
+    const before = sp.icon; applyBuddyArt({ [window.__free]: window.__uri }); out.twice = sp.icon === before && sp.emoji === window.__emoji;
+    out.pack = packOf(sp).id === window.__pack;
+    out.emojiOf = [emojiOf(sp) === window.__emoji, emojiOf(plain)];
     return out;
   });
-  assert.deepEqual(r.icon, [true, '🐕', true]);
-  assert.deepEqual(r.pet, [true, '🐕']);
+  assert.deepEqual(r.icon, [true, true, true]);
+  assert.deepEqual(r.pet, [true, true]);
   assert.deepEqual(r.plain, ['🦊', true], 'untouched: no emoji copy needed');
   assert.equal(r.avatar, true);
   assert.equal(r.twice, true);
-  assert.equal(r.pack, 'bluey', 'packs are still placed by show/id/emoji, not by the picture');
-  assert.deepEqual(r.emojiOf, ['🐕', '🦊']);
+  assert.equal(r.pack, true, 'packs are still placed by show/id/emoji, not by the picture');
+  assert.deepEqual(r.emojiOf, [true, '🦊']);
 });
 
 test('the art shows on the battle screen, hub, Dex, shop and legend story, and no picture data ever leaks into visible text', async () => {
   await withArt();
   const r = await page.evaluate(() => {
     const out = {};
-    state.unlockedPets = ['dog', 'toon_bluey']; state.activePet = 'toon_bluey'; state.buddyXp.toon_bluey = xpForLevel(20); state.gems = 9999;
+    const F = window.__free; state.unlockedPets = ['dog', F]; state.activePet = F; state.buddyXp[F] = xpForLevel(20); state.gems = 9999;
     updateStatsUI(); updateBattleUI();
     out.battle = document.querySelector('#pet-box .buddy-img, #battle-header-arena .buddy-img') !== null;
     const leaks = [];
     const scan = (where) => { const t = document.body.innerText; if (/data:image|<img|buddy-img|base64/.test(t)) leaks.push(where); };
     scan('battle');
-    openHub(); hubPet = 'toon_bluey'; renderHub(); out.hub = document.querySelector('#hub-modal .buddy-img') !== null; scan('hub'); closeHub();
+    openHub(); hubPet = F; renderHub(); out.hub = document.querySelector('#hub-modal .buddy-img') !== null; scan('hub'); closeHub();
     bookTab = 'buddy'; openBook(); out.dexOwned = document.querySelector('#book-body .buddy-img') !== null;
     state.unlockedPets = ['dog']; renderBook(); out.dexLocked = [...document.querySelectorAll('#book-body .silhouette .buddy-img')].length > 0; scan('dex'); closeBook();
     openShop(); out.shop = document.querySelector('#shop-modal .buddy-img') !== null; scan('shop'); closeShop();
     // a duel win line and the legend story are text: they use the emoji
-    out.emojiText = emojiOf(getSpecies('toon_homer')) === '👨‍🦲';
+    out.emojiText = emojiOf(getSpecies(F)) === window.__emoji;
     out.leaks = leaks;
     return out;
   });
@@ -94,9 +97,9 @@ test('the trading card draws the picture, scaled to fit, and falls back to the e
     const calls = [], emoji = [];
     CanvasRenderingContext2D.prototype.drawImage = function (img, x, y, w, h) { calls.push([x, y, w, h]); return real.apply(this, arguments); };
     CanvasRenderingContext2D.prototype.fillText = function (t) { emoji.push(String(t)); return realText.apply(this, arguments); };
-    state.unlockedPets = ['dog', 'toon_bluey', 'fox'];
-    drawCard(cv, 'toon_bluey'); out.art = [calls.length, calls[0] && Math.round(calls[0][2]) <= 380, calls[0] && Math.round(calls[0][2] / calls[0][3] * 100)];
-    out.noEmoji = !emoji.includes('🐕');
+    state.unlockedPets = ['dog', window.__free, 'fox'];
+    drawCard(cv, window.__free); out.art = [calls.length, calls[0] && Math.round(calls[0][2]) <= 380, calls[0] && Math.round(calls[0][2] / calls[0][3] * 100)];
+    out.noEmoji = !emoji.includes(window.__emoji);
     calls.length = 0; emoji.length = 0;
     drawCard(cv, 'fox'); out.plain = [calls.length, emoji.includes('🦊')];
     CanvasRenderingContext2D.prototype.drawImage = real; CanvasRenderingContext2D.prototype.fillText = realText;
@@ -143,13 +146,14 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
   const uri = /"zz_vb":"(data:image\/svg\+xml;base64,[^"]+)"/.exec(js)[1];
   assert.match(Buffer.from(uri.split(',')[1], 'base64').toString(), /width="160" height="80"/);
   const r = await page.evaluate(async (uri) => {
-    applyBuddyArt({ toon_bluey: uri });
+    const F = allBuddies().filter((b) => !BUDDY_ART[b.id] && !b.emoji && b.id !== 'dog' && b.id !== 'fox' && typeof b.icon === 'string' && !b.icon.startsWith('<'))[0].id;
+    applyBuddyArt({ [F]: uri });
     await new Promise((res) => setTimeout(res, 300));
-    const im = ART_IMGS.toon_bluey, calls = [], real = CanvasRenderingContext2D.prototype.drawImage;
+    const im = ART_IMGS[F], calls = [], real = CanvasRenderingContext2D.prototype.drawImage;
     CanvasRenderingContext2D.prototype.drawImage = function (i, x, y, w, h) { calls.push([w, h]); return real.apply(this, arguments); };
-    state.unlockedPets = ['dog', 'toon_bluey']; drawCard(document.createElement('canvas'), 'toon_bluey');
+    state.unlockedPets = ['dog', F]; drawCard(document.createElement('canvas'), F);
     CanvasRenderingContext2D.prototype.drawImage = real;
-    return { size: [im.naturalWidth, im.naturalHeight], drawn: calls.length, ratio: calls[0] && Math.round(calls[0][0] / calls[0][1] * 100), avatar: avatarHtml(getPetById('toon_bluey'), 40).includes('<img') };
+    return { size: [im.naturalWidth, im.naturalHeight], drawn: calls.length, ratio: calls[0] && Math.round(calls[0][0] / calls[0][1] * 100), avatar: avatarHtml(getPetById(F), 40).includes('<img') };
   }, uri);
   assert.deepEqual(r.size, [160, 80]);
   assert.equal(r.drawn, 1);
