@@ -59,6 +59,13 @@ Search the codebase first. Never write a second copy of something that exists. E
 - The Buddy Dex is the old Collection Book (`30-collection-book.js`, ids still `book-*`): `markDexSeen()` when a buddy is met. Catch Nets, the flawless bonus and the daily rare are in `ECON.wild` / `ECON.daily`.
 - After a new battle system: new saved fields need defaults and a normalizer; run `npm run sim` (energy moves shorten battles: `HITS_PER_BOSS` in the sim).
 
+## Parents (portal, settings, timed challenge)
+- A parent has their own account at `/parent` (same page, `isPortal()`; the game never loads there, and `syncNow()` must never upload from it). No email, so no password recovery. Server: `15-parents.js`, `16-challenges.js`; client: `35-parent-portal.js` (child's "link a parent" section and the parent page), `03b-parent-controls.js`, `36-challenge.js`. Limits are in `ECON.parents`.
+- Linking: the child's device (PIN-gated Parent Report) makes a one-time code; the parent types it. Every key has one writer (`grant:` child, `plinks:` parent, `ctl:`/`chall:` primary parent, `cprog:` child). The first linked parent is the primary and the only one who can change settings; settings and challenges count only while their writer is still the child's primary link.
+- Parents get report numbers only (`kidSummary()`), never the save, the PIN hash or friend names. Reuse `reportParts()` for the report on both sides.
+- Settings (`setControls`/`applyControls`): lowest grade band, allowed math types, duels. Every new way to change grade, math types or duels must respect `ctlFloor()`, `allowedOp()` and `duelsLocked()`; easier problems must never go below the floor. The server clamps the cloud save too.
+- Timed challenge: the server owns the clock (starts at the child's Start tap) and accepts a claim only in time and not faster than `minSecPerProblem` per answer. The device adds the gems once per challenge id (`state.challengePaid`). Only correct practice answers count (`challengeCorrect()` in `checkAnswer`), never duels, tournaments or the vault. Running out of time costs nothing and is worded kindly.
+
 ## Saved state
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.
   Never trust data from localStorage or the cloud.

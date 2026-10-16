@@ -1307,3 +1307,10 @@
 .portal-ops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; }
 .portal-op { display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 0.8rem; font-weight: 700; }
 .portal-op input { width: 20px; height: 20px; flex: none; }
+
+/* ===== A parent's timed challenge ===== */
+.chal-bar { display: flex; align-items: center; justify-content: center; min-height: 30px; padding: 2px 10px; margin: 2px 0; background: #0f172a; border: 1px solid #facc15; border-radius: 999px; color: #fde047; font-family: inherit; font-size: 0.74rem; font-weight: 800; text-align: center; line-height: 1.2; }
+.chal-bar:not([aria-disabled="true"]) { min-height: 44px; cursor: pointer; animation: chalGlow 1.2s infinite alternate; }
+@keyframes chalGlow { from { box-shadow: 0 0 0 rgba(250, 204, 21, 0); } to { box-shadow: 0 0 12px rgba(250, 204, 21, 0.7); } }   /* glow only: the bar never moves or grows */
+.portal-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 6px 0; }
+.portal-fields label { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }

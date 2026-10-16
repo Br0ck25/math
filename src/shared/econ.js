@@ -86,7 +86,8 @@ const ECON = {
     servedWindow: 12, maxChallengeServed: 4,           // at most 4 challenge problems in any 12
     challengeXpBonus: 0.5
   },
-  parents: { codeMinutes: 10, codeTries: 8, maxLinks: 4, maxKids: 10, gradeBands: 6 },   // link codes last 10 minutes; a child can have 4 parents linked; a parent can watch 10 children; gradeBands = GRADES.length (checked in tests)
+  parents: { codeMinutes: 10, codeTries: 8, maxLinks: 4, maxKids: 10, gradeBands: 6,
+    challenge: { maxProblems: 100, minMinutes: 1, maxMinutes: 60, gemPerProblem: 1, minSecPerProblem: 2, graceSeconds: 15 } },   // a parent's timed challenge: N correct answers in M minutes pays N gems; answers faster than 2 s each are not believed   // link codes last 10 minutes; a child can have 4 parents linked; a parent can watch 10 children; gradeBands = GRADES.length (checked in tests)
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 

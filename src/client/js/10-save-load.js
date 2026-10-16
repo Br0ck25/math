@@ -190,6 +190,7 @@ const NORMALIZERS = [
   function social(s) {
     s.duelFriends = s.duelFriends.filter(function (n) { return typeof n === 'string' && /^[a-z0-9_-]{3,20}$/.test(n); }).slice(0, 8);
     s.duelSettled = s.duelSettled.filter(function (n) { return typeof n === 'string'; }).slice(-80);
+    s.challengePaid = s.challengePaid.filter(function (n) { return typeof n === 'string' && n.length <= 20; }).slice(-20);
     ['w', 'l', 't'].forEach(function (k) { s.duelRecord[k] = asInt(s.duelRecord[k], 0, 1e6, 0); });
     s.duelStat.count = asInt(s.duelStat.count, 0, 1e6, 0);
     ['runs', 'trophies', 'wins'].forEach(function (k) { s.tour[k] = asInt(s.tour[k], 0, 1e6, 0); });
@@ -249,6 +250,7 @@ function pruneState() {
   const days = Object.keys(state.stats.days).sort();
   while (days.length > 14) delete state.stats.days[days.shift()];
   state.duelSettled = state.duelSettled.slice(-20);
+  state.challengePaid = state.challengePaid.slice(-20);
 }
 function serializeState() {
   let json = JSON.stringify(state);

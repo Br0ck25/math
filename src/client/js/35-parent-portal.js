@@ -134,6 +134,47 @@ async function portalSaveControls(i) {
     await portalLoad();
   } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
 }
+// The timed challenge for one child: where it stands, and (first parent only) a form to start one or a button to cancel it.
+function challengeBox(k, i) {
+  const ch = k.challenge;
+  const who = escHtml(k.child);
+  let status = '<div class="portal-sub">No challenge right now.</div>';
+  if (ch) {
+    const goal = ch.problems + ' correct in ' + ch.minutes + ' min = ' + ch.gems + ' 💎';
+    if (ch.state === 'ready') status = '<div class="portal-sub">⏳ Waiting for ' + who + ' to tap Start (' + goal + ').</div>';
+    else if (ch.state === 'running') status = '<div class="portal-sub">⏱️ <b>' + ch.count + '/' + ch.problems + '</b> done, about ' + Math.max(0, Math.ceil((ch.endsAt - ch.serverNow) / 60000)) + ' min left (' + goal + '). Use Refresh to update.</div>';
+    else if (ch.state === 'won') status = '<div class="portal-sub">🏆 ' + who + ' finished it and won ' + ch.gems + ' 💎 (' + goal + ').</div>';
+    else status = '<div class="portal-sub">⏱️ Time ran out at ' + ch.count + '/' + ch.problems + '. No gems this time, nothing lost (' + goal + ').</div>';
+  }
+  let act = '';
+  if (k.primary) {
+    const busy = ch && (ch.state === 'ready' || ch.state === 'running');
+    act = busy
+      ? '<button class="grade-btn" style="width:100%;" onclick="portalChallenge(' + i + ', true)">Cancel this challenge</button>'
+      : '<div class="portal-fields"><label>Correct answers <input class="acct-input" type="number" inputmode="numeric" min="1" max="' + ECON.parents.challenge.maxProblems + '" value="20" data-chal="problems"></label>' +
+        '<label>Minutes <input class="acct-input" type="number" inputmode="numeric" min="' + ECON.parents.challenge.minMinutes + '" max="' + ECON.parents.challenge.maxMinutes + '" value="15" data-chal="minutes"></label></div>' +
+        '<div class="portal-sub">' + who + ' wins ' + ECON.parents.challenge.gemPerProblem + ' 💎 per answer, but only if they get them all in time. Wrong answers do not count. If time runs out nothing is lost.</div>' +
+        '<button class="grade-btn" style="width:100%;" onclick="portalChallenge(' + i + ', false)">Start a challenge</button>';
+  }
+  return '<div class="settings-label">🏆 Timed challenge</div><div id="chal-' + i + '">' + status + act + '</div>';
+}
+async function portalChallenge(i, cancel) {
+  const k = portalKids && portalKids[i];
+  const box = document.getElementById('chal-' + i);
+  if (!k || !box) return;
+  const body = { child: k.child };
+  if (cancel) body.cancel = true;
+  else {
+    body.problems = parseInt(box.querySelector('input[data-chal="problems"]').value, 10);
+    body.minutes = parseInt(box.querySelector('input[data-chal="minutes"]').value, 10);
+  }
+  try {
+    const r = await portalApi('/api/parent/challenge', 'POST', body);
+    if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not save the challenge.', 'err');
+    setPortalMsg(cancel ? 'Challenge cancelled.' : 'Challenge ready. ' + k.child + ' will see it the next time the game opens or saves.', 'ok');
+    await portalLoad();
+  } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
+}
 function kidCard(k, i) {
   if (k.revoked) {
     return '<div class="portal-kid"><h2>' + escHtml(k.child) + '</h2><div class="portal-sub">This player unlinked you, or the account was deleted.</div>' +
@@ -142,7 +183,7 @@ function kidCard(k, i) {
   const r = reportParts(k.days, { streak: k.streak, raids: k.raids, trophies: k.trophies });
   return '<div class="portal-kid"><h2>' + escHtml(k.child) + ' <small>' + (k.primary ? 'you can change settings' : 'view only') + '</small></h2>' +
     '<div class="portal-sub">' + (GRADES[k.grade] ? escHtml(GRADES[k.grade].long) : 'Grade ' + k.grade) + ' · ' + k.gems + ' 💎 · ' + (k.updatedAt ? 'saved ' + timeAgo(k.updatedAt) : 'nothing saved online yet') + '</div>' +
-    controlsBox(k, i) +
+    challengeBox(k, i) + controlsBox(k, i) +
     '<div class="par-tiles">' + r.tiles + '</div>' +
     '<div style="font-size:0.74rem; font-weight:700; margin-bottom:2px;">' + r.compare + '</div>' +
     '<div class="settings-label">📅 Minutes per day</div><div class="par-days">' + r.days + '</div>' +
@@ -160,6 +201,7 @@ function renderPortal() {
     '<div class="portal-sub">On your child\'s device: Parent Report → See stats on a parent\'s phone → Get a link code.</div>' +
     '<input class="acct-input" id="portal-code" placeholder="Code, like ABCD-EFGH" maxlength="12" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" aria-label="Link code">' +
     '<div class="acct-btns"><button class="grade-btn" onclick="portalClaim()">Add child</button><button class="grade-btn" onclick="portalLogout()">Sign out</button></div>' +
+    '<button class="grade-btn" style="width:100%; margin-top:6px;" onclick="portalLoad()">🔄 Refresh</button>' +
     '<div class="acct-msg ' + portalMsg.kind + '" id="portal-msg" role="status">' + escHtml(portalMsg.text) + '</div>' +
     (portalKids === null ? '<div class="portal-sub">Loading…</div>' : (kids.length ? kids.map(kidCard).join('') : '<div class="portal-sub">No children yet. Add one with a code.</div>')) +
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';

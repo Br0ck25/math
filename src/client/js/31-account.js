@@ -150,7 +150,7 @@ async function acctLogin() {
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not sign in.', 'err');
     const save = r.data.save;
     startSession(r.data.name, r.data.token, save ? save.version : 0);
-    setControls(r.data.controls);
+    applyParentData(r.data);
     syncProblem = '';
     if (!save) {
       acct.dirty = true; persistAcct();
@@ -181,7 +181,7 @@ function acctLogout() {
   if (t) { try { api('/api/logout', 'POST', {}); } catch (e) {} }
   acct = null;
   persistAcct();
-  setControls(null);
+  applyParentData(null);
   clearTimeout(syncTimer);
   setAcctMsg('Signed out. Your progress is still saved on this device.', 'ok');
   renderAccount();
@@ -201,7 +201,7 @@ async function acctDelete() {
     const r = await api('/api/delete', 'POST', { password: p.value });
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not delete the account.', 'err');
     acct = null; persistAcct();
-    setControls(null);
+    applyParentData(null);
     setAcctMsg('Account deleted. Your progress is still on this device.', 'ok');
     renderAccount();
   } catch (e) { setAcctMsg('Could not reach the server.', 'err'); }
@@ -240,7 +240,7 @@ async function syncNow(force) {
       acct.lastSync = Date.now();
       syncProblem = '';
       persistAcct();
-      setControls(r.data.controls);
+      applyParentData(r.data);
     } else if (r.status === 409) {
       pendingConflict = { cloud: r.data.save };
       openConflict();
@@ -301,7 +301,7 @@ async function acctStartup() {
     const r = await api('/api/save');
     if (r.status === 401) return acctExpired();
     if (r.status !== 200) return;
-    setControls(r.data.controls);
+    applyParentData(r.data);
     const save = r.data.save;
     if (!save) { acct.dirty = true; return syncNow(false); }
     if (save.version > acct.version) {
