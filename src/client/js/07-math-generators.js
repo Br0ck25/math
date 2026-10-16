@@ -396,6 +396,11 @@ function updateWeakChip() {
   const chip = document.getElementById('weak-chip');
   if (!chip) return;
   const r = state.raid;
+  if (inChampionBattle()) {
+    chip.innerText = '👑 ' + championAlive().length + ' left';
+    chip.title = "The Champion's Hall: beat all six of Nova's buddies. Nova can swap them at any time.";
+    return;
+  }
   const gym = state.gym ? '🏟️ ' + Math.min(state.gym.step + 1, ECON.map.trainers + 1) + '/' + (ECON.map.trainers + 1) : '';
   if (state.wild.id && state.wild.trainer) {
     chip.innerText = gym + ' · Trainer';

@@ -10,13 +10,13 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 353 buddies, 55 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 353 buddies, 55 bosses, 121 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length, legend: legendPets.length
   }));
-  assert.deepEqual(c, { buddies: 353, bosses: 55, gear: 118, store: 44, mythic: 36, secret: 209, legend: 6 });
+  assert.deepEqual(c, { buddies: 353, bosses: 55, gear: 121, store: 44, mythic: 36, secret: 209, legend: 6 });
 });
 
 test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {

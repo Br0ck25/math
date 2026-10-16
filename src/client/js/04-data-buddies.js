@@ -140,6 +140,8 @@ const accessoriesList = [
   { id: 'sax',        name: 'Jazz Sax',         icon: '🎷', cost: 118, slot: 'side', renderIcon: '🎷' },
   { id: 'comet',      name: 'Comet Trail',      icon: '☄️', cost: 340, slot: 'aura', renderIcon: '☄️' },
   { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
+  { id: 'champlaurel', name: "Champion's Laurel", icon: '🏵️', cost: 0,  slot: 'head', renderIcon: '🏵️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
+  { id: 'champtrophy', name: "Champion's Trophy", icon: '🏆', cost: 0, slot: 'back', renderIcon: '🏆', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'cups', n: 1, text: 'Win a tournament cup' } },
   { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } },
   // ---- cartoon cast gear: 11 to buy, 2 earned by collecting the cartoon buddies ----
@@ -174,6 +176,7 @@ const armorList = [
   { id: 'celestial', name: 'Celestial Plate', icon: '✨', cost: 1300, hp: 5, tier: 3, renderIcon: '✨' },
   { id: 'sailor',    name: 'Sailor Coat',     icon: '⚓', cost: 180,  hp: 1, tier: 1, renderIcon: '⚓' },
   { id: 'spidersilk',name: 'Spider Silk',     icon: '🕸️', cost: 400,  hp: 3, tier: 2, renderIcon: '🕸️' },
+  { id: 'champmantle', name: "Champion's Mantle", icon: '🛡️', cost: 0, hp: 4, tier: 3, renderIcon: '🛡️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'centurion', name: 'Centurion Plate', icon: '🔰', cost: 0,    hp: 5, tier: 3, renderIcon: '🔰', earn: { key: 'bosses', n: 100, text: 'Defeat 100 bosses' } },
   { id: 'squareshorts', name: 'Square Shorts',   icon: '🩳', cost: 190, hp: 1, tier: 1, renderIcon: '🩳' },
   { id: 'puddledress',  name: 'Puddle Dress',    icon: '👗', cost: 200, hp: 1, tier: 1, renderIcon: '👗' },

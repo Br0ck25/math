@@ -21,7 +21,7 @@ function getBossInfo() {
     if (shiny) st.maxHp = Math.ceil(st.maxHp * ECON.daily.hpMult);
     if (legend) st.maxHp = Math.ceil(st.maxHp * ECON.legend.hpMult);
     return {
-      legend: legend, name: (legend ? '🌟 ' : '') + (shiny ? '✨ ' : '') + (trainer ? trainer + "'s " + sp.name : sp.name), trainer: trainer, shiny: shiny, icon: sp.icon, element: sp.element, taunts: WILD_TAUNTS, slays: null, wild: true,
+      legend: legend, name: (legend ? '🌟 ' : '') + (shiny ? '✨ ' : '') + (trainer ? trainer + "'s " + sp.name : sp.name), trainer: trainer, shiny: shiny, icon: sp.icon, element: sp.element, taunts: inChampionBattle() ? CHAMPION_LINES : WILD_TAUNTS, slays: null, wild: true,
       form: 0, level: bossLevel, maxHp: st.maxHp, atk: st.atk, swapped: false
     };
   }

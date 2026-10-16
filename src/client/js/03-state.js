@@ -49,8 +49,9 @@ function freshState() {
     daily: { day: '', fights: 0, spawned: false },   // today's count of wild buddies beaten, and whether the daily rare has appeared yet
     badges: [],                                      // gym badges: region ids
     rematch: { day: '', lands: [], wins: 0 },        // Champion rematches: the lands paid today, and how many rematches were won in all
+    champ: { wins: 0, day: '' },                     // the Champion's Hall: wins in all, and the day of the last paid win
     legend: { week: -1, day: '', caught: false, misses: 0, race: '', wins: 0 },   // this week's Legend hunt: the day it was last started, whether it was caught, misses so far (each adds to the catch chance), the race with Riley ('won' / 'lost' once caught), races won in all
-    gym: null,                                       // a gym run in progress: { region, step }
+    gym: null,                                       // a gym run in progress: { region, step } (the Champion's Hall also has `champ`, see 24d-champion.js)
     storySeen: {},                                   // one-time story beats already shown
     wild: { id: '', trainer: '', shiny: false, legend: false, since: 0, next: 6 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat before the next boss
     swapUsed: false,                                 // the one free buddy swap of this battle has been used

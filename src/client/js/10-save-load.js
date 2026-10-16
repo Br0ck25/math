@@ -78,7 +78,10 @@ const NORMALIZERS = [
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
     const g = s.gym;
     const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
-    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {
+    if (g && isPlainObject(g) && g.region === 'champion' && gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; })) {      // the Champion's Hall needs all six badges
+      const champ = cleanChampionRun(g.champ);
+      s.gym = { region: 'champion', step: champ.fallen.length, champ: champ };
+    } else if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {
       s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
       if (rematch) s.gym.rematch = true;
       s.region = g.region;
@@ -87,6 +90,9 @@ const NORMALIZERS = [
     rm.day = typeof rm.day === 'string' ? rm.day.slice(0, 12) : '';
     rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return gymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
     rm.wins = asInt(rm.wins, 0, 1e6, 0);
+    if (!isPlainObject(s.champ)) s.champ = { wins: 0, day: '' };
+    s.champ.wins = asInt(s.champ.wins, 0, 1e6, 0);
+    s.champ.day = typeof s.champ.day === 'string' ? s.champ.day.slice(0, 12) : '';
   },
   function daily(s) {
     s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
@@ -229,6 +235,7 @@ function loadState() {
     currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
     bossLevel = clamp(state.bossLevel, 1, MAX_LEVEL);
     monsterCurrentHp = getBossMaxHp();
+    if (inChampionBattle()) restoreChampionFoe();
   } else {
     currentMonsterIndex = -1;
     pickNextFoe();

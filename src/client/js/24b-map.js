@@ -56,6 +56,7 @@ function gymFoeReset() {
   bossMistakes = 0;
 }
 function pickGymFoe() {
+  if (state.gym.champ) { pickChampionFoe(); return; }
   const g = state.gym, r = regionById(g.region), mine = getBuddyLevel(state.activePet), bonus = g.rematch ? ECON.map.rematch.levels : 0;
   if (g.step < ECON.map.trainers) {
     const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
@@ -78,12 +79,13 @@ function pickGymFoe() {
   }
   gymFoeReset();
 }
-function inGymLeaderFight() { return !!state.gym && state.gym.step >= ECON.map.trainers && !state.wild.id; }
+function inGymLeaderFight() { return !!state.gym && !state.gym.champ && state.gym.step >= ECON.map.trainers && !state.wild.id; }
 
 // A gym battle was won. Returns the badge result when the leader fell, else null.
 function advanceGym(leaderWon) {
   const g = state.gym;
   if (!g) return null;
+  if (g.champ) return championFell();
   if (!leaderWon) { g.step += 1; return null; }
   const r = regionById(g.region);
   state.gym = null;
@@ -97,11 +99,10 @@ function advanceGym(leaderWon) {
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
   state.gems += ECON.map.badgeGems;
-  const champion = state.badges.length >= gymRegions().length && !state.storySeen.champion;
-  if (champion) { state.storySeen.champion = 1; state.gems += ECON.map.championGems; }
-  return { region: r, champion: champion };
+  return { region: r, hall: state.badges.length >= gymRegions().length };       // the sixth badge opens the Champion's Hall
 }
 function showBadgeStory(res) {
+  if (res.champion) { showChampionStory(res); return; }
   if (res.rematch) {
     const line = RIVAL_REMATCH[(state.rematch.wins - 1 + RIVAL_REMATCH.length) % RIVAL_REMATCH.length];
     showStoryModal({ chapter: 'Champion Rematch', title: res.region.icon + ' ' + res.region.name + ' cleared again!', panels: [{ icon: '🧢', text: line.outro }, { icon: '💎', text: res.gems ? 'Rematch reward: +' + res.gems + ' gems!' : 'No more rematch rewards today, but come back tomorrow!' }], note: 'Rematches won: ' + state.rematch.wins, btn: 'Hooray!', cleared: true });
@@ -109,7 +110,7 @@ function showBadgeStory(res) {
   }
   const st = GYM_STORY[res.region.id];
   const panels = [{ icon: '🏅', text: st.outro }, { icon: '💎', text: 'Badge reward: +' + ECON.map.badgeGems + ' gems!' }];
-  if (res.champion) panels.push({ icon: '🏆', text: 'All badges! You are the Number Kingdom Champion! +' + ECON.map.championGems + ' gems!' });
+  if (res.hall) panels.push({ icon: '👑', text: "All six badges! The Champion's Hall is open: find it at the top of the Map." });
   showStoryModal({ chapter: 'Badge ' + state.badges.length + '/' + gymRegions().length, title: res.region.icon + ' ' + res.region.name + ' Badge!', panels: panels, note: 'Badges: ' + state.badges.length + ' of ' + gymRegions().length, btn: 'Hooray!', cleared: true });
 }
 
@@ -119,7 +120,7 @@ function closeMap() { hideModal('map-modal', updateStatsUI); }
 function travelTo(id) {
   const r = regionById(id);
   if (!regionUnlocked(r)) { soundWrong(); toast('🔒 Reach level ' + regionLevel(r) + ' to visit ' + r.name); return; }
-  if (state.gym && state.gym.region !== id) { soundWrong(); toast('Finish or leave the gym first'); return; }
+  if (state.gym && (state.gym.champ || state.gym.region !== id)) { soundWrong(); toast('Finish or leave the gym first'); return; }
   state.region = id;
   soundClick();
   saveState();
@@ -161,7 +162,7 @@ function leaveGym() {
 function renderMap() {
   const best = getBestLevel(), total = gymRegions().length;
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '');
-  let h = legendRowHtml();
+  let h = championRowHtml() + legendRowHtml();
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
     const need = regionLevel(r);
@@ -186,7 +187,7 @@ function renderMap() {
     showStoryModal({ chapter: 'The Journey', title: '🗺️ The Number Kingdom Map', panels: [
       { icon: '🗺️', text: 'The Number Kingdom has six lands, one for each type of buddy.' },
       { icon: '🏟️', text: 'Each land has a gym. Beat its trainers and its leader to win a badge!' },
-      { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all six badges to become Champion!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
+      { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all six badges to open the Champion\'s Hall!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
   }
 }
 // A new region opens when your best buddy reaches its level.

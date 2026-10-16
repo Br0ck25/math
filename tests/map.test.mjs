@@ -29,8 +29,8 @@ test('the map lists seven lands; the others open by level and travelling to a lo
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row)').length;
-    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row)').length;
+    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row)').length;
+    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row)').length;
     const text = document.getElementById('map-body').innerText;
     travelTo('tide'); const refused = state.region;
     travelTo('ember'); const ok = state.region;
@@ -123,16 +123,13 @@ test('leaving a gym ends it; a won gym cannot be started again; one gym at a tim
   assert.equal(r.again, null);
 });
 
-test('all six badges make you Champion once, with a bonus', async () => {
+test('the sixth badge opens the Champion\'s Hall (it no longer makes you Champion by itself)', async () => {
   const r = await page.evaluate(() => {
     state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom']; state.gems = 0; state.gym = { region: 'mystic', step: 3 };
     const res = advanceGym(true);
-    const again = (state.gym = { region: 'mystic', step: 3 }, state.badges = state.badges.filter((b) => b !== 'mystic'), advanceGym(true));
-    return { champ: res.champion, gems: state.gems, badges: state.badges.length, again: again && again.champion };
+    return { hall: res.hall, champion: !!state.storySeen.champion, badges: state.badges.length, gems: state.gems, open: championOpen() };
   });
-  assert.equal(r.champ, true);
-  assert.equal(r.badges, 6);
-  assert.equal(r.again, false, 'the Champion bonus is paid once');
+  assert.deepEqual(r, { hall: true, champion: false, badges: 6, gems: 60, open: true });
 });
 
 test('Champion rematches: only Champions can replay a cleared gym; trainers and leader are stronger, Riley is back, and the first clear of a land each day pays (3 lands a day)', async () => {
