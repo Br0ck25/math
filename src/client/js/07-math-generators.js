@@ -284,12 +284,10 @@ MATH_OPS.forEach(function (o) { OP_BY_ID[o.id] = o; });
 
 function getActiveOps() {
   const g = state.grade;
-  let ops = (state.enabledOps || []).filter(function (id) {
-    return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g;
-  });
-  if (ops.length === 0) {
-    ops = GRADE_DEFAULT_OPS[g].filter(function (id) { return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g; });
-  }
+  const usable = function (id) { return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g && allowedOp(id); };
+  let ops = (state.enabledOps || []).filter(usable);
+  if (ops.length === 0) ops = GRADE_DEFAULT_OPS[g].filter(usable);
+  if (ops.length === 0) ops = MATH_OPS.map(function (o) { return o.id; }).filter(usable);   // a parent allowed only types this level does not have yet
   return ops.length ? ops : ['add'];
 }
 

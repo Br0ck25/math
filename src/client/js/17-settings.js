@@ -19,19 +19,22 @@ function renderTypeChart() {
 
 function renderSettings() {
   renderTypeChart();
+  document.getElementById('ctl-note').innerText = ctlNote();
   const gg = document.getElementById('grade-grid');
   gg.innerHTML = '';
   GRADES.forEach(function (g) {
     const b = document.createElement('button');
-    b.className = 'grade-btn' + (state.grade === g.id ? ' active' : '');
+    const locked = g.id < ctlFloor();
+    b.className = 'grade-btn' + (state.grade === g.id ? ' active' : '') + (locked ? ' locked' : '');
     b.innerText = g.label;
+    if (locked) b.setAttribute('aria-label', g.long + ' (locked by a parent)');
     b.onclick = function () { setGrade(g.id); };
     gg.appendChild(b);
   });
 
   const og = document.getElementById('ops-grid');
   og.innerHTML = '';
-  MATH_OPS.filter(function (o) { return o.minGrade <= state.grade; }).forEach(function (o) {
+  MATH_OPS.filter(function (o) { return o.minGrade <= state.grade && allowedOp(o.id); }).forEach(function (o) {
     const on = state.enabledOps.indexOf(o.id) !== -1;
     const b = document.createElement('button');
     b.className = 'op-toggle' + (on ? ' on' : '');
@@ -42,6 +45,7 @@ function renderSettings() {
 }
 
 function setGrade(g) {
+  if (g < ctlFloor()) { soundWrong(); toast('🔒 A parent set the lowest level you can play.'); return; }
   soundClick();
   state.grade = g;
   state.enabledOps = GRADE_DEFAULT_OPS[g].slice();

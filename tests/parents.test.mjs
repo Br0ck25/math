@@ -99,3 +99,51 @@ test('a child can have only a few parents', async () => {
   assert.equal((await c('/api/link/code', 'POST', {}, kid)).status, 400);
   assert.ok(env);
 });
+
+const ctl = (over = {}) => ({ child: 'kiddo', minGrade: 1, ops: null, duelsOnline: true, ...over });
+
+test('only the primary parent can change settings, and they are checked', async () => {
+  const { c, kid, mom, dad } = await setup();
+  await link(c, kid, mom);
+  await link(c, kid, dad);
+  assert.equal((await c('/api/parent/controls', 'POST', ctl(), dad)).status, 403, 'the second parent can only look');
+  assert.equal((await c('/api/parent/controls', 'POST', ctl({ child: 'someone' }), mom)).status, 404);
+  for (const bad of [{ minGrade: 6 }, { minGrade: -1 }, { minGrade: 1.5 }, { ops: [] }, { ops: ['<b>'] }, { ops: 'add' }, { duelsOnline: 'no' }]) {
+    assert.equal((await c('/api/parent/controls', 'POST', ctl(bad), mom)).status, 400, JSON.stringify(bad));
+  }
+  const ok = await c('/api/parent/controls', 'POST', ctl({ ops: ['add', 'add', 'sub'], duelsOnline: false }), mom);
+  assert.equal(ok.status, 200);
+  assert.deepEqual(ok.data.controls, { minGrade: 1, ops: ['add', 'sub'], duelsOnline: false });
+  assert.deepEqual((await c('/api/parent/kids', 'GET', null, mom)).data.kids[0].controls, ok.data.controls);
+  assert.equal((await c('/api/parent/kids', 'GET', null, dad)).data.kids[0].controls.minGrade, 1, 'the second parent can see them');
+});
+
+test('the child receives the settings, and the cloud save never holds a lower level or duels', async () => {
+  const { c, kid, mom } = await setup();
+  await link(c, kid, mom);
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null);
+  await c('/api/parent/controls', 'POST', ctl({ minGrade: 2, duelsOnline: false }), mom);
+  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, { minGrade: 2, ops: null, duelsOnline: false });
+  const put = await c('/api/save', 'PUT', { state: { ...save, grade: 0, duelsOnline: true }, baseVersion: 1, force: true }, kid);
+  assert.equal(put.data.controls.minGrade, 2, 'every save tells the device the settings');
+  const stored = (await c('/api/save', 'GET', null, kid)).data.save.state;
+  assert.equal(stored.grade, 2, 'raised to the lowest level the parent allows');
+  assert.equal(stored.duelsOnline, false);
+  const high = await c('/api/save', 'PUT', { state: { ...save, grade: 4 }, baseVersion: put.data.version }, kid);
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.save.state.grade, 4, 'a higher level is never lowered');
+  assert.ok(high.data.ok);
+  assert.deepEqual((await c('/api/login', 'POST', { name: 'kiddo', password: 'secret1' })).data.controls, { minGrade: 2, ops: null, duelsOnline: false });
+});
+
+test('settings stop applying when the parent who set them is no longer the primary link', async () => {
+  const { c, kid, mom, dad } = await setup();
+  await link(c, kid, mom);
+  await link(c, kid, dad);
+  await c('/api/parent/controls', 'POST', ctl({ minGrade: 3 }), mom);
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.controls.minGrade, 3);
+  const list = (await c('/api/link/list', 'GET', null, kid)).data.links;
+  await c('/api/link/unlink', 'POST', { id: list[0].id }, kid);   // the kid unlinks mom; dad becomes primary
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null, 'mom\'s settings lapse with her link');
+  assert.equal((await c('/api/parent/controls', 'POST', ctl({ minGrade: 2 }), dad)).status, 200);
+  assert.equal((await c('/api/save', 'GET', null, kid)).data.controls.minGrade, 2, 'dad\'s own settings apply');
+});

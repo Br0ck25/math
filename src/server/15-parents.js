@@ -7,6 +7,8 @@
 //    plinks:<parent>      {kids:[{child, linkId, at}]}      written only by that parent
 //    plink:<linkId>       {parent, at}   written by the parent who used the code (lets the child see who is linked); {gone:true} when that parent stops watching
 //    cfail:<parent>       wrong code tries, expires in 15 minutes
+//    ctl:<child>          {minGrade, ops, duelsOnline, linkId, at}   the parent's settings; written only by the primary parent and
+//                         in force only while that link is still the child's primary link (so unlinking cannot be a way round them)
 //  A parent sees a child only while the child's grant still lists the link, so the child can always unlink from their own device.
 //  The first link is the primary parent (the only one who can change settings); later parents can only look.
 // ---------------------------------------------------------------------
@@ -84,6 +86,37 @@ async function handleLink(path, request, kv, who, body) {
   return json({ error: 'Not found' }, 404);
 }
 
+// ---- the parent's settings for a child -----------------------------------------
+function liveControls(ctl, grant) {
+  if (!ctl || !grant || !grant.links.some(function (l) { return l.id === ctl.linkId && l.primary; })) return null;
+  return { minGrade: ctl.minGrade, ops: ctl.ops, duelsOnline: ctl.duelsOnline };
+}
+async function activeControls(kv, child) {
+  const ctl = await kv.get('ctl:' + child, 'json');
+  return ctl ? liveControls(ctl, await kv.get('grant:' + child, 'json')) : null;
+}
+// The cloud copy of a save never holds a lower level, or online duels, than the parent allows.
+function clampToControls(state, c) {
+  if (!c) return;
+  if (!(state.grade >= c.minGrade)) state.grade = c.minGrade;
+  if (c.duelsOnline === false) state.duelsOnline = false;
+}
+function cleanControls(b) {
+  const minGrade = Number(b.minGrade);
+  if (!Number.isInteger(minGrade) || minGrade < 0 || minGrade >= ECON.parents.gradeBands) return null;
+  let ops = null;
+  if (b.ops !== null && b.ops !== undefined) {
+    if (!Array.isArray(b.ops) || b.ops.length < 1 || b.ops.length > 40) return null;
+    ops = [];
+    for (let i = 0; i < b.ops.length; i++) {
+      if (typeof b.ops[i] !== 'string' || !/^[a-z0-9_]{1,20}$/.test(b.ops[i])) return null;
+      if (ops.indexOf(b.ops[i]) === -1) ops.push(b.ops[i]);
+    }
+  }
+  if (typeof b.duelsOnline !== 'boolean') return null;
+  return { minGrade: minGrade, ops: ops, duelsOnline: b.duelsOnline };
+}
+
 // ---- the parent's side ---------------------------------------------------
 const SUMMARY_DAYS = 14;
 function num(v, max) { return typeof v === 'number' && isFinite(v) ? Math.max(0, Math.min(max || 1e9, v)) : 0; }
@@ -130,10 +163,10 @@ async function handleParent(path, request, kv, body) {
   if (path === '/api/parent/kids' && request.method === 'GET') {
     const mine = (await kv.get('plinks:' + parent, 'json')) || { kids: [] };
     const rows = await Promise.all(mine.kids.map(async function (k) {
-      const reads = await Promise.all([kv.get('grant:' + k.child, 'json'), kv.get('save:' + k.child, 'json')]);
+      const reads = await Promise.all([kv.get('grant:' + k.child, 'json'), kv.get('save:' + k.child, 'json'), kv.get('ctl:' + k.child, 'json')]);
       const link = reads[0] && reads[0].links.find(function (l) { return l.id === k.linkId; });
       if (!link) return { child: k.child, revoked: true };
-      return Object.assign({ child: k.child, primary: !!link.primary, revoked: false }, kidSummary(reads[1]));
+      return Object.assign({ child: k.child, primary: !!link.primary, revoked: false, controls: liveControls(reads[2], reads[0]) }, kidSummary(reads[1]));
     }));
     return json({ kids: rows });
   }
@@ -159,6 +192,18 @@ async function handleParent(path, request, kv, body) {
     await kv.delete(key);
     await kv.delete(failKey);
     return json({ ok: true, child: claim.child });
+  }
+
+  if (path === '/api/parent/controls' && request.method === 'POST') {
+    const mine = (await kv.get('plinks:' + parent, 'json')) || { kids: [] };
+    const k = mine.kids.find(function (x) { return x.child === String(body.child || ''); });
+    if (!k) return json({ error: 'That child is not on your list.' }, 404);
+    const grant = await kv.get('grant:' + k.child, 'json');
+    if (!grant || !grant.links.some(function (l) { return l.id === k.linkId && l.primary; })) return json({ error: 'Only the first parent linked to this player can change their settings.' }, 403);
+    const c = cleanControls(body);
+    if (!c) return json({ error: 'Those settings are not valid.' }, 400);
+    await kv.put('ctl:' + k.child, JSON.stringify(Object.assign({ linkId: k.linkId, at: Date.now() }, c)));
+    return json({ ok: true, controls: c });
   }
 
   if (path === '/api/parent/unlink' && request.method === 'POST') {

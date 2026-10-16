@@ -94,6 +94,46 @@ function portalSignedOut() {
     '<div class="settings-hint">No email is needed, so a lost password cannot be recovered: write it down. Pick a name that is different from your child\'s player name.</div>' +
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';
 }
+// The settings form for one child. Only the first linked parent (primary) can change them; anyone else just sees them.
+function controlsBox(k, i) {
+  const c = k.controls || { minGrade: 0, ops: null, duelsOnline: true };
+  if (!k.primary) {
+    return '<div class="portal-sub">Settings (set by the first parent linked): lowest level ' + escHtml(GRADES[c.minGrade].long) + (c.ops ? ', ' + c.ops.length + ' math types' : ', all math types') + ', online duels ' + (c.duelsOnline ? 'on' : 'off') + '.</div>';
+  }
+  const grades = GRADES.map(function (g) { return '<option value="' + g.id + '"' + (g.id === c.minGrade ? ' selected' : '') + '>' + escHtml(g.long) + '</option>'; }).join('');
+  const ops = MATH_OPS.map(function (o) {
+    const on = !c.ops || c.ops.indexOf(o.id) !== -1;
+    return '<label class="portal-op"><input type="checkbox" data-op="' + escHtml(o.id) + '"' + (on ? ' checked' : '') + '> ' + o.icon + ' ' + escHtml(o.label) + '</label>';
+  }).join('');
+  return '<details class="portal-ctl" id="ctl-' + i + '"><summary>⚙️ Settings for ' + escHtml(k.child) + '</summary>' +
+    '<div class="settings-label">📚 Lowest level</div>' +
+    '<select class="acct-input" data-ctl="grade" aria-label="Lowest level">' + grades + '</select>' +
+    '<div class="portal-sub">' + escHtml(k.child) + ' can play this level or higher, never lower, so easy problems cannot be used to farm gems.</div>' +
+    '<div class="settings-label">🧮 Math types allowed</div><div class="portal-ops">' + ops + '</div>' +
+    '<div class="portal-sub">A type only shows up once its level is reached.</div>' +
+    '<div class="settings-label">🌍 Online duels</div>' +
+    '<label class="portal-op"><input type="checkbox" data-ctl="duels"' + (c.duelsOnline ? ' checked' : '') + '> Let ' + escHtml(k.child) + ' challenge friends by player name</label>' +
+    '<button class="grade-btn" style="width:100%; margin-top:10px;" onclick="portalSaveControls(' + i + ')">Save settings</button>' +
+    '<div class="portal-sub">They reach ' + escHtml(k.child) + '\'s device the next time the game opens or saves. Tip: set a Parent PIN on that device (Parent Report) so settings cannot be undone by unlinking or signing out.</div></details>';
+}
+async function portalSaveControls(i) {
+  const k = portalKids && portalKids[i];
+  const box = document.getElementById('ctl-' + i);
+  if (!k || !box) return;
+  const checked = Array.prototype.filter.call(box.querySelectorAll('input[data-op]'), function (el) { return el.checked; }).map(function (el) { return el.dataset.op; });
+  if (!checked.length) return setPortalMsg('Pick at least one math type.', 'err');
+  try {
+    const r = await portalApi('/api/parent/controls', 'POST', {
+      child: k.child,
+      minGrade: parseInt(box.querySelector('select[data-ctl="grade"]').value, 10),
+      ops: checked.length === MATH_OPS.length ? null : checked,
+      duelsOnline: box.querySelector('input[data-ctl="duels"]').checked
+    });
+    if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not save the settings.', 'err');
+    setPortalMsg('Saved settings for ' + k.child + '.', 'ok');
+    await portalLoad();
+  } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
+}
 function kidCard(k, i) {
   if (k.revoked) {
     return '<div class="portal-kid"><h2>' + escHtml(k.child) + '</h2><div class="portal-sub">This player unlinked you, or the account was deleted.</div>' +
@@ -102,6 +142,7 @@ function kidCard(k, i) {
   const r = reportParts(k.days, { streak: k.streak, raids: k.raids, trophies: k.trophies });
   return '<div class="portal-kid"><h2>' + escHtml(k.child) + ' <small>' + (k.primary ? 'you can change settings' : 'view only') + '</small></h2>' +
     '<div class="portal-sub">' + (GRADES[k.grade] ? escHtml(GRADES[k.grade].long) : 'Grade ' + k.grade) + ' · ' + k.gems + ' 💎 · ' + (k.updatedAt ? 'saved ' + timeAgo(k.updatedAt) : 'nothing saved online yet') + '</div>' +
+    controlsBox(k, i) +
     '<div class="par-tiles">' + r.tiles + '</div>' +
     '<div style="font-size:0.74rem; font-weight:700; margin-bottom:2px;">' + r.compare + '</div>' +
     '<div class="settings-label">📅 Minutes per day</div><div class="par-days">' + r.days + '</div>' +

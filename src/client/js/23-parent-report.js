@@ -22,7 +22,10 @@ function deltaText(now, before, unit) {
 }
 let parentUnlocked = false;
 // Parent switches. (setDuelsOnline was lost in an earlier rewrite; tests/parent-switches covers both now.)
-function setDuelsOnline(on) { state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off'); }
+function setDuelsOnline(on) {
+  if (duelsLocked()) { toast('🔒 Online duels are switched off from a parent\'s phone.'); renderParent(); return; }
+  state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off');
+}
 function setAdaptive(on) { state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent(); }
 function parentLocked() { return !!state.parentPinHash && !parentUnlocked; }
 // 4-digit PIN stored only as a SHA-256 hash (a light lock against little fingers, not real security).
@@ -138,6 +141,8 @@ function renderParent() {
   document.getElementById('par-content').style.display = locked ? 'none' : 'block';
   if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
   document.getElementById('par-duels').checked = !!state.duelsOnline;
+  document.getElementById('par-duels').disabled = duelsLocked();
+  document.getElementById('par-ctl-note').innerText = ctlNote();
   document.getElementById('par-adaptive').checked = state.adapt.on;
   const lv = getActiveOps().filter(function (op) { return state.adapt.on ? true : false; }).map(function (op) {
     const t = opTier(op), acc = recentAccuracy(op);

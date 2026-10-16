@@ -150,6 +150,7 @@ async function acctLogin() {
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not sign in.', 'err');
     const save = r.data.save;
     startSession(r.data.name, r.data.token, save ? save.version : 0);
+    setControls(r.data.controls);
     syncProblem = '';
     if (!save) {
       acct.dirty = true; persistAcct();
@@ -167,17 +168,27 @@ async function acctLogin() {
   } catch (e) { setAcctMsg('Could not reach the server. Check your internet and try again.', 'err'); }
 }
 
+// While a parent's settings are on and the parent PIN is set, signing out or deleting the account needs the PIN first:
+// otherwise it would be a way round them.
+function acctNeedsParent() {
+  if (!ctlActive() || !parentLocked()) return false;
+  toast('🔒 A parent has settings on. Unlock the Parent Report with the PIN first.');
+  return true;
+}
 function acctLogout() {
+  if (acctNeedsParent()) return;
   const t = acct && acct.token;
   if (t) { try { api('/api/logout', 'POST', {}); } catch (e) {} }
   acct = null;
   persistAcct();
+  setControls(null);
   clearTimeout(syncTimer);
   setAcctMsg('Signed out. Your progress is still saved on this device.', 'ok');
   renderAccount();
 }
 
 function acctShowDelete() {
+  if (acctNeedsParent()) return;
   document.getElementById('acct-delete-area').innerHTML =
     '<div class="settings-hint">This deletes your online account and saved progress. Your progress on this device stays.</div>' +
     '<input class="acct-input" id="acct-del-pass" type="password" placeholder="Enter your password to confirm" autocomplete="current-password">' +
@@ -190,6 +201,7 @@ async function acctDelete() {
     const r = await api('/api/delete', 'POST', { password: p.value });
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not delete the account.', 'err');
     acct = null; persistAcct();
+    setControls(null);
     setAcctMsg('Account deleted. Your progress is still on this device.', 'ok');
     renderAccount();
   } catch (e) { setAcctMsg('Could not reach the server.', 'err'); }
@@ -228,6 +240,7 @@ async function syncNow(force) {
       acct.lastSync = Date.now();
       syncProblem = '';
       persistAcct();
+      setControls(r.data.controls);
     } else if (r.status === 409) {
       pendingConflict = { cloud: r.data.save };
       openConflict();
@@ -288,6 +301,7 @@ async function acctStartup() {
     const r = await api('/api/save');
     if (r.status === 401) return acctExpired();
     if (r.status !== 200) return;
+    setControls(r.data.controls);
     const save = r.data.save;
     if (!save) { acct.dirty = true; return syncNow(false); }
     if (save.version > acct.version) {

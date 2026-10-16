@@ -10,10 +10,10 @@ function easyScore(p) {
   const plain = (p.expr || (p.num1 + ' ' + p.num2)).replace(/<[^>]+>/g, '');
   return plain.length + String(Math.abs(p.answer)).length * 2;
 }
-// A gentler problem: one grade down (never below the type's own grade) and the simplest of five tries.
+// A gentler problem: one grade down (never below the type's own grade, or the lowest level a parent allows) and the simplest of five tries.
 function genEasy(id) {
   const op = OP_BY_ID[id];
-  const g = Math.max(op.minGrade, state.grade - 1);
+  const g = Math.max(op.minGrade, state.grade - 1, ctlFloor());
   let best = null;
   for (let i = 0; i < 5; i++) {
     const c = op.gen(g);

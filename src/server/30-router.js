@@ -30,7 +30,7 @@ async function handleApi(request, env, url) {
     const r = await signIn(kv, KID_NS, body);
     if (r.res) return r.res;
     const save = await kv.get('save:' + r.name, 'json');
-    return json({ ok: true, name: r.name, token: await newSession(kv, r.name), save: save || null });
+    return json({ ok: true, name: r.name, token: await newSession(kv, r.name), save: save || null, controls: await activeControls(kv, r.name) });
   }
 
   if (path.indexOf('/api/parent/') === 0) return handleParent(path, request, kv, body);
@@ -39,7 +39,7 @@ async function handleApi(request, env, url) {
   if (!who) return json({ error: 'Please sign in again.' }, 401);
 
   if (path === '/api/save' && request.method === 'GET') {
-    return json({ save: (await kv.get('save:' + who.name, 'json')) || null });
+    return json({ save: (await kv.get('save:' + who.name, 'json')) || null, controls: await activeControls(kv, who.name) });
   }
 
   if (path === '/api/save' && request.method === 'PUT') {
@@ -48,9 +48,11 @@ async function handleApi(request, env, url) {
     const cur = await kv.get('save:' + who.name, 'json');
     const curVersion = cur ? cur.version : 0;
     if (!body.force && Number(body.baseVersion) !== curVersion) return json({ conflict: true, save: cur || null }, 409);
+    const controls = await activeControls(kv, who.name);
+    clampToControls(body.state, controls);
     const next = { state: body.state, version: curVersion + 1, updatedAt: Date.now() };
     await kv.put('save:' + who.name, JSON.stringify(next));
-    return json({ ok: true, version: next.version, updatedAt: next.updatedAt });
+    return json({ ok: true, version: next.version, updatedAt: next.updatedAt, controls: controls });
   }
 
   if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);

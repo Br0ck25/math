@@ -1300,3 +1300,10 @@
 .link-code { font-size: 1.7rem; font-weight: 900; letter-spacing: 4px; text-align: center; color: #fde047; background: #0f172a; border: 2px dashed #facc15; border-radius: 12px; padding: 8px 4px; margin: 8px 0 4px; user-select: all; }
 .portal .grade-btn { min-height: 44px; padding-left: 8px; padding-right: 8px; }
 .portal .acct-input { min-height: 44px; }
+.grade-btn.locked { opacity: 0.55; text-decoration: line-through; }
+
+.portal-ctl { margin: 8px 0; border: 1px solid var(--card-border); border-radius: 12px; padding: 0 10px 10px; }
+.portal-ctl summary { min-height: 44px; display: flex; align-items: center; font-weight: 800; font-size: 0.9rem; cursor: pointer; }
+.portal-ops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 8px; }
+.portal-op { display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 0.8rem; font-weight: 700; }
+.portal-op input { width: 20px; height: 20px; flex: none; }
