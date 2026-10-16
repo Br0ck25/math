@@ -13,10 +13,37 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 const readDir = (dir, ext) => fs.readdirSync(path.join(root, dir)).filter((f) => f.endsWith(ext)).sort()
   .map((f) => read(path.join(dir, f)));
 
+// Licensed artwork for buddies: art/buddies/<buddy id>.png|webp|jpg|gif|svg becomes `BUDDY_ART` (id -> data: URI) in the page script.
+// The page is one self-contained file, so the pictures travel inside it: keep them small (see art/README.md).
+const ART_TYPES = { png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml' };
+const ART_FILE_MAX = 150 * 1024, ART_TOTAL_MAX = 2.5 * 1024 * 1024;
+export function artFiles() {
+  const dir = path.join(root, 'art/buddies');
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => !f.startsWith('.') && f !== 'README.md').sort().map((f) => {
+    const m = /^([a-z0-9_]+)\.(png|webp|jpe?g|gif|svg)$/i.exec(f);
+    if (!m) throw new Error('art/buddies/' + f + ': name it <buddy id>.png (or .webp .jpg .gif .svg), for example toon_bluey.png');
+    const bytes = fs.readFileSync(path.join(dir, f));
+    if (bytes.length > ART_FILE_MAX) throw new Error('art/buddies/' + f + ' is ' + Math.round(bytes.length / 1024) + ' KB: shrink it below ' + ART_FILE_MAX / 1024 + ' KB (about 256 px wide, WebP or PNG)');
+    if (m[2].toLowerCase() === 'svg' && /<script|\bon\w+\s*=/i.test(bytes.toString('utf8'))) throw new Error('art/buddies/' + f + ': svg pictures may not contain scripts or event handlers');
+    return { id: m[1].toLowerCase(), file: f, bytes: bytes };
+  });
+}
+function artChunk() {
+  const files = artFiles(), map = {};
+  let total = 0;
+  files.forEach((a) => {
+    total += a.bytes.length;
+    map[a.id] = 'data:' + ART_TYPES[a.file.split('.').pop().toLowerCase()] + ';base64,' + a.bytes.toString('base64');
+  });
+  if (total > ART_TOTAL_MAX) throw new Error('art/buddies is ' + (total / 1024 / 1024).toFixed(1) + ' MB in all: the Worker has a size limit, keep it below ' + ART_TOTAL_MAX / 1024 / 1024 + ' MB');
+  return 'const BUDDY_ART = ' + JSON.stringify(map) + ';';
+}
+
 export function assemble() {
   const css = read('src/client/styles.css');
   const shared = read('src/shared/econ.js');
-  const js = [shared].concat(readDir('src/client/js', '.js')).join('\n');
+  const js = [shared, artChunk()].concat(readDir('src/client/js', '.js')).join('\n');
   new vm.Script(js, { filename: 'client script (src/shared + src/client/js)' });   // throws on a syntax error
   if (/<\/script/i.test(js)) throw new Error('src/client/js must not contain "</script"');
   const page = read('src/client/index.html').replace('{{CSS}}', () => css).replace('{{JS}}', () => js);

@@ -59,6 +59,7 @@ function getPetById(id) {
     name: form.name,
     baseName: sp.name,
     icon: form.icon,
+    emoji: form.emoji || form.icon,
     element: sp.element,
     superMove: sp.superMove + suffix,
     stage: stage,

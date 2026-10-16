@@ -134,7 +134,7 @@ function duelEnd() {
   soundMonsterDefeated();
   const names = ['Player 1', 'Player 2'];
   const sec = function (p) { return (p.t / 1000).toFixed(1) + 's'; };
-  const title = win < 0 ? '🤝 It is a tie!' : getPetById(duel.b[win]).icon + ' ' + names[win] + ' wins!';
+  const title = win < 0 ? '🤝 It is a tie!' : getPetById(duel.b[win]).emoji + ' ' + names[win] + ' wins!';
   duelCover('<div style="font-size:1.6rem; font-weight:900; color:#fde047;">' + title + '</div>' +
     '<div style="font-size:0.95rem; font-weight:800;">🔵 ' + a.score + '/' + duel.qs.length + ' (' + sec(a) + ') &nbsp;vs&nbsp; 🩷 ' + b.score + '/' + duel.qs.length + ' (' + sec(b) + ')</div>' +
     '<div style="font-size:1.1rem; font-weight:900;">Series: ' + duel.series[0] + ' – ' + duel.series[1] + '</div>' +

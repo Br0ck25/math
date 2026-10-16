@@ -68,7 +68,7 @@ function startLegendHunt() {
   updateStatsUI();
   saveState();
   enqueueModal(function () {
-    showStoryModal({ chapter: 'Legend Hunt', title: sp.icon + ' ' + sp.name + ' appears!', panels: [
+    showStoryModal({ chapter: 'Legend Hunt', title: emojiOf(sp) + ' ' + sp.name + ' appears!', panels: [
       { icon: sp.icon, text: sp.lore },
       { icon: '⚔️', text: sp.name + ' is much tougher than a wild buddy. Win and it may join you!' },
       { icon: '🧢', text: rivalLine(rileyLeft() > 0 ? 'track' : 'done', sp) + (rileyLeft() > 0 ? ' It catches it in ' + rileyLeft() + ' day' + (rileyLeft() === 1 ? '' : 's') + '. Be first for a bonus!' : '') },

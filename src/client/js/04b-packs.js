@@ -52,7 +52,7 @@ function packOf(sp) {
     packCache = {};
     allBuddies().forEach(function (b) {
       const hit = PACKS.find(function (p) { return (p.shows && p.shows.indexOf(b.show) !== -1) || (p.ids && p.ids.indexOf(b.id) !== -1) || (p.bossElem && b.bossBuddy && p.bossElem === b.element); }) ||
-        PACKS.find(function (p) { return p.icons && typeof b.icon === 'string' && p.icons.indexOf(b.icon) !== -1; }) || PACK_BY_ID.mystery;
+        PACKS.find(function (p) { return p.icons && typeof (b.emoji || b.icon) === 'string' && p.icons.indexOf(b.emoji || b.icon) !== -1; }) || PACK_BY_ID.mystery;
       packCache[b.id] = hit;
     });
   }

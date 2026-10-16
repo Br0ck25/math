@@ -25,7 +25,7 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans
 function buddyCard(id) {
   const d = getPetById(id);
   return {
-    name: d.name, levelText: 'Lv ' + d.level, icon: d.icon, element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
+    name: d.name, levelText: 'Lv ' + d.level, icon: d.emoji, art: artImage(id), element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
     stats: [['❤️', getPetMaxHp(id), 'HP'], ['⚔️', getPetAttack(id), 'Attack'], ['🏆', state.tour.trophies, 'Trophies']],
     line: '⚡ ' + d.superMove, foot: heartsHtml(getBond(id)), sleepy: isSleepy(id), stage: d.stage,
     gear: id === state.activePet ? activeGear() : { acc: null, armor: null }    // gear belongs to the active buddy
@@ -55,7 +55,7 @@ function bossCard(idx, opts) {
 function wildCard(id, level) {
   const sp = getSpecies(id), st = wildStats(level), shiny = state.wild.shiny && state.wild.id === id, owned = getOwnedIds().indexOf(id) !== -1;
   return {
-    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
+    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: emojiOf(sp), art: artImage(id), element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
     stats: [['❤️', shiny ? Math.ceil(st.maxHp * ECON.daily.hpMult) : st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp, { shiny: shiny }) * 100) + '%', 'Catch']],
     line: '⚡ ' + sp.superMove, foot: owned ? '✅ In your collection' + (spareCount(id) ? ' · ' + spareCount(id) + ' spare' + (spareCount(id) > 1 ? 's' : '') : '') : '🆕 Not in your collection yet',
     sleepy: false, stage: 0, gear: { acc: null, armor: null }
@@ -100,7 +100,10 @@ function drawCardFromDesc(cv, c) {
   ctx.font = fs + 'px ' + EMOJI_FONT;
   ctx.globalAlpha = c.sleepy ? 0.55 : 1;
   if (c.stage) { ctx.shadowColor = ec; ctx.shadowBlur = 22 + 14 * (c.stage - 1); }
-  fillEmoji(ctx, c.icon, W / 2, 335);
+  if (c.art) {                                           // licensed art: drawn as a picture, fitted into the art box
+    const k = Math.min(380 / c.art.naturalWidth, 380 / c.art.naturalHeight);
+    ctx.drawImage(c.art, W / 2 - (c.art.naturalWidth * k) / 2, 335 - (c.art.naturalHeight * k) / 2, c.art.naturalWidth * k, c.art.naturalHeight * k);
+  } else fillEmoji(ctx, c.icon, W / 2, 335);
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   drawForm(ctx, c.stage, c.element, W / 2, 335, fs, 'front');
