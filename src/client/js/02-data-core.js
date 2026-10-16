@@ -1,10 +1,10 @@
 const monstersList = [
   // 6 Fire Bosses
   { name: "Fire Drake", icon: "🐲", baseHp: 4, element: "fire", taunts: ["You cannot calculate my flames!", "Feel the blazing inferno!"] },
-  { name: "Magma Golem", icon: "🌋", baseHp: 5, element: "fire", taunts: ["I am forged in molten rock!", "Crushing your numbers!"] },
+  { name: "Magma Rex", icon: "🦖", baseHp: 5, element: "fire", taunts: ["I am forged in molten rock!", "Crushing your numbers!"] },
   { name: "Inferno Phoenix", icon: "🦅", baseHp: 5, element: "fire", taunts: ["From the ash I rise!", "Burn away your math skills!"] },
   { name: "Blazing Cerberus", icon: "🐕‍🦺", baseHp: 5, element: "fire", taunts: ["Three heads, triple the flame!", "No escape from my fire!"] },
-  { name: "Sun Titan", icon: "☀️", baseHp: 6, element: "fire", taunts: ["I burn brighter than a thousand stars!", "Solar flare unleashed!"] },
+  { name: "Sun Tiger", icon: "🐅", baseHp: 6, element: "fire", taunts: ["I burn brighter than a thousand stars!", "Solar flare unleashed!"] },
   { name: "Cinder Djinn", icon: "🧞", baseHp: 5, element: "fire", taunts: ["Your answers turn to smoke!", "A wish for defeat granted!"] },
 
   // 6 Water Bosses
@@ -17,7 +17,7 @@ const monstersList = [
 
   // 6 Nature Bosses
   { name: "Sneaky Goblin", icon: "👺", baseHp: 3, element: "nature", taunts: ["I'll steal your gems!", "Think fast, math cadet!"] },
-  { name: "Bramble Treant", icon: "🌲", baseHp: 4, element: "nature", taunts: ["My roots hold deep!", "Tangle your calculations!"] },
+  { name: "Bramble Stag", icon: "🦌", baseHp: 4, element: "nature", taunts: ["My antlers are thick as branches!", "Tangle your calculations!"] },
   { name: "Venom Hydrak", icon: "🐍", baseHp: 5, element: "nature", taunts: ["Hiss! Toxic subtraction!", "Poison fangs strike hard!"] },
   { name: "Jungle Behemoth", icon: "🦏", baseHp: 5, element: "nature", taunts: ["Heavy footfalls shake the jungle!", "Nature's unstoppable force!"] },
   { name: "Spore Mantis", icon: "🦗", baseHp: 5, element: "nature", taunts: ["Fast strikes from the canopy!", "Blades of the forest!"] },
@@ -25,11 +25,11 @@ const monstersList = [
 
   // 6 Electric Bosses
   { name: "Robo-Glitch", icon: "🤖", baseHp: 4, element: "electric", taunts: ["Syntax Error in human brain!", "Multiplication overload!"] },
-  { name: "Thunder Griffin", icon: "⚡", baseHp: 5, element: "electric", taunts: ["Lightning speed arithmetic!", "Shockwaves incoming!"] },
-  { name: "Plasma Core", icon: "🛸", baseHp: 5, element: "electric", taunts: ["Voltage surge exceeding limit!", "Alien calculation protocol!"] },
-  { name: "Volt Dynamo", icon: "🔋", baseHp: 5, element: "electric", taunts: ["High voltage overload!", "Batteries fully charged!"] },
+  { name: "Thunder Griffin", icon: "🦅", baseHp: 5, element: "electric", taunts: ["Lightning speed arithmetic!", "Shockwaves incoming!"] },
+  { name: "Plasma Gecko", icon: "🦎", baseHp: 5, element: "electric", taunts: ["Voltage surge exceeding limit!", "Alien calculation protocol!"] },
+  { name: "Volt Hamster", icon: "🐹", baseHp: 5, element: "electric", taunts: ["High voltage overload!", "Running my wheel at full charge!"] },
   { name: "Storm Falcon", icon: "🦅", baseHp: 5, element: "electric", taunts: ["Lightning rides on my wings!", "Thunder crack in the sky!"] },
-  { name: "Cyber Mecha", icon: "🦾", baseHp: 6, element: "electric", taunts: ["Target locked, human computation failing!", "Laser grid activated!"] },
+  { name: "Cyber Mecha", icon: "🤖", baseHp: 6, element: "electric", taunts: ["Target locked, human computation failing!", "Laser grid activated!"] },
 
   // 6 Dark Bosses
   { name: "Shadow Sphinx", icon: "🦁", baseHp: 5, element: "dark", taunts: ["None solve my ancient riddles!", "Step into the shadow realm!"] },
@@ -40,14 +40,14 @@ const monstersList = [
   { name: "Cursed Mummy", icon: "🧟", baseHp: 6, element: "dark", taunts: ["Ancient math curses upon you!", "Sealed in dark tombs forever!"] },
 
   // 6 Magic Bosses
-  { name: "Hex Witch", icon: "🧙‍♀️", baseHp: 5, element: "magic", taunts: ["Your numbers are bewitched!", "Eye of newt, tail of math!"] },
-  { name: "Rune Golem", icon: "🗿", baseHp: 6, element: "magic", taunts: ["Ancient runes guard my answers!", "Stone and spell, you shall not pass!"] },
-  { name: "Tome Mimic", icon: "📖", baseHp: 4, element: "magic", taunts: ["I am the book that bites back!", "Turn the page... if you dare!"] },
-  { name: "Mirror Wraith", icon: "🪞", baseHp: 5, element: "magic", taunts: ["I reflect your every mistake!", "Which answer is real?"] },
-  { name: "Chaos Jester", icon: "🤡", baseHp: 4, element: "magic", taunts: ["Abra-cadabra, you are wrong!", "Tricks and spells, no treats!"] },
-  { name: "Arcane Archmage", icon: "🧙‍♂️", baseHp: 6, element: "magic", taunts: ["Behold my forbidden formulas!", "Mathematics is the oldest magic!"] },
+  { name: "Hex Cat", icon: "🐱", baseHp: 5, element: "magic", taunts: ["Your numbers are bewitched!", "Eye of newt, tail of math!"] },
+  { name: "Rune Bear", icon: "🐻", baseHp: 6, element: "magic", taunts: ["Ancient runes guard my answers!", "Stone and spell, you shall not pass!"] },
+  { name: "Tome Chameleon", icon: "🦎", baseHp: 4, element: "magic", taunts: ["I blend in with the books!", "Turn the page... if you dare!"] },
+  { name: "Mirror Wraith", icon: "👻", baseHp: 5, element: "magic", taunts: ["I reflect your every mistake!", "Which answer is real?"] },
+  { name: "Chaos Monkey", icon: "🐵", baseHp: 4, element: "magic", taunts: ["Abra-cadabra, you are wrong!", "Tricks and spells, no treats!"] },
+  { name: "Arcane Peacock", icon: "🦚", baseHp: 6, element: "magic", taunts: ["Behold my forbidden formulas!", "Mathematics is the oldest magic!"] },
   // ---- v4 additions: 14 more bosses (appended so saved boss books keep their numbers) ----
-  { name: "Dynamite Imp", icon: "🧨", baseHp: 4, element: "fire", taunts: ["Three, two... boom!", "I light up every fuse!"] },
+  { name: "Dynamite Imp", icon: "👿", baseHp: 4, element: "fire", taunts: ["Three, two... boom!", "I light up every fuse!"] },
   { name: "Scorch Scorpion", icon: "🦂", baseHp: 5, element: "fire", taunts: ["My tail burns like a torch!", "The desert sand is red hot!"] },
   { name: "Ember Ogre", icon: "👹", baseHp: 6, element: "fire", taunts: ["Smash and sizzle!", "Nobody out-counts an ogre!"] },
   { name: "Tide Turtle", icon: "🐢", baseHp: 4, element: "water", taunts: ["Slow and steady beats you!", "Splash! Right into my shell!"] },
@@ -59,8 +59,8 @@ const monstersList = [
   { name: "Circuit Spider", icon: "🕷️", baseHp: 5, element: "electric", taunts: ["Caught in my web of wires!", "Every thread carries a shock!"] },
   { name: "Gloom Owl", icon: "🦉", baseHp: 5, element: "dark", taunts: ["Who? Who got that wrong?", "The night sees every mistake!"] },
   { name: "Bone Pirate", icon: "☠️", baseHp: 6, element: "dark", taunts: ["Yo ho ho, give me your gems!", "X marks your mistake!"] },
-  { name: "Potion Imp", icon: "🧪", baseHp: 4, element: "magic", taunts: ["Bubble, bubble, wrong answer!", "One drop and poof!"] },
-  { name: "Mirror Knight", icon: "🤺", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] },
+  { name: "Potion Frog", icon: "🐸", baseHp: 4, element: "magic", taunts: ["Bubble, bubble, wrong answer!", "One drop and poof!"] },
+  { name: "Mirror Moth", icon: "🦋", baseHp: 6, element: "magic", taunts: ["I copy every move you make!", "En garde, number knight!"] },
 
   // 3 Buddy Slayers: they fight like any other boss, but each is strong against one ultra-rare buddy (see ECON.boss.slayer)
   { name: "Bovine Bruiser", icon: "🐄", baseHp: 6, element: "nature", slays: "secret_janie", buddy: "boss_cow", taunts: ["Moo-ve over, math cadet!", "I will stampede right over your sums!"] },

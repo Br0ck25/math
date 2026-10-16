@@ -19,6 +19,27 @@ test('the collection has the planned size: 351 buddies, 54 bosses, 118 pieces of
   assert.deepEqual(c, { buddies: 351, bosses: 54, gear: 118, store: 43, mythic: 36, secret: 209, legend: 6 });
 });
 
+test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {
+  const r = await inPage(() => ({
+    buddies: allBuddies().map((b) => ({ id: b.id, name: b.name, icon: b.icon, person: !!(b.show || b.mythic || b.legend) })),
+    bosses: monstersList.map((m) => ({ name: m.name, icon: m.icon }))
+  }));
+  const cp = (icon) => icon.codePointAt(0);
+  const animal = (c) => (c >= 0x1F400 && c <= 0x1F43D) || c === 0x1F43F || (c >= 0x1F980 && c <= 0x1F9AE) || c === 0x1F577 || c === 0x1F54A || (c >= 0x1FAB0 && c <= 0x1FAB3);
+  const creature = new Set([0x1F479, 0x1F47A, 0x1F47B, 0x1F47D, 0x1F47E, 0x1F916, 0x1F480, 0x2620, 0x1F47F, 0x1F608, 0x1F9DE, 0x1F9DC, 0x1F9DA, 0x1F9DD, 0x1F9DB, 0x1F9DF, 0x26C4, 0x1F409, 0x1F432, 0x1F995, 0x1F996]);    // monsters, ghosts, aliens, robots, fairies, elves, snowman
+  const person = (c) => (c >= 0x1F466 && c <= 0x1F469) || c === 0x1F471 || c === 0x1F474 || c === 0x1F475 || c === 0x1F476 || c === 0x1F478 || c === 0x1F934 || c === 0x1F9D4 || c === 0x1F9D9 || c === 0x1F9B8 || c === 0x1F9D1;
+  const exceptions = { toon_spongebob: 'a sea sponge', mythic_patrick: 'a sea star', secret_papaw: 'a family buddy: the owner decides' };    // no emoji exists for these animals
+  const bad = [];
+  r.buddies.forEach((b) => {
+    if (b.icon.trim().startsWith('<')) return;                   // the Bandit is drawn
+    const c = cp(b.icon);
+    if (animal(c) || creature.has(c) || exceptions[b.id] || (b.person && person(c))) return;
+    bad.push(b.name + ' ' + b.icon);
+  });
+  r.bosses.forEach((m) => { const c = cp(m.icon); if (!animal(c) && !creature.has(c)) bad.push('boss ' + m.name + ' ' + m.icon); });
+  assert.deepEqual(bad, [], 'these look like objects or people: pick an animal or creature');
+});
+
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
   const bad = await inPage(() => {
     const out = [], seen = new Set();
@@ -101,7 +122,7 @@ test('every boss is complete: unique name and icon slot, valid type, 3-6 HP and 
     });
     const per = {}; monstersList.forEach((m) => { per[m.element] = (per[m.element] || 0) + 1; });
     if (Object.values(per).some((n) => n < 6)) out.push('uneven types ' + JSON.stringify(per));
-    if (monstersList[35].name !== 'Arcane Archmage') out.push('old boss numbers changed');
+    if (monstersList[35].name !== 'Arcane Peacock') out.push('old boss numbers changed');
     return out;
   });
   assert.deepEqual(bad, []);
