@@ -9,7 +9,7 @@
 //    blk:<me>:<them>     me has blocked them (no expiry)
 // ---------------------------------------------------------------------
 const DUEL_TTL = 60 * 60 * 24 * ECON.duel.ttlDays;
-function newDuelId() { return toB64(rand(6)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+function newDuelId() { return randomId(6); }
 async function savedGems(kv, name) {
   const s = await kv.get('save:' + name, 'json');
   return s && s.state && typeof s.state.gems === 'number' ? s.state.gems : 0;

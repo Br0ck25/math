@@ -1286,3 +1286,17 @@
 .type-chart .tc-row { display: flex; flex-direction: column; margin: 0 0 6px; padding-bottom: 5px; border-bottom: 1px solid var(--card-border); }
 .type-chart .tc-row b { font-size: 0.9rem; }
 .type-chart .tc-row span { font-size: 0.8rem; color: var(--text-muted); }
+
+/* ===== Parent page (/parent) ===== */
+.portal-mode .game-container { display: none; }
+.portal { position: fixed; inset: 0; overflow-y: auto; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(16px, env(safe-area-inset-bottom, 0px)); }
+.portal-inner { max-width: 490px; margin: 0 auto; background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 20px; padding: 14px; text-align: left; min-width: 0; }
+.portal h1 { font-size: 1.3rem; margin-bottom: 4px; }
+.portal-kid { background: #0f172a; border: 1px solid var(--card-border); border-radius: 14px; padding: 10px; margin-top: 12px; min-width: 0; }
+.portal-kid h2 { font-size: 1.05rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.portal-kid h2 small { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+.portal-sub { font-size: 0.74rem; color: var(--text-muted); margin: 2px 0 6px; }
+.portal a { color: #93c5fd; }
+.link-code { font-size: 1.7rem; font-weight: 900; letter-spacing: 4px; text-align: center; color: #fde047; background: #0f172a; border: 2px dashed #facc15; border-radius: 12px; padding: 8px 4px; margin: 8px 0 4px; user-select: all; }
+.portal .grade-btn { min-height: 44px; padding-left: 8px; padding-right: 8px; }
+.portal .acct-input { min-height: 44px; }

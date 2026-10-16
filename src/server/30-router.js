@@ -15,14 +15,9 @@ async function handleApi(request, env, url) {
   }
 
   if (path === '/api/register' && request.method === 'POST') {
-    const name = String(body.name || '').trim().toLowerCase();
-    const password = String(body.password || '');
-    if (!NAME_RE.test(name)) return json({ error: 'Player names are 3-20 letters, numbers, - or _.' }, 400);
-    if (password.length < 6 || password.length > 100) return json({ error: 'Passwords need at least 6 characters.' }, 400);
-    if (await kv.get('acct:' + name)) return json({ error: 'That player name is taken. Try another!' }, 409);
-    const salt = rand(16);
-    const hash = await hashPassword(password, salt, PBKDF2_ITERS);
-    await kv.put('acct:' + name, JSON.stringify({ salt: toB64(salt), hash: hash, iters: PBKDF2_ITERS, created: Date.now() }));
+    const made = await createAccount(kv, KID_NS, body);
+    if (made.res) return made.res;
+    const name = made.name;
     let version = 0;
     if (validState(body.state) && JSON.stringify(body.state).length <= MAX_SAVE_BYTES) {
       version = 1;
@@ -32,19 +27,13 @@ async function handleApi(request, env, url) {
   }
 
   if (path === '/api/login' && request.method === 'POST') {
-    const name = String(body.name || '').trim().toLowerCase();
-    const password = String(body.password || '');
-    const failKey = 'fail:' + name;
-    const fails = parseInt((await kv.get(failKey)) || '0', 10);
-    if (fails >= 8) return json({ error: 'Too many tries. Please wait 15 minutes and try again.' }, 429);
-    if (!NAME_RE.test(name) || !password || !(await checkPassword(kv, name, password))) {
-      if (NAME_RE.test(name)) await kv.put(failKey, String(fails + 1), { expirationTtl: 900 });
-      return json({ error: 'Wrong player name or password.' }, 401);
-    }
-    await kv.delete(failKey);
-    const save = await kv.get('save:' + name, 'json');
-    return json({ ok: true, name: name, token: await newSession(kv, name), save: save || null });
+    const r = await signIn(kv, KID_NS, body);
+    if (r.res) return r.res;
+    const save = await kv.get('save:' + r.name, 'json');
+    return json({ ok: true, name: r.name, token: await newSession(kv, r.name), save: save || null });
   }
+
+  if (path.indexOf('/api/parent/') === 0) return handleParent(path, request, kv, body);
 
   const who = await authenticate(request, kv);
   if (!who) return json({ error: 'Please sign in again.' }, 401);
@@ -65,6 +54,7 @@ async function handleApi(request, env, url) {
   }
 
   if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);
+  if (path.indexOf('/api/link/') === 0) return handleLink(path, request, kv, who, body);
 
   if (path === '/api/logout' && request.method === 'POST') {
     await kv.delete('sess:' + who.tokenHash);
@@ -75,6 +65,7 @@ async function handleApi(request, env, url) {
     if (!(await checkPassword(kv, who.name, String(body.password || '')))) return json({ error: 'Wrong password.' }, 401);
     await kv.delete('acct:' + who.name);
     await kv.delete('save:' + who.name);
+    await kv.delete('grant:' + who.name);   // parents lose sight of a deleted account
     await kv.delete('sess:' + who.tokenHash);
     return json({ ok: true });
   }

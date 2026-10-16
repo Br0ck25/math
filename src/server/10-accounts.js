@@ -1,11 +1,15 @@
 // =====================================================================
 //  OPTIONAL ACCOUNTS  (needs a KV namespace bound as MATH_KV; without it the
 //  game works exactly as before and the Account section explains it is off)
+//  Players and parents are separate kinds of account: the same code runs for both, with
+//  different key prefixes (KID_NS / PARENT_NS), so a parent's token can never act as a player.
 // =====================================================================
 const PBKDF2_ITERS = 100000;          // Workers' maximum; stored per account so it can be changed later
 const SESSION_TTL = 60 * 60 * 24 * 30; // stay signed in for 30 days
 const MAX_SAVE_BYTES = ECON.save.hardLimitBytes;
 const NAME_RE = /^[a-z0-9_-]{3,20}$/;
+const KID_NS = { acct: 'acct:', sess: 'sess:', fail: 'fail:', noun: 'player name' };
+const PARENT_NS = { acct: 'pacct:', sess: 'psess:', fail: 'pfail:', noun: 'parent name' };
 
 function rand(n) { const a = new Uint8Array(n); crypto.getRandomValues(a); return a; }
 function toB64(buf) {
@@ -20,6 +24,7 @@ function fromB64(s) {
   for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
   return a;
 }
+function randomId(bytes) { return toB64(rand(bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 async function hashPassword(pw, salt, iters) {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: iters }, key, 256);
@@ -44,21 +49,47 @@ function json(obj, status) {
 function validState(s) {
   return !!s && typeof s === 'object' && !Array.isArray(s) && Array.isArray(s.unlockedPets) && typeof s.gems === 'number';
 }
-async function newSession(kv, name) {
-  const token = toB64(rand(32)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  await kv.put('sess:' + await sha256Hex(token), JSON.stringify({ name: name, at: Date.now() }), { expirationTtl: SESSION_TTL });
+async function newSession(kv, name, ns) {
+  const token = randomId(32);
+  await kv.put((ns || KID_NS).sess + await sha256Hex(token), JSON.stringify({ name: name, at: Date.now() }), { expirationTtl: SESSION_TTL });
   return token;
 }
-async function authenticate(request, kv) {
+async function authenticate(request, kv, ns) {
   const h = request.headers.get('authorization') || '';
   const m = h.match(/^Bearer\s+(.+)$/i);
   if (!m) return null;
-  const rec = await kv.get('sess:' + await sha256Hex(m[1]), 'json');
+  const rec = await kv.get((ns || KID_NS).sess + await sha256Hex(m[1]), 'json');
   return rec && rec.name ? { name: rec.name, tokenHash: await sha256Hex(m[1]) } : null;
 }
-async function checkPassword(kv, name, password) {
-  const acct = await kv.get('acct:' + name, 'json');
+async function checkPassword(kv, name, password, ns) {
+  const acct = await kv.get((ns || KID_NS).acct + name, 'json');
   if (!acct) return false;
   const h = await hashPassword(password, fromB64(acct.salt), acct.iters || PBKDF2_ITERS);
   return safeEq(h, acct.hash);
+}
+// Validates a name and password and stores the new account. Returns { name } or { res } (an error response to send).
+async function createAccount(kv, ns, body) {
+  const name = String(body.name || '').trim().toLowerCase();
+  const password = String(body.password || '');
+  if (!NAME_RE.test(name)) return { res: json({ error: ns.noun.charAt(0).toUpperCase() + ns.noun.slice(1) + 's are 3-20 letters, numbers, - or _.' }, 400) };
+  if (password.length < 6 || password.length > 100) return { res: json({ error: 'Passwords need at least 6 characters.' }, 400) };
+  if (await kv.get(ns.acct + name)) return { res: json({ error: 'That ' + ns.noun + ' is taken. Try another!' }, 409) };
+  const salt = rand(16);
+  const hash = await hashPassword(password, salt, PBKDF2_ITERS);
+  await kv.put(ns.acct + name, JSON.stringify({ salt: toB64(salt), hash: hash, iters: PBKDF2_ITERS, created: Date.now() }));
+  return { name: name };
+}
+// Checks a name and password, with a lockout after too many wrong tries. Returns { name } or { res }.
+async function signIn(kv, ns, body) {
+  const name = String(body.name || '').trim().toLowerCase();
+  const password = String(body.password || '');
+  const failKey = ns.fail + name;
+  const fails = parseInt((await kv.get(failKey)) || '0', 10);
+  if (fails >= 8) return { res: json({ error: 'Too many tries. Please wait 15 minutes and try again.' }, 429) };
+  if (!NAME_RE.test(name) || !password || !(await checkPassword(kv, name, password, ns))) {
+    if (NAME_RE.test(name)) await kv.put(failKey, String(fails + 1), { expirationTtl: 900 });
+    return { res: json({ error: 'Wrong ' + ns.noun + ' or password.' }, 401) };
+  }
+  await kv.delete(failKey);
+  return { name: name };
 }

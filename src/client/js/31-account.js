@@ -24,9 +24,11 @@ function persistAcct() {
   } catch (e) {}
 }
 
-async function api(path, method, body, keepalive) {
+// `token` is for the parent page, which signs in as a parent rather than as the player (null = send none).
+async function api(path, method, body, keepalive, token) {
   const headers = { 'content-type': 'application/json' };
-  if (acct && acct.token) headers.authorization = 'Bearer ' + acct.token;
+  const tok = token === undefined ? (acct && acct.token) : token;
+  if (tok) headers.authorization = 'Bearer ' + tok;
   const payload = body ? JSON.stringify(body) : undefined;
   const res = await fetch(path, {
     method: method || 'GET',
@@ -214,7 +216,7 @@ function acctExpired() {
 }
 
 async function syncNow(force) {
-  if (!acct || syncing || pendingConflict) return;
+  if (!acct || syncing || pendingConflict || isPortal()) return;   // the parent page never loads a save, so it must never upload one
   syncing = true;
   updateAcctStatus();
   const seq = dirtySeq;
