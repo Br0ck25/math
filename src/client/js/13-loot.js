@@ -63,6 +63,13 @@ function showLootModal(pet, lootCategory) {
     tag.innerText = '🏆 BOSS BUDDY!';
     title.innerText = pet.name + ' Joins You!';
     subtitle.innerText = `💪 Beaten ${ECON.bossBuddy.alphaWins} times as an Alpha! Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
+  } else if (lootCategory === 'legend') {
+    border.style.borderColor = '#fde047';
+    tag.style.background = '#713f12';
+    tag.style.color = '#fef9c3';
+    tag.innerText = '🌟 LEGEND CAUGHT!';
+    title.innerText = pet.name + ' Joins You!';
+    subtitle.innerText = `${pet.lore} Joins at Lv ${startLv} • Ult: ${pet.superMove}`;
   } else if (lootCategory === 'wild') {
     border.style.borderColor = '#38bdf8';
     tag.style.background = '#0c4a6e';

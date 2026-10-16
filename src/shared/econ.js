@@ -31,12 +31,19 @@ const ECON = {
     net: { mult: [1, 1.5, 2, 2.5], max: 0.75, stock: 9 }
   },
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
-  sell: { storeShare: 0.2, secret: 12 },
+  sell: { storeShare: 0.2, secret: 12, legend: 100 },
   // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
   // Winning the gym gives a badge and gems; all six badges make you Champion.
   map: {
     levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
-    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60, championGems: 250
+    trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60,
+    // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
+    // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
+    rematch: { levels: 4, gems: 40, perDay: 3 },
+    // The Champion's Hall (24d-champion.js), open once all six badges are won: Champion Nova's six buddies (one of each type), `levels` above your buddy.
+    // Nova swaps a buddy that is below `swapAt` of its HP (or that your buddy beats) for a clearly better one: at most `maxSwaps` times, never again within `cooldown` hits.
+    // The first win pays `firstGems`, `nets` Catch Nets, one of each held item and three secret gear pieces (and makes you Champion); after that a win pays `repeatGems` once a day.
+    champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50, swapAt: 0.4, maxSwaps: 4, cooldown: 3 }
   },
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
@@ -44,8 +51,15 @@ const ECON = {
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
-  // Moves (12c-moves.js): Recover heals this share of max HP.
-  moves: { healShare: 0.4 },
+  // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
+  moves: { healShare: 0.4, slots: 4 },
+  // The Legend hunt (24c-legend.js): after becoming Champion, one legendary buddy a week (a different type each week) can be hunted once a day.
+  // It is a wild fight: HP x hpMult, `levels` above your buddy, and a win always pays `gems`. The catch chance starts at `catchChance` and grows by `pity` for every miss that week.
+  // Riley (the rival) hunts the same legend: Riley catches it on day `firstDay`..`lastDay` of the week (0 = Monday; it varies by week, never by chance).
+  // Catch it before then and you beat Riley: `raceGems` once. Losing the race costs nothing: you can still catch it.
+  legend: { hpMult: 2.5, levels: 5, catchChance: 0.3, pity: 0.1, gems: 60, raceGems: 40, riley: { firstDay: 2, lastDay: 5 } },
+  // The Buddy Dex: owning every buddy of a pack pays once, per member, plus Catch Nets.
+  dex: { packGemsPer: 8, packNets: 2 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
@@ -81,7 +95,8 @@ function sessionGoalReward(solved) {
 }
 
 // What a spare buddy sells for.
-function spareValue(isStore, cost) {
+function spareValue(isStore, cost, isLegend) {
+  if (isLegend) return ECON.sell.legend;
   return isStore ? Math.max(1, Math.round(cost * ECON.sell.storeShare)) : ECON.sell.secret;
 }
 

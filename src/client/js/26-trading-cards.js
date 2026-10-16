@@ -1,6 +1,7 @@
 // ----- trading card -----
 function rarityOf(id) {
   const sp = getSpecies(id) || {};
+  if (sp.legend) return { name: 'LEGEND', col: '#fde047' };
   if (sp.bossBuddy) return { name: 'BOSS', col: '#f87171' };
   if (sp.ultra) return { name: 'COSMIC', col: '#e879f9' };
   if (sp.mythic) return { name: 'MYTHIC', col: '#f43f5e' };
@@ -24,7 +25,7 @@ const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans
 function buddyCard(id) {
   const d = getPetById(id);
   return {
-    name: d.name, levelText: 'Lv ' + d.level, icon: d.icon, element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
+    name: d.name, levelText: 'Lv ' + d.level, icon: d.emoji, art: artImage(id), element: d.element, rarity: rarityOf(id), stars: d.stage + 1,
     stats: [['❤️', getPetMaxHp(id), 'HP'], ['⚔️', getPetAttack(id), 'Attack'], ['🏆', state.tour.trophies, 'Trophies']],
     line: '⚡ ' + d.superMove, foot: heartsHtml(getBond(id)), sleepy: isSleepy(id), stage: d.stage,
     gear: id === state.activePet ? activeGear() : { acc: null, armor: null }    // gear belongs to the active buddy
@@ -42,7 +43,7 @@ function bossCard(idx, opts) {
   const hp = base.baseHp + (opts.level ? Math.floor(opts.level / 3) : 0) + form * 2 + (raid ? 2 : 0) + (tough ? ECON.boss.swap.extraHp : 0);
   return {
     name: (raid ? '👑 ' : '') + (form === 2 ? 'Alpha ' : form === 1 ? 'Elder ' : '') + base.name,
-    levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: base.icon, element: base.element,
+    levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: emojiOf(base), art: base.buddy ? artImage(base.buddy) : null, element: base.element,
     rarity: raid ? { name: 'RAID BOSS', col: '#ef4444' } : [null, null, null, { name: 'COMMON', col: '#94a3b8' }, { name: 'RARE', col: '#38bdf8' }, { name: 'EPIC', col: '#a78bfa' }, { name: 'LEGENDARY', col: '#fbbf24' }][clamp(base.baseHp, 3, 6)],
     stars: form + 1,
     stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', bossAtk(base, opts.level || 0, form) + (tough ? ECON.boss.swap.extraAtk : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],
@@ -54,7 +55,7 @@ function bossCard(idx, opts) {
 function wildCard(id, level) {
   const sp = getSpecies(id), st = wildStats(level), shiny = state.wild.shiny && state.wild.id === id, owned = getOwnedIds().indexOf(id) !== -1;
   return {
-    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: sp.icon, element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
+    name: (shiny ? '✨ ' : '') + sp.name, levelText: 'Lv ' + level, icon: emojiOf(sp), art: artImage(id), element: sp.element, rarity: shiny ? { name: 'DAILY RARE', col: '#facc15' } : rarityOf(id), stars: shiny ? 2 : 1,
     stats: [['❤️', shiny ? Math.ceil(st.maxHp * ECON.daily.hpMult) : st.maxHp, 'HP'], ['⚔️', st.atk, 'Attack'], ['🫧', state.wild.trainer ? '—' : Math.round(wildCatchChance(sp, { shiny: shiny }) * 100) + '%', 'Catch']],
     line: '⚡ ' + sp.superMove, foot: owned ? '✅ In your collection' + (spareCount(id) ? ' · ' + spareCount(id) + ' spare' + (spareCount(id) > 1 ? 's' : '') : '') : '🆕 Not in your collection yet',
     sleepy: false, stage: 0, gear: { acc: null, armor: null }
@@ -99,7 +100,10 @@ function drawCardFromDesc(cv, c) {
   ctx.font = fs + 'px ' + EMOJI_FONT;
   ctx.globalAlpha = c.sleepy ? 0.55 : 1;
   if (c.stage) { ctx.shadowColor = ec; ctx.shadowBlur = 22 + 14 * (c.stage - 1); }
-  fillEmoji(ctx, c.icon, W / 2, 335);
+  if (c.art) {                                           // licensed art: drawn as a picture, fitted into the art box
+    const k = Math.min(380 / c.art.naturalWidth, 380 / c.art.naturalHeight);
+    ctx.drawImage(c.art, W / 2 - (c.art.naturalWidth * k) / 2, 335 - (c.art.naturalHeight * k) / 2, c.art.naturalWidth * k, c.art.naturalHeight * k);
+  } else fillEmoji(ctx, c.icon, W / 2, 335);
   ctx.shadowBlur = 0;
   ctx.globalAlpha = 1;
   drawForm(ctx, c.stage, c.element, W / 2, 335, fs, 'front');

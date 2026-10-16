@@ -27,10 +27,15 @@ function holds(buddyId, item) { return heldIdOf(buddyId) === item; }
 function activeRole(name) { return roleOf(getActivePetDisplay()).name === name; }
 function activeHolds(item) { return holds(state.activePet, item); }
 
-function buyHeld(id) {
+function buyHeld(id, confirmed) {
   if (state.heldOwned.indexOf(id) !== -1) return;
   const cost = ECON.held.cost[id];
   if (state.gems < cost) { soundWrong(); toast('You need ' + (cost - state.gems) + ' more 💎'); return; }
+  if (!confirmed) {
+    const it = HELD_ITEMS.find(function (x) { return x.id === id; });
+    askBuy({ icon: it.icon, name: it.name, cost: cost, note: it.text }, function () { buyHeld(id, true); });
+    return;
+  }
   state.gems -= cost;
   state.heldOwned.push(id);
   soundCoinChirp();

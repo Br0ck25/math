@@ -77,6 +77,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
     if (dmgMult && dmgMult < 1) damage = Math.max(1, Math.floor(damage * dmgMult));
     if (weakened) damage = Math.max(1, damage - 1);
     monsterCurrentHp -= damage;
+    championAfterHit(pet);                           // Nova may swap buddies (only in the Champion's Hall)
     if (monsterCurrentHp > 0) bossReact(fast ? 'fast' : (weakHit || rel === 1) ? 'wow' : monsterCurrentHp <= boss.maxHp / 4 ? 'angry' : 'flinch');
 
     if (monsterCurrentHp <= 0 && state.raid && state.raid.phase < state.raid.total - 1) {
@@ -95,7 +96,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       launchConfetti(wild ? 'streak' : 'boss');
       screenShake(!wild);
       const leaderFight = !wild && inGymLeaderFight();
-      if (wild) { if (!state.gym) state.wild.since += 1; }       // gym battles do not count toward the next boss
+      if (wild) { if (!state.gym && !state.wild.legend) state.wild.since += 1; }       // gym battles do not count toward the next boss
       else {
         questEvent('boss');
         if (bossMistakes === 0) questEvent('flawless');
@@ -108,6 +109,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
       if (boss.trainer) gemBonus += ECON.map.trainerGems;
       if (boss.shiny) gemBonus += ECON.daily.gems;
+      if (boss.legend) gemBonus += ECON.legend.gems;
       const wasRaid = state.raid ? state.raid.chapter : -1;
       if (wasRaid >= 0) { gemBonus += ECON.raid.bonusGems; state.raidsCleared += 1; state.raid = null; }
       checkEarnedGear();
@@ -246,6 +248,7 @@ function triggerBuddyDamage() {
     state.faintedPets = [];
     partyHp = {};
     monsterCurrentHp = getBossMaxHp();
+    if (inChampionBattle()) delete state.gym.champ.hp[state.wild.id];
     showPopup('💀 YOUR TEAM FAINTED! EVERYONE IS REVIVED!');
     document.getElementById('feedback-msg').innerText = 'Your whole team fell in battle! Everyone is revived, try again!';
     updateStatsUI();

@@ -37,7 +37,7 @@ test('held items: buy, give to one buddy, moving it takes it from the other, bad
   const r = await page.evaluate(() => {
     const out = {};
     state.gems = 100; state.unlockedPets = ['dog', 'fox']; hubPet = 'dog'; hubTab = 'hold';
-    buyHeld('berry'); out.bought = [state.heldOwned.join(), state.gems];
+    buyHeld('berry'); confirmBuy(); out.bought = [state.heldOwned.join(), state.gems];
     buyHeld('berry'); out.once = state.gems;
     state.gems = 5; buyHeld('shell'); out.poor = [state.heldOwned.length, state.gems];
     giveHeld('berry'); out.dog = state.held.dog;
@@ -131,7 +131,7 @@ test('pressing and holding a team chip opens the team picker; a quick tap still 
     out.tip = document.getElementById('toast').innerText; state.storySeen.teamHint = state.storySeen.teamHint;
     const chip = () => document.querySelectorAll('#team-bar .swap-chip')[1];
     chip().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     chip().dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); chip().click();
     out.hub = [document.getElementById('hub-modal').style.display, hubTab, state.activePet === ids[0], state.swapUsed];
     document.getElementById('hub-modal').style.display = 'none'; modalDone();
@@ -162,11 +162,11 @@ test('the Sanctuary, a new catch and the team chips share one swap per battle', 
     state.swapUsed = false; pendingLootPet = getSpecies(ids[2]); closeLootModal(true); out.lootFree = [state.activePet === ids[2], state.swapUsed];
     // adopting from the shop while the swap is used does not take over
     state.swapUsed = true; const buy = storePets.find((x) => x.cost > 0 && !x.requiresAllStorePets && !ids.includes(x.id) && state.unlockedPets.indexOf(x.id) === -1);
-    state.activePet = ids[0]; selectOrBuyPet(buy);
+    state.activePet = ids[0]; selectOrBuyPet(buy); confirmBuy();
     out.adopt = [state.unlockedPets.includes(buy.id), state.activePet === ids[0]];
     // a new battle gives a new swap
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.fresh = state.swapUsed === false;
     return out;
   });

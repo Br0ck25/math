@@ -6,12 +6,16 @@ const MOVE_NAMES = {
   fire: ['Ember', 'Flame Wheel'], water: ['Bubble Shot', 'Tidal Crash'], nature: ['Vine Whip', 'Leaf Storm'],
   electric: ['Static Zap', 'Thunder Bolt'], dark: ['Shadow Claw', 'Night Slash'], magic: ['Sparkle', 'Star Burst'], shadow: ['Shadow Claw', 'Night Slash']
 };
-// kind: damage (extra damage that uses the type chart), guard (blocks the next hit), heal, ult (the buddy's own super move)
+// kind: damage (extra damage that uses the type chart), guard (blocks the next hit), heal, cleanse (clears a status effect), ult (the buddy's own super move)
+// A buddy knows every move of its level, but takes only ECON.moves.slots of them (plus its ultimate) into battle: the player chooses (state.moveSet).
+// Until the player chooses, the default set is every learned move that is not `optional`.
 const MOVES = [
   { id: 'strike', cost: 1, minLevel: 1, kind: 'damage', icon: '💥' },
   { id: 'guard', cost: 1, minLevel: 8, kind: 'guard', icon: '🛡️', name: 'Guard' },
   { id: 'power', cost: 2, minLevel: 18, kind: 'damage', icon: '🔥' },
+  { id: 'cleanse', cost: 1, minLevel: 24, kind: 'cleanse', icon: '🧼', name: 'Cleanse', optional: true },
   { id: 'heal', cost: 2, minLevel: 30, kind: 'heal', icon: '💚', name: 'Recover' },
+  { id: 'drain', cost: 2, minLevel: 36, kind: 'damage', icon: '🌿', name: 'Absorb', drain: true, optional: true },
   { id: 'ult', cost: 3, minLevel: 1, kind: 'ult', icon: '⚡' }
 ];
 let guardUp = false;                       // Guard is up: the next hit on your buddy is blocked
@@ -24,10 +28,12 @@ function moveName(m, pet) {
 }
 // Extra damage of a damage move at a level: kept near the ultimate's damage per energy, so moves are a choice and not a free speed-up.
 function moveDamage(m, level) {
-  return m.id === 'power' ? 1 + Math.floor(level / 12) : m.id === 'strike' ? 1 : 2 + Math.floor(level / 10);
+  return m.id === 'power' ? 1 + Math.floor(level / 12) : m.id === 'strike' ? 1 : m.id === 'drain' ? 1 + Math.floor(level / 20) : 2 + Math.floor(level / 10);
 }
 function moveDesc(m, pet) {
   if (m.kind === 'guard') return 'Blocks the next hit on your buddy';
+  if (m.kind === 'cleanse') return 'Clears a status effect from your buddy';
+  if (m.drain) return '+' + moveDamage(m, pet.level) + ' damage and heals 1 HP, ' + pet.element + ' type';
   if (m.kind === 'heal') return 'Heals ' + Math.round(ECON.moves.healShare * 100) + '% of your buddy\'s HP';
   return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type';
 }
@@ -37,8 +43,32 @@ function movesBetween(fromLevel, toLevel) {
   return MOVES.filter(function (m) { return m.kind !== 'ult' && m.minLevel > fromLevel && m.minLevel <= toLevel; });
 }
 
+// The moves a buddy takes into battle: its chosen set (only moves it has learned), else the first ones it learned. The ultimate is always there.
+function equippedMoves(pet) {
+  const known = movesLearned(pet.level).filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
+  const saved = state.moveSet[pet.id];
+  const ids = (saved ? saved.filter(function (id) { return known.indexOf(id) !== -1; }) : known.filter(function (id) { return !MOVES.find(function (m) { return m.id === id; }).optional; })).slice(0, ECON.moves.slots);
+  return MOVES.filter(function (m) { return m.kind === 'ult' || ids.indexOf(m.id) !== -1; });
+}
+function isEquipped(pet, id) { return equippedMoves(pet).some(function (m) { return m.id === id; }); }
+let movesEditing = false;
+function toggleMovesEdit() { soundClick(); movesEditing = !movesEditing; renderMoves(); }
+// Equip or take away one move (edit mode). The set is saved per buddy.
+function toggleEquip(id) {
+  const pet = getActivePetDisplay(), now = equippedMoves(pet).filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
+  const at = now.indexOf(id);
+  if (at !== -1) now.splice(at, 1);
+  else if (now.length >= ECON.moves.slots) { soundWrong(); toast('Your buddy can take ' + ECON.moves.slots + ' moves into battle. Take one away first.'); return; }
+  else now.push(id);
+  state.moveSet[pet.id] = now;
+  soundClick();
+  saveState();
+  renderMoves();
+}
+
 function openMoves() {
   if (inputLocked) return;
+  movesEditing = false;
   showModal('moves-modal', renderMoves);
 }
 function closeMoves() { hideModal('moves-modal'); }
@@ -47,26 +77,41 @@ function renderMoves() {
   document.getElementById('moves-head').innerText = pet.name + ' · Energy ' + '⚡'.repeat(ultimateCharge) + '▫️'.repeat(3 - ultimateCharge);
   const list = document.getElementById('moves-list');
   list.innerHTML = '';
+  const equipped = equippedMoves(pet), slotsUsed = equipped.filter(function (m) { return m.kind !== 'ult'; }).length;
+  const edit = document.getElementById('moves-edit');
+  edit.innerText = movesEditing ? '✅ Done (' + slotsUsed + '/' + ECON.moves.slots + ' moves)' : '✏️ Choose moves (' + slotsUsed + '/' + ECON.moves.slots + ')';
+  edit.setAttribute('aria-pressed', movesEditing ? 'true' : 'false');
+  document.getElementById('moves-note').innerText = movesEditing
+    ? 'Tap a move to take it into battle or leave it out. ' + ECON.moves.slots + ' at a time, plus your ultimate.'
+    : 'Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!';
   MOVES.forEach(function (m) {
-    const known = m.minLevel <= pet.level;
-    const can = known && ultimateCharge >= m.cost && !(m.kind === 'heal' && getPetHp(pet.id) >= getPetMaxHp(pet.id));
+    const known = m.minLevel <= pet.level, on = equipped.indexOf(m) !== -1;
+    if (!movesEditing && !on && known) return;                       // in battle only the equipped moves show
+    if (!movesEditing && !known && m.kind !== 'ult' && !isNextToLearn(pet, m)) return;
+    const can = !movesEditing && known && ultimateCharge >= m.cost && !(m.kind === 'heal' && getPetHp(pet.id) >= getPetMaxHp(pet.id));
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'move-btn' + (can ? '' : ' off');
-    b.disabled = !can;
+    b.className = 'move-btn' + (can || (movesEditing && known) ? '' : ' off');
+    b.disabled = movesEditing ? !known || m.kind === 'ult' : !can;
     const name = escHtml(moveName(m, pet));
+    const tail = movesEditing ? (m.kind === 'ult' ? '⭐' : known ? (on ? '✅' : '➕') : '🔒') : (known ? '⚡' + m.cost : '🔒');
     b.innerHTML = '<span class="mv-icon">' + m.icon + '</span><span class="mv-main"><b>' + name + '</b><small>' +
-      (known ? escHtml(moveDesc(m, pet)) : 'Learned at Lv ' + m.minLevel) + '</small></span><span class="mv-cost">' + (known ? '⚡' + m.cost : '🔒') + '</span>';
-    b.setAttribute('aria-label', known ? name + ', costs ' + m.cost + ' energy. ' + moveDesc(m, pet) : name + ', learned at level ' + m.minLevel);
-    b.onclick = function () { useMove(m.id); };
+      (known ? escHtml(moveDesc(m, pet)) : 'Learned at Lv ' + m.minLevel) + '</small></span><span class="mv-cost">' + tail + '</span>';
+    b.setAttribute('aria-label', known ? name + ', costs ' + m.cost + ' energy. ' + moveDesc(m, pet) + (movesEditing && m.kind !== 'ult' ? (on ? '. Equipped, tap to remove' : '. Not equipped, tap to equip') : '') : name + ', learned at level ' + m.minLevel);
+    b.onclick = function () { movesEditing ? toggleEquip(m.id) : useMove(m.id); };
     list.appendChild(b);
   });
+}
+// In battle one locked move is teased (the next one to learn), so there is something to look forward to.
+function isNextToLearn(pet, m) {
+  const next = MOVES.filter(function (x) { return x.minLevel > pet.level; }).sort(function (a, b) { return a.minLevel - b.minLevel; })[0];
+  return next === m;
 }
 
 function useMove(id) {
   const m = MOVES.find(function (x) { return x.id === id; });
   const pet = getActivePetDisplay();
-  if (!m || m.minLevel > pet.level || ultimateCharge < m.cost || inputLocked) return;
+  if (!m || m.minLevel > pet.level || ultimateCharge < m.cost || inputLocked || !isEquipped(pet, id)) return;
   closeMoves();
   if (m.kind === 'ult') { triggerSuperMove(); return; }
   ultimateCharge -= m.cost;
@@ -75,6 +120,11 @@ function useMove(id) {
     soundShieldBreak();
     showPopup('🛡️ GUARD UP!');
     buddyReact('cheer');
+  } else if (m.kind === 'cleanse') {
+    soundCoinChirp();
+    showPopup('🧼 ' + moveName(m, pet).toUpperCase() + '!');
+    buddyReact('cheer');
+    clearBuddyStatus();
   } else if (m.kind === 'heal') {
     const max = getPetMaxHp(pet.id);
     setPetHp(pet.id, Math.min(max, getPetHp(pet.id) + Math.max(1, Math.ceil(max * ECON.moves.healShare))));
@@ -88,6 +138,7 @@ function useMove(id) {
     showPopup('💥 ' + moveName(m, pet).toUpperCase() + '!');
     inputLocked = true;
     triggerMonsterDamage(moveDamage(m, pet.level));
+    if (m.drain) setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
     setTimeout(function () { inputLocked = false; }, 600);
   }
   updateBattleUI();

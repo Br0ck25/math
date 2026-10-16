@@ -16,6 +16,10 @@ function dayKey(d) {
   d = d || new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
+// The number of the current week (Monday to Sunday), the same for everyone. `weekDaysLeft()` counts the days until the next one.
+function dayNumber(d) { const k = dayKey(d).split('-'); return Math.round(Date.UTC(+k[0], +k[1] - 1, +k[2]) / 86400000); }
+function weekNumber(d) { return Math.floor((dayNumber(d) + 3) / 7); }
+function weekDaysLeft(d) { return 7 - ((dayNumber(d) + 3) % 7); }
 function daysAgoKey(n) {
   const d = new Date();
   d.setDate(d.getDate() - n);

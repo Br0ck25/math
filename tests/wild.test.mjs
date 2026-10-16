@@ -24,7 +24,7 @@ const beat = (random) => page.evaluate(async (rnd) => {
   if (rnd !== undefined) Math.random = () => rnd;
   monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
   triggerMonsterDamage(50, false);
-  await new Promise((res) => setTimeout(res, 1000));
+  await new Promise((res) => setTimeout(res, 2000));
   Math.random = real;
 }, random);
 
@@ -58,7 +58,7 @@ test('a wild win pays wild gems, counts no boss, and the boss counter is untouch
     state.gems = 0; state.monstersDefeated = 0; state.wild.since = 0; const lvl = bossLevel;      // (an earlier test's late save may have been reloaded)
     monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { gems: state.gems, want: ECON.wild.gemBase + Math.floor(lvl / ECON.wild.gemPerLevels), bosses: state.monstersDefeated, since: state.wild.since };
   });
   assert.ok(r.gems >= r.want, `${r.gems} >= ${r.want}`);
@@ -72,14 +72,14 @@ test('beating a wild buddy can catch it: a new one joins, one you own becomes a 
     state.wild.id = 'fox'; bossLevel = 5; state.unlockedPets = ['dog'];
     const real = Math.random; Math.random = () => 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     Math.random = real;
     out.owned = state.unlockedPets.includes('fox'); out.spares1 = spareCount('fox'); out.modal = document.getElementById('loot-modal').style.display;
     out.tag = document.getElementById('loot-modal-tag').innerText;
     closeLootModal(false);
     state.wild.id = 'fox'; bossLevel = 5; Math.random = () => 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     Math.random = real;
     out.spares2 = spareCount('fox'); out.count = state.unlockedPets.filter((x) => x === 'fox').length;
     return out;
@@ -184,7 +184,7 @@ test('bad wild and spare data in a save is repaired', async () => {
     NORMALIZERS.forEach((fn) => fn(state));
     return { wild: state.wild, spares: state.spares };
   });
-  assert.deepEqual(r.wild, { id: '', trainer: '', shiny: false, since: 0, next: 8 });
+  assert.deepEqual(r.wild, { id: '', trainer: '', shiny: false, legend: false, since: 0, next: 8 });
   assert.deepEqual(r.spares, { fox: 99 });
 });
 
@@ -201,11 +201,11 @@ test('quests: only bosses count for "defeat bosses" and "flawless", not wild bud
       { id: 'q1', type: 'flawless', text: 'x', target: 1, reward: 1, progress: 0, done: false, claimed: false }
     ] };
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     const afterWild = state.quests.list.map((q) => q.progress);
     state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; bossMistakes = 0;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { afterWild, afterBoss: state.quests.list.map((q) => q.progress) };
   });
   assert.deepEqual(r.afterWild, [0, 0]);
@@ -237,7 +237,7 @@ test('one buddy swap per battle; a new battle gives a new swap', async () => {
     out.stayed = state.activePet === ids[1];
     out.dimmed = [...document.querySelectorAll('#team-bar .swap-chip')].filter((c) => c.classList.contains('resting')).length;
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     out.reset = state.swapUsed === false;
     return out;
   });
@@ -252,11 +252,11 @@ test('fainted buddies come back only after a boss, not after a wild win', async 
   const r = await page.evaluate(async () => {
     state.unlockedPets = ['dog', 'fox']; state.activePet = 'dog'; state.faintedPets = ['fox'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     const afterWild = state.faintedPets.slice();
     state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; partyHp = {}; state.faintedPets = ['fox'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1000));
+    await new Promise((res) => setTimeout(res, 2000));
     return { afterWild, afterBoss: state.faintedPets.slice() };
   });
   assert.deepEqual(r.afterWild, ['fox']);
@@ -322,6 +322,63 @@ test('the Buddy Dex: a buddy you have only met shows its name, an unmet one is h
   assert.deepEqual(r.cleaned, ['fox']);
 });
 
+test('Dex pack rewards: owning every buddy of a pack pays once (gems per member plus Catch Nets); an incomplete or claimed pack pays nothing', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const g = buddyPacks().find((x) => x.pack.id === 'arctic');
+    state.gems = 0; state.nets = 8; state.packClaims = []; bookTab = 'buddy'; bookMissingOnly = false;
+    const first = g.members[0];
+    state.unlockedPets = ['dog', first.id];
+    claimPackReward('arctic'); out.incomplete = [state.gems, state.packClaims.length];
+    renderBook(); out.noButton = !document.getElementById('book-body').innerHTML.includes('claimPackReward');
+    g.members.forEach((m) => { if (!getOwnedIds().includes(m.id)) state.unlockedSecrets.push(m.id); });
+    renderBook(); out.button = document.getElementById('book-body').innerHTML.includes('claimPackReward(&quot;arctic&quot;)');
+    claimPackReward('arctic'); out.paid = [state.gems, state.nets, state.packClaims.join()];
+    claimPackReward('arctic'); out.twice = state.gems;
+    renderBook(); out.done = document.getElementById('book-body').innerHTML.includes('Pack complete');
+    state.packClaims = ['arctic', 'arctic', 'nope', 7]; NORMALIZERS.forEach((fn) => fn(state)); out.clean = state.packClaims.join();
+    out.pay = g.members.length * ECON.dex.packGemsPer;
+    return out;
+  });
+  assert.deepEqual(r.incomplete, [0, 0]);
+  assert.equal(r.noButton, true);
+  assert.equal(r.button, true);
+  assert.deepEqual(r.paid, [r.pay, 9, 'arctic'], 'nets are capped at the stock limit');
+  assert.equal(r.twice, r.pay, 'a pack pays only once');
+  assert.equal(r.done, true);
+  assert.equal(r.clean, 'arctic');
+});
+
+test('shiny buddies: catching the golden daily rare makes that buddy glow for good (owned or a spare), and saves are repaired', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const real = Math.random; Math.random = () => 0;                    // every catch succeeds
+    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.shinies = {};
+    const sp = wildPool().find((p) => isStoreBuddy(p) && p.id !== 'dog');
+    resolveCatch({ id: sp.id, flawless: false, shiny: false }, 0);
+    out.plain = [getOwnedIds().includes(sp.id), !!state.shinies[sp.id]];
+    state.unlockedPets = ['dog']; state.shinies = {};
+    resolveCatch({ id: sp.id, flawless: false, shiny: true }, 0);
+    out.shiny = [getOwnedIds().includes(sp.id), !!state.shinies[sp.id]];
+    out.glow = avatarHtml(getPetById(sp.id), 40).includes('buddy-avatar shiny') && !avatarHtml(getPetById('dog'), 40).includes('shiny');
+    resolveCatch({ id: sp.id, flawless: false, shiny: true }, 0);        // already owned: a spare, still shiny
+    out.spare = [state.spares[sp.id], !!state.shinies[sp.id]];
+    bookTab = 'buddy'; bookMissingOnly = false; renderBook();
+    out.book = document.getElementById('book-body').innerHTML.includes('✨ ') && /Shiny 1/.test(document.getElementById('book-progress').innerText);
+    Math.random = real;
+    state.shinies = { [sp.id]: 1, dog: 0, stranger: 1, fox: 1 }; NORMALIZERS.forEach((fn) => fn(state));
+    out.clean = Object.keys(state.shinies).join();
+    out.id = sp.id;
+    return out;
+  });
+  assert.deepEqual(r.plain, [true, false], 'a normal catch is not shiny');
+  assert.deepEqual(r.shiny, [true, true]);
+  assert.equal(r.glow, true);
+  assert.deepEqual(r.spare, [1, true]);
+  assert.equal(r.book, true);
+  assert.equal(r.clean, r.id, 'only owned buddies can be shiny');
+});
+
 test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets, better chance; closing the window is a plain try', async () => {
   const r = await page.evaluate(async () => {
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -349,8 +406,8 @@ test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets,
     Math.random = real;
     chooseNets(1); out.noPending = state.nets;                // nothing pending: nothing happens
     // buying: up to the stock, no gems taken beyond it
-    state.nets = 0; state.gems = 1000; buyItem('net'); const bought = [state.nets, state.gems];
-    state.nets = ECON.wild.net.stock; state.gems = 1000; buyItem('net'); const full = [state.nets, state.gems];
+    state.nets = 0; state.gems = 1000; buyItem('net'); confirmBuy(); const bought = [state.nets, state.gems];
+    state.nets = ECON.wild.net.stock; state.gems = 1000; buyItem('net'); confirmBuy(); const full = [state.nets, state.gems];
     state.nets = 0; state.wild.id = 'fox'; updateStatsUI(); const chip0 = document.getElementById('weak-chip').innerText;
     state.nets = 2; updateStatsUI();
     return { ...out, bought, full, chip0, chip2: document.getElementById('weak-chip').innerText, stock: ECON.wild.net.stock };
@@ -387,7 +444,7 @@ test('the daily rare: once a day after 3 wild wins a golden buddy appears, tough
     state.daily.fights = 3; pickNextWild(); out.nextDay = [state.wild.shiny, state.daily.spawned];
     state.wild.shiny = true; state.gems = 0; bossLevel = 5; state.unlockedPets = ['dog'];
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.gems = state.gems;
     state.wild = { id: 'fox', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.keep = state.wild.shiny;
     state.wild = { id: '', trainer: '', shiny: true, since: 0, next: 6 }; NORMALIZERS.forEach((fn) => fn(state)); out.drop = state.wild.shiny;

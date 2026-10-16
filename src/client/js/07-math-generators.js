@@ -396,6 +396,11 @@ function updateWeakChip() {
   const chip = document.getElementById('weak-chip');
   if (!chip) return;
   const r = state.raid;
+  if (inChampionBattle()) {
+    chip.innerText = '👑 ' + championAlive().length + ' left';
+    chip.title = "The Champion's Hall: beat all six of Nova's buddies. Nova can swap them at any time.";
+    return;
+  }
   const gym = state.gym ? '🏟️ ' + Math.min(state.gym.step + 1, ECON.map.trainers + 1) + '/' + (ECON.map.trainers + 1) : '';
   if (state.wild.id && state.wild.trainer) {
     chip.innerText = gym + ' · Trainer';
@@ -403,7 +408,7 @@ function updateWeakChip() {
     return;
   }
   if (state.wild.id) {
-    chip.innerText = (state.wild.shiny ? '✨ ' : '') + '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id), { shiny: state.wild.shiny }) * 100) + '%' + (state.nets > 0 ? ' 🕸️' + state.nets : '');
+    chip.innerText = (state.wild.legend ? '🌟 ' : '') + (state.wild.shiny ? '✨ ' : '') + '🫧 Catch ' + Math.round(wildCatchChance(getSpecies(state.wild.id), { shiny: state.wild.shiny }) * 100) + '%' + (state.nets > 0 ? ' 🕸️' + state.nets : '');
     chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%. With Catch Nets you choose how many to throw after the win.';
     return;
   }

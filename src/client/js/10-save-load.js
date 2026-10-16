@@ -77,10 +77,22 @@ const NORMALIZERS = [
     s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
     const g = s.gym;
-    if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && s.badges.indexOf(g.region) === -1) {
+    const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
+    if (g && isPlainObject(g) && g.region === 'champion' && gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; })) {      // the Champion's Hall needs all six badges
+      const champ = cleanChampionRun(g.champ);
+      s.gym = { region: 'champion', step: champ.fallen.length, champ: champ };
+    } else if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {
       s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
+      if (rematch) s.gym.rematch = true;
       s.region = g.region;
     } else s.gym = null;
+    const rm = s.rematch;
+    rm.day = typeof rm.day === 'string' ? rm.day.slice(0, 12) : '';
+    rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return gymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
+    rm.wins = asInt(rm.wins, 0, 1e6, 0);
+    if (!isPlainObject(s.champ)) s.champ = { wins: 0, day: '' };
+    s.champ.wins = asInt(s.champ.wins, 0, 1e6, 0);
+    s.champ.day = typeof s.champ.day === 'string' ? s.champ.day.slice(0, 12) : '';
   },
   function daily(s) {
     s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
@@ -101,10 +113,28 @@ const NORMALIZERS = [
     Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });
     s.dexSeen = seen;
   },
+  function shinies(s) {
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), shiny = {};
+    Object.keys(s.shinies || {}).forEach(function (id) { if (s.shinies[id] && owned.indexOf(id) !== -1) shiny[id] = 1; });
+    s.shinies = shiny;
+  },
+  function legend(s) {
+    const l = s.legend;
+    l.week = asInt(l.week, -1, 1e6, -1);
+    l.day = typeof l.day === 'string' ? l.day.slice(0, 12) : '';
+    l.caught = l.caught === true;
+    l.misses = asInt(l.misses, 0, 20, 0);
+    l.race = l.caught && (l.race === 'won' || l.race === 'lost') ? l.race : '';
+    l.wins = asInt(l.wins, 0, 1e6, 0);
+  },
+  function packs(s) {
+    s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
+  },
   function wild(s) {
     const w = s.wild;
-    const ok = w.id && wildPool().some(function (p) { return p.id === w.id; });
+    const ok = w.id && (wildPool().some(function (p) { return p.id === w.id; }) || (w.legend === true && legendPets.some(function (p) { return p.id === w.id; })));
     w.id = ok ? w.id : '';
+    w.legend = w.legend === true && !!w.id && !w.trainer && legendPets.some(function (p) { return p.id === w.id; });
     w.shiny = w.shiny === true && !!w.id && !w.trainer;
     w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
     w.since = asInt(w.since, 0, 50, 0);
@@ -116,6 +146,14 @@ const NORMALIZERS = [
       if (n > 0 && owned.indexOf(id) !== -1) spares[id] = n;
     });
     s.spares = spares;
+  },
+  function moves(s) {
+    const set = {}, ids = MOVES.filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
+    Object.keys(s.moveSet || {}).forEach(function (b) {
+      if (!getSpecies(b) || !Array.isArray(s.moveSet[b])) return;
+      set[b] = s.moveSet[b].filter(function (id, i, a) { return ids.indexOf(id) !== -1 && a.indexOf(id) === i; }).slice(0, ECON.moves.slots);
+    });
+    s.moveSet = set;
   },
   function bossBook(s) {
     const book = {};
@@ -197,6 +235,7 @@ function loadState() {
     currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
     bossLevel = clamp(state.bossLevel, 1, MAX_LEVEL);
     monsterCurrentHp = getBossMaxHp();
+    if (inChampionBattle()) restoreChampionFoe();
   } else {
     currentMonsterIndex = -1;
     pickNextFoe();

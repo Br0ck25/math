@@ -1,44 +1,7 @@
-const banditSvg = `
-  <svg viewBox="0 0 36 36" width="36" height="36" style="display: block; margin: 0 auto;">
-    <polygon fill="#18181b" stroke="#818cf8" stroke-width="1.2" points="7,12 2,1 13,6"/>
-    <polygon fill="#18181b" stroke="#818cf8" stroke-width="1.2" points="29,12 34,1 23,6"/>
-    <polygon fill="#fb7185" points="7,10 4,3 12,7"/>
-    <polygon fill="#fb7185" points="29,10 32,3 24,7"/>
-    <circle cx="18" cy="18" r="12" fill="#18181b" stroke="#818cf8" stroke-width="1.2"/>
-    <path d="M12 18 C12 13 24 13 24 18 C24 24 12 24 12 18 Z" fill="#ffffff"/>
-    <ellipse cx="13.5" cy="15" rx="2.4" ry="2.8" fill="#10b981"/>
-    <ellipse cx="22.5" cy="15" rx="2.4" ry="2.8" fill="#10b981"/>
-    <circle cx="13.5" cy="15" r="1.2" fill="#000000"/>
-    <circle cx="22.5" cy="15" r="1.2" fill="#000000"/>
-    <circle cx="12.8" cy="14.3" r="0.6" fill="#ffffff"/>
-    <circle cx="21.8" cy="14.3" r="0.6" fill="#ffffff"/>
-    <polygon fill="#f43f5e" points="18,19.5 16.5,17.5 19.5,17.5"/>
-    <path d="M16 20.5 Q18 22.5 20 20.5" stroke="#18181b" stroke-width="1.1" fill="none"/>
-    <line x1="10" y1="18" x2="4" y2="17" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="10" y1="20" x2="4" y2="21" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="26" y1="18" x2="32" y2="17" stroke="#e2e8f0" stroke-width="1.1"/>
-    <line x1="26" y1="20" x2="32" y2="21" stroke="#e2e8f0" stroke-width="1.1"/>
-  </svg>
-`;
-
-const banditEvoSvg = `
-  <svg viewBox="0 0 36 36" width="36" height="36" style="display: block; margin: 0 auto;">
-    <polygon fill="#312e81" stroke="#a5b4fc" stroke-width="1.2" points="7,12 2,1 13,6"/>
-    <polygon fill="#312e81" stroke="#a5b4fc" stroke-width="1.2" points="29,12 34,1 23,6"/>
-    <circle cx="18" cy="18" r="12" fill="#09090b" stroke="#a5b4fc" stroke-width="1.2"/>
-    <rect x="5" y="12" width="26" height="7" fill="#6366f1" rx="2"/>
-    <ellipse cx="13" cy="15.5" rx="2.6" ry="2.8" fill="#facc15"/>
-    <ellipse cx="23" cy="15.5" rx="2.6" ry="2.8" fill="#facc15"/>
-    <circle cx="13" cy="15.5" r="1.3" fill="#000000"/>
-    <circle cx="23" cy="15.5" r="1.3" fill="#000000"/>
-    <polygon fill="#f43f5e" points="18,22 16.5,20 19.5,20"/>
-    <path d="M16 23 Q18 25 20 23" stroke="#ffffff" stroke-width="1.2" fill="none"/>
-  </svg>
-`;
-
 // Store Companions: All unique names
 const storePets = [
   { id: 'dog', name: 'Pup', icon: '🐶', cost: 0, element: 'nature', superMove: 'Bark Strike', evoLevel: 30, evoName: 'Thunder Wolf', evoIcon: '🐺' },
+  { id: 'jimothy', name: 'Jimothy', icon: '🦝', cost: 0, element: 'dark', superMove: 'Trash Panda Tumble', evoLevel: 35, evoName: 'Midnight Raider', evoIcon: '🦝' },
   { id: 'fox', name: 'Sparky', icon: '🦊', cost: 52, element: 'fire', superMove: 'Flame Tail', evoLevel: 40, evoName: 'Blaze Fox', evoIcon: '🦊' },
   { id: 'bunny', name: 'Hops', icon: '🐰', cost: 75, element: 'magic', superMove: 'Carrot Cannon', evoLevel: 40, evoName: 'Moon Rabbit', evoIcon: '🐰' },
   { id: 'otter', name: 'Pip', icon: '🦦', cost: 104, element: 'water', superMove: 'River Splash', evoLevel: 40, evoName: 'Frost Otter', evoIcon: '🦦' },
@@ -57,7 +20,7 @@ const storePets = [
   { id: 'panther', name: 'Nyx', icon: '🐆', cost: 560, element: 'dark', superMove: 'Shadow Pounce', evoLevel: 70, evoName: 'Night Panther', evoIcon: '🐈‍⬛' },
   { id: 'bat', name: 'Echo', icon: '🦇', cost: 610, element: 'dark', superMove: 'Sonic Shriek', evoLevel: 70, evoName: 'Vampire Lord', evoIcon: '🧛' },
   { id: 'griffin', name: 'Zeus', icon: '🦅', cost: 690, element: 'electric', superMove: 'Thunderstorm', evoLevel: 80, evoName: 'Sky King', evoIcon: '🦅' },
-  { id: 'cosmo', name: 'Cosmo', icon: '⭐', cost: 780, element: 'magic', superMove: 'Supernova Wave', evoLevel: 75, evoName: 'Nova Astral', evoIcon: '🌟' },
+  { id: 'cosmo', name: 'Cosmo', icon: '🐈', cost: 780, element: 'magic', superMove: 'Supernova Wave', evoLevel: 75, evoName: 'Nova Astral', evoIcon: '🐈' },
   { id: 'lion', name: 'Aslan', icon: '🦁', cost: 870, element: 'nature', superMove: 'Solar Roar', evoLevel: 80, evoName: 'Golden Monarch', evoIcon: '🦁' },
   { id: 'phoenix', name: 'Solaris', icon: '🦅', cost: 975, element: 'fire', superMove: 'Solar Rebirth', evoLevel: 80, evoName: 'Sun Emperor', evoIcon: '🦅' },
   { id: 'frostfang', name: 'Frostfang', icon: '🐉', cost: 1105, element: 'water', superMove: 'Glacial Frost', evoLevel: 85, evoName: 'Ice Dragon', evoIcon: '🐉' },
@@ -76,11 +39,11 @@ const storePets = [
   { id: 'gorilla', name: 'Titan', icon: '🦍', cost: 3000, element: 'nature', superMove: 'Titan Slam', evoLevel: 100, evoName: 'Titan Alpha', evoIcon: '🦍' },
   { id: 'toon_bluey', name: 'Bluey', icon: '🐕', cost: 3050, element: 'nature', superMove: 'Keepy Uppy Spin', evoLevel: 100, evoName: 'Super Bluey', evoIcon: '🐕', show: 'Bluey' },
   { id: 'toon_spongebob', name: 'SpongeBob', icon: '🧽', cost: 3080, element: 'water', superMove: 'Bubble Blast Jellyfish Jam', evoLevel: 100, evoName: 'Mighty SpongeBob', evoIcon: '🧽', show: 'SpongeBob' },
-  { id: 'toon_chase', name: 'Chase', icon: '🚓', cost: 3110, element: 'electric', superMove: 'Pup Pursuit Siren', evoLevel: 100, evoName: 'Super Chase', evoIcon: '🚓', show: 'Paw Patrol' },
+  { id: 'toon_chase', name: 'Chase', icon: '🐕‍🦺', cost: 3110, element: 'electric', superMove: 'Pup Pursuit Siren', evoLevel: 100, evoName: 'Super Chase', evoIcon: '🐕‍🦺', show: 'Paw Patrol' },
   { id: 'toon_peppa', name: 'Peppa Pig', icon: '🐷', cost: 3140, element: 'water', superMove: 'Muddy Puddle Splash', evoLevel: 100, evoName: 'Puddle Queen Peppa', evoIcon: '🐷', show: 'Peppa Pig' },
-  { id: 'toon_bugs', name: 'Bugs Bunny', icon: '🥕', cost: 3170, element: 'magic', superMove: 'Carrot Trick Shot', evoLevel: 100, evoName: 'Wascally Bugs', evoIcon: '🥕', show: 'Looney Tunes' },
-  { id: 'toon_homer', name: 'Homer', icon: '🍩', cost: 3200, element: 'electric', superMove: 'Donut Overload', evoLevel: 100, evoName: 'Power Plant Homer', evoIcon: '🍩', show: 'The Simpsons' },
-  { id: 'bandit', name: 'Bandit', icon: banditSvg, cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: banditEvoSvg, requiresAllStorePets: true }
+  { id: 'toon_bugs', name: 'Bugs Bunny', icon: '🐰', cost: 3170, element: 'magic', superMove: 'Carrot Trick Shot', evoLevel: 100, evoName: 'Wascally Bugs', evoIcon: '🐰', show: 'Looney Tunes' },
+  { id: 'toon_homer', name: 'Homer', icon: '👨‍🦲', cost: 3200, element: 'electric', superMove: 'Donut Overload', evoLevel: 100, evoName: 'Power Plant Homer', evoIcon: '👨‍🦲', show: 'The Simpsons' },
+  { id: 'bandit', name: 'Bandit', icon: '🐈‍⬛', cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: '🐈‍⬛', requiresAllStorePets: true }
 ];
 
 // Wearable Gear & Accessories
@@ -177,6 +140,8 @@ const accessoriesList = [
   { id: 'sax',        name: 'Jazz Sax',         icon: '🎷', cost: 118, slot: 'side', renderIcon: '🎷' },
   { id: 'comet',      name: 'Comet Trail',      icon: '☄️', cost: 340, slot: 'aura', renderIcon: '☄️' },
   { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
+  { id: 'champlaurel', name: "Champion's Laurel", icon: '🏵️', cost: 0,  slot: 'head', renderIcon: '🏵️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
+  { id: 'champtrophy', name: "Champion's Trophy", icon: '🏆', cost: 0, slot: 'back', renderIcon: '🏆', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'cups', n: 1, text: 'Win a tournament cup' } },
   { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } },
   // ---- cartoon cast gear: 11 to buy, 2 earned by collecting the cartoon buddies ----
@@ -211,6 +176,7 @@ const armorList = [
   { id: 'celestial', name: 'Celestial Plate', icon: '✨', cost: 1300, hp: 5, tier: 3, renderIcon: '✨' },
   { id: 'sailor',    name: 'Sailor Coat',     icon: '⚓', cost: 180,  hp: 1, tier: 1, renderIcon: '⚓' },
   { id: 'spidersilk',name: 'Spider Silk',     icon: '🕸️', cost: 400,  hp: 3, tier: 2, renderIcon: '🕸️' },
+  { id: 'champmantle', name: "Champion's Mantle", icon: '🛡️', cost: 0, hp: 4, tier: 3, renderIcon: '🛡️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'centurion', name: 'Centurion Plate', icon: '🔰', cost: 0,    hp: 5, tier: 3, renderIcon: '🔰', earn: { key: 'bosses', n: 100, text: 'Defeat 100 bosses' } },
   { id: 'squareshorts', name: 'Square Shorts',   icon: '🩳', cost: 190, hp: 1, tier: 1, renderIcon: '🩳' },
   { id: 'puddledress',  name: 'Puddle Dress',    icon: '👗', cost: 200, hp: 1, tier: 1, renderIcon: '👗' },
@@ -224,41 +190,41 @@ function getArmor(id) { return armorList.find(function (a) { return a.id === id;
 
 // Ultra-Rare Mythic Lore Legends (Harry Potter & Storybook Movie Royalty) - 4% Drop Rate
 const mythicSpecies = [
-  { id: 'mythic_harry',      name: 'Harry',        icon: '⚡',  elem: 'magic', superMove: 'Expelliarmus Burst', mythic: true },
-  { id: 'mythic_hermione',   name: 'Hermione',     icon: '📚',  elem: 'magic',   superMove: 'Wingardium Leviosa', mythic: true },
-  { id: 'mythic_ron',        name: 'Ron',          icon: '🍗',  elem: 'magic',     superMove: 'Wizard Chess Slam',  mythic: true },
+  { id: 'mythic_harry',      name: 'Harry',        icon: '🧙',  elem: 'magic', superMove: 'Expelliarmus Burst', mythic: true },
+  { id: 'mythic_hermione',   name: 'Hermione',     icon: '🧙‍♀️',  elem: 'magic',   superMove: 'Wingardium Leviosa', mythic: true },
+  { id: 'mythic_ron',        name: 'Ron',          icon: '🧙',  elem: 'magic',     superMove: 'Wizard Chess Slam',  mythic: true },
   { id: 'mythic_dumbledore', name: 'Dumbledore',   icon: '🧙‍♂️', elem: 'magic',     superMove: 'Fawkes Inferno Fire',mythic: true },
-  { id: 'mythic_dobby',      name: 'Dobby',        icon: '🧦',  elem: 'magic',   superMove: 'Free Elf Sock Strike',mythic: true },
-  { id: 'mythic_fawkes',     name: 'Fawkes',       icon: '🔥',  elem: 'fire',     superMove: 'Phoenix Firestorm',  mythic: true },
+  { id: 'mythic_dobby',      name: 'Dobby',        icon: '🧝',  elem: 'magic',   superMove: 'Free Elf Sock Strike',mythic: true },
+  { id: 'mythic_fawkes',     name: 'Fawkes',       icon: '🦅',  elem: 'fire',     superMove: 'Phoenix Firestorm',  mythic: true },
   { id: 'mythic_buckbeak',   name: 'Buckbeak',     icon: '🦅',  elem: 'nature',   superMove: 'Hippogriff Talon Dive',mythic: true },
-  { id: 'mythic_niffler',    name: 'Niffler',      icon: '🪙',  elem: 'dark',     superMove: 'Shiny Coin Whirlwind',mythic: true },
-  { id: 'mythic_luna',       name: 'Luna',         icon: '🦁',  elem: 'magic',    superMove: 'Spectrespec Beam',   mythic: true },
+  { id: 'mythic_niffler',    name: 'Niffler',      icon: '🦫',  elem: 'dark',     superMove: 'Shiny Coin Whirlwind',mythic: true },
+  { id: 'mythic_luna',       name: 'Luna',         icon: '👱‍♀️',  elem: 'magic',    superMove: 'Spectrespec Beam',   mythic: true },
   { id: 'mythic_sirius',     name: 'Sirius',       icon: '🐺',  elem: 'dark',     superMove: 'Padfoot Shadow Leap',mythic: true },
-  { id: 'mythic_elsa',       name: 'Elsa',         icon: '❄️',  elem: 'water',    superMove: 'Let It Go Frostwave', mythic: true },
-  { id: 'mythic_anna',       name: 'Anna',         icon: '🌻',  elem: 'nature',   superMove: 'True Love Warmth',   mythic: true },
-  { id: 'mythic_rapunzel',   name: 'Rapunzel',     icon: '☀️',  elem: 'magic', superMove: 'Sundrop Healing Ray',mythic: true },
-  { id: 'mythic_moana',      name: 'Moana',        icon: '🌊',  elem: 'water',    superMove: 'Ocean Crest Surge',  mythic: true },
-  { id: 'mythic_mirabel',    name: 'Mirabel',      icon: '🦋',  elem: 'magic',   superMove: 'Casita Butterfly Swarm',mythic: true },
+  { id: 'mythic_elsa',       name: 'Elsa',         icon: '👸',  elem: 'water',    superMove: 'Let It Go Frostwave', mythic: true },
+  { id: 'mythic_anna',       name: 'Anna',         icon: '👩‍🦰',  elem: 'nature',   superMove: 'True Love Warmth',   mythic: true },
+  { id: 'mythic_rapunzel',   name: 'Rapunzel',     icon: '👱‍♀️',  elem: 'magic', superMove: 'Sundrop Healing Ray',mythic: true },
+  { id: 'mythic_moana',      name: 'Moana',        icon: '👧',  elem: 'water',    superMove: 'Ocean Crest Surge',  mythic: true },
+  { id: 'mythic_mirabel',    name: 'Mirabel',      icon: '👩',  elem: 'magic',   superMove: 'Casita Butterfly Swarm',mythic: true },
   { id: 'mythic_ariel',      name: 'Ariel',        icon: '🧜‍♀️', elem: 'water',    superMove: 'Part of That World Wave',mythic: true },
-  { id: 'mythic_belle',      name: 'Belle',        icon: '🌹',  elem: 'magic',   superMove: 'Enchanted Rose Petals',mythic: true },
-  { id: 'mythic_cinderella', name: 'Cinderella',   icon: '👠',  elem: 'magic',    superMove: 'Midnight Glass Magic',mythic: true },
-  { id: 'mythic_barbie',     name: 'Barbie',       icon: '💖',  elem: 'fire',     superMove: 'Dreamhouse Sparkle', mythic: true },
+  { id: 'mythic_belle',      name: 'Belle',        icon: '👩‍🦱',  elem: 'magic',   superMove: 'Enchanted Rose Petals',mythic: true },
+  { id: 'mythic_cinderella', name: 'Cinderella',   icon: '👸',  elem: 'magic',    superMove: 'Midnight Glass Magic',mythic: true },
+  { id: 'mythic_barbie',     name: 'Barbie',       icon: '👱‍♀️',  elem: 'fire',     superMove: 'Dreamhouse Sparkle', mythic: true },
   { id: 'mythic_tinkerbell', name: 'Tinkerbell',   icon: '🧚',  elem: 'magic', superMove: 'Pixie Dust Nova',    mythic: true },
-  { id: 'mythic_mulan',      name: 'Mulan',        icon: '🗡️',  elem: 'fire',     superMove: 'Imperial Dragon Slash',mythic: true },
-  { id: 'mythic_stitch',     name: 'Stitch',       icon: '💙',  elem: 'electric', superMove: 'Experiment 626 Havoc',mythic: true },
-  { id: 'mythic_arthur',      name: 'Arthur',       icon: '🏰',  elem: 'magic',    superMove: 'Excalibur Rising',   mythic: true },
-  { id: 'mythic_robin',      name: 'Robin',        icon: '🏹',  elem: 'nature',   superMove: 'Merry Arrow Storm',  mythic: true },
-  { id: 'mythic_alice',      name: 'Alice',        icon: '🫖',  elem: 'magic',    superMove: 'Rabbit Hole Whirl',  mythic: true },
-  { id: 'mythic_sinbad',     name: 'Sinbad',       icon: '⛵',  elem: 'water',    superMove: 'Seven Voyages Wave', mythic: true },
+  { id: 'mythic_mulan',      name: 'Mulan',        icon: '🦸‍♀️',  elem: 'fire',     superMove: 'Imperial Dragon Slash',mythic: true },
+  { id: 'mythic_stitch',     name: 'Stitch',       icon: '👽',  elem: 'electric', superMove: 'Experiment 626 Havoc',mythic: true },
+  { id: 'mythic_arthur',      name: 'Arthur',       icon: '🤴',  elem: 'magic',    superMove: 'Excalibur Rising',   mythic: true },
+  { id: 'mythic_robin',      name: 'Robin',        icon: '🧝‍♂️',  elem: 'nature',   superMove: 'Merry Arrow Storm',  mythic: true },
+  { id: 'mythic_alice',      name: 'Alice',        icon: '👱‍♀️',  elem: 'magic',    superMove: 'Rabbit Hole Whirl',  mythic: true },
+  { id: 'mythic_sinbad',     name: 'Sinbad',       icon: '🧔',  elem: 'water',    superMove: 'Seven Voyages Wave', mythic: true },
   { id: 'mythic_aladdin',    name: 'Aladdin',      icon: '🧞',  elem: 'magic',    superMove: 'Lamp Wish Blast',    mythic: true },
-  { id: 'mythic_dorothy',    name: 'Dorothy',      icon: '👠',  elem: 'electric', superMove: 'Yellow Brick Cyclone',mythic: true },
+  { id: 'mythic_dorothy',    name: 'Dorothy',      icon: '👧',  elem: 'electric', superMove: 'Yellow Brick Cyclone',mythic: true },
   { id: 'mythic_bingo',      name: 'Bingo',        icon: '🦮',  elem: 'magic',    superMove: 'Magic Xylophone Wave', mythic: true, show: 'Bluey' },
   { id: 'mythic_patrick',    name: 'Patrick Star', icon: '🌟',  elem: 'water',    superMove: 'Rock Bottom Slam',     mythic: true, show: 'SpongeBob' },
-  { id: 'mythic_skye',       name: 'Skye',         icon: '🚁',  elem: 'magic',    superMove: 'High Flyer Rescue',    mythic: true, show: 'Paw Patrol' },
-  { id: 'mythic_george',     name: 'George Pig',   icon: '🦖',  elem: 'fire',     superMove: 'Dine-Saw Roar',        mythic: true, show: 'Peppa Pig' },
-  { id: 'mythic_lisa',       name: 'Lisa',         icon: '🎷',  elem: 'magic',    superMove: 'Jazz Genius Burst',    mythic: true, show: 'The Simpsons' },
+  { id: 'mythic_skye',       name: 'Skye',         icon: '🐩',  elem: 'magic',    superMove: 'High Flyer Rescue',    mythic: true, show: 'Paw Patrol' },
+  { id: 'mythic_george',     name: 'George Pig',   icon: '🐖',  elem: 'fire',     superMove: 'Dine-Saw Roar',        mythic: true, show: 'Peppa Pig' },
+  { id: 'mythic_lisa',       name: 'Lisa',         icon: '👧',  elem: 'magic',    superMove: 'Jazz Genius Burst',    mythic: true, show: 'The Simpsons' },
   { id: 'mythic_daffy',      name: 'Daffy Duck',   icon: '🦆',  elem: 'fire',     superMove: 'Dizzy Duck Dive',      mythic: true, show: 'Looney Tunes' },
-  { id: 'mythic_roadrunner', name: 'Road Runner',  icon: '💨',  elem: 'electric', superMove: 'Supersonic Dash',      mythic: true, show: 'Looney Tunes' },
+  { id: 'mythic_roadrunner', name: 'Road Runner',  icon: '🐦',  elem: 'electric', superMove: 'Supersonic Dash',      mythic: true, show: 'Looney Tunes' },
   { id: 'mythic_sandy',      name: 'Sandy Cheeks', icon: '🐿️', elem: 'electric', superMove: 'Treedome Karate Chop', mythic: true, show: 'SpongeBob' }
 ];
 
@@ -310,7 +276,8 @@ const BOSS_BUDDY_FIXED = {
   boss_cow: { superMove: 'Stampede Slam', snack: { icon: '🌾', name: 'fresh hay' } },
   boss_harpy: { superMove: 'Thunder Talon Dive' },
   boss_mara: { superMove: 'Tempting Trick' },
-  boss_rocky: { superMove: 'Big Dog Pounce', snack: { icon: '🦴', name: 'big bones' } }
+  boss_rocky: { superMove: 'Big Dog Pounce', snack: { icon: '🦴', name: 'big bones' } },
+  boss_54: { superMove: 'Zoomie Fetch Frenzy', snack: { icon: '🎾', name: 'tennis balls' } }
 };
 const BOSS_MOVE_VERB = { fire: 'Blaze', water: 'Surge', nature: 'Smash', electric: 'Shock', dark: 'Shadow Strike', magic: 'Spell' };
 const bossBuddies = monstersList.map(function (m, i) {
@@ -322,6 +289,17 @@ const bossBuddies = monstersList.map(function (m, i) {
     superMove: fixed.superMove || noun + ' ' + BOSS_MOVE_VERB[m.element], snack: fixed.snack
   };
 });
+
+// Legendary buddies: one per type, hunted once a week by Champions (24c-legend.js). They are only ever won that way.
+// Append new ones; their order sets which type comes up in which week.
+const legendPets = [
+  { id: 'legend_fire', name: 'Solaris', icon: '🦁', element: 'fire', superMove: 'Sun Crown Blast', lore: 'Born in the heart of the Ember Hills, Solaris lights every sunrise.' },
+  { id: 'legend_water', name: 'Tsunara', icon: '🐋', element: 'water', superMove: 'Great Wave', lore: 'Tsunara sings in the deepest part of Tide Bay and the tides listen.' },
+  { id: 'legend_nature', name: 'Sylvara', icon: '🦌', element: 'nature', superMove: 'Ancient Bloom', lore: 'Flowers grow wherever Sylvara walks in Leaf Grove.' },
+  { id: 'legend_electric', name: 'Stormara', icon: '🦅', element: 'electric', superMove: 'Skyfall Bolt', lore: 'Stormara rides the lightning above Volt Valley.' },
+  { id: 'legend_dark', name: 'Umbra', icon: '🐆', element: 'dark', superMove: 'Eclipse', lore: 'Umbra drifts through Gloom Marsh and hides the moon when it is shy.' },
+  { id: 'legend_magic', name: 'Lumina', icon: '🦄', element: 'magic', superMove: 'Starfall', lore: 'Lumina sleeps on Mystic Peak and dreams the stars into the sky.' }
+].map(function (l) { return { ...l, secret: true, legend: true }; });
 
 // Completely Unique Secret Companions
 const secretSpecies = [
@@ -349,7 +327,7 @@ const secretSpecies = [
   { name: 'Brock', icon: '🦡', elem: 'nature', superMove: 'Earth Digger' },
   { name: 'Peanut', icon: '🐘', elem: 'water', superMove: 'Tusk Tremor' },
   { name: 'Woolly', icon: '🦣', elem: 'water', superMove: 'Glacial Tusk' },
-  { name: 'Boulder', icon: '🦏', elem: 'nature', superMove: 'Horn Breaker' },
+  { name: 'Boulder', icon: '🦕', elem: 'nature', superMove: 'Horn Breaker' },
   { name: 'Bubbles', icon: '🦛', elem: 'water', superMove: 'River Maw' },
   { name: 'Squeak', icon: '🐁', elem: 'electric', superMove: 'Spark Nibble' },
   { name: 'Cotton', icon: '🐇', elem: 'nature', superMove: 'Quick Dash' },
@@ -373,7 +351,7 @@ const secretSpecies = [
   { name: 'Geyser', icon: '🐳', elem: 'water', superMove: 'Whale Geyser' },
   { name: 'Jaws', icon: '🦈', elem: 'water', superMove: 'Apex Frenzy' },
   { name: 'Flipper', icon: '🦭', elem: 'water', superMove: 'Ice Splash' },
-  { name: 'Gator', icon: '🐊', elem: 'water', superMove: 'Swamp Ambush' },
+  { name: 'Gharry', icon: '🐊', elem: 'water', superMove: 'Swamp Ambush' },
   { name: 'Plume', icon: '🦚', elem: 'nature', superMove: 'Feather Burst' },
   { name: 'Flamingo', icon: '🦩', elem: 'water', superMove: 'Crimson Flutter' },
   { name: 'Ducky', icon: '🦆', elem: 'water', superMove: 'Quack Torrent' },
@@ -392,72 +370,72 @@ const secretSpecies = [
   { name: 'Anty', icon: '🐜', elem: 'nature', superMove: 'Colony March' },
   { name: 'Chirp', icon: '🦗', elem: 'nature', superMove: 'Sonic Chirp' },
   { name: 'Webby', icon: '🕷️', elem: 'dark', superMove: 'Spider Snare' },
-  { name: 'Sting', icon: '🦂', elem: 'dark', superMove: 'Venom Puncture' },
+  { name: 'Sting', icon: '🐛', elem: 'dark', superMove: 'Venom Puncture' },
   { name: 'Zippy', icon: '🦟', elem: 'nature', superMove: 'Swarm Sting' },
   { name: 'Nano', icon: '🦠', elem: 'electric', superMove: 'Cell Division' },
-  { name: 'Spore', icon: '🍄', elem: 'nature', superMove: 'Spore Cloud' },
-  { name: 'Cactus', icon: '🌵', elem: 'nature', superMove: 'Desert Prick' },
-  { name: 'Evergreen', icon: '🌲', elem: 'nature', superMove: 'Pine Needles' },
-  { name: 'Maple', icon: '🍁', elem: 'nature', superMove: 'Autumn Gale' },
-  { name: 'Saturn', icon: '🪐', elem: 'dark', superMove: 'Cosmic Rings' },
-  { name: 'Comet', icon: '☄️', elem: 'fire', superMove: 'Meteor Trail' },
-  { name: 'Sunny', icon: '☀️', elem: 'fire', superMove: 'Solar Flare' },
-  { name: 'Selene', icon: '🌙', elem: 'dark', superMove: 'Eclipse Ray' },
-  { name: 'Volt', icon: '⚡', elem: 'electric', superMove: 'Volt Cannon' },
-  { name: 'Ember', icon: '🔥', elem: 'fire', superMove: 'Inferno Wave' },
-  { name: 'Aqua', icon: '💧', elem: 'water', superMove: 'Tsunami Crash' },
-  { name: 'Frost', icon: '❄️', elem: 'water', superMove: 'Absolute Zero' },
-  { name: 'Twister', icon: '🌪️', elem: 'electric', superMove: 'Vortex Surge' },
-  { name: 'Prism', icon: '🌈', elem: 'electric', superMove: 'Spectrum Laser' },
-  { name: 'Jewel', icon: '💎', elem: 'water', superMove: 'Diamond Armor' },
-  { name: 'Monarch', icon: '👑', elem: 'fire', superMove: 'Royal Decree' },
-  { name: 'Aegis', icon: '🛡️', elem: 'nature', superMove: 'Shield Bash' },
-  { name: 'Blade', icon: '⚔️', elem: 'dark', superMove: 'Sword Dance' },
-  { name: 'Invader', icon: '🛸', elem: 'dark', superMove: 'UFO Abduction' },
-  { name: 'Apollo', icon: '🚀', elem: 'fire', superMove: 'Rocket Blast' },
-  { name: 'Mystic', icon: '🔮', elem: 'magic', superMove: 'Arcane Nova' },
-  { name: 'Oracle', icon: '🧿', elem: 'magic', superMove: 'Evil Eye' },
-  { name: 'Teddy', icon: '🧸', elem: 'nature', superMove: 'Cuddle Crash' },
-  { name: 'Spooky', icon: '🎃', elem: 'dark', superMove: 'Jack-o-Lantern' },
+  { name: 'Spore', icon: '🐌', elem: 'nature', superMove: 'Spore Cloud' },
+  { name: 'Cactus', icon: '🦔', elem: 'nature', superMove: 'Desert Prick' },
+  { name: 'Evergreen', icon: '🦌', elem: 'nature', superMove: 'Pine Needles' },
+  { name: 'Maple', icon: '🐿️', elem: 'nature', superMove: 'Autumn Gale' },
+  { name: 'Saturn', icon: '🐙', elem: 'dark', superMove: 'Cosmic Rings' },
+  { name: 'Comet', icon: '🐎', elem: 'fire', superMove: 'Meteor Trail' },
+  { name: 'Sunny', icon: '🐥', elem: 'fire', superMove: 'Solar Flare' },
+  { name: 'Selene', icon: '🐇', elem: 'dark', superMove: 'Eclipse Ray' },
+  { name: 'Volt', icon: '🐕', elem: 'electric', superMove: 'Volt Cannon' },
+  { name: 'Ember', icon: '🦊', elem: 'fire', superMove: 'Inferno Wave' },
+  { name: 'Aqua', icon: '🐠', elem: 'water', superMove: 'Tsunami Crash' },
+  { name: 'Frost', icon: '🐻‍❄️', elem: 'water', superMove: 'Absolute Zero' },
+  { name: 'Twister', icon: '🐁', elem: 'electric', superMove: 'Vortex Surge' },
+  { name: 'Prism', icon: '🦜', elem: 'electric', superMove: 'Spectrum Laser' },
+  { name: 'Jewel', icon: '🦜', elem: 'water', superMove: 'Diamond Armor' },
+  { name: 'Monarch', icon: '🦋', elem: 'fire', superMove: 'Royal Decree' },
+  { name: 'Aegis', icon: '🐢', elem: 'nature', superMove: 'Shield Bash' },
+  { name: 'Blade', icon: '🐟', elem: 'dark', superMove: 'Sword Dance' },
+  { name: 'Invader', icon: '👽', elem: 'dark', superMove: 'UFO Abduction' },
+  { name: 'Apollo', icon: '🦅', elem: 'fire', superMove: 'Rocket Blast' },
+  { name: 'Mystic', icon: '🦉', elem: 'magic', superMove: 'Arcane Nova' },
+  { name: 'Oracle', icon: '🦚', elem: 'magic', superMove: 'Evil Eye' },
+  { name: 'Teddy', icon: '🐻', elem: 'nature', superMove: 'Cuddle Crash' },
+  { name: 'Spooky', icon: '🦇', elem: 'dark', superMove: 'Jack-o-Lantern' },
   { name: 'Boo', icon: '👻', elem: 'dark', superMove: 'Spooky Haunt' },
   { name: 'Zorblax', icon: '👽', elem: 'dark', superMove: 'Alien Ray' },
   { name: 'Ryu', icon: '🐲', elem: 'fire', superMove: 'Dragon Rage' },
   { name: 'Badger', icon: '🦡', elem: 'nature', superMove: 'Burrow Ambush' },
-  { name: 'Castor', icon: '🦫', elem: 'water', superMove: 'River Lodge' },
+  { name: 'Capy', icon: '🦫', elem: 'water', superMove: 'River Lounge' },
   { name: 'Skunk', icon: '🦨', elem: 'dark', superMove: 'Stench Blast' },
   { name: 'Joey', icon: '🦘', elem: 'nature', superMove: 'Bounce Slam' },
   { name: 'Alpaca', icon: '🦙', elem: 'nature', superMove: 'Fleece Guard' },
-  { name: 'Rhinoceros', icon: '🦏', elem: 'electric', superMove: 'Thunder Charge' },
+  { name: 'Bison', icon: '🐃', elem: 'electric', superMove: 'Thunder Charge' },
   { name: 'Hippo', icon: '🦛', elem: 'water', superMove: 'Mud Cannon' },
-  { name: 'Mammoth', icon: '🐘', elem: 'water', superMove: 'Ice Quake' },
+  { name: 'Tusker', icon: '🐘', elem: 'water', superMove: 'Ice Quake' },
   { name: 'Giraffe', icon: '🦒', elem: 'nature', superMove: 'Stomp Wave' },
   { name: 'Peacock', icon: '🦚', elem: 'nature', superMove: 'Tail Mirage' },
   { name: 'Parrot', icon: '🦜', elem: 'nature', superMove: 'Mimic Strike' },
   { name: 'Cygnus', icon: '🦢', elem: 'water', superMove: 'Wing Shield' },
   { name: 'Phoenic', icon: '🦩', elem: 'water', superMove: 'Pink Geyser' },
   { name: 'Selkie', icon: '🦭', elem: 'water', superMove: 'Tide Cry' },
-  { name: 'Lutra', icon: '🦦', elem: 'water', superMove: 'Stream Whirl' },
+  { name: 'Platy', icon: '🦦', elem: 'water', superMove: 'Duckbill Dive' },
   { name: 'Nocturne', icon: '🦇', elem: 'dark', superMove: 'Shadow Wings' },
   { name: 'Noctis', icon: '🦉', elem: 'electric', superMove: 'Moon Lightning' },
   { name: 'Aquila', icon: '🦅', elem: 'nature', superMove: 'Sky Piercer' },
-  { name: 'Fenrir', icon: '🐺', elem: 'dark', superMove: 'Winter Howl' },
+  { name: 'Anubis', icon: '🐺', elem: 'dark', superMove: 'Dusk Howl' },
   { name: 'Kitsune', icon: '🦊', elem: 'magic', superMove: 'Fox Fire' },
   { name: 'Simba', icon: '🦁', elem: 'nature', superMove: 'Prideland Roar' },
-  { name: 'Tora', icon: '🐯', elem: 'fire', superMove: 'Blaze Pounce' },
-  { name: 'Pardus', icon: '🐆', elem: 'dark', superMove: 'Stealth Slash' },
+  { name: 'Yuki', icon: '🐆', elem: 'fire', superMove: 'Blaze Pounce' },
+  { name: 'Sprint', icon: '🐆', elem: 'dark', superMove: 'Sprint Slash' },
   { name: 'Ursa', icon: '🐻', elem: 'nature', superMove: 'Claw Slam' },
   { name: 'Bamboo', icon: '🐼', elem: 'nature', superMove: 'Bao Roll' },
-  { name: 'Koala', icon: '🐨', elem: 'nature', superMove: 'Gumtree Guard' },
-  { name: 'Sloth', icon: '🦥', elem: 'nature', superMove: 'Snooze Barrier' },
+  { name: 'Wombo', icon: '🐨', elem: 'nature', superMove: 'Burrow Guard' },
+  { name: 'Tarsi', icon: '🐵', elem: 'nature', superMove: 'Wide-Eye Barrier' },
   { name: 'Chipmunk', icon: '🐿️', elem: 'nature', superMove: 'Nut Cannon' },
   { name: 'Clover', icon: '🐇', elem: 'nature', superMove: 'Hop Barrage' },
   { name: 'Mouse', icon: '🐁', elem: 'electric', superMove: 'Static Zap' },
   { name: 'Rat', icon: '🐀', elem: 'dark', superMove: 'Shadow Nibble' },
-  { name: 'Bristle', icon: '🦔', elem: 'nature', superMove: 'Quill Shield' },
+  { name: 'Dillo', icon: '🦔', elem: 'nature', superMove: 'Shell Roll' },
   { name: 'Gecko', icon: '🦎', elem: 'nature', superMove: 'Camouflage' },
-  { name: 'Viper', icon: '🐍', elem: 'nature', superMove: 'Poison Fang' },
+  { name: 'Cobra', icon: '🐍', elem: 'nature', superMove: 'Poison Fang' },
   { name: 'Tortoise', icon: '🐢', elem: 'water', superMove: 'Ancient Guard' },
-  { name: 'Caiman', icon: '🐊', elem: 'water', superMove: 'River Jaw' },
+  { name: 'Nile', icon: '🐊', elem: 'water', superMove: 'River Jaw' },
   { name: 'Toad', icon: '🐸', elem: 'water', superMove: 'Toxic Bubble' },
   { name: 'Megalodon', icon: '🦈', elem: 'water', superMove: 'Ocean Terror' },
   { name: 'Orca', icon: '🐬', elem: 'water', superMove: 'Deep Crest' },
@@ -470,13 +448,13 @@ const secretSpecies = [
   { name: 'Fugu', icon: '🐡', elem: 'water', superMove: 'Poison Spikes' },
   { name: 'Tang', icon: '🐠', elem: 'water', superMove: 'Blue Fin Slash' },
   { name: 'Salmon', icon: '🐟', elem: 'water', superMove: 'Upstream Leap' },
-  { name: 'Papillon', icon: '🦋', elem: 'nature', superMove: 'Flutter Gale' },
+  { name: 'Dart', icon: '🦋', elem: 'nature', superMove: 'Dragonfly Gale' },
   { name: 'Hornet', icon: '🐝', elem: 'electric', superMove: 'Plasma Sting' },
   { name: 'Ladybird', icon: '🐞', elem: 'nature', superMove: 'Lucky Shell' },
-  { name: 'Locust', icon: '🦗', elem: 'nature', superMove: 'Swarm Devour' },
+  { name: 'Reaper', icon: '🦗', elem: 'nature', superMove: 'Scythe Devour' },
   { name: 'Tarantula', icon: '🕷️', elem: 'dark', superMove: 'Poison Web' },
   { name: 'Scorpio', icon: '🦂', elem: 'dark', superMove: 'Stinger Guillotine' },
-  { name: 'Carnotaur', icon: '🦖', elem: 'fire', superMove: 'Horn Rampage' },
+  { name: 'Spino', icon: '🦖', elem: 'fire', superMove: 'Sail Rampage' },
   { name: 'Diplodocus', icon: '🦕', elem: 'nature', superMove: 'Tail Whip Slam' },
   { name: 'Alicorn', icon: '🦄', elem: 'magic', superMove: 'Holy Thunder' },
   { name: 'Hammy', icon: '🐹', elem: 'nature', superMove: 'Cheek Stuffer Rush' },
@@ -495,7 +473,7 @@ const secretSpecies = [
   { name: 'Fluff', icon: '🐥', elem: 'fire', superMove: 'Fuzzy Flare' },
   { name: 'Scarab', icon: '🪲', elem: 'dark', superMove: 'Pharaoh Shell Smash' },
   { name: 'Wiggle', icon: '🪱', elem: 'nature', superMove: 'Tunnel Burst' },
-  { name: 'Conch', icon: '🐚', elem: 'water', superMove: 'Ocean Echo Call' },
+  { name: 'Conch', icon: '🐙', elem: 'water', superMove: 'Ocean Echo Call' },
   { name: 'Pearl', icon: '🦪', elem: 'water', superMove: 'Shell Shine' },
   { name: 'Orang', icon: '🦧', elem: 'nature', superMove: 'Jungle Swing' },
   { name: 'Rocky', icon: '🦝', elem: 'dark', superMove: 'Mask Bandit Dash' },
@@ -503,37 +481,37 @@ const secretSpecies = [
   { name: 'Buffalo', icon: '🐃', elem: 'nature', superMove: 'Prairie Stampede' },
   { name: 'Tweet', icon: '🐦', elem: 'electric', superMove: 'Song Shock' },
   { name: 'Zing', icon: '🪰', elem: 'electric', superMove: 'Buzz Bomb' },
-  { name: 'Plumette', icon: '🪶', elem: 'magic', superMove: 'Feather Fall Spell' },
-  { name: 'Cupcake', icon: '🧁', elem: 'magic', superMove: 'Frosting Burst' },
-  { name: 'Melon', icon: '🍉', elem: 'nature', superMove: 'Seed Spitter' },
+  { name: 'Plumette', icon: '🐦', elem: 'magic', superMove: 'Feather Fall Spell' },
+  { name: 'Cupcake', icon: '🐹', elem: 'magic', superMove: 'Frosting Burst' },
+  { name: 'Melon', icon: '🦛', elem: 'nature', superMove: 'Seed Spitter' },
   { name: 'Elara', icon: '🧝', elem: 'magic', superMove: 'Moonlit Archery' },
   { name: 'Merrow', icon: '🧜', elem: 'water', superMove: 'Tidal Song' },
   { name: 'Scout', icon: '🐕', elem: 'nature', superMove: 'Fetch Fury' },
   { name: 'Bandit Heeler', icon: '🐕‍🦺', elem: 'nature', superMove: 'Dad Games Pounce', show: 'Bluey' },
-  { name: 'Chilli', icon: '🐩', elem: 'nature', superMove: 'Calm Mum Cuddle', show: 'Bluey' },
+  { name: 'Chilli', icon: '🐕', elem: 'nature', superMove: 'Calm Mum Cuddle', show: 'Bluey' },
   { name: 'Muffin', icon: '🐶', elem: 'electric', superMove: 'Toddler Tornado', show: 'Bluey' },
-  { name: 'Socks', icon: '🐾', elem: 'electric', superMove: 'Sock Surprise', show: 'Bluey' },
+  { name: 'Socks', icon: '🐕', elem: 'electric', superMove: 'Sock Surprise', show: 'Bluey' },
   { name: 'Squidward', icon: '🦑', elem: 'dark', superMove: 'Clarinet Gloom', show: 'SpongeBob' },
   { name: 'Mr. Krabs', icon: '🦀', elem: 'fire', superMove: 'Money Claw Crunch', show: 'SpongeBob' },
-  { name: 'Plankton', icon: '🟢', elem: 'dark', superMove: 'Secret Formula Scheme', show: 'SpongeBob' },
+  { name: 'Plankton', icon: '🦠', elem: 'dark', superMove: 'Secret Formula Scheme', show: 'SpongeBob' },
   { name: 'Gary', icon: '🐌', elem: 'water', superMove: 'Meow Slime Trail', show: 'SpongeBob' },
-  { name: 'Marshall', icon: '🚒', elem: 'fire', superMove: 'Fire Pup Hose Blast', show: 'Paw Patrol' },
-  { name: 'Rubble', icon: '🚜', elem: 'nature', superMove: 'Dig It Dozer', show: 'Paw Patrol' },
-  { name: 'Rocky', icon: '♻️', elem: 'nature', superMove: 'Green Means Go Fix', show: 'Paw Patrol' },
-  { name: 'Zuma', icon: '🚤', elem: 'water', superMove: 'Hovercraft Splash', show: 'Paw Patrol' },
-  { name: 'Everest', icon: '🏔️', elem: 'water', superMove: 'Snow Rescue Slide', show: 'Paw Patrol' },
-  { name: 'Tracker', icon: '🐆', elem: 'nature', superMove: 'Jungle Tracker Leap', show: 'Paw Patrol' },
+  { name: 'Marshall', icon: '🐕', elem: 'fire', superMove: 'Fire Pup Hose Blast', show: 'Paw Patrol' },
+  { name: 'Rubble', icon: '🐶', elem: 'nature', superMove: 'Dig It Dozer', show: 'Paw Patrol' },
+  { name: 'Rocky', icon: '🐕', elem: 'nature', superMove: 'Green Means Go Fix', show: 'Paw Patrol' },
+  { name: 'Zuma', icon: '🦮', elem: 'water', superMove: 'Hovercraft Splash', show: 'Paw Patrol' },
+  { name: 'Everest', icon: '🐺', elem: 'water', superMove: 'Snow Rescue Slide', show: 'Paw Patrol' },
+  { name: 'Tracker', icon: '🐕', elem: 'nature', superMove: 'Jungle Tracker Leap', show: 'Paw Patrol' },
   { name: 'Suzy Sheep', icon: '🐑', elem: 'magic', superMove: 'Best Friend Bounce', show: 'Peppa Pig' },
   { name: 'Rebecca Rabbit', icon: '🐇', elem: 'nature', superMove: 'Carrot Hop Rush', show: 'Peppa Pig' },
   { name: 'Danny Dog', icon: '🐕', elem: 'water', superMove: 'Pirate Pup Plunge', show: 'Peppa Pig' },
-  { name: 'Marge', icon: '💙', elem: 'nature', superMove: 'Tall Hair Tower', show: 'The Simpsons' },
-  { name: 'Bart', icon: '🛹', elem: 'dark', superMove: 'Skateboard Prank', show: 'The Simpsons' },
-  { name: 'Maggie', icon: '🍼', elem: 'magic', superMove: 'Pacifier Pop', show: 'The Simpsons' },
+  { name: 'Marge', icon: '👩‍🦱', elem: 'nature', superMove: 'Tall Hair Tower', show: 'The Simpsons' },
+  { name: 'Bart', icon: '👦', elem: 'dark', superMove: 'Skateboard Prank', show: 'The Simpsons' },
+  { name: 'Maggie', icon: '👶', elem: 'magic', superMove: 'Pacifier Pop', show: 'The Simpsons' },
   { name: 'Tweety', icon: '🐤', elem: 'nature', superMove: 'Tiny Bird Flutter', show: 'Looney Tunes' },
-  { name: 'Sylvester', icon: '😼', elem: 'dark', superMove: 'Sneaky Cat Pounce', show: 'Looney Tunes' },
+  { name: 'Sylvester', icon: '🐈', elem: 'dark', superMove: 'Sneaky Cat Pounce', show: 'Looney Tunes' },
   { name: 'Porky Pig', icon: '🐖', elem: 'nature', superMove: 'Stutter Stomp', show: 'Looney Tunes' },
-  { name: 'Wile E. Coyote', icon: '💣', elem: 'electric', superMove: 'Gadget Gone Wrong', show: 'Looney Tunes' },
-  { name: 'Taz', icon: '🌪️', elem: 'fire', superMove: 'Tasmanian Twirl', show: 'Looney Tunes' }
+  { name: 'Wile E. Coyote', icon: '🐺', elem: 'electric', superMove: 'Gadget Gone Wrong', show: 'Looney Tunes' },
+  { name: 'Taz', icon: '🐗', elem: 'fire', superMove: 'Tasmanian Twirl', show: 'Looney Tunes' }
 ];
 
 const secretCompanions = secretSpecies.map((s, idx) => ({

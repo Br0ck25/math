@@ -451,6 +451,18 @@
     </div>
   </div>
 
+  <!-- Buy confirmation: every purchase with gems asks first (askBuy) -->
+  <div class="modal-overlay" id="confirm-modal" data-close="closeConfirm">
+    <div class="modal-content" style="text-align:center;">
+      <div id="confirm-icon" style="font-size:3rem; line-height:1.1;" aria-hidden="true"></div>
+      <h2 style="font-size:1.2rem; margin:4px 0;" id="confirm-title">Buy this?</h2>
+      <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;" id="confirm-note"></div>
+      <div style="font-size:0.95rem; font-weight:800; margin-bottom:12px; white-space:pre-line;" id="confirm-wallet" aria-live="polite"></div>
+      <button type="button" class="key-btn submit-btn" id="confirm-yes" style="width:100%; height:48px; font-size:1rem; margin-bottom:8px;" onclick="confirmBuy()">Buy</button>
+      <button type="button" class="key-btn action-btn" style="width:100%; height:44px; font-size:0.95rem;" onclick="closeConfirm()">Not now</button>
+    </div>
+  </div>
+
   <!-- Catch window: how many Catch Nets to throw after beating a wild buddy -->
   <div class="modal-overlay" id="catch-modal" data-close="closeCatchModal">
     <div class="modal-content" style="border-color:#38bdf8;">
@@ -467,7 +479,8 @@
       <h2 style="font-size:1.2rem; margin-bottom:2px;">⚔️ Moves</h2>
       <div style="font-size:0.85rem; font-weight:800; color:#fde047; margin-bottom:8px;" id="moves-head"></div>
       <div class="moves-list" id="moves-list"></div>
-      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;">Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!</p>
+      <button type="button" class="grade-btn" id="moves-edit" style="width:100%; margin-top:8px; padding:8px; min-height:44px;" onclick="toggleMovesEdit()">✏️ Choose moves</button>
+      <p style="font-size:0.72rem; color:var(--text-muted); margin:8px 0;" id="moves-note">Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!</p>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; height:44px; font-size:1rem;" onclick="closeMoves()">Back to Game</button>
     </div>
   </div>

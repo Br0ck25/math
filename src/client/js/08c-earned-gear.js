@@ -7,6 +7,7 @@ const EARN_COUNTERS = {
   cups: function () { return state.tour.wins; },
   calendarDay: function () { return state.streakCal.count; },
   bosses: function () { return state.monstersDefeated; },
+  champion: function () { return state.champ.wins; },
   cartoons: function () { return ownedCartoons().length; },
   headliners: function () { return ownedCartoons().filter(function (p) { return p.id.indexOf('toon_') === 0; }).length; }
 };

@@ -27,8 +27,8 @@ test('a buddy learns moves by level, with names from its element', async () => {
   assert.equal(r.l1, 'strike,ult');
   assert.equal(r.l8, 'strike,guard,ult');
   assert.equal(r.l18, 'strike,guard,power,ult');
-  assert.equal(r.l30, 'strike,guard,power,heal,ult');
-  assert.deepEqual(r.names, ['Ember', 'Guard', 'Flame Wheel', 'Recover', 'Flame Tail']);
+  assert.equal(r.l30, 'strike,guard,power,cleanse,heal,ult');
+  assert.deepEqual(r.names, ['Ember', 'Guard', 'Flame Wheel', 'Cleanse', 'Recover', 'Absorb', 'Flame Tail']);
   assert.equal(r.water, 'Tidal Crash');
   assert.deepEqual(r.between, ['power']);
 });
@@ -38,18 +38,19 @@ test('the Moves sheet spends energy: a damage move hits, guard blocks the next h
     const out = {};
     state.buddyXp.dog = xpForLevel(40); state.activePet = 'dog'; state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 10; state.bossSwapped = false; state.raid = null;
     partyHp = {}; monsterCurrentHp = 50; inputLocked = false; ultimateCharge = 0;
+    state.moveSet = { dog: ['strike', 'guard', 'power', 'heal'] };
     openMoves();
     out.sheet = document.getElementById('moves-modal').style.display;
     out.offAtZero = [...document.querySelectorAll('#moves-list .move-btn')].filter((b) => b.disabled).length;
     closeMoves();
     ultimateCharge = 1; const hp0 = monsterCurrentHp;
     useMove('strike');
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.strike = [hp0 - monsterCurrentHp > 0, ultimateCharge];
     ultimateCharge = 1; useMove('guard'); out.guard = [guardUp, ultimateCharge];
     inputLocked = false; state.shields = 0; const petHp = getPetHp('dog');
     userInput = String(currentProblem.answer + 7); checkAnswer();
-    await new Promise((res) => setTimeout(res, 1500));
+    await new Promise((res) => setTimeout(res, 3000));
     out.blocked = [getPetHp('dog') === petHp, guardUp];
     inputLocked = false; setPetHp('dog', 1); ultimateCharge = 2; useMove('heal');
     out.heal = [getPetHp('dog') > 1, ultimateCharge];
@@ -140,3 +141,42 @@ test('evolving shows the jump in stats and the moves learned', async () => {
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
+
+test('move slots: a buddy takes 4 moves plus its ultimate into battle, the player chooses them, and the choice is saved and repaired', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    state.buddyXp.dog = xpForLevel(40); state.activePet = 'dog'; state.wild.id = ''; currentMonsterIndex = 0; ultimateCharge = 3; inputLocked = false;
+    const pet = () => getActivePetDisplay();
+    const ids = () => equippedMoves(pet()).map((m) => m.id).join(',');
+    const shown = () => [...document.querySelectorAll('#moves-list .move-btn b')].map((b) => b.innerText).length;
+    out.default = ids();                                       // unchanged for existing players: the new moves are opt-in
+    openMoves(); out.battleButtons = shown();
+    toggleMovesEdit(); out.editButtons = shown();
+    toggleEquip('drain'); out.full = [ids(), (state.moveSet.dog || []).length];     // all 4 slots are full: nothing changes
+    toggleEquip('guard'); toggleEquip('drain');
+    out.swapped = ids();
+    toggleMovesEdit(); out.battleAfter = shown();
+    // a move that is not equipped cannot be used
+    const hp = monsterCurrentHp; ultimateCharge = 3; const before = ultimateCharge; useMove('guard'); out.unequippedUsed = [ultimateCharge !== before, guardUp];
+    // cleanse clears a status
+    toggleEquip('power'); toggleEquip('cleanse'); closeMoves();
+    buddyStatus = { kind: 'burn', left: 3 }; ultimateCharge = 1; useMove('cleanse'); out.cleansed = [buddyStatus.left, ultimateCharge];
+    // drain hurts the foe and heals a point
+    setPetHp('dog', 2); monsterCurrentHp = 50; inputLocked = false; ultimateCharge = 2; useMove('drain'); out.drained = [getPetHp('dog'), ultimateCharge];
+    // saves are repaired
+    state.moveSet = { dog: ['drain', 'drain', 'nonsense', 'strike', 'power', 'heal', 'guard'], nobody: ['strike'], bunny: 'x' };
+    normalizeState();
+    out.repaired = [JSON.stringify(state.moveSet.dog), Object.keys(state.moveSet).join(',')];
+    return out;
+  });
+  assert.equal(r.default, 'strike,guard,power,heal,ult');
+  assert.equal(r.battleButtons, 5, 'in battle: 4 moves and the ultimate');
+  assert.equal(r.editButtons, 7, 'when choosing: every move');
+  assert.deepEqual(r.full, ['strike,guard,power,heal,ult', 0], 'a full set refuses a fifth move and saves nothing');
+  assert.equal(r.swapped, 'strike,power,heal,drain,ult');
+  assert.equal(r.battleAfter, 5);
+  assert.deepEqual(r.unequippedUsed, [false, false], 'a move left out cannot be used');
+  assert.deepEqual(r.cleansed, [0, 0]);
+  assert.equal(r.drained[1], 0); assert.ok(r.drained[0] >= 3, 'Absorb heals 1 HP: ' + r.drained);
+  assert.deepEqual(r.repaired, ['["drain","strike","power","heal"]', 'dog']);
+});

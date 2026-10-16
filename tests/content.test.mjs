@@ -10,20 +10,40 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 345 buddies, 54 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 353 buddies, 55 bosses, 121 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
-    store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length
+    store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length, legend: legendPets.length
   }));
-  assert.deepEqual(c, { buddies: 345, bosses: 54, gear: 118, store: 43, mythic: 36, secret: 209 });
+  assert.deepEqual(c, { buddies: 353, bosses: 55, gear: 121, store: 44, mythic: 36, secret: 209, legend: 6 });
+});
+
+test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {
+  const r = await inPage(() => ({
+    buddies: allBuddies().map((b) => ({ id: b.id, name: b.name, icon: b.emoji || b.icon, person: !!(b.show || b.mythic || b.legend) })),
+    bosses: monstersList.map((m) => ({ name: m.name, icon: m.emoji || m.icon }))
+  }));
+  const cp = (icon) => icon.codePointAt(0);
+  const animal = (c) => (c >= 0x1F400 && c <= 0x1F43D) || c === 0x1F43F || (c >= 0x1F980 && c <= 0x1F9AE) || c === 0x1F577 || c === 0x1F54A || (c >= 0x1FAB0 && c <= 0x1FAB3);
+  const creature = new Set([0x1F479, 0x1F47A, 0x1F47B, 0x1F47D, 0x1F47E, 0x1F916, 0x1F480, 0x2620, 0x1F47F, 0x1F608, 0x1F9DE, 0x1F9DC, 0x1F9DA, 0x1F9DD, 0x1F9DB, 0x1F9DF, 0x26C4, 0x1F409, 0x1F432, 0x1F995, 0x1F996]);    // monsters, ghosts, aliens, robots, fairies, elves, snowman
+  const person = (c) => (c >= 0x1F466 && c <= 0x1F469) || c === 0x1F471 || c === 0x1F474 || c === 0x1F475 || c === 0x1F476 || c === 0x1F478 || c === 0x1F934 || c === 0x1F9D4 || c === 0x1F9D9 || c === 0x1F9B8 || c === 0x1F9D1;
+  const exceptions = { toon_spongebob: 'a sea sponge', mythic_patrick: 'a sea star', secret_papaw: 'a family buddy: the owner decides' };    // no emoji exists for these animals
+  const bad = [];
+  r.buddies.forEach((b) => {
+    const c = cp(b.icon);
+    if (animal(c) || creature.has(c) || exceptions[b.id] || (b.person && person(c))) return;
+    bad.push(b.name + ' ' + b.icon);
+  });
+  r.bosses.forEach((m) => { const c = cp(m.icon); if (!animal(c) && !creature.has(c)) bad.push('boss ' + m.name + ' ' + m.icon); });
+  assert.deepEqual(bad, [], 'these look like objects or people: pick an animal or creature');
 });
 
 test('every buddy has what it needs: unique id, valid type, a move, and three forms that still look like it', async () => {
   const bad = await inPage(() => {
     const out = [], seen = new Set();
     const elems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic', 'shadow'];
-    storePets.concat(mythicCompanions, secretCompanions, ultraPets, bossBuddies).forEach((p) => {
+    storePets.concat(mythicCompanions, secretCompanions, ultraPets, bossBuddies, legendPets).forEach((p) => {
       if (seen.has(p.id)) out.push('duplicate id ' + p.id);
       seen.add(p.id);
       if (elems.indexOf(p.element) === -1) out.push(p.id + ' element ' + p.element);
@@ -31,7 +51,8 @@ test('every buddy has what it needs: unique id, valid type, a move, and three fo
       if (!p.forms || p.forms.length !== 3) { out.push(p.id + ' forms'); return; }
       p.forms.forEach((f, i) => {
         if (!f.name || !f.icon) out.push(p.id + ' form ' + i + ' incomplete');
-        if (typeof f.icon === 'string' && !f.icon.trim().startsWith('<svg') && /\s/.test(f.icon.trim())) out.push(p.id + ' form ' + i + ' icon has extra pieces: ' + f.icon);
+        const fi = f.emoji || f.icon;                       // a buddy with licensed art keeps its emoji here
+        if (typeof fi === 'string' && !fi.trim().startsWith('<svg') && /\s/.test(fi.trim())) out.push(p.id + ' form ' + i + ' icon has extra pieces: ' + fi);
         if (i && f.minLevel <= p.forms[i - 1].minLevel) out.push(p.id + ' forms out of order');
       });
       if (p.forms[2].minLevel > 100) out.push(p.id + ' final form beyond level 100');
@@ -44,7 +65,7 @@ test('every buddy has what it needs: unique id, valid type, a move, and three fo
 test('evolved forms keep the buddy recognisable: the base animal is never replaced by a bare symbol', async () => {
   const bad = await inPage(() => {
     const symbols = /^(🔥|🌙|🌊|🌵|👑|❄️|⚡|🌈|☀️|✨)$/;
-    return storePets.filter((p) => p.forms.some((f) => symbols.test(f.icon))).map((p) => p.id + ' → ' + p.forms.map((f) => f.icon).join(' '));
+    return storePets.filter((p) => p.forms.some((f) => symbols.test(f.emoji || f.icon))).map((p) => p.id + ' → ' + p.forms.map((f) => f.emoji || f.icon).join(' '));
   });
   assert.deepEqual(bad, []);
 });
@@ -73,7 +94,7 @@ test('Rocky the pitbull is the strongest boss, hits harder, and is a slayer of t
     currentMonsterIndex = i;
     return {
       i, mostHp: others.every((m) => m.baseHp < monstersList[i].baseHp), slays: monstersList[i].slays, target: slayerTarget(b),
-      atk: b.atk, otherAtk: o.atk, maxHp: b.maxHp, otherHp: o.maxHp, buddy: getSpecies('boss_rocky').name, last: i === monstersList.length - 1,
+      atk: b.atk, otherAtk: o.atk, maxHp: b.maxHp, otherHp: o.maxHp, buddy: getSpecies('boss_rocky').name, last: i === monstersList.length - 2,       // Tyson was appended after him
       cardAtk: bossCard(i, { level: 20 }).stats[1][1]
     };
   });
@@ -101,7 +122,7 @@ test('every boss is complete: unique name and icon slot, valid type, 3-6 HP and 
     });
     const per = {}; monstersList.forEach((m) => { per[m.element] = (per[m.element] || 0) + 1; });
     if (Object.values(per).some((n) => n < 6)) out.push('uneven types ' + JSON.stringify(per));
-    if (monstersList[35].name !== 'Arcane Archmage') out.push('old boss numbers changed');
+    if (monstersList[35].name !== 'Arcane Peacock') out.push('old boss numbers changed');
     return out;
   });
   assert.deepEqual(bad, []);
@@ -221,7 +242,7 @@ test('no errors', () => { assert.deepEqual(errors, []); });
 test('Janie, Amber and Papaw: three ultra-rare buddies, equally rare and equally strong, each with a favorite food', async () => {
   const r = await inPage(() => {
     const out = {};
-    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + p.icon);
+    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + (p.emoji || p.icon));
     out.food = ultraPets.map((p) => favSnack(p.id).icon + ' ' + favSnack(p.id).name);
     // same stats at the same level, and the same damage against every boss element, whatever the element badge says
     const dmg = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => tourDamage({ element: p.element, ultra: p.ultra, atk: 4 }, { element: e, ultra: false })));
@@ -276,7 +297,7 @@ test('found ultra buddies appear in their own shop section and not among the ord
 test('four slayer bosses: a cow, a Harpy Eagle, Māra and Rocky, each strong against one buddy', async () => {
   const r = await inPage(() => {
     const list = monstersList.map((m, i) => ({ i, m })).filter((x) => x.m.slays);
-    return list.map((x) => ({ i: x.i, name: x.m.name, icon: x.m.icon, element: x.m.element, slays: x.m.slays, ultra: ultraPets.some((u) => u.id === x.m.slays), hp: x.m.baseHp, taunts: x.m.taunts.length }));
+    return list.map((x) => ({ i: x.i, name: x.m.name, icon: x.m.emoji || x.m.icon, element: x.m.element, slays: x.m.slays, ultra: ultraPets.some((u) => u.id === x.m.slays), hp: x.m.baseHp, taunts: x.m.taunts.length }));
   });
   assert.deepEqual(r.map((b) => [b.i, b.slays, b.ultra]), [[50, 'secret_janie', true], [51, 'secret_amber', true], [52, 'secret_papaw', true], [53, 'bandit', false]], 'appended after the old bosses, so saved boss positions still match');
   assert.deepEqual(r.map((b) => b.icon), ['🐄', '🦅', '😈', '🐕']);
@@ -329,10 +350,11 @@ test('the arrival message warns when the new boss is a slayer of your active bud
     state.activePet = buddy; partyHp = {}; state.monstersDefeated = 0;
     if (buddy === 'bandit') state.buddyXp.bandit = xpForLevel(60);          // Rocky only appears for a strong buddy
     state.wild.id = ''; state.wild.since = 99;                  // a boss comes next
-    state.recentBossTypes = []; const real = Math.random; Math.random = () => roll;
+    state.recentBossTypes = ['electric', 'electric'];             // no electric boss (Tyson, the Harpy Eagle) in this draw: the last candidate is then Māra or Rocky
+    const real = Math.random; Math.random = () => roll;
     currentMonsterIndex = 0; monsterCurrentHp = 1; inputLocked = false;
     triggerMonsterDamage(50, false);
-    await new Promise((res) => setTimeout(res, 1300));
+    await new Promise((res) => setTimeout(res, 2600));
     Math.random = real;
     return document.getElementById('toast').innerText;
   }, [buddy, roll]);
@@ -372,7 +394,7 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
   const r = await inPage(() => {
     const out = {};
     out.notUltra = bossBuddies.every((b) => !b.ultra && battleElement(b) === b.element);
-    out.packs = bossBuddies.slice(-3).map((b) => packOf(b).id);
+    out.packs = ['boss_harpy', 'boss_mara', 'boss_rocky'].map((id) => packOf(getSpecies(id)).id);
     out.all = bossBuddies.length === monstersList.length && monstersList.every((m, i) => getSpecies(m.buddy) && getSpecies(m.buddy).name === m.name);
     out.moves = new Set(bossBuddies.map((b) => b.superMove)).size;
     out.moveSample = bossBuddies[0].superMove + ' / ' + bossBuddies[50].superMove;
@@ -394,7 +416,7 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
   assert.equal(r.moveSample, 'Drake Blaze / Stampede Slam');
   assert.deepEqual(r.packs, ['boss-electric', 'boss-dark', 'boss-fire']);
   assert.equal(r.rarity, 'BOSS');
-  assert.deepEqual(r.shop, ['1', '54', 1, '0'], 'boss buddies are not counted as ordinary secrets');
+  assert.deepEqual(r.shop, ['1', '55', 1, '0'], 'boss buddies are not counted as ordinary secrets');
   assert.equal(r.book, '{"50":{"wins":0,"form":2,"alpha":0}}');
   assert.match(r.progress, /Alpha wins: 2\/3/);
   assert.doesNotMatch(r.progress, /Beaten x5/);
@@ -434,4 +456,28 @@ test('any boss can be won as a buddy after 3 Alpha victories, not just the slaye
   assert.deepEqual(r.steps, [[1, false], [2, false], [3, true]]);
   assert.equal(r.name, 'Fire Drake');
   assert.equal(r.level, 30);
+});
+
+test('Tyson, the playful German shepherd, is the newest boss: appended last, a plain electric boss with his own buddy', async () => {
+  const r = await inPage(() => {
+    const i = monstersList.findIndex((m) => m.name === 'Tyson'), m = monstersList[i], sp = getSpecies('boss_54');
+    state.wild.id = ''; currentMonsterIndex = i; bossLevel = 12; state.bossSwapped = false; state.raid = null;
+    return { last: i === monstersList.length - 1, i, element: m.element, hp: m.baseHp, slays: m.slays || null, minLevel: m.minLevel || 0, buddy: m.buddy, spName: sp.name, move: sp.superMove, snack: favSnack('boss_54').name,
+      taunts: m.taunts.length, kind: m.taunts.every((t) => !/stupid|dumb|loser|die/i.test(t)), name: getBossInfo().name.includes('Tyson'), available: bossAvailable(i), pack: packOf(sp).id, rockyStillAt: monstersList[53].name };
+  });
+  assert.deepEqual(r, { last: true, i: 54, element: 'electric', hp: 5, slays: null, minLevel: 0, buddy: 'boss_54', spName: 'Tyson', move: 'Zoomie Fetch Frenzy', snack: 'tennis balls', taunts: 2, kind: true, name: true, available: true, pack: 'boss-electric', rockyStillAt: 'Rocky' });
+});
+
+test('Jimothy the raccoon is a free store buddy with his own picture: one tap adopts him, no gems, no confirm window', async () => {
+  const r = await inPage(() => {
+    const sp = storePets.find((p) => p.id === 'jimothy');
+    state.gems = 0; state.unlockedPets = ['dog']; state.swapUsed = true;
+    renderShopPets();
+    const label = document.getElementById('pet-grid').textContent.includes('Free');
+    const before = state.gems;
+    selectOrBuyPet(sp);
+    const out = { free: sp.cost === 0, owned: state.unlockedPets.indexOf('jimothy') !== -1, gems: state.gems - before, confirm: !!document.getElementById('confirm-modal') && !document.getElementById('confirm-modal').classList.contains('hidden') && document.getElementById('confirm-modal').style.display === 'flex', picture: !!BUDDY_ART.jimothy && String(sp.icon).indexOf('<img') === 0, label };
+    return out;
+  });
+  assert.deepEqual({ free: r.free, owned: r.owned, gems: r.gems, confirm: r.confirm, picture: r.picture, label: r.label }, { free: true, owned: true, gems: 0, confirm: false, picture: true, label: true });
 });
