@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Background badge base -->
+  <rect width="100" height="100" rx="24" fill="#FCE7F3" />
+
+  <!-- Pointed Starfish Head / Body -->
+  <path d="M 50 14 C 44 26 24 45 24 74 C 24 84 76 84 76 74 C 76 45 56 26 50 14 Z" fill="#F472B6" stroke="#831843" stroke-width="3.5" stroke-linejoin="round" />
+
+  <!-- Star Body Texture Spots -->
+  <circle cx="34" cy="44" r="2.5" fill="#DB2777" opacity="0.6" />
+  <circle cx="68" cy="50" r="3" fill="#DB2777" opacity="0.6" />
+  <circle cx="38" cy="62" r="2.5" fill="#DB2777" opacity="0.6" />
+
+  <!-- Classic Crinkled Eyebrows (Z-shapes) -->
+  <path d="M 39 36 L 43 35 L 40 38 L 44 37" fill="none" stroke="#831843" stroke-width="1.5" stroke-linecap="round" />
+  <path d="M 57 37 L 61 38 L 58 35 L 62 36" fill="none" stroke="#831843" stroke-width="1.5" stroke-linecap="round" />
+
+  <!-- Oval Eyes close together -->
+  <ellipse cx="45" cy="43" rx="4.5" ry="6.5" fill="#FFFFFF" stroke="#831843" stroke-width="2" />
+  <ellipse cx="55" cy="43" rx="4.5" ry="6.5" fill="#FFFFFF" stroke="#831843" stroke-width="2" />
+
+  <!-- Small Pupils -->
+  <circle cx="46" cy="43" r="2" fill="#0F172A" />
+  <circle cx="54" cy="43" r="2" fill="#0F172A" />
+
+  <!-- Derpy Open Mouth / Smile -->
+  <path d="M 40 54 Q 50 68 60 54" fill="#881337" stroke="#831843" stroke-width="2" />
+  <path d="M 45 61 Q 50 58 55 61" fill="#FB7185" />
+
+  <!-- Lime Green Swim Trunks with Purple Floral Pattern -->
+  <path d="M 24 73 C 24 82 76 82 76 73 L 76 82 C 76 86 70 87 50 87 C 30 87 24 86 24 82 Z" fill="#A3E635" stroke="#831843" stroke-width="3" />
+  <circle cx="36" cy="78" r="2" fill="#9333EA" />
+  <circle cx="64" cy="79" r="2.5" fill="#9333EA" />
+</svg>
