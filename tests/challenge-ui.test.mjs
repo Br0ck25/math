@@ -104,7 +104,7 @@ test('a parent starts and cancels a challenge on the parent page; a second paren
 
   await g.page.click('text=Cancel this challenge');
   await g.page.waitForFunction(() => /No challenge right now/.test(document.getElementById('chal-0').innerText));
-  assert.equal(await g.page.locator('#chal-0 input').count(), 2);
+  assert.equal(await g.page.locator('#chal-0 input').count(), 3);
   assert.deepEqual(g.errors.filter((e) => !/40\d/.test(e)), []);
   for (const x of [kid, g, v]) await x.context.close();
 });

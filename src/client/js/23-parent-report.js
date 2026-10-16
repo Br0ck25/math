@@ -131,6 +131,7 @@ function reportParts(days, facts) {
 
   const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
   const strong = strongestOp(byOp);
+  out.weakIds = weak;
   out.strong = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
   out.weak = weak.length
     ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')

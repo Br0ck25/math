@@ -61,6 +61,20 @@ function challengeBudgetLeft() {
   return (state.adapt.served.match(/c/g) || []).length < ECON.adaptive.maxChallengeServed;
 }
 
+// A parent's "extra practice" (+N% of all problems for a type): that type gains N points of share and the others give them up evenly.
+function applyBoost(ops, p) {
+  const b = parentCtl && parentCtl.boost;
+  if (!b) return p;
+  let q = p.slice();
+  ops.forEach(function (op, i) {
+    const extra = (b[op] || 0) / 100;
+    if (!extra || q[i] >= 1) return;
+    const rest = 1 - q[i], add = Math.min(extra, rest - 1e-6);
+    q = q.map(function (x, j) { return j === i ? x + add : x * (rest - add) / rest; });
+  });
+  return q;
+}
+
 // Weights for picking the next math type: weaker types get more, the boss weak point gets its share, nobody exceeds the cap.
 function typeShares(ops, weakOp) {
   const E = ECON.adaptive;
@@ -73,7 +87,7 @@ function typeShares(ops, weakOp) {
   if (wi >= 0 && ops.length > 1 && w[wi] / sum(w) < E.bossWeakShare) {     // lift the boss weak point to its share, never lower it
     w[wi] = (sum(w) - w[wi]) * E.bossWeakShare / (1 - E.bossWeakShare);
   }
-  let p = w.map(function (x) { return x / sum(w); });
+  let p = applyBoost(ops, w.map(function (x) { return x / sum(w); }));
   const cap = Math.max(E.maxTypeShare, 1 / ops.length);
   for (let pass = 0; pass < 4; pass++) {          // clip anything over the cap and share the excess among the rest
     const over = p.filter(function (x) { return x > cap + 1e-9; }).length;

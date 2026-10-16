@@ -39,10 +39,13 @@ async function setChallenge(kv, parent, body) {
     return json({ ok: true, challenge: null });
   }
   const problems = Number(body.problems), minutes = Number(body.minutes);
+  const gemsPer = body.gemsPer === undefined || body.gemsPer === null ? CHAL.gemPerProblem : Number(body.gemsPer);
   if (!Number.isInteger(problems) || problems < 1 || problems > CHAL.maxProblems) return json({ error: 'Pick 1 to ' + CHAL.maxProblems + ' problems.' }, 400);
   if (!Number.isInteger(minutes) || minutes < CHAL.minMinutes || minutes > CHAL.maxMinutes) return json({ error: 'Pick ' + CHAL.minMinutes + ' to ' + CHAL.maxMinutes + ' minutes.' }, 400);
+  if (!Number.isInteger(gemsPer) || gemsPer < 1 || gemsPer > CHAL.maxGemPerProblem) return json({ error: 'Pick 1 to ' + CHAL.maxGemPerProblem + ' gems per answer.' }, 400);
+  if (problems * gemsPer > CHAL.maxGems) return json({ error: 'That would be ' + problems * gemsPer + ' gems. The most for one challenge is ' + CHAL.maxGems + '.' }, 400);
   if (challengeBusy(view)) return json({ error: 'A challenge is already going. Cancel it first.' }, 409);
-  const def = { id: randomId(6), problems: problems, minutes: minutes, gems: problems * CHAL.gemPerProblem, linkId: p.k.linkId, at: Date.now() };
+  const def = { id: randomId(6), problems: problems, minutes: minutes, gems: problems * gemsPer, linkId: p.k.linkId, at: Date.now() };
   await kv.put('chall:' + child, JSON.stringify(def));
   return json({ ok: true, challenge: challengeView(def, null, Date.now()) });
 }

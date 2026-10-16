@@ -103,11 +103,11 @@ test('a parent changes the settings from the parent page', async () => {
   await g.page.fill('#portal-name', 'mom_ui'); await g.page.fill('#portal-pass', 'secret1');
   await g.page.click('text=Sign in');
   await g.page.waitForSelector('.portal-kid');
-  await g.page.click('.portal-ctl summary');
   await g.page.selectOption('.portal-ctl select', '2');
+  await g.page.click('.portal-more summary');
   await g.page.uncheck('.portal-ctl input[data-op="deriv"]');
   await g.page.uncheck('.portal-ctl input[data-ctl="duels"]');
-  await g.page.click('text=Save settings');
+  await g.page.click('button:has-text("Save settings")');
   await g.page.waitForFunction(() => /Saved settings/.test(document.getElementById('portal-msg').innerText));
   const stored = await env.MATH_KV.get('ctl:kid_ui', 'json');
   assert.equal(stored.minGrade, 2); assert.equal(stored.duelsOnline, false);
@@ -167,11 +167,10 @@ test('a parent sets the goal and difficulty matching from the parent page, and c
   await g.page.fill('#portal-name', 'mom_gp'); await g.page.fill('#portal-pass', 'secret1');
   await g.page.click('text=Sign in');
   await g.page.waitForSelector('.portal-kid');
-  await g.page.click('.portal-ctl summary');
   await g.page.selectOption('select[data-ctl="goal"]', '30');
   await g.page.fill('input[data-ctl="reward"]', 'movie night');
   await g.page.selectOption('select[data-ctl="adaptive"]', 'off');
-  await g.page.click('text=Save settings');
+  await g.page.click('button:has-text("Save settings")');
   await g.page.waitForFunction(() => /Saved settings/.test(document.getElementById('portal-msg').innerText));
   const stored = await env.MATH_KV.get('ctl:kid_gp', 'json');
   assert.deepEqual([stored.goalMinutes, stored.goalReward, stored.adaptive], [30, 'movie night', false]);
@@ -179,12 +178,11 @@ test('a parent sets the goal and difficulty matching from the parent page, and c
   assert.deepEqual(await kid.page.evaluate(() => [state.parentGoal.minutes, state.parentGoal.reward, state.adapt.on]), [30, 'movie night', false]);
 
   // the form shows what is set, and "decides" puts them back in the child's hands
-  await g.page.click('.portal-ctl summary');
   assert.equal(await g.page.inputValue('select[data-ctl="goal"]'), '30');
   assert.equal(await g.page.inputValue('select[data-ctl="adaptive"]'), 'off');
   await g.page.selectOption('select[data-ctl="goal"]', '');
   await g.page.selectOption('select[data-ctl="adaptive"]', '');
-  await g.page.click('text=Save settings');
+  await g.page.click('button:has-text("Save settings")');
   await g.page.waitForFunction(() => /Saved settings/.test(document.getElementById('portal-msg').innerText));
   assert.deepEqual(await kid.page.evaluate(async () => { await acctStartup(); return [goalLocked(), adaptiveLocked()]; }), [false, false]);
 
@@ -200,5 +198,102 @@ test('a parent sets the goal and difficulty matching from the parent page, and c
   assert.equal((await c('/api/parent/login', 'POST', { name: 'mom_gp', password: 'secret1' })).status, 401);
   assert.equal(await env.MATH_KV.get('ctl:kid_gp'), null);
   assert.deepEqual(g.errors.filter((e) => !/40\d/.test(e)), []);
+  await kid.context.close(); await g.context.close();
+});
+
+test('the grade lock is visible without opening anything, and two children are kept apart', async () => {
+  const a = await family('kid_a', 'mom_two');
+  const b = await openGame(browser, worker, env, { fast: true });
+  await signUp(b.page, 'kid_b');
+  const tokB = await b.page.evaluate(() => acct.token);
+  const momTok = (await c('/api/parent/login', 'POST', { name: 'mom_two', password: 'secret1' })).data.token;
+  assert.equal((await c('/api/parent/claim', 'POST', { code: (await c('/api/link/code', 'POST', {}, tokB)).data.code }, momTok)).status, 200);
+
+  const g = await openGame(browser, worker, env, { fast: true });
+  await g.page.goto('http://localhost/parent');
+  await g.page.fill('#portal-name', 'mom_two'); await g.page.fill('#portal-pass', 'secret1');
+  await g.page.click('text=Sign in');
+  await g.page.waitForFunction(() => document.querySelectorAll('.portal-kid').length === 2);
+  assert.match(await g.page.innerText('#portal'), /Add another child/);
+  assert.equal(await g.page.locator('details.portal-ctl[open]').count(), 2, 'the settings are open by default');
+  assert.equal(await g.page.locator('select[data-ctl="grade"]').first().isVisible(), true, 'the grade lock is on screen');
+
+  // lock kid_b only (the second card)
+  await g.page.selectOption('#ctl-1 select[data-ctl="grade"]', '3');
+  await g.page.click('#ctl-1 button:has-text("Save settings")');
+  await g.page.waitForFunction(() => /Saved settings/.test(document.getElementById('portal-msg').innerText));
+  assert.equal((await env.MATH_KV.get('ctl:kid_b', 'json')).minGrade, 3);
+  assert.equal(await env.MATH_KV.get('ctl:kid_a'), null, 'the other child is untouched');
+  await b.page.evaluate(() => acctStartup());
+  await a.kid.page.evaluate(() => acctStartup());
+  assert.equal(await b.page.evaluate(() => state.grade), 3);
+  assert.notEqual(await a.kid.page.evaluate(() => state.grade), 3);
+  for (const x of [a.kid, b, g]) await x.context.close();
+});
+
+test('weak spots have one-tap extra practice buttons that change what the child is asked', async () => {
+  const { kid, mom } = await family('kid_boost', 'mom_boost');
+  await kid.page.evaluate(() => {
+    state.stats.days[dayKey()] = { s: 4, a: 14, ms: 60000, h: 0, w: 0, ops: { div: [10, 3], add: [10, 9] } };
+    saveState();
+  });
+  await kid.page.evaluate(() => syncNow(true));
+  const g = await openGame(browser, worker, env, { fast: true });
+  await g.page.goto('http://localhost/parent');
+  await g.page.fill('#portal-name', 'mom_boost'); await g.page.fill('#portal-pass', 'secret1');
+  await g.page.click('text=Sign in');
+  await g.page.waitForSelector('.portal-kid');
+  assert.match(await g.page.innerText('.portal-kid'), /extra practice/i);
+  assert.equal(await g.page.locator('.boost-btn[data-boost="add"]').count(), 0, 'only weak types get a button');
+  await g.page.click('.boost-btn[data-boost="div"]');
+  await g.page.waitForFunction(() => /\+10% practice/.test(document.querySelector('.portal-kid').innerText));
+  assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 10 });
+  await g.page.click('.boost-btn[data-boost="div"]');
+  await g.page.waitForFunction(() => /\+20% practice/.test(document.querySelector('.portal-kid').innerText));
+  await g.page.click('.boost-btn[data-boost="div"]');
+  await g.page.waitForFunction(() => /\+30% practice/.test(document.querySelector('.portal-kid').innerText));
+  assert.equal(await g.page.locator('.boost-btn[data-boost="div"]').first().isDisabled(), true, 'no more than 30% for one type');
+  assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 30 });
+  await g.page.click('text=−');
+  await g.page.waitForFunction(() => /\+20% practice/.test(document.querySelector('.portal-kid').innerText));
+  assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 20 });
+  // saving the other settings keeps the boost
+  await g.page.click('button:has-text("Save settings")');
+  await g.page.waitForFunction(() => /Saved settings/.test(document.getElementById('portal-msg').innerText));
+  assert.deepEqual((await env.MATH_KV.get('ctl:kid_boost', 'json')).boost, { div: 20 });
+
+  // on the child's device the type really is asked for more often (others give up their share evenly)
+  await kid.page.evaluate(() => acctStartup());
+  const shares = await kid.page.evaluate(() => { state.adapt.on = false; return typeShares(['add', 'sub', 'mul', 'div'], null).map((x) => Math.round(x * 1000) / 1000); });
+  assert.deepEqual(shares, [0.183, 0.183, 0.183, 0.45]);
+  assert.equal(await kid.page.evaluate(() => ctlActive()), false, 'extra practice alone does not lock sign-out');
+  await kid.page.evaluate(() => { parentCtl.boost = {}; });
+  assert.deepEqual(await kid.page.evaluate(() => typeShares(['add', 'sub', 'mul', 'div'], null).map((x) => Math.round(x * 100) / 100)), [0.25, 0.25, 0.25, 0.25]);
+  await kid.context.close(); await g.context.close();
+});
+
+test('the challenge form takes the gems per answer and shows the prize', async () => {
+  const { kid } = await family('kid_gems', 'mom_gems');
+  const g = await openGame(browser, worker, env, { fast: true });
+  await g.page.goto('http://localhost/parent');
+  await g.page.fill('#portal-name', 'mom_gems'); await g.page.fill('#portal-pass', 'secret1');
+  await g.page.click('text=Sign in');
+  await g.page.waitForSelector('.portal-kid');
+  assert.equal(await g.page.inputValue('input[data-chal="gems"]'), '1', 'one gem per answer by default');
+  assert.match(await g.page.innerText('#chal-0'), /Total prize: 20 💎|^/);
+  await g.page.fill('input[data-chal="problems"]', '30');
+  await g.page.fill('input[data-chal="gems"]', '5');
+  await g.page.waitForFunction(() => /too many.*100/.test(document.getElementById('chal-preview-0').innerText));
+  await g.page.click('text=Start a challenge');
+  await g.page.waitForFunction(() => /gems/.test(document.getElementById('portal-msg').innerText) && document.getElementById('portal-msg').className.includes('err'));
+  assert.equal(await env.MATH_KV.get('chall:kid_gems'), null, 'nothing was created');
+  await g.page.fill('input[data-chal="problems"]', '10');
+  await g.page.waitForFunction(() => /Total prize: 50 💎/.test(document.getElementById('chal-preview-0').innerText));
+  await g.page.click('text=Start a challenge');
+  await g.page.waitForFunction(() => /Waiting for kid_gems to tap Start \(10 correct in 15 min = 50 💎\)/.test(document.getElementById('chal-0').innerText));
+  assert.equal((await env.MATH_KV.get('chall:kid_gems', 'json')).gems, 50);
+  await kid.page.evaluate(() => acctStartup());
+  await kid.page.waitForFunction(() => chal && chal.gems === 50);
+  assert.match(await kid.page.innerText('#chal-bar'), /10 in 15 min = 50 💎/);
   await kid.context.close(); await g.context.close();
 });

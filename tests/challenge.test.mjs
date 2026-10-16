@@ -96,3 +96,20 @@ test('a cancelled challenge, or one from a parent who is no longer primary, disa
   await c('/api/link/unlink', 'POST', { id: list[0].id }, kid);   // the child unlinks mom
   assert.equal(await mine(), null, 'her challenge lapses with her link');
 });
+
+test('a parent can choose the gems per answer (1 unless set), within the limit', async () => {
+  const { c, kid, mom, age } = await setup();
+  assert.equal((await make(c, mom, { problems: 10 })).data.challenge.gems, 10, 'one gem per answer by default');
+  await c('/api/parent/challenge', 'POST', { child: 'kiddo', cancel: true }, mom);
+  for (const bad of [{ gemsPer: 0 }, { gemsPer: 11 }, { gemsPer: 1.5 }, { gemsPer: 'x' }]) assert.equal((await make(c, mom, bad)).status, 400, JSON.stringify(bad));
+  const tooMany = await make(c, mom, { problems: 21, gemsPer: 5 });
+  assert.equal(tooMany.status, 400);
+  assert.match(tooMany.data.error, /105 gems.*most.*100/);
+  const ok = await make(c, mom, { problems: 20, gemsPer: 5 });
+  assert.equal(ok.data.challenge.gems, 100);
+  const id = ok.data.challenge.id;
+  await c('/api/challenge/start', 'POST', { id }, kid);
+  await age(120000);
+  const won = await c('/api/challenge/claim', 'POST', { id, count: 20 }, kid);
+  assert.deepEqual([won.data.won, won.data.gems], [true, 100], 'the child is paid the parent\'s amount');
+});

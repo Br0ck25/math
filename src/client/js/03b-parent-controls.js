@@ -9,6 +9,16 @@
 const CTL_KEY = 'math_quest_controls';
 let parentCtl = null;
 
+// A parent's "extra practice": { math type id: percent of all problems moved to that type }.
+function cleanBoost(b) {
+  const out = {};
+  if (!b || typeof b !== 'object') return out;
+  Object.keys(b).slice(0, ECON.parents.boost.maxTypes).forEach(function (id) {
+    const v = b[id];
+    if (Number.isInteger(v) && v > 0) out[id] = Math.min(v, ECON.parents.boost.maxPerType);
+  });
+  return out;
+}
 function cleanCtl(c) {
   if (!c || typeof c !== 'object') return null;
   const g = Math.floor(Number(c.minGrade));
@@ -19,7 +29,8 @@ function cleanCtl(c) {
     duelsOnline: c.duelsOnline !== false,
     goalMinutes: Number.isInteger(c.goalMinutes) && c.goalMinutes >= ECON.parents.goal.minMinutes && c.goalMinutes <= ECON.parents.goal.maxMinutes ? c.goalMinutes : null,
     goalReward: typeof c.goalReward === 'string' ? c.goalReward.slice(0, ECON.parents.goal.maxRewardChars) : '',
-    adaptive: typeof c.adaptive === 'boolean' ? c.adaptive : null
+    adaptive: typeof c.adaptive === 'boolean' ? c.adaptive : null,
+    boost: cleanBoost(c.boost)
   };
 }
 (function loadCtl() {

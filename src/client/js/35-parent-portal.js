@@ -95,8 +95,9 @@ function portalSignedOut() {
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';
 }
 // The settings form for one child. Only the first linked parent (primary) can change them; anyone else just sees them.
+function ctlOf(k) { return cleanCtl(k.controls) || { minGrade: 0, ops: null, duelsOnline: true, goalMinutes: null, goalReward: '', adaptive: null, boost: {} }; }
 function controlsBox(k, i) {
-  const c = cleanCtl(k.controls) || { minGrade: 0, ops: null, duelsOnline: true, goalMinutes: null, goalReward: '', adaptive: null };
+  const c = ctlOf(k);
   if (!k.primary) {
     return '<div class="portal-sub">Settings (set by the first parent linked): lowest level ' + escHtml(GRADES[c.minGrade].long) + (c.ops ? ', ' + c.ops.length + ' math types' : ', all math types') + ', online duels ' + (c.duelsOnline ? 'on' : 'off') +
       (c.goalMinutes ? ', daily goal ' + c.goalMinutes + ' min' : '') + (c.adaptive === null ? '' : ', difficulty matching ' + (c.adaptive ? 'on' : 'off')) + '.</div>';
@@ -112,12 +113,12 @@ function controlsBox(k, i) {
     const on = !c.ops || c.ops.indexOf(o.id) !== -1;
     return '<label class="portal-op"><input type="checkbox" data-op="' + escHtml(o.id) + '"' + (on ? ' checked' : '') + '> ' + o.icon + ' ' + escHtml(o.label) + '</label>';
   }).join('');
-  return '<details class="portal-ctl" id="ctl-' + i + '"><summary>⚙️ Settings for ' + escHtml(k.child) + '</summary>' +
-    '<div class="settings-label">📚 Lowest level</div>' +
-    '<select class="acct-input" data-ctl="grade" aria-label="Lowest level">' + grades + '</select>' +
-    '<div class="portal-sub">' + escHtml(k.child) + ' can play this level or higher, never lower, so easy problems cannot be used to farm gems.</div>' +
-    '<div class="settings-label">🧮 Math types allowed</div><div class="portal-ops">' + ops + '</div>' +
-    '<div class="portal-sub">A type only shows up once its level is reached.</div>' +
+  return '<details class="portal-ctl" id="ctl-' + i + '" open><summary>⚙️ Settings for ' + escHtml(k.child) + '</summary>' +
+    '<div class="settings-label">🔒 Lowest grade level</div>' +
+    '<select class="acct-input" data-ctl="grade" aria-label="Lowest grade level">' + grades + '</select>' +
+    '<div class="portal-sub">' + escHtml(k.child) + ' can play this level or higher, never lower, so easy problems cannot be used to farm gems. Tap Save settings to lock it.</div>' +
+    '<details class="portal-more"><summary>🧮 Math types allowed' + (c.ops ? ' (' + c.ops.length + ' of ' + MATH_OPS.length + ')' : ' (all)') + '</summary><div class="portal-ops">' + ops + '</div>' +
+    '<div class="portal-sub">A type only shows up once its level is reached.</div></details>' +
     '<div class="settings-label">⏳ Daily math time goal</div>' +
     '<select class="acct-input" data-ctl="goal" aria-label="Daily math time goal">' + goals + '</select>' +
     '<input class="acct-input" data-ctl="reward" type="text" maxlength="' + ECON.parents.goal.maxRewardChars + '" placeholder="Reward, e.g. ice cream trip" value="' + escHtml(c.goalReward) + '" aria-label="Reward for reaching the goal">' +
@@ -129,27 +130,59 @@ function controlsBox(k, i) {
     '<button class="grade-btn" style="width:100%; margin-top:10px;" onclick="portalSaveControls(' + i + ')">Save settings</button>' +
     '<div class="portal-sub">They reach ' + escHtml(k.child) + '\'s device the next time the game opens or saves. Tip: set a Parent PIN on that device (Parent Report) so settings cannot be undone by unlinking or signing out.</div></details>';
 }
+// Sends a child's full settings to the server and reloads the page's list. `done` is the message shown on success.
+async function portalSendControls(k, ctl, done) {
+  try {
+    const r = await portalApi('/api/parent/controls', 'POST', Object.assign({ child: k.child }, ctl));
+    if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not save the settings.', 'err');
+    setPortalMsg(done, 'ok');
+    await portalLoad();
+  } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
+}
 async function portalSaveControls(i) {
   const k = portalKids && portalKids[i];
   const box = document.getElementById('ctl-' + i);
   if (!k || !box) return;
   const checked = Array.prototype.filter.call(box.querySelectorAll('input[data-op]'), function (el) { return el.checked; }).map(function (el) { return el.dataset.op; });
   if (!checked.length) return setPortalMsg('Pick at least one math type.', 'err');
-  try {
-    const r = await portalApi('/api/parent/controls', 'POST', {
-      child: k.child,
-      minGrade: parseInt(box.querySelector('select[data-ctl="grade"]').value, 10),
-      ops: checked.length === MATH_OPS.length ? null : checked,
-      duelsOnline: box.querySelector('input[data-ctl="duels"]').checked,
-      goalMinutes: box.querySelector('select[data-ctl="goal"]').value === '' ? null : parseInt(box.querySelector('select[data-ctl="goal"]').value, 10),
-      goalReward: box.querySelector('input[data-ctl="reward"]').value.trim(),
-      adaptive: { '': null, on: true, off: false }[box.querySelector('select[data-ctl="adaptive"]').value]
-    });
-    if (r.status !== 200) return setPortalMsg((r.data && r.data.error) || 'Could not save the settings.', 'err');
-    setPortalMsg('Saved settings for ' + k.child + '.', 'ok');
-    await portalLoad();
-  } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
+  const goal = box.querySelector('select[data-ctl="goal"]').value;
+  await portalSendControls(k, {
+    minGrade: parseInt(box.querySelector('select[data-ctl="grade"]').value, 10),
+    ops: checked.length === MATH_OPS.length ? null : checked,
+    duelsOnline: box.querySelector('input[data-ctl="duels"]').checked,
+    goalMinutes: goal === '' ? null : parseInt(goal, 10),
+    goalReward: box.querySelector('input[data-ctl="reward"]').value.trim(),
+    adaptive: { '': null, on: true, off: false }[box.querySelector('select[data-ctl="adaptive"]').value],
+    boost: ctlOf(k).boost
+  }, 'Saved settings for ' + k.child + '.');
 }
+
+// "Extra practice" quick buttons: each tap moves another 10% of all problems to a weak math type (30% at most for one type, 40% in all).
+function boostBox(k, i, weakIds) {
+  const B = ECON.parents.boost, boost = ctlOf(k).boost;
+  const total = Object.keys(boost).reduce(function (s, id) { return s + boost[id]; }, 0);
+  const label = function (id) { return OP_BY_ID[id] ? OP_BY_ID[id].icon + ' ' + escHtml(OP_BY_ID[id].label) : escHtml(id); };
+  const ids = weakIds.concat(Object.keys(boost).filter(function (id) { return weakIds.indexOf(id) === -1; }));
+  if (!ids.length) return '';
+  const rows = ids.map(function (id) {
+    const now = boost[id] || 0;
+    const canAdd = k.primary && now < B.maxPerType && total + B.step <= B.maxTotal;
+    return '<div class="par-row"><span style="flex:1; white-space:normal;">' + label(id) + (now ? ' · <b>+' + now + '% practice</b>' : '') + '</span>' +
+      (k.primary ? '<button class="grade-btn boost-btn" data-boost="' + escHtml(id) + '" onclick="portalBoost(' + i + ', \'' + escHtml(id) + '\', ' + B.step + ')"' + (canAdd ? '' : ' disabled') + ' aria-label="Add ' + B.step + '% extra practice on ' + escHtml(OP_BY_ID[id] ? OP_BY_ID[id].label : id) + '">+' + B.step + '%</button>' +
+        (now ? '<button class="grade-btn boost-btn" onclick="portalBoost(' + i + ', \'' + escHtml(id) + '\', ' + -B.step + ')" aria-label="Remove ' + B.step + '% extra practice on ' + escHtml(OP_BY_ID[id] ? OP_BY_ID[id].label : id) + '">−</button>' : '') : '') + '</div>';
+  }).join('');
+  return '<div class="settings-label">🚀 Extra practice</div>' + rows +
+    '<div class="portal-sub">' + (k.primary ? 'Each tap moves ' + B.step + '% of ' + escHtml(k.child) + '\'s problems to that type (up to ' + B.maxPerType + '% for one type, ' + B.maxTotal + '% in all). ' : '') + 'It reaches their device the next time the game opens or saves.</div>';
+}
+async function portalBoost(i, id, delta) {
+  const k = portalKids && portalKids[i];
+  if (!k || !k.primary) return;
+  const c = ctlOf(k), boost = Object.assign({}, c.boost);
+  boost[id] = Math.max(0, (boost[id] || 0) + delta);
+  if (!boost[id]) delete boost[id];
+  await portalSendControls(k, Object.assign({}, c, { boost: boost }), (OP_BY_ID[id] ? OP_BY_ID[id].label : id) + ': ' + (boost[id] ? '+' + boost[id] + '% extra practice' : 'no extra practice') + '.');
+}
+
 // The timed challenge for one child: where it stands, and (first parent only) a form to start one or a button to cancel it.
 function challengeBox(k, i) {
   const ch = k.challenge;
@@ -167,12 +200,23 @@ function challengeBox(k, i) {
     const busy = ch && (ch.state === 'ready' || ch.state === 'running');
     act = busy
       ? '<button class="grade-btn" style="width:100%;" onclick="portalChallenge(' + i + ', true)">Cancel this challenge</button>'
-      : '<div class="portal-fields"><label>Correct answers <input class="acct-input" type="number" inputmode="numeric" min="1" max="' + ECON.parents.challenge.maxProblems + '" value="20" data-chal="problems"></label>' +
-        '<label>Minutes <input class="acct-input" type="number" inputmode="numeric" min="' + ECON.parents.challenge.minMinutes + '" max="' + ECON.parents.challenge.maxMinutes + '" value="15" data-chal="minutes"></label></div>' +
-        '<div class="portal-sub">' + who + ' wins ' + ECON.parents.challenge.gemPerProblem + ' 💎 per answer, but only if they get them all in time. Wrong answers do not count. If time runs out nothing is lost.</div>' +
+      : '<div class="portal-fields"><label>Correct answers <input class="acct-input" type="number" inputmode="numeric" min="1" max="' + ECON.parents.challenge.maxProblems + '" value="20" data-chal="problems" oninput="portalChalPreview(' + i + ')"></label>' +
+        '<label>Minutes <input class="acct-input" type="number" inputmode="numeric" min="' + ECON.parents.challenge.minMinutes + '" max="' + ECON.parents.challenge.maxMinutes + '" value="15" data-chal="minutes"></label>' +
+        '<label>💎 per answer <input class="acct-input" type="number" inputmode="numeric" min="1" max="' + ECON.parents.challenge.maxGemPerProblem + '" value="' + ECON.parents.challenge.gemPerProblem + '" data-chal="gems" oninput="portalChalPreview(' + i + ')"></label></div>' +
+        '<div class="portal-sub" id="chal-preview-' + i + '" aria-live="polite"></div>' +
+        '<div class="portal-sub">' + who + ' only wins if they get them all in time. Wrong answers do not count. If time runs out nothing is lost. The most for one challenge is ' + ECON.parents.challenge.maxGems + ' 💎.</div>' +
         '<button class="grade-btn" style="width:100%;" onclick="portalChallenge(' + i + ', false)">Start a challenge</button>';
   }
   return '<div class="settings-label">🏆 Timed challenge</div><div id="chal-' + i + '">' + status + act + '</div>';
+}
+// Shows what the challenge form would pay, and warns when it is over the limit.
+function portalChalPreview(i) {
+  const box = document.getElementById('chal-' + i), out = document.getElementById('chal-preview-' + i);
+  if (!box || !out) return;
+  const n = parseInt(box.querySelector('input[data-chal="problems"]').value, 10) || 0;
+  const g = parseInt(box.querySelector('input[data-chal="gems"]').value, 10) || 0;
+  const total = n * g;
+  out.innerText = total > ECON.parents.challenge.maxGems ? '⚠️ ' + total + ' 💎 is too many. The most is ' + ECON.parents.challenge.maxGems + '.' : 'Total prize: ' + total + ' 💎';
 }
 async function portalChallenge(i, cancel) {
   const k = portalKids && portalKids[i];
@@ -183,6 +227,7 @@ async function portalChallenge(i, cancel) {
   else {
     body.problems = parseInt(box.querySelector('input[data-chal="problems"]').value, 10);
     body.minutes = parseInt(box.querySelector('input[data-chal="minutes"]').value, 10);
+    body.gemsPer = parseInt(box.querySelector('input[data-chal="gems"]').value, 10);
   }
   try {
     const r = await portalApi('/api/parent/challenge', 'POST', body);
@@ -204,7 +249,7 @@ function kidCard(k, i) {
     '<div style="font-size:0.74rem; font-weight:700; margin-bottom:2px;">' + r.compare + '</div>' +
     '<div class="settings-label">📅 Minutes per day</div><div class="par-days">' + r.days + '</div>' +
     '<div class="settings-label">🎯 Accuracy by math type</div>' + r.types +
-    '<div class="settings-label">🔍 Weak spots</div><div style="font-size:0.8rem; margin-bottom:4px;">' + r.strong + '</div><div style="font-size:0.8rem;">' + r.weak + '</div>' +
+    '<div class="settings-label">🔍 Weak spots</div><div style="font-size:0.8rem; margin-bottom:4px;">' + r.strong + '</div><div style="font-size:0.8rem;">' + r.weak + '</div>' + boostBox(k, i, r.weakIds) +
     '<button class="grade-btn" style="margin-top:10px;" onclick="portalUnlink(' + i + ')">Stop watching ' + escHtml(k.child) + '</button></div>';
 }
 function renderPortal() {
@@ -213,10 +258,10 @@ function renderPortal() {
   document.getElementById('portal').innerHTML =
     '<div class="portal-inner"><h1>👨‍👩‍👧 Parent page</h1>' +
     '<div class="acct-signed">✅ Signed in as ' + escHtml(portal.name) + '</div>' +
-    '<div class="settings-label">Add a child</div>' +
-    '<div class="portal-sub">On your child\'s device: Parent Report → See stats on a parent\'s phone → Get a link code.</div>' +
+    '<div class="settings-label">' + (kids.length ? 'Add another child' : 'Add a child') + '</div>' +
+    '<div class="portal-sub">You can watch up to ' + ECON.parents.maxKids + ' children. On each child\'s device: Parent Report → See stats on a parent\'s phone → Get a link code, then type it here.</div>' +
     '<input class="acct-input" id="portal-code" placeholder="Code, like ABCD-EFGH" maxlength="12" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" aria-label="Link code">' +
-    '<div class="acct-btns"><button class="grade-btn" onclick="portalClaim()">Add child</button><button class="grade-btn" onclick="portalLogout()">Sign out</button></div>' +
+    '<div class="acct-btns"><button class="grade-btn" onclick="portalClaim()">' + (kids.length ? 'Add another child' : 'Add child') + '</button><button class="grade-btn" onclick="portalLogout()">Sign out</button></div>' +
     '<button class="grade-btn" style="width:100%; margin-top:6px;" onclick="portalLoad()">🔄 Refresh</button>' +
     '<div class="acct-msg ' + portalMsg.kind + '" id="portal-msg" role="status">' + escHtml(portalMsg.text) + '</div>' +
     (portalKids === null ? '<div class="portal-sub">Loading…</div>' : (kids.length ? kids.map(kidCard).join('') : '<div class="portal-sub">No children yet. Add one with a code.</div>')) +

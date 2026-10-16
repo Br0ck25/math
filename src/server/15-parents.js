@@ -95,7 +95,8 @@ function controlsOf(ctl) {
   return {
     minGrade: ctl.minGrade, ops: ctl.ops, duelsOnline: ctl.duelsOnline,
     goalMinutes: ctl.goalMinutes === undefined ? null : ctl.goalMinutes, goalReward: ctl.goalReward || '',
-    adaptive: typeof ctl.adaptive === 'boolean' ? ctl.adaptive : null
+    adaptive: typeof ctl.adaptive === 'boolean' ? ctl.adaptive : null,
+    boost: ctl.boost || {}
   };
 }
 function liveControls(ctl, grant) {
@@ -152,7 +153,22 @@ function cleanControls(b) {
   const goalReward = b.goalReward === undefined || b.goalReward === null ? '' : b.goalReward;
   if (typeof goalReward !== 'string' || goalReward.length > ECON.parents.goal.maxRewardChars || /[\u0000-\u001f<>]/.test(goalReward)) return null;
   if (b.adaptive !== undefined && b.adaptive !== null && typeof b.adaptive !== 'boolean') return null;
-  return { minGrade: minGrade, ops: ops, duelsOnline: b.duelsOnline, goalMinutes: goalMinutes, goalReward: goalReward.trim(), adaptive: typeof b.adaptive === 'boolean' ? b.adaptive : null };
+  // extra practice: { math type id: percent of all problems moved to it }
+  const boost = {};
+  if (b.boost !== undefined && b.boost !== null) {
+    const B = ECON.parents.boost;
+    if (typeof b.boost !== 'object' || Array.isArray(b.boost)) return null;
+    const ids = Object.keys(b.boost);
+    let total = 0;
+    if (ids.length > B.maxTypes) return null;
+    for (let i = 0; i < ids.length; i++) {
+      const v = b.boost[ids[i]];
+      if (!/^[a-z0-9_]{1,20}$/.test(ids[i]) || !Number.isInteger(v) || v < 0 || v > B.maxPerType) return null;
+      if (v) { boost[ids[i]] = v; total += v; }
+    }
+    if (total > B.maxTotal) return null;
+  }
+  return { minGrade: minGrade, ops: ops, duelsOnline: b.duelsOnline, goalMinutes: goalMinutes, goalReward: goalReward.trim(), adaptive: typeof b.adaptive === 'boolean' ? b.adaptive : null, boost: boost };
 }
 
 // ---- the parent's side ---------------------------------------------------

@@ -113,7 +113,7 @@ test('only the primary parent can change settings, and they are checked', async 
   }
   const ok = await c('/api/parent/controls', 'POST', ctl({ ops: ['add', 'add', 'sub'], duelsOnline: false }), mom);
   assert.equal(ok.status, 200);
-  assert.deepEqual(ok.data.controls, { minGrade: 1, ops: ['add', 'sub'], duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null });
+  assert.deepEqual(ok.data.controls, { minGrade: 1, ops: ['add', 'sub'], duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null, boost: {} });
   assert.deepEqual((await c('/api/parent/kids', 'GET', null, mom)).data.kids[0].controls, ok.data.controls);
   assert.equal((await c('/api/parent/kids', 'GET', null, dad)).data.kids[0].controls.minGrade, 1, 'the second parent can see them');
 });
@@ -123,7 +123,7 @@ test('the child receives the settings, and the cloud save never holds a lower le
   await link(c, kid, mom);
   assert.equal((await c('/api/save', 'GET', null, kid)).data.controls, null);
   await c('/api/parent/controls', 'POST', ctl({ minGrade: 2, duelsOnline: false }), mom);
-  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, { minGrade: 2, ops: null, duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null });
+  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls, { minGrade: 2, ops: null, duelsOnline: false, goalMinutes: null, goalReward: '', adaptive: null, boost: {} });
   const put = await c('/api/save', 'PUT', { state: { ...save, grade: 0, duelsOnline: true }, baseVersion: 1, force: true }, kid);
   assert.equal(put.data.controls.minGrade, 2, 'every save tells the device the settings');
   const stored = (await c('/api/save', 'GET', null, kid)).data.save.state;
@@ -192,4 +192,15 @@ test('deleting a parent account needs the password and removes everything they s
   assert.equal((await c('/api/parent/kids', 'GET', null, mom)).status, 401, 'the old token stays dead');
   assert.equal((await c('/api/parent/kids', 'GET', null, otherPhone)).status, 401, 'a sign-in on another phone does not carry over to the new account');
   assert.equal((await c('/api/parent/kids', 'GET', null, again)).status, 200);
+});
+
+test('extra practice (boost) settings are checked and kept', async () => {
+  const { c, kid, mom } = await setup();
+  await link(c, kid, mom);
+  for (const bad of [{ div: 40 }, { div: 5.5 }, { '<b>': 10 }, { div: 'x' }, { div: 30, mul: 20 }, [10], 'div']) {
+    assert.equal((await c('/api/parent/controls', 'POST', ctl({ boost: bad }), mom)).status, 400, JSON.stringify(bad));
+  }
+  const ok = await c('/api/parent/controls', 'POST', ctl({ boost: { div: 30, mul: 10, add: 0 } }), mom);
+  assert.deepEqual(ok.data.controls.boost, { div: 30, mul: 10 }, 'zero entries are dropped');
+  assert.deepEqual((await c('/api/save', 'GET', null, kid)).data.controls.boost, { div: 30, mul: 10 });
 });
