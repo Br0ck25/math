@@ -10,11 +10,17 @@ import { reptiles } from './art/reptiles.mjs';
 import { sea } from './art/sea.mjs';
 import { bugs } from './art/bugs.mjs';
 import { other } from './art/other.mjs';
+import { mammals2 } from './art/mammals2.mjs';
+import { birds2 } from './art/birds2.mjs';
+import { reptiles2 } from './art/reptiles2.mjs';
+import { sea2 } from './art/sea2.mjs';
+import { bugs2 } from './art/bugs2.mjs';
+import { other2 } from './art/other2.mjs';
 import { SPECS } from './art/specs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'art/buddies');
-const SPECIES = { ...mammals, ...birds, ...reptiles, ...sea, ...bugs, ...other };
+const SPECIES = { ...mammals, ...birds, ...reptiles, ...sea, ...bugs, ...other, ...mammals2, ...birds2, ...reptiles2, ...sea2, ...bugs2, ...other2 };
 export function draw([id, sp, color, x = {}]) {
   const make = SPECIES[sp];
   if (!make) throw new Error(id + ': unknown species ' + sp);

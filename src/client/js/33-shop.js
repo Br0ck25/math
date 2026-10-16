@@ -203,7 +203,7 @@ function renderShopPets() {
     const lockedBandit = pet.requiresAllStorePets && !allOthersOwned && !owned;
     container.appendChild(makePetCard(pet, {
       owned: owned,
-      statusText: lockedBandit ? `🔒 Needs All ${otherStats.total} (${otherStats.owned}/${otherStats.total})` : `💎 ${pet.cost}`,
+      statusText: lockedBandit ? `🔒 Needs All ${otherStats.total} (${otherStats.owned}/${otherStats.total})` : (pet.cost ? `💎 ${pet.cost}` : '🎁 Free'),
       statusColor: lockedBandit ? '#94a3b8' : '#f59e0b',
       onclick: function () { selectOrBuyPet(pet); }
     }));
@@ -224,7 +224,7 @@ function selectOrBuyPet(pet, confirmed) {
     toast(`You need ${pet.cost - state.gems} more 💎 Gems to adopt ${pet.name}!`);
     return;
   }
-  if (!confirmed) { askBuy({ icon: pet.icon, name: pet.name, cost: pet.cost, note: 'A new ' + pet.element + ' buddy for your collection' }, function () { selectOrBuyPet(pet, true); }); return; }
+  if (!confirmed && pet.cost) { askBuy({ icon: pet.icon, name: pet.name, cost: pet.cost, note: 'A new ' + pet.element + ' buddy for your collection' }, function () { selectOrBuyPet(pet, true); }); return; }
   state.gems -= pet.cost;
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);

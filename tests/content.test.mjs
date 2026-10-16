@@ -10,13 +10,13 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 352 buddies, 55 bosses, 118 pieces of gear', async () => {
+test('the collection has the planned size: 353 buddies, 55 bosses, 118 pieces of gear', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
     gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length, legend: legendPets.length
   }));
-  assert.deepEqual(c, { buddies: 352, bosses: 55, gear: 118, store: 43, mythic: 36, secret: 209, legend: 6 });
+  assert.deepEqual(c, { buddies: 353, bosses: 55, gear: 118, store: 44, mythic: 36, secret: 209, legend: 6 });
 });
 
 test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {
@@ -466,4 +466,18 @@ test('Tyson, the playful German shepherd, is the newest boss: appended last, a p
       taunts: m.taunts.length, kind: m.taunts.every((t) => !/stupid|dumb|loser|die/i.test(t)), name: getBossInfo().name.includes('Tyson'), available: bossAvailable(i), pack: packOf(sp).id, rockyStillAt: monstersList[53].name };
   });
   assert.deepEqual(r, { last: true, i: 54, element: 'electric', hp: 5, slays: null, minLevel: 0, buddy: 'boss_54', spName: 'Tyson', move: 'Zoomie Fetch Frenzy', snack: 'tennis balls', taunts: 2, kind: true, name: true, available: true, pack: 'boss-electric', rockyStillAt: 'Rocky' });
+});
+
+test('Jimothy the raccoon is a free store buddy with his own picture: one tap adopts him, no gems, no confirm window', async () => {
+  const r = await inPage(() => {
+    const sp = storePets.find((p) => p.id === 'jimothy');
+    state.gems = 0; state.unlockedPets = ['dog']; state.swapUsed = true;
+    renderShopPets();
+    const label = document.getElementById('pet-grid').textContent.includes('Free');
+    const before = state.gems;
+    selectOrBuyPet(sp);
+    const out = { free: sp.cost === 0, owned: state.unlockedPets.indexOf('jimothy') !== -1, gems: state.gems - before, confirm: !!document.getElementById('confirm-modal') && !document.getElementById('confirm-modal').classList.contains('hidden') && document.getElementById('confirm-modal').style.display === 'flex', picture: !!BUDDY_ART.jimothy && String(sp.icon).indexOf('<img') === 0, label };
+    return out;
+  });
+  assert.deepEqual({ free: r.free, owned: r.owned, gems: r.gems, confirm: r.confirm, picture: r.picture, label: r.label }, { free: true, owned: true, gems: 0, confirm: false, picture: true, label: true });
 });

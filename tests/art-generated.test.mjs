@@ -31,6 +31,13 @@ test('no two buddies or bosses look the same: each has its own picture or its ow
   assert.deepEqual(bossClash, [], 'two bosses share an emoji');
 });
 
+test('every generated picture is a different animal: no two buddies or bosses share a species drawing', async () => {
+  const bySpecies = {};
+  SPECS.forEach((s) => (bySpecies[s[1]] = bySpecies[s[1]] || []).push(s[0]));
+  const dupes = Object.keys(bySpecies).filter((k) => bySpecies[k].length > 1).map((k) => k + ': ' + bySpecies[k].join(', '));
+  assert.deepEqual(dupes, [], 'give each buddy its own animal (a new template in scripts/art/*2.mjs), not just a new colour');
+});
+
 test('every spec is for a real buddy, the files are valid pictures, and they are up to date with the generator', async () => {
   const ids = await page.evaluate(() => allBuddies().map((b) => b.id));
   const bad = [];

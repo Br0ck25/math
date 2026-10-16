@@ -21,14 +21,14 @@ const monstersList = [
   { name: "Venom Hydrak", icon: "🐍", baseHp: 5, element: "nature", taunts: ["Hiss! Toxic subtraction!", "Poison fangs strike hard!"] },
   { name: "Jungle Behemoth", icon: "🦏", baseHp: 5, element: "nature", taunts: ["Heavy footfalls shake the jungle!", "Nature's unstoppable force!"] },
   { name: "Spore Mantis", icon: "🦗", baseHp: 5, element: "nature", taunts: ["Fast strikes from the canopy!", "Blades of the forest!"] },
-  { name: "Thorn Dragon", icon: "🐲", baseHp: 6, element: "nature", taunts: ["Sharp thorns defend the ancient grove!", "Entangling vines trap you!"] },
+  { name: "Thorn Hydra", icon: "🐲", baseHp: 6, element: "nature", taunts: ["Sharp thorns defend the ancient grove!", "Entangling vines trap you!"] },
 
   // 6 Electric Bosses
   { name: "Robo-Glitch", icon: "🤖", baseHp: 4, element: "electric", taunts: ["Syntax Error in human brain!", "Multiplication overload!"] },
   { name: "Thunder Griffin", icon: "🦅", baseHp: 5, element: "electric", taunts: ["Lightning speed arithmetic!", "Shockwaves incoming!"] },
   { name: "Plasma Gecko", icon: "🦎", baseHp: 5, element: "electric", taunts: ["Voltage surge exceeding limit!", "Alien calculation protocol!"] },
   { name: "Volt Hamster", icon: "🐹", baseHp: 5, element: "electric", taunts: ["High voltage overload!", "Running my wheel at full charge!"] },
-  { name: "Storm Falcon", icon: "🦅", baseHp: 5, element: "electric", taunts: ["Lightning rides on my wings!", "Thunder crack in the sky!"] },
+  { name: "Storm Condor", icon: "🦅", baseHp: 5, element: "electric", taunts: ["Lightning rides on my wings!", "Thunder crack in the sky!"] },
   { name: "Cyber Mecha", icon: "🤖", baseHp: 6, element: "electric", taunts: ["Target locked, human computation failing!", "Laser grid activated!"] },
 
   // 6 Dark Bosses

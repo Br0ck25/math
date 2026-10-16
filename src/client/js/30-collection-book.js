@@ -163,7 +163,7 @@ function renderBook() {
     };
     // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
     const tierHint = function (sp) {
-      return storePets.indexOf(sp) !== -1 ? '💎 ' + sp.cost + ' in the Sanctuary' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+      return storePets.indexOf(sp) !== -1 ? (sp.cost ? '💎 ' + sp.cost : 'Free') + ' in the Sanctuary' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
     };
     buddyPacks().forEach(function (g) {
       let reward = '';
