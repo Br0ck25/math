@@ -133,6 +133,8 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
   assert.equal(sizeSvg(sized), sized);
   assert.equal(sizeSvg('<svg height="20" viewBox="0 0 200 100">'), '<svg height="20" viewBox="0 0 200 100">');
   assert.equal(sizeSvg('<svg xmlns="x">'), '<svg xmlns="x">', 'no viewBox: nothing to add');
+  assert.equal(sizeSvg('<svg xmlns="x" viewBox="0 0 100 100" width="100%" height="100%">'), '<svg width="100" height="100" xmlns="x" viewBox="0 0 100 100">', 'percent sizes become the viewBox size');
+  assert.equal(sizeSvg('<svg viewBox="0 0 100 100" width="64px" height="64px">'), '<svg viewBox="0 0 100 100" width="64px" height="64px">');
   const f = path.join(artDir, 'zz_vb.svg');
   fs.mkdirSync(artDir, { recursive: true });
   fs.writeFileSync(f, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><rect width="160" height="80" fill="#22c55e"/></svg>');

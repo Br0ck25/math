@@ -29,13 +29,15 @@ export function artFiles() {
     return { id: m[1].toLowerCase(), file: f, bytes: bytes };
   });
 }
-// An svg with only a viewBox has no natural size in some browsers (Firefox, iOS Safari), so the trading card could not draw it.
-// Give it the viewBox's width and height when it has neither.
+// An svg with only a viewBox, or with width/height="100%", has no natural size in some browsers (Firefox, iOS Safari), so the trading card
+// could not draw it. Give it the viewBox's width and height when it has no fixed size.
 export function sizeSvg(text) {
   return text.replace(/<svg\b([^>]*)>/i, (tag, attrs) => {
-    if (/\b(width|height)\s*=/i.test(attrs)) return tag;
+    const fixed = (n) => new RegExp('\\b' + n + '\\s*=\\s*["\']\\s*[\\d.]+\\s*(px)?\\s*["\']', 'i').test(attrs);
+    if (fixed('width') || fixed('height')) return tag;
     const vb = /viewBox\s*=\s*["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*["']/i.exec(attrs);
-    return vb ? '<svg width="' + vb[1] + '" height="' + vb[2] + '"' + attrs + '>' : tag;
+    if (!vb) return tag;
+    return '<svg width="' + vb[1] + '" height="' + vb[2] + '"' + attrs.replace(/\s(width|height)\s*=\s*["'][^"']*["']/gi, '') + '>';
   });
 }
 function artChunk() {

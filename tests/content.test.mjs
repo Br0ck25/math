@@ -21,7 +21,7 @@ test('the collection has the planned size: 351 buddies, 54 bosses, 118 pieces of
 
 test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {
   const r = await inPage(() => ({
-    buddies: allBuddies().map((b) => ({ id: b.id, name: b.name, icon: b.icon, person: !!(b.show || b.mythic || b.legend) })),
+    buddies: allBuddies().map((b) => ({ id: b.id, name: b.name, icon: b.emoji || b.icon, person: !!(b.show || b.mythic || b.legend) })),
     bosses: monstersList.map((m) => ({ name: m.name, icon: m.icon }))
   }));
   const cp = (icon) => icon.codePointAt(0);
@@ -52,7 +52,8 @@ test('every buddy has what it needs: unique id, valid type, a move, and three fo
       if (!p.forms || p.forms.length !== 3) { out.push(p.id + ' forms'); return; }
       p.forms.forEach((f, i) => {
         if (!f.name || !f.icon) out.push(p.id + ' form ' + i + ' incomplete');
-        if (typeof f.icon === 'string' && !f.icon.trim().startsWith('<svg') && /\s/.test(f.icon.trim())) out.push(p.id + ' form ' + i + ' icon has extra pieces: ' + f.icon);
+        const fi = f.emoji || f.icon;                       // a buddy with licensed art keeps its emoji here
+        if (typeof fi === 'string' && !fi.trim().startsWith('<svg') && /\s/.test(fi.trim())) out.push(p.id + ' form ' + i + ' icon has extra pieces: ' + fi);
         if (i && f.minLevel <= p.forms[i - 1].minLevel) out.push(p.id + ' forms out of order');
       });
       if (p.forms[2].minLevel > 100) out.push(p.id + ' final form beyond level 100');
@@ -65,7 +66,7 @@ test('every buddy has what it needs: unique id, valid type, a move, and three fo
 test('evolved forms keep the buddy recognisable: the base animal is never replaced by a bare symbol', async () => {
   const bad = await inPage(() => {
     const symbols = /^(🔥|🌙|🌊|🌵|👑|❄️|⚡|🌈|☀️|✨)$/;
-    return storePets.filter((p) => p.forms.some((f) => symbols.test(f.icon))).map((p) => p.id + ' → ' + p.forms.map((f) => f.icon).join(' '));
+    return storePets.filter((p) => p.forms.some((f) => symbols.test(f.emoji || f.icon))).map((p) => p.id + ' → ' + p.forms.map((f) => f.emoji || f.icon).join(' '));
   });
   assert.deepEqual(bad, []);
 });
