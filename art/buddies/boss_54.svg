@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Resting Front Paws (Lying down flat style) -->
+  <ellipse cx="20" cy="85" rx="8" ry="6" fill="#D97706" stroke="#451A03" stroke-width="2.5"/>
+  <circle cx="17" cy="88" r="1.5" fill="#1E293B"/>
+  <circle cx="21" cy="89" r="1.5" fill="#1E293B"/>
+
+  <!-- Red Collar with Deep Saddle Fur behind neck -->
+  <path d="M 32 30 C 40 24 60 24 68 30" fill="none" stroke="#DC2626" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M 34 26 C 42 20 58 20 66 26" fill="none" stroke="#1E293B" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Signature Huge Winged German Shepherd Radar Ears (Flared Outward) -->
+  <!-- Left Winged Ear -->
+  <path d="M 34 36 C 24 28 8 16 6 25 C 4 35 14 50 30 46 Z" fill="#B45309" stroke="#451A03" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 28 36 C 20 30 11 23 10 27 C 9 33 16 43 27 41 Z" fill="#FDE68A"/>
+  <!-- Ear Fluff Spikes -->
+  <path d="M 16 30 Q 20 34 16 38" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Right Winged Ear -->
+  <path d="M 66 36 C 76 28 92 16 94 25 C 96 35 86 50 70 46 Z" fill="#B45309" stroke="#451A03" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 72 36 C 80 30 89 23 90 27 C 91 33 84 43 73 41 Z" fill="#FDE68A"/>
+  <!-- Ear Fluff Spikes -->
+  <path d="M 84 30 Q 80 34 84 38" fill="none" stroke="#D97706" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Head Base (Warm Golden Tan) -->
+  <rect x="22" y="24" width="56" height="58" rx="20" fill="#D97706" stroke="#451A03" stroke-width="3.5"/>
+
+  <!-- Black Shepherd Cap / Forehead Mask -->
+  <path d="M 28 26 C 36 22 64 22 72 26 C 70 38 64 43 62 48 C 58 41 54 41 50 44 C 46 41 42 41 38 48 C 36 43 30 38 28 26 Z" fill="#1E293B" stroke="#0F172A" stroke-width="1.5"/>
+
+  <!-- Forehead Center Brow Furrows -->
+  <path d="M 44 32 Q 50 36 56 32" fill="none" stroke="#451A03" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 46 36 Q 50 39 54 36" fill="none" stroke="#451A03" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Big Melts-Your-Heart Puppy Eyes (Angled, Sleepy & Sweet) -->
+  <!-- Left Eye with Dark Mask Patch -->
+  <ellipse cx="38" cy="46" rx="8" ry="7.5" fill="#1E293B"/>
+  <ellipse cx="38.5" cy="46.5" rx="5" ry="5.5" fill="#451A03"/>
+  <circle cx="39" cy="46.5" r="3.2" fill="#0F172A"/>
+  <circle cx="37.2" cy="44.2" r="1.3" fill="#FFFFFF"/>
+  <path d="M 30 42 Q 38 38 45 44" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Right Eye with Dark Mask Patch -->
+  <ellipse cx="62" cy="46" rx="8" ry="7.5" fill="#1E293B"/>
+  <ellipse cx="61.5" cy="46.5" rx="5" ry="5.5" fill="#451A03"/>
+  <circle cx="61" cy="46.5" r="3.2" fill="#0F172A"/>
+  <circle cx="59.2" cy="44.2" r="1.3" fill="#FFFFFF"/>
+  <path d="M 55 44 Q 62 38 70 42" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Elongated Resting Muzzle (Warm Tan transitioning to Charcoal Snout) -->
+  <path d="M 32 54 C 32 48 40 48 50 48 C 60 48 68 48 68 54 C 68 76 62 84 50 84 C 38 84 32 76 32 54 Z" fill="#B45309" stroke="#451A03" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Charcoal/Black Muzzle Shading -->
+  <path d="M 36 62 C 36 56 42 55 50 55 C 58 55 64 56 64 62 C 64 78 59 83 50 83 C 41 83 36 78 36 62 Z" fill="#1E293B" stroke="#0F172A" stroke-width="1.8"/>
+
+  <!-- Large Black Leathery Dog Nose -->
+  <path d="M 43 72 C 43 67 46 66 50 66 C 54 66 57 67 57 72 C 57 77 54 79 50 79 C 46 79 43 77 43 72 Z" fill="#0F172A"/>
+  <ellipse cx="46.5" cy="74" rx="1.5" ry="2" fill="#1E293B"/>
+  <ellipse cx="53.5" cy="74" rx="1.5" ry="2" fill="#1E293B"/>
+  <ellipse cx="48.5" cy="69" rx="2.5" ry="1.2" fill="#64748B" opacity="0.6"/>
+
+  <!-- Muzzle Rest Crease / Gentle Sleepy Smile -->
+  <line x1="50" y1="79" x2="50" y2="82" stroke="#0F172A" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 44 81 Q 50 83 56 81" fill="none" stroke="#0F172A" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Whisker Muzzle Spots -->
+  <circle cx="39" cy="70" r="1.1" fill="#0F172A"/>
+  <circle cx="38" cy="74" r="1.1" fill="#0F172A"/>
+  <circle cx="61" cy="70" r="1.1" fill="#0F172A"/>
+  <circle cx="62" cy="74" r="1.1" fill="#0F172A"/>
+</svg>

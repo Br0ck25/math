@@ -272,7 +272,8 @@ const BOSS_BUDDY_FIXED = {
   boss_cow: { superMove: 'Stampede Slam', snack: { icon: '🌾', name: 'fresh hay' } },
   boss_harpy: { superMove: 'Thunder Talon Dive' },
   boss_mara: { superMove: 'Tempting Trick' },
-  boss_rocky: { superMove: 'Big Dog Pounce', snack: { icon: '🦴', name: 'big bones' } }
+  boss_rocky: { superMove: 'Big Dog Pounce', snack: { icon: '🦴', name: 'big bones' } },
+  boss_54: { superMove: 'Zoomie Fetch Frenzy', snack: { icon: '🎾', name: 'tennis balls' } }
 };
 const BOSS_MOVE_VERB = { fire: 'Blaze', water: 'Surge', nature: 'Smash', electric: 'Shock', dark: 'Shadow Strike', magic: 'Spell' };
 const bossBuddies = monstersList.map(function (m, i) {

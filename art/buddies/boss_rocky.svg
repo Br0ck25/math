@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Rose / Floppy Pitbull Ears (Fawn / Warm Honey) -->
+  <!-- Left Ear -->
+  <path d="M 26 34 C 12 36 8 52 14 62 C 17 66 24 64 26 58 C 28 52 28 42 28 34 Z" fill="#E0A96D" stroke="#5C381E" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 20 44 C 18 50 20 56 23 54" stroke="#C88E52" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Right Ear -->
+  <path d="M 74 34 C 88 36 92 52 86 62 C 83 66 76 64 74 58 C 72 52 72 42 72 34 Z" fill="#E0A96D" stroke="#5C381E" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M 80 44 C 82 50 80 56 77 54" stroke="#C88E52" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+  <!-- Blue Collar & Silver Ring at Neck -->
+  <path d="M 34 84 Q 50 92 66 84" fill="none" stroke="#1D4ED8" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="68" cy="81" r="3.5" fill="none" stroke="#94A3B8" stroke-width="1.8"/>
+
+  <!-- Broad Blocky Head Shape (Fawn/Tan Pittie Coat) -->
+  <rect x="18" y="22" width="64" height="60" rx="22" fill="#E0A96D" stroke="#5C381E" stroke-width="3.5"/>
+
+  <!-- Forehead White Blaze Streak -->
+  <path d="M 50 23 L 51 35 L 49 35 Z" fill="#FFFFFF" opacity="0.9"/>
+
+  <!-- Expressive / Gentle Pittie Forehead Wrinkles -->
+  <path d="M 40 30 Q 50 33 60 30" fill="none" stroke="#C88E52" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 43 26 Q 50 28 57 26" fill="none" stroke="#C88E52" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Soulful, Gentle Dark Almond Eyes with Subtle Shadow -->
+  <!-- Left Eye -->
+  <ellipse cx="35" cy="42" rx="7" ry="7" fill="#5C381E"/>
+  <circle cx="35" cy="42" r="4.5" fill="#3D1E0B"/>
+  <circle cx="35" cy="42" r="2.8" fill="#180A04"/>
+  <circle cx="33.5" cy="40" r="1.2" fill="#FFFFFF"/>
+  <path d="M 27 38 Q 35 34 43 40" fill="none" stroke="#5C381E" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Right Eye -->
+  <ellipse cx="65" cy="42" rx="7" ry="7" fill="#5C381E"/>
+  <circle cx="65" cy="42" r="4.5" fill="#3D1E0B"/>
+  <circle cx="65" cy="42" r="2.8" fill="#180A04"/>
+  <circle cx="63.5" cy="40" r="1.2" fill="#FFFFFF"/>
+  <path d="M 57 40 Q 65 34 73 38" fill="none" stroke="#5C381E" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- White Snout Blaze Extension (Flowing down into the muzzle) -->
+  <path d="M 46 44 Q 50 42 54 44 L 59 55 C 67 55 72 61 72 68 C 72 78 61 82 50 82 C 39 82 28 78 28 68 C 28 61 33 55 41 55 Z" fill="#FFFFFF" stroke="#5C381E" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Pinkish Pigment Spotting Under/Around the Nose -->
+  <ellipse cx="50" cy="71" rx="8.5" ry="4" fill="#FBCFE8" opacity="0.85"/>
+
+  <!-- Wide Pitbull Nose -->
+  <path d="M 42 58 C 42 54 46 53 50 53 C 54 53 58 54 58 58 C 58 64 54 67 50 67 C 46 67 42 64 42 58 Z" fill="#1E293B" stroke="#0F172A" stroke-width="1.8"/>
+  <ellipse cx="46" cy="61" rx="1.6" ry="2.2" fill="#0F172A"/>
+  <ellipse cx="54" cy="61" rx="1.6" ry="2.2" fill="#0F172A"/>
+  <ellipse cx="48" cy="56" rx="2" ry="1" fill="#64748B" opacity="0.6"/>
+
+  <!-- Muzzle Center Crease & Gentle Sweet Grin -->
+  <line x1="50" y1="67" x2="50" y2="73" stroke="#5C381E" stroke-width="2" stroke-linecap="round"/>
+  <path d="M 40 73 Q 50 78 60 73" fill="none" stroke="#5C381E" stroke-width="2.2" stroke-linecap="round"/>
+
+  <!-- Whisker Dots on White Muzzle -->
+  <circle cx="36" cy="65" r="1" fill="#C88E52"/>
+  <circle cx="34" cy="69" r="1" fill="#C88E52"/>
+  <circle cx="64" cy="65" r="1" fill="#C88E52"/>
+  <circle cx="66" cy="69" r="1" fill="#C88E52"/>
+</svg>

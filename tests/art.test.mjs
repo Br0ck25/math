@@ -161,6 +161,30 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
   assert.equal(r.avatar, true);
 });
 
+test('a boss with art (Rocky, Tyson) shows the picture in the fight, the Dex and on the card, and never as text', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {}, i = monstersList.findIndex((m) => m.name === 'Rocky'), t = monstersList.findIndex((m) => m.name === 'Tyson');
+    out.have = [monstersList[i].icon.startsWith('<img'), monstersList[i].emoji, monstersList[t].icon.startsWith('<img'), monstersList[t].emoji];
+    state.wild.id = ''; state.bossBook[i] = { wins: 1, form: 0, alpha: 0 }; state.bossBook[t] = { wins: 1, form: 0, alpha: 0 };
+    currentMonsterIndex = t; bossLevel = 10; state.bossSwapped = false; state.raid = null; monsterCurrentHp = 5; updateBattleUI();
+    out.fight = document.getElementById('monster-icon').querySelector('.buddy-img') !== null && !/<img|data:image/.test(document.getElementById('monster-icon').innerText);
+    bookTab = 'boss'; openBook(); out.dex = document.querySelectorAll('#book-body .buddy-img').length >= 2; closeBook();
+    await new Promise((res) => setTimeout(res, 300));
+    const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
+    CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
+    drawCardFromDesc(document.createElement('canvas'), bossCard(t, { level: 10 }));
+    CanvasRenderingContext2D.prototype.drawImage = real;
+    out.card = calls.length;
+    out.text = !/data:image|buddy-img/.test(document.body.innerText);
+    return out;
+  });
+  assert.deepEqual(r.have, [true, '🐕', true, '🐕‍🦺']);
+  assert.equal(r.fight, true, 'the boss on the fight screen');
+  assert.equal(r.dex, true, 'the boss tab of the Dex');
+  assert.equal(r.card, 1, 'the boss card');
+  assert.equal(r.text, true);
+});
+
 test('every file in art/buddies belongs to a real buddy', async () => {
   const ids = await page.evaluate(() => allBuddies().map((b) => b.id));
   const orphans = artFiles().map((a) => a.id).filter((id) => ids.indexOf(id) === -1);

@@ -68,7 +68,10 @@ const monstersList = [
   { name: "Māra", icon: "😈", baseHp: 6, element: "dark", slays: "secret_papaw", buddy: "boss_mara", taunts: ["Why not skip this one? Giving up is easier!", "Doubt is my favorite trick!"] },
 
   // The strongest boss of all (more HP and +1 attack), only met once your buddy is level 50 (`minLevel`), and a slayer of the Bandit: a big pitbull who chases cats
-  { name: "Rocky", icon: "🐕", baseHp: 9, atkBonus: 1, minLevel: 50, element: "fire", slays: "bandit", buddy: "boss_rocky", taunts: ["Woof! Cats do not get past me!", "I am the biggest, strongest pup on the block!"] }
+  { name: "Rocky", icon: "🐕", baseHp: 9, atkBonus: 1, minLevel: 50, element: "fire", slays: "bandit", buddy: "boss_rocky", taunts: ["Woof! Cats do not get past me!", "I am the biggest, strongest pup on the block!"] },
+
+  // Tyson: a playful German shepherd who loves people. He is appended like every new boss (boss_54), so older saves keep their boss numbers.
+  { name: "Tyson", icon: "🐕‍🦺", baseHp: 5, element: "electric", taunts: ["Want to play? Solve it and I will fetch the ball!", "Zoomies! Can you keep up with me?"] }
 ];
 
 const GRADES = [

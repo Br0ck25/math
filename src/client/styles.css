@@ -1053,7 +1053,7 @@
 .buddy-avatar { position: relative; display: inline-block; isolation: isolate; width: var(--u); height: var(--u); line-height: var(--u); text-align: center; vertical-align: middle; }
 .buddy-glyph { position: relative; z-index: 3; display: inline-block; font-size: calc(var(--u) * 0.8); line-height: var(--u); }
 .buddy-glyph svg { vertical-align: middle; }
-.buddy-img { height: 1em; width: auto; max-width: 1.25em; object-fit: contain; vertical-align: middle; pointer-events: none; -webkit-user-drag: none; }
+.buddy-img { height: 1em; width: auto; max-width: 1.25em; object-fit: contain; vertical-align: middle; pointer-events: none; -webkit-user-drag: none; filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.6)); }   /* a thin light edge keeps dark outlines readable on the dark panels */
 /* A shiny buddy (its golden version was caught) glows and carries a small star; no animation, so it needs no reduced-motion rule */
 .buddy-avatar.shiny .buddy-glyph { filter: drop-shadow(0 0 calc(var(--u) * 0.1) #fde047) saturate(1.35) brightness(1.08); }
 .buddy-avatar.shiny::after { content: '✨'; position: absolute; top: 0; right: 0; z-index: 5; font-size: calc(var(--u) * 0.32); line-height: 1; pointer-events: none; }

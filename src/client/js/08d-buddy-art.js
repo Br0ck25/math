@@ -17,6 +17,13 @@ function applyBuddyArt(map) {
     im.src = uri;
     ART_IMGS[b.id] = im;
   });
+  // A boss that is also a buddy (`m.buddy`) shows the same picture in the fight and in the Dex.
+  monstersList.forEach(function (m) {
+    const uri = m.buddy && map[m.buddy];
+    if (!uri || m.emoji) return;
+    m.emoji = m.icon;
+    m.icon = artHtml(uri);
+  });
 }
 // The emoji of a buddy or form even when it has art: for text, toasts and the card's fallback.
 function emojiOf(x) { return x.emoji || x.icon; }

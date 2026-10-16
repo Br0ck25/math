@@ -43,7 +43,7 @@ function bossCard(idx, opts) {
   const hp = base.baseHp + (opts.level ? Math.floor(opts.level / 3) : 0) + form * 2 + (raid ? 2 : 0) + (tough ? ECON.boss.swap.extraHp : 0);
   return {
     name: (raid ? '👑 ' : '') + (form === 2 ? 'Alpha ' : form === 1 ? 'Elder ' : '') + base.name,
-    levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: base.icon, element: base.element,
+    levelText: opts.level ? 'Lv ' + opts.level : 'Lv ?', icon: emojiOf(base), art: base.buddy ? artImage(base.buddy) : null, element: base.element,
     rarity: raid ? { name: 'RAID BOSS', col: '#ef4444' } : [null, null, null, { name: 'COMMON', col: '#94a3b8' }, { name: 'RARE', col: '#38bdf8' }, { name: 'EPIC', col: '#a78bfa' }, { name: 'LEGENDARY', col: '#fbbf24' }][clamp(base.baseHp, 3, 6)],
     stars: form + 1,
     stats: [['❤️', opts.level ? hp : '~' + hp, 'HP'], ['⚔️', bossAtk(base, opts.level || 0, form) + (tough ? ECON.boss.swap.extraAtk : 0), 'Attack'], ['🏅', seen.wins, 'Beaten']],

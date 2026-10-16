@@ -41,7 +41,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Licensed artwork goes in `art/buddies/<buddy id>.png` (see `art/README.md`; `npm run art` lists the ids). The build embeds it and `applyBuddyArt()` (`08d-buddy-art.js`) swaps it in for the emoji: a buddy's `icon` is then an `<img>`, so never put a buddy's `icon` into plain text, use `emojiOf()` / `.emoji` there. Never draw or generate character artwork yourself.
 - Every buddy belongs to exactly one pack (`04b-packs.js`); the Collection Book groups by pack. A new buddy is placed by its show, its id or its emoji; `tests/packs.test.mjs` fails if one lands in the catch-all, so add its emoji or id to the right pack.
 - Gear needs a `slot` (see Reuse). A piece with `earn: {key, n, text}` and `cost: 0` is a secret: it is awarded by `checkEarnedGear()` (`08c-earned-gear.js`) and never sold.
-- Sizes are asserted in `tests/content.test.mjs` (currently 351 buddies, 54 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
+- Sizes are asserted in `tests/content.test.mjs` (currently 352 buddies, 55 bosses, 118 gear). Change the test together with the data, and run `npm run sim` if prices change.
 
 ## Battles: wild buddies and bosses
 - Most battles are against a wild buddy (`13b-wild.js`, numbers in `ECON.wild` / `ECON.sell`); a boss comes after every 5-8 of them. `state.wild.id` is the wild buddy being fought, `''` means a boss. Only bosses count toward `monstersDefeated`, raids, the Alpha buddy rule and the golden vault.

@@ -15,7 +15,7 @@ function updateBattleUI() {
   document.getElementById('monster-name').innerText = boss.name;
   updateWeakChip();
   const mIcon = document.getElementById('monster-icon');
-  mIcon.innerText = boss.icon;
+  mIcon.innerHTML = boss.icon;                                      // an emoji, or an <img> when the foe has licensed art
   setStageClass(mIcon, 'boss-stage-', boss.form);
   mIcon.parentNode.setAttribute('data-element', boss.element);       // each element gives its boss a different glow
   document.getElementById('monster-level').innerText = boss.level;
