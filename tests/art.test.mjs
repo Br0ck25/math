@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { launch, loadWorker, fakeKV, openGame } from './helpers.mjs';
-import { artFiles, assemble } from '../scripts/build.mjs';
+import { artFiles, assemble, sizeSvg } from '../scripts/build.mjs';
 
 const artDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../art/buddies');
 let browser, worker, env, page, errors;
@@ -124,6 +124,35 @@ test('the build embeds art/buddies/<id>.png and refuses bad names, oversized fil
     put('zz_ok.svg', '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4"><rect width="4" height="4"/></svg>'); assert.doesNotThrow(() => artFiles());
   } finally { made.forEach((f) => { try { fs.unlinkSync(f); } catch (e) { /* gone */ } }); }
   assert.ok(!fs.existsSync(path.join(artDir, 'zz_test_buddy.png')), 'the test cleaned up');
+});
+
+test('svg art: a viewBox-only svg gets its size from the viewBox so every browser can draw it; sized ones are untouched; and it works in the page and on the card', async () => {
+  assert.match(sizeSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><rect/></svg>'), /^<svg width="200" height="100" xmlns=/);
+  assert.match(sizeSvg('<svg viewBox="-10 -10 64.5 48">'), /^<svg width="64.5" height="48" /);
+  const sized = '<svg width="10" height="20" viewBox="0 0 200 100">';
+  assert.equal(sizeSvg(sized), sized);
+  assert.equal(sizeSvg('<svg height="20" viewBox="0 0 200 100">'), '<svg height="20" viewBox="0 0 200 100">');
+  assert.equal(sizeSvg('<svg xmlns="x">'), '<svg xmlns="x">', 'no viewBox: nothing to add');
+  const f = path.join(artDir, 'zz_vb.svg');
+  fs.mkdirSync(artDir, { recursive: true });
+  fs.writeFileSync(f, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80"><rect width="160" height="80" fill="#22c55e"/></svg>');
+  let js;
+  try { js = assemble().js; } finally { fs.unlinkSync(f); }
+  const uri = /"zz_vb":"(data:image\/svg\+xml;base64,[^"]+)"/.exec(js)[1];
+  assert.match(Buffer.from(uri.split(',')[1], 'base64').toString(), /width="160" height="80"/);
+  const r = await page.evaluate(async (uri) => {
+    applyBuddyArt({ toon_bluey: uri });
+    await new Promise((res) => setTimeout(res, 300));
+    const im = ART_IMGS.toon_bluey, calls = [], real = CanvasRenderingContext2D.prototype.drawImage;
+    CanvasRenderingContext2D.prototype.drawImage = function (i, x, y, w, h) { calls.push([w, h]); return real.apply(this, arguments); };
+    state.unlockedPets = ['dog', 'toon_bluey']; drawCard(document.createElement('canvas'), 'toon_bluey');
+    CanvasRenderingContext2D.prototype.drawImage = real;
+    return { size: [im.naturalWidth, im.naturalHeight], drawn: calls.length, ratio: calls[0] && Math.round(calls[0][0] / calls[0][1] * 100), avatar: avatarHtml(getPetById('toon_bluey'), 40).includes('<img') };
+  }, uri);
+  assert.deepEqual(r.size, [160, 80]);
+  assert.equal(r.drawn, 1);
+  assert.equal(r.ratio, 200);
+  assert.equal(r.avatar, true);
 });
 
 test('every file in art/buddies belongs to a real buddy', async () => {

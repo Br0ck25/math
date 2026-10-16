@@ -29,12 +29,22 @@ export function artFiles() {
     return { id: m[1].toLowerCase(), file: f, bytes: bytes };
   });
 }
+// An svg with only a viewBox has no natural size in some browsers (Firefox, iOS Safari), so the trading card could not draw it.
+// Give it the viewBox's width and height when it has neither.
+export function sizeSvg(text) {
+  return text.replace(/<svg\b([^>]*)>/i, (tag, attrs) => {
+    if (/\b(width|height)\s*=/i.test(attrs)) return tag;
+    const vb = /viewBox\s*=\s*["']\s*[-\d.]+[\s,]+[-\d.]+[\s,]+([\d.]+)[\s,]+([\d.]+)\s*["']/i.exec(attrs);
+    return vb ? '<svg width="' + vb[1] + '" height="' + vb[2] + '"' + attrs + '>' : tag;
+  });
+}
 function artChunk() {
   const files = artFiles(), map = {};
   let total = 0;
   files.forEach((a) => {
-    total += a.bytes.length;
-    map[a.id] = 'data:' + ART_TYPES[a.file.split('.').pop().toLowerCase()] + ';base64,' + a.bytes.toString('base64');
+    const isSvg = /\.svg$/i.test(a.file), bytes = isSvg ? Buffer.from(sizeSvg(a.bytes.toString('utf8'))) : a.bytes;
+    total += bytes.length;
+    map[a.id] = 'data:' + ART_TYPES[a.file.split('.').pop().toLowerCase()] + ';base64,' + bytes.toString('base64');
   });
   if (total > ART_TOTAL_MAX) throw new Error('art/buddies is ' + (total / 1024 / 1024).toFixed(1) + ' MB in all: the Worker has a size limit, keep it below ' + ART_TOTAL_MAX / 1024 / 1024 + ' MB');
   return 'const BUDDY_ART = ' + JSON.stringify(map) + ';';
