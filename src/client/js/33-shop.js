@@ -47,7 +47,28 @@ function renderArmor() {
   });
 }
 
-function selectOrBuyArmor(ar) {
+// ----- buy confirmation: every purchase with gems asks first -----
+// askBuy({icon, name, cost, note}, onYes): shows what it costs and what is left; onYes runs only after "Buy". Callers check they can afford it first.
+let pendingBuy = null;
+function askBuy(o, onYes) {
+  pendingBuy = onYes;
+  document.getElementById('confirm-icon').innerHTML = o.icon;
+  document.getElementById('confirm-title').innerText = 'Buy ' + o.name + '?';
+  document.getElementById('confirm-note').innerText = o.note || '';
+  document.getElementById('confirm-wallet').innerText = 'Costs 💎 ' + o.cost + '\nYou have 💎 ' + state.gems + ' · left 💎 ' + (state.gems - o.cost);
+  document.getElementById('confirm-yes').innerText = 'Buy for ' + o.cost + ' 💎';
+  document.getElementById('confirm-yes').setAttribute('aria-label', 'Buy ' + o.name + ' for ' + o.cost + ' gems');
+  showModal('confirm-modal');
+}
+function closeConfirm() { pendingBuy = null; hideModal('confirm-modal'); }
+function confirmBuy() {
+  const go = pendingBuy;
+  pendingBuy = null;
+  hideModal('confirm-modal');
+  if (go) go();
+}
+
+function selectOrBuyArmor(ar, confirmed) {
   const owned = state.unlockedArmor.indexOf(ar.id) !== -1;
   if (!owned) {
     if (ar.earn) { soundWrong(); toast('🔒 Earn it: ' + ar.earn.text); return; }
@@ -56,6 +77,7 @@ function selectOrBuyArmor(ar) {
       toast(`You need ${ar.cost - state.gems} more 💎 Gems for ${ar.name}!`);
       return;
     }
+    if (!confirmed) { askBuy({ icon: ar.icon, name: ar.name, cost: ar.cost, note: 'Body armor: +' + ar.hp + ' HP' }, function () { selectOrBuyArmor(ar, true); }); return; }
     state.gems -= ar.cost;
     state.unlockedArmor.push(ar.id);
     soundLevelUp();
@@ -93,13 +115,16 @@ function renderAccessories() {
   });
 }
 
-function selectOrBuyAccessory(acc) {
+function selectOrBuyAccessory(acc, confirmed) {
   if (state.unlockedAccessories.indexOf(acc.id) !== -1) {
     state.activeAccessory = acc.id;
     soundClick();
   } else if (acc.earn) {
     soundWrong();
     toast('🔒 Earn it: ' + acc.earn.text);
+  } else if (state.gems >= acc.cost && !confirmed) {
+    askBuy({ icon: acc.icon, name: acc.name, cost: acc.cost, note: 'Gear for your buddy' }, function () { selectOrBuyAccessory(acc, true); });
+    return;
   } else if (state.gems >= acc.cost) {
     state.gems -= acc.cost;
     state.unlockedAccessories.push(acc.id);
@@ -185,7 +210,7 @@ function renderShopPets() {
   });
 }
 
-function selectOrBuyPet(pet) {
+function selectOrBuyPet(pet, confirmed) {
   if (state.unlockedPets.indexOf(pet.id) !== -1) { equipPet(pet.id); return; }
 
   if (pet.requiresAllStorePets && !hasUnlockedAllOtherStorePets()) {
@@ -199,6 +224,7 @@ function selectOrBuyPet(pet) {
     toast(`You need ${pet.cost - state.gems} more 💎 Gems to adopt ${pet.name}!`);
     return;
   }
+  if (!confirmed) { askBuy({ icon: pet.icon, name: pet.name, cost: pet.cost, note: 'A new ' + pet.element + ' buddy for your collection' }, function () { selectOrBuyPet(pet, true); }); return; }
   state.gems -= pet.cost;
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);

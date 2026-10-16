@@ -406,8 +406,8 @@ test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets,
     Math.random = real;
     chooseNets(1); out.noPending = state.nets;                // nothing pending: nothing happens
     // buying: up to the stock, no gems taken beyond it
-    state.nets = 0; state.gems = 1000; buyItem('net'); const bought = [state.nets, state.gems];
-    state.nets = ECON.wild.net.stock; state.gems = 1000; buyItem('net'); const full = [state.nets, state.gems];
+    state.nets = 0; state.gems = 1000; buyItem('net'); confirmBuy(); const bought = [state.nets, state.gems];
+    state.nets = ECON.wild.net.stock; state.gems = 1000; buyItem('net'); confirmBuy(); const full = [state.nets, state.gems];
     state.nets = 0; state.wild.id = 'fox'; updateStatsUI(); const chip0 = document.getElementById('weak-chip').innerText;
     state.nets = 2; updateStatsUI();
     return { ...out, bought, full, chip0, chip2: document.getElementById('weak-chip').innerText, stock: ECON.wild.net.stock };

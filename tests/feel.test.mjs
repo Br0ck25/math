@@ -147,7 +147,7 @@ test('the streak shield costs what the economy says: refused below it, bought at
     const price = ECON.items.shield;
     state.shields = 0; state.gems = price - 1; buyItem('shield', 1);       // a stale price passed in must be ignored
     const refused = { shields: state.shields, gems: state.gems };
-    state.gems = price; buyItem('shield', 1);
+    state.gems = price; buyItem('shield', 1); confirmBuy();
     return { price, refused, bought: { shields: state.shields, gems: state.gems }, label: document.getElementById('item-shield').innerText };
   });
   assert.deepEqual(r.refused, { shields: 0, gems: r.price - 1 });

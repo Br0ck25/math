@@ -28,8 +28,8 @@ function showModal(id, before) {
 }
 function hideModal(id, after) {
   soundClick();
-  resumeClock();
   document.getElementById(id).style.display = 'none';
+  if (!openOverlays().length) resumeClock();               // a window opened on top of another (the buy confirmation) must not restart the question timer
   if (after) after();
 }
 
