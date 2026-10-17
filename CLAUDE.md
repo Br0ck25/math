@@ -5,12 +5,43 @@ accounts in Cloudflare KV. Read this before changing anything.
 
 
 ## How to work (read first)
-1. **Think before coding.** State your assumptions. If the request has two reasonable readings, or something is unclear, ask or say which you chose; do not guess silently. Push back if a simpler way exists.
-2. **Use existing code first. Always.** Before writing anything, search `src/` for a helper, constant, pattern or similar feature and reuse or extend it (see "Reuse before writing"). A new helper or second copy needs a one-line reason in your reply.
-3. **Simplest thing that works.** Only what was asked: no extra features, options or "just in case" code, no abstraction for a single use. If 200 lines could be 50, write 50.
-4. **Surgical changes.** Touch only the lines the task needs, in the existing style, even if you would write it differently. No drive-by refactors, renames or reformatting. Mention unrelated problems you notice instead of fixing them. Remove only what your own change made unused.
-5. **Know what done looks like.** Turn the request into a check you can run (a test that fails first, then passes). For multi-step work, give a short plan first. Loop until the check passes.
-6. **Save tokens.** Use the file map below and the area rules in `.claude/rules/` (they load when you open matching files) instead of exploring. Never read `worker.js`, `package-lock.json` or `art/` (generated or binary). Read only the part of a file you need (offset/limit or grep), not whole big files.
+Behavioral guidelines to reduce common LLM coding mistakes (from the Karpathy-skills rules). They bias toward caution over speed; for trivial tasks, use judgment.
+
+### 1. Think Before Coding
+Don't assume. Don't hide confusion. Surface tradeoffs. Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2. Simplicity First
+Minimum code that solves the problem. Nothing speculative.
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it. Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 3. Surgical Changes
+Touch only what you must. Clean up only your own mess.
+- Don't "improve" adjacent code, comments, or formatting. Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
+- Remove imports/variables/functions that YOUR changes made unused; leave pre-existing dead code unless asked.
+- The test: every changed line should trace directly to the user's request.
+
+### 4. Goal-Driven Execution
+Define success criteria. Loop until verified. "Add validation" -> write tests for invalid inputs, then make them pass. "Fix the bug" -> write a test that reproduces it, then make it pass. "Refactor X" -> tests pass before and after. For multi-step tasks, state a brief plan:
+```
+1. [Step] -> verify: [check]
+2. [Step] -> verify: [check]
+```
+
+### 5. Use existing code first (this repo)
+Before writing anything, search `src/` for a helper, constant, pattern or similar feature and reuse or extend it (see "Reuse before writing"). A new helper or a second copy needs a one-line reason in your reply.
+
+### 6. Save tokens (this repo)
+Use the file map below and the area rules in `.claude/rules/` (they load when you open matching files) instead of exploring. Never read `worker.js`, `package-lock.json` or `art/` (generated or binary). Read only the part of a file you need (offset/limit or grep), not whole big files.
 
 ## Where things live (open the right file first)
 - Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`.
