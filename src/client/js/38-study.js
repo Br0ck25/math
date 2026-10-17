@@ -9,6 +9,7 @@ const STUDY_ID_RE = /^[a-z]{3,7}[0-9]{1,4}$|^p[A-Za-z0-9_-]{3,12}$/;
 let parentQs = [];               // questions this player's parent added (already cleaned)
 let parentOnly = false;           // the parent chose "only my questions": the built-in ones are hidden
 let parentQsOwner = '';          // the player name they belong to (never show one player's to another)
+let studyOn = false;             // the study pane is showing instead of the math problem
 let studyScreen = 'home';        // 'home' | 'card' | 'done'
 let studyRound = null;           // { mode, qs, i, results, phase, t0 }
 let studyNote = '';
@@ -47,15 +48,22 @@ async function studyLoadParent() {
 }
 function studyAll() { return STUDY_BANK.concat(studyParent()); }
 
-// Questions for a subject filter ('all', a subject id, 'ky' or 'parent') at a level. A parent's questions ignore the level.
+// Does a question belong to a filter ('all', a subject id, 'ky' or 'parent') at a level? A parent's questions ignore the level.
+function studyMatch(q, filter, level) {
+  if (q.parent) return filter === 'all' || filter === 'parent' || filter === q.s;
+  if (filter === 'parent' || q.g > level) return false;
+  return filter === 'all' || (filter === 'ky' ? q.t === 'ky' : q.s === filter);
+}
+// The questions for one filter or a list of them (a question in any of them counts).
 function studyPool(filter, level) {
-  const only = studyOnlyParent();
-  return studyAll().filter(function (q) {
-    if (only && !q.parent) return false;
-    if (q.parent) return filter === 'all' || filter === 'parent' || filter === q.s;
-    if (filter === 'parent' || q.g > level) return false;
-    return filter === 'all' || (filter === 'ky' ? q.t === 'ky' : q.s === filter);
-  });
+  const only = studyOnlyParent(), list = Array.isArray(filter) ? filter : [filter];
+  return studyAll().filter(function (q) { return (!only || q.parent) && list.some(function (f) { return studyMatch(q, f, level); }); });
+}
+// The subjects the player ticked that are still on offer; none ticked means all.
+function studySelected(filters) {
+  const have = (filters || studyFilters()).map(function (f) { return f[0]; });
+  const sel = state.study.subjects.filter(function (id) { return id !== 'all' && have.indexOf(id) !== -1; });
+  return sel.length ? sel : ['all'];
 }
 function studyFilters() {
   const lvl = state.study.level;
@@ -171,17 +179,37 @@ function studyPick(pool, n) {
 }
 
 // ---- the window ---------------------------------------------------------------
-function openStudy() {
-  showModal('study-modal', function () {
-    studyScreen = 'home';
-    studyRound = null;
-    studyNote = '';
-    studyDay();
-    studyRender();
-    studyLoadParent();
-  });
+// Study takes the place of the arena and the keypad on the main page (the buddy and the top bars stay). The bottom-bar button switches between the two.
+function studySync() {
+  document.querySelector('.game-container').classList.toggle('study-on', studyOn);
+  document.getElementById('study-pane').style.display = studyOn ? '' : 'none';
+  document.getElementById('study-toggle-text').innerText = studyOn ? '🧮 Math' : '📚 Study';
+  document.getElementById('study-toggle').setAttribute('aria-label', studyOn ? 'Back to math problems' : 'Study school subjects');
 }
-function closeStudy() { hideModal('study-modal', function () { studyRound = null; saveState(); updateStatsUI(); }); }
+function toggleStudy() { if (studyOn) closeStudy(); else openStudy(); }
+function openStudy() {
+  if (studyOn) return;
+  soundClick();
+  pauseClock();
+  studyOn = true;
+  studyScreen = 'home';
+  studyRound = null;
+  studyNote = '';
+  studyDay();
+  studySync();
+  studyRender();
+  studyLoadParent();
+}
+function closeStudy() {
+  if (!studyOn) return;
+  soundClick();
+  studyOn = false;
+  studyRound = null;
+  studySync();
+  if (!openOverlays().length) resumeClock();
+  saveState();
+  updateStatsUI();
+}
 // Escape and the ✕: from a round go back to the start (what was answered is remembered), from the start close.
 function studyEsc() {
   if (studyScreen === 'home') return closeStudy();
@@ -201,9 +229,13 @@ function studySetLevel(n) {
   saveState();
   studyRender();
 }
+// Tap a subject to add it or take it off; "All" clears the choice.
 function studySetFilter(id) {
   soundClick();
-  state.study.subject = id;
+  const sel = state.study.subjects, i = sel.indexOf(id);
+  if (id === 'all') state.study.subjects = [];
+  else if (i === -1) sel.push(id);
+  else sel.splice(i, 1);
   saveState();
   studyRender();
 }
@@ -225,7 +257,7 @@ function studyFillOpts() {
   if (!r || !opts) return;
   const q = r.qs[r.i];
   fillOptButtons(opts, r.opts, studyPickOpt);
-  opts.classList.toggle('study-wide', r.opts.some(function (o) { return o.length > 14; }));        // long answers get a full-width row each
+  opts.classList.toggle('study-wide', r.opts.some(function (o) { return o.length > 26; }));        // only very long answers get a full-width row each
   if (r.phase !== 'reveal') return;
   Array.prototype.forEach.call(opts.children, function (b) {
     b.disabled = true;
@@ -236,14 +268,14 @@ function studyFillOpts() {
 function studyHomeHtml() {
   const S = ECON.study, st = studyDay();
   const level = st.level, filters = studyFilters();
-  if (!filters.some(function (f) { return f[0] === st.subject; })) st.subject = 'all';
-  const pool = studyPool(st.subject, level);
+  const sel = studySelected(filters);
+  const pool = studyPool(sel, level);
   const levelBtns = [6, 7, 8].map(function (n) {
     return '<button class="grade-btn' + (n === level ? ' active' : '') + '" onclick="studySetLevel(' + n + ')" aria-pressed="' + (n === level) + '">' + n + 'th' + (n === 8 ? ' (all)' : '') + '</button>';
   }).join('');
   const filterBtns = filters.map(function (f) {
     const n = studyPool(f[0], level).length;
-    return '<button class="grade-btn' + (f[0] === st.subject ? ' active' : '') + '" onclick="studySetFilter(\'' + f[0] + '\')" aria-pressed="' + (f[0] === st.subject) + '">' + escHtml(f[1]) + ' <small>' + n + '</small></button>';
+    return '<button class="grade-btn' + (sel.indexOf(f[0]) !== -1 ? ' active' : '') + '" onclick="studySetFilter(\'' + f[0] + '\')" aria-pressed="' + (sel.indexOf(f[0]) !== -1) + '">' + escHtml(f[1]) + ' <small>' + n + '</small></button>';
   }).join('');
   const off = pool.length ? '' : ' disabled';
   const missed = pool.filter(function (q) { return st.miss.indexOf(q.id) !== -1; }).length;
@@ -251,20 +283,20 @@ function studyHomeHtml() {
     '<div class="settings-hint" style="margin-top:2px;">School subjects for grades 6–8. Right answers earn buddy XP and a few gems, up to ' + S.dayCap + ' 💎 a day.</div>' +
     (studyNote ? '<div class="study-note" role="status">' + escHtml(studyNote) + '</div>' : '') +
     (studyOnlyParent() ? '<div class="study-note">👪 Your parent chose to practise their own questions.</div>' : '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>') +
-    '<div class="settings-label">Subject</div><div class="study-chips">' + filterBtns + '</div>' +
+    '<div class="settings-label">Subjects <small>(tap one or more)</small></div><div class="study-chips">' + filterBtns + '</div>' +
     '<div class="study-stats" aria-live="polite">' + pool.length + ' questions · ' + studyMastered(pool) + ' learned' + (missed ? ' · ' + missed + ' to review' : '') + ' · today ' + st.gems + '/' + S.dayCap + ' 💎</div>' +
     '<div class="settings-label">How do you want to study?</div>' +
     '<button class="key-btn submit-btn study-go" onclick="studyStart(\'mcq\')"' + off + '>🎯 Quick Recall <small>pick the answer</small></button>' +
     '<button class="grade-btn study-go" onclick="studyStart(\'type\')"' + off + '>⌨️ Type it <small>write the answer</small></button>' +
     '<button class="grade-btn study-go" onclick="studyStart(\'cards\')"' + off + '>🃏 Flashcards <small>no gems, just practice</small></button>' +
-    (pool.length ? '' : '<div class="settings-hint">No questions here yet.' + (st.subject === 'parent' ? ' A parent can add some from the parent page.' : '') + '</div>') +
+    (pool.length ? '' : '<div class="settings-hint">No questions here yet.' + (sel.indexOf('parent') !== -1 ? ' A parent can add some from the parent page.' : '') + '</div>') +
     '<div class="settings-hint">A question pays again after ' + S.freshDays + ' days. Missed questions come back first.</div>' +
-    '<button class="key-btn submit-btn study-back" onclick="closeStudy()">Back to Game</button>';
+    '<button class="key-btn submit-btn study-back" onclick="closeStudy()">🧮 Back to math</button>';
 }
 
 // ---- a round --------------------------------------------------------------------
 function studyStart(mode) {
-  const st = state.study, pool = studyPool(st.subject, st.level);
+  const st = state.study, pool = studyPool(studySelected(), st.level);
   if (!pool.length) return;
   soundClick();
   studyRound = { mode: mode, qs: studyPick(pool, ECON.study.roundSize), i: 0, results: [], phase: 'ask', t0: Date.now(), opts: null };
@@ -295,14 +327,15 @@ function studyCardHtml() {
     if (r.mode === 'cards') body += '<div class="acct-btns"><button class="grade-btn study-go" onclick="studyMark(false)">↻ Again</button><button class="key-btn submit-btn study-go" onclick="studyMark(true)">✓ Got it</button></div>';
     else body += '<button class="key-btn submit-btn study-go" id="study-next" onclick="studyNext()">' + (r.i + 1 >= r.qs.length ? 'See results ➔' : 'Next ➔') + '</button>';
   }
-  return '<div class="raid-chapter" style="color:#a5b4fc;">Question ' + (r.i + 1) + ' of ' + r.qs.length + ' · ' + sub.icon + ' ' + escHtml(sub.label) + (q.parent ? ' · 👪 from your parent' : '') + '</div>' +
+  return '<div class="study-top"><div class="raid-chapter" style="color:#a5b4fc;">Question ' + (r.i + 1) + ' of ' + r.qs.length + ' · ' + sub.icon + ' ' + escHtml(sub.label) + (q.parent ? ' · 👪 from your parent' : '') + '</div>' +
+    '<button class="grade-btn study-exit" onclick="studyEsc()" aria-label="Stop this round and go back">⏸ Back</button></div>' +
     '<div class="study-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
     '<div class="study-q">' + escHtml(q.q) + '</div>' + body;
 }
 function studyFeedback(q, res) {
   if (res.shown) return '<b>Answer: ' + escHtml(q.a) + '</b>' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>Did you know it?';
   if (res.ok) return '✅ <b>Correct!</b> ' + escHtml(q.a) + (q.x ? '<br>' + escHtml(q.x) : '');
-  return '💡 Good try! The answer is <b>' + escHtml(q.a) + '</b>.' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>This one will come back so you can learn it.';
+  return '💡 Good try! The answer is <b>' + escHtml(q.a) + '</b>.' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>It will come back so you can learn it.';
 }
 function studyAnswered(ok, shown) {
   const r = studyRound, q = r.qs[r.i];
@@ -396,5 +429,5 @@ function studyDoneHtml() {
     (missed ? '<div class="settings-label">Worth another look</div><ul class="study-missed">' + missed + '</ul>' : '') +
     '<button class="key-btn submit-btn study-go" onclick="studyStart(\'' + r.mode + '\')">Study again</button>' +
     '<button class="grade-btn study-go" onclick="studyHome()">Choose something else</button>' +
-    '<button class="grade-btn study-go" onclick="closeStudy()">Back to Game</button>';
+    '<button class="grade-btn study-go" onclick="closeStudy()">🧮 Back to math</button>';
 }

@@ -200,7 +200,9 @@ const NORMALIZERS = [
   function study(s) {
     const t = s.study, S = ECON.study, today = dayNumber();
     t.level = asInt(t.level, S.minLevel, S.maxLevel, S.minLevel);
-    if (['all', 'parent', 'ky'].indexOf(t.subject) === -1 && !STUDY_SUBJECTS.some(function (x) { return x.id === t.subject; })) t.subject = 'all';
+    if (typeof t.subject === 'string' && t.subject !== 'all' && !t.subjects.length) t.subjects = [t.subject];      // saves from when only one subject could be picked
+    delete t.subject;
+    t.subjects = t.subjects.filter(function (id, i, a) { return typeof id === 'string' && (['parent', 'ky'].indexOf(id) !== -1 || STUDY_SUBJECTS.some(function (x) { return x.id === id; })) && a.indexOf(id) === i; });
     const seen = {};
     Object.keys(t.seen).filter(function (id) { return STUDY_ID_RE.test(id) && Array.isArray(t.seen[id]); }).slice(0, 2000).forEach(function (id) {
       const e = t.seen[id];

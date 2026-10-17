@@ -99,8 +99,9 @@ test('a Quick Recall round plays through the window, pays a little and shows the
   assert.equal(s.today, 11);
   assert.deepEqual(s.stat, [8, 8], 'the parent report counts them');
   assert.ok(s.xp >= 16);
-  await page.click('#study-box >> text=Back to Game');
-  assert.equal(await page.evaluate(() => document.getElementById('study-modal').style.display), 'none');
+  await page.click('#study-box >> text=Back to math');
+  assert.equal(await page.evaluate(() => document.querySelector('.game-container').classList.contains('study-on')), false);
+  assert.ok(await page.isVisible('.arena'), 'the math problem is back');
 });
 
 test('study pays at most the daily cap, and a question that paid does not pay again for a few days', async () => {
@@ -140,7 +141,7 @@ test('tomorrow the cap starts over, and a round in the cap says so kindly', asyn
 
 test('missed questions are remembered and come back first; right answers clear them', async () => {
   const r = await inPage(() => {
-    state.study.miss = []; state.study.seen = {}; state.study.subject = 'all';
+    state.study.miss = []; state.study.seen = {}; state.study.subjects = [];
     state.study.day = dayKey(); state.study.gems = 0;
     openStudy();
     studyStart('type');
@@ -205,7 +206,7 @@ test('saved study data is repaired on load', async () => {
     return state.study;
   });
   assert.equal(r.level, 8, 'clamped to the top level');
-  assert.equal(r.subject, 'all');
+  assert.deepEqual(r.subjects, []);
   assert.deepEqual(Object.keys(r.seen).sort(), ['science2', 'social1']);
   assert.deepEqual(r.seen.social1, [0, 0, 3]);
   assert.deepEqual(r.miss, ['social1']);
@@ -396,7 +397,7 @@ test('with "only my questions" the child sees just those: no built-in subjects, 
   const r = await inPage(() => {
     startSession('kid_x', 'tok', 1);
     setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }, { id: 'pBBBB', s: 'social', q: 'Who lives at the north pole?', a: 'Santa' }], 'kid_x', true);
-    state.study.subject = 'ky';
+    state.study.subjects = ['ky'];
     openStudy();
     const out = { pool: studyPool('all', 8).map((q) => q.id), html: document.getElementById('study-box').innerText, filters: studyFilters().map((f) => f[0]) };
     setParentQs([], 'kid_x', true);
@@ -424,4 +425,87 @@ test('the parent page always shows the study section, and says what to do first 
   await m.page.click('#portal-study > summary');
   assert.match(await m.page.innerText('#portal-study'), /Add a child first/);
   await m.context.close();
+});
+
+test('Study takes the place of the math problem and keypad on the main page, and the bottom-bar button switches back', async () => {
+  await inPage(() => { if (studyOn) closeStudy(); });
+  assert.ok(await page.isVisible('.arena'));
+  assert.ok(await page.isVisible('.keypad'));
+  assert.equal(await page.locator('#study-pane').isVisible(), false);
+  await page.click('#study-toggle');
+  assert.equal(await page.locator('.arena').isVisible(), false);
+  assert.equal(await page.locator('.keypad').isVisible(), false);
+  assert.ok(await page.isVisible('#study-pane'));
+  assert.equal(await page.isVisible('.top-bar'), true, 'the buddy and the top bars stay');
+  assert.match(await page.innerText('#study-toggle'), /Math/);
+  // no math keys while studying: digits and Enter do nothing to the math problem
+  const before = await inPage(() => ({ input: userInput, attempts: state.records.attempts }));
+  await inPage(() => document.activeElement.blur());      // the toggle button was just tapped: Enter would press it again
+  await page.keyboard.press('5');
+  await page.keyboard.press('Enter');
+  assert.deepEqual(await inPage(() => ({ input: userInput, attempts: state.records.attempts })), before);
+  // Escape goes back from a round to the start, then to the math problem
+  await page.click('text=Quick Recall');
+  await page.keyboard.press('Escape');
+  assert.match(await page.innerText('#study-box'), /Round paused/);
+  await page.keyboard.press('Escape');
+  assert.ok(await page.isVisible('.arena'));
+  assert.match(await page.innerText('#study-toggle'), /Study/);
+});
+
+test('several subjects can be studied together; All clears the choice; old saves keep their one subject', async () => {
+  const r = await inPage(() => {
+    state.study.subjects = []; state.study.level = 8;
+    openStudy();
+    const click = (id) => { studySetFilter(id); };
+    const ids = () => studyPool(studySelected(), 8).map((q) => q.s);
+    click('science'); click('arts');
+    const both = new Set(ids());
+    const pressed = [...document.querySelectorAll('#study-box .study-chips:not(.study-levels) .active')].map((b) => b.innerText.replace(/\d+$/, '').trim());
+    click('science');
+    const one = new Set(ids());
+    click('ky'); click('math');
+    const mixed = studyPool(studySelected(), 8).some((q) => q.t === 'ky') && studyPool(studySelected(), 8).some((q) => q.s === 'math');
+    studyStart('mcq');
+    const roundSubjects = new Set(studyRound.qs.map((q) => q.s));
+    studyHome();
+    click('all');
+    const cleared = state.study.subjects.length;
+    closeStudy();
+    // an older save kept a single subject
+    state.study = Object.assign(state.study, { subject: 'lang', subjects: [] });
+    normalizeState();
+    return { both: [...both].sort(), pressed, one: [...one], mixed, roundOk: roundSubjects.size >= 1, cleared, migrated: state.study.subjects, gone: 'subject' in state.study };
+  });
+  assert.deepEqual(r.both, ['arts', 'science']);
+  assert.equal(r.pressed.length, 2);
+  assert.deepEqual(r.one, ['arts']);
+  assert.ok(r.mixed);
+  assert.equal(r.cleared, 0);
+  assert.deepEqual(r.migrated, ['lang']);
+  assert.equal(r.gone, false);
+});
+
+test('the study pane fits phones: nothing sideways, and it stays above the bottom bar, at the start and in a round', async () => {
+  for (const [w, h] of [[320, 568], [360, 640], [375, 548], [420, 800]]) {
+    const g = await openGame(browser, worker, env, { viewport: { width: w, height: h }, fast: true });
+    await g.page.click('#study-toggle');
+    const check = async (label) => {
+      const o = await g.page.evaluate(() => {
+        const pane = document.getElementById('study-pane').getBoundingClientRect(), bar = document.querySelector('.bottom-bar').getBoundingClientRect();
+        return { sideways: document.documentElement.scrollWidth > innerWidth + 1 || document.getElementById('study-pane').scrollWidth > document.getElementById('study-pane').clientWidth + 1, overlap: pane.bottom > bar.top + 1, tall: pane.height };
+      });
+      assert.equal(o.sideways, false, w + 'x' + h + ' ' + label + ' sideways scroll');
+      assert.equal(o.overlap, false, w + 'x' + h + ' ' + label + ' overlaps the bottom bar');
+      assert.ok(o.tall > 120, w + 'x' + h + ' ' + label + ' pane has room');
+    };
+    await check('start');
+    await g.page.click('text=Quick Recall');
+    await g.page.evaluate(() => { studyRound.qs[0].q = 'A very long question that wraps over several lines on a small phone screen to test how things fit?'; studyAsk(); });
+    await check('question');
+    await g.page.evaluate(() => { const r = studyRound; studyPickOpt(r.opts.find((o) => o !== r.qs[r.i].a)); });
+    await check('answered');
+    assert.ok(await g.page.locator('#study-next').isVisible(), 'the Next button can be reached');
+    await g.context.close();
+  }
 });

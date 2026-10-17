@@ -131,6 +131,9 @@
       <div class="feedback-msg" id="feedback-msg">Type your answer or use keypad!</div>
     </div>
 
+    <!-- Study (38-study.js): while it is on, this takes the place of the arena and the keypad -->
+    <div class="study-pane" id="study-pane" style="display:none"><div id="study-box"></div></div>
+
     <!-- Keypad (4 columns: includes +/- and decimal point) -->
     <div class="keypad">
       <button class="key-btn" onclick="pressKey('7')">7</button>
@@ -168,8 +171,8 @@
       <button class="btn-secondary" onclick="openMap()">
         🗺️ Map
       </button>
-      <button class="btn-secondary" onclick="openStudy()" aria-label="Study school subjects">
-        📚 Study
+      <button class="btn-secondary" id="study-toggle" onclick="toggleStudy()" aria-label="Study school subjects">
+        <span id="study-toggle-text">📚 Study</span>
       </button>
       <button class="btn-secondary" onclick="openSettings()">
         ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
@@ -561,13 +564,6 @@
     </div>
   </div>
   <div class="duel-chip" id="duel-chip" onclick="rdOpenFromChip()" style="display:none;"></div>
-
-  <!-- Study: school-subject questions (38-study.js). Escape goes back a step; a stray tap on the backdrop must not end a round. -->
-  <div class="modal-overlay" id="study-modal" data-esc="studyEsc">
-    <div class="modal-content" style="border-color:#6366f1;">
-      <div id="study-box"></div>
-    </div>
-  </div>
 
   <!-- Tournament battle -->
   <div class="modal-overlay" id="tour-modal" data-esc="tourQuit">
