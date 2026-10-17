@@ -4,7 +4,7 @@
 //  textContent, copy and screen readers still work) and CSS hides it behind the picture. A MutationObserver covers everything the
 //  page writes later. Buddy faces are not here (they have art/buddies). Emoji not in ICONS are left alone; canvas text is untouched.
 // =====================================================================
-Object.assign(ICON_BODIES, ICON_BODIES_UI, ICON_BODIES_GEAR, ICON_BODIES_MORE);
+Object.assign(ICON_BODIES, ICON_BODIES_UI, ICON_BODIES_GEAR, ICON_BODIES_MORE, ICON_BODIES_FOOD);
 const ICON_URIS = {};
 // Buddy and boss emoji turn into that buddy's picture (the first buddy that uses the emoji), so toasts and lists show the art.
 (function addBuddyIcons() {

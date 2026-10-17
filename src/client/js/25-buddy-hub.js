@@ -11,6 +11,7 @@ const ELEM_COLORS = { fire: '#ef4444', water: '#38bdf8', nature: '#22c55e', elec
 function favSnack(id) {
   const sp = getSpecies(id);
   if (sp && sp.snack) return sp.snack;              // some buddies have a favorite of their own
+  if (FAV_SNACKS[id]) return FAV_SNACKS[id];
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
   return SNACKS[h % SNACKS.length];

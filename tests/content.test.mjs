@@ -481,3 +481,22 @@ test('Jimothy the raccoon is a free store buddy with his own picture: one tap ad
   });
   assert.deepEqual({ free: r.free, owned: r.owned, gems: r.gems, confirm: r.confirm, picture: r.picture, label: r.label }, { free: true, owned: true, gems: 0, confirm: false, picture: true, label: true });
 });
+
+test('every buddy and boss has its own favorite food; Janie, Papaw and Amber keep theirs; the Bandit likes cat treats', async () => {
+  const r = await page.evaluate(() => {
+    const all = allBuddies().map((b) => ({ id: b.id, name: favSnack(b.id).name, icon: favSnack(b.id).icon }));
+    const byName = {};
+    all.forEach((a) => (byName[a.name.toLowerCase()] = byName[a.name.toLowerCase()] || []).push(a.id));
+    const by = (id) => all.find((a) => a.id === id).name;
+    return {
+      shared: Object.values(byName).filter((ids) => ids.length > 1),
+      noIcon: all.filter((a) => !a.icon).map((a) => a.id),
+      fixed: [by('secret_janie'), by('secret_papaw'), by('secret_amber')],
+      bandit: by('bandit')
+    };
+  });
+  assert.deepEqual(r.shared, [], 'two buddies share a favorite food');
+  assert.deepEqual(r.noIcon, []);
+  assert.deepEqual(r.fixed, ['Hawaiian rolls', 'hamburgers', 'air fried potatoes']);
+  assert.equal(r.bandit, 'cat treats');
+});
