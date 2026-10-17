@@ -1,0 +1,4 @@
+# Generated: do not review line by line
+worker.js linguist-generated=true -diff
+package-lock.json linguist-generated=true -diff
+art/** linguist-generated=true
