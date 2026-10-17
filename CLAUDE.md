@@ -47,9 +47,9 @@ Use the file map below and the area rules in `.claude/rules/` (they load when yo
 - Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`.
 - Rules and numbers: `src/shared/econ.js` (`ECON`, also used by the Worker). Saved state: `03-state.js` (defaults), `10-save-load.js` (migrations, normalizers).
 - Battle: `12-battle.js`, wild `13b-wild.js`, moves `12c-`, status `12d-`, loot `13-loot.js`. Map `24b-`, legend `24c-`, Champion `24d-`, raids `24-`, hub `25-`, held items `25b-`.
-- Practice: generators `07-math-generators.js`, difficulty `07b-adaptive.js`, quests `19-`, hints `21-`.
+- Practice: generators `07-math-generators.js`, problem flow and keypad `07a-`, difficulty `07b-adaptive.js`, quests `19-`, hints `21-`.
 - Social: tournament `27-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), account `31-`.
-- Parents: controls `03b-`, report `23-`, portal `35-`, challenge `36-` (server `15-parents.js`, `16-challenges.js`). Shop `33-`, vault `15-`, cards `26-`, Dex `30-`.
+- Parents: controls `03b-`, report `23-`, portal child side `35-`, parent page `35b-`, challenge `36-` (server `15-parents.js`, `16-challenges.js`). Shop `33-`, vault `15-`, cards `26-`, Dex `30-`.
 - Server: accounts `10-`, router and security headers `30-router.js`. Page shell `src/client/index.html`, styles `styles.css`.
 - Tests: one area per file in `tests/`; `node scripts/test-changed.mjs --list` shows which cover your change. Add a row to `MAP` in `scripts/test-changed.mjs` for any new source file.
 

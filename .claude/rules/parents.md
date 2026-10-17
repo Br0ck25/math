@@ -2,7 +2,7 @@
 paths:
   - "src/client/js/03b-parent-controls.js"
   - "src/client/js/23-parent-report.js"
-  - "src/client/js/35-parent-portal.js"
+  - "src/client/js/35*.js"
   - "src/client/js/36-challenge.js"
   - "src/server/15-parents.js"
   - "src/server/16-challenges.js"
