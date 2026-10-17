@@ -90,6 +90,7 @@
       font-size: 0.8rem;
       white-space: nowrap;
     }
+    .stat-pill[onclick] { cursor: pointer; }
 
     .session-info-row {
       display: flex;

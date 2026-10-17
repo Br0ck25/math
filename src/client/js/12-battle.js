@@ -80,6 +80,21 @@ function hatchEgg() {
   return null;
 }
 
+function awardBattleXp(baseXp) {
+  const roomIds = typeof getSanctuaryIds === 'function' ? getSanctuaryIds() : [];
+  const share = roomIds.length * ((ECON.profile && ECON.profile.roomXpPerBuddy) || 0.01);
+  const roomXp = Math.round(baseXp * share);
+  const totalXp = baseXp + roomXp;
+  awardBuddyXp(totalXp);
+  if (roomIds.length > 0 && baseXp > 0) {
+    const passiveXp = Math.max(1, roomXp);
+    roomIds.forEach(function (id) {
+      if (id !== state.activePet) addXpTo(id, passiveXp);
+    });
+  }
+  return totalXp;
+}
+
 function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
   const weakened = hasStatus('weak');               // read now: the status may run out at the end of this answer
   extraDamage = extraDamage || 0;
@@ -175,7 +190,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBuddyXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
+      awardBattleXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
 
       const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {
@@ -386,7 +401,7 @@ function checkAnswer() {
     if (wasChallenge) xpEarned = Math.round(xpEarned * (1 + ECON.adaptive.challengeXpBonus));
     if (cloverOn) xpEarned = Math.round(xpEarned * 1.5);
     recordAdaptive(opId, true, isFast);
-    awardBuddyXp(xpEarned);
+    xpEarned = awardBattleXp(xpEarned);
 
     const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
     if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');

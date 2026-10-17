@@ -23,13 +23,13 @@
           <span class="xp-ring-wrap"><progress class="progress-ring" id="xp-ring" max="100" value="0" aria-label="Buddy XP progress"></progress><span class="trainer-mini-avatar" id="trainer-mini-avatar">🐶</span></span>
           <span>Lv <span id="lvl-display">1</span></span>
         </div>
-        <div class="stat-pill" title="Math Gems">
+        <div class="stat-pill" id="gems-pill" title="Math Gems — tap to open Shop" onclick="openShop()" role="button" tabindex="0" aria-label="Math Gems: open Shop">
           <span>💎 <span id="gems-display">0</span></span>
         </div>
         <div class="stat-pill" title="Current Streak">
           <span>🔥 <span id="streak-display">0</span></span>
         </div>
-        <div class="stat-pill" title="Streak Shields Owned">
+        <div class="stat-pill" id="shield-pill" title="Streak Shields Owned — tap to buy shields" onclick="openShieldShop()" role="button" tabindex="0" aria-label="Streak Shields: buy shields">
           <span>🛡️ <span id="shield-display">0</span></span>
         </div>
         <div class="stat-pill goal-pill" title="Session goal: solve problems to earn a bonus">

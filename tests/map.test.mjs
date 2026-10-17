@@ -273,6 +273,23 @@ test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline 
     selectProfileFrame('gold');
     out.frameUnlocked = state.profile.frame === 'gold';
     closeHub();
+    // 12. Top bar Gems & Shield clicks + Sanctuary Room XP bonus (1% per buddy in room)
+    document.getElementById('gems-pill').click();
+    out.gemsOpensShop = document.getElementById('shop-modal').style.display === 'flex';
+    closeShop();
+    state.gems = 500;
+    document.getElementById('shield-pill').click();
+    out.shieldOpensBuy = document.getElementById('shop-modal').style.display === 'flex' && document.getElementById('confirm-modal').style.display === 'flex';
+    closeConfirm();
+    closeShop();
+    const sixIds = storePets.slice(0, 6).map((p) => p.id);
+    state.unlockedPets = sixIds.slice();
+    state.activePet = sixIds[0];
+    state.profile.showcase = sixIds.slice();
+    sixIds.forEach((id) => { state.buddyXp[id] = xpForLevel(10); });
+    const gainedActive = awardBattleXp(100);
+    out.roomSixActiveXp = gainedActive === 106 && state.buddyXp[sixIds[0]] - xpForLevel(10) === 106;
+    out.roomSixPassiveXp = state.buddyXp[sixIds[1]] - xpForLevel(10) === 6;
     return out;
   });
   assert.equal(r.xpRing, true);
@@ -296,6 +313,10 @@ test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline 
   assert.equal(r.sanctuary, true);
   assert.equal(r.titleUnlocked, true);
   assert.equal(r.frameUnlocked, true);
+  assert.equal(r.gemsOpensShop, true);
+  assert.equal(r.shieldOpensBuy, true);
+  assert.equal(r.roomSixActiveXp, true);
+  assert.equal(r.roomSixPassiveXp, true);
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

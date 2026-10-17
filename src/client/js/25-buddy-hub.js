@@ -183,6 +183,16 @@ function selectProfileFrame(id) {
   saveState();
   renderRoomTab();
 }
+function getSanctuaryIds() {
+  const prof = ensureProfile();
+  const owned = getOwnedIds();
+  const valid = (prof.showcase || []).filter(function (id) { return owned.indexOf(id) !== -1; }).slice(0, ECON.profile.maxShowcase);
+  if (!valid.length && state.activePet) valid.push(state.activePet);
+  return valid;
+}
+function getSanctuaryXpShare() {
+  return getSanctuaryIds().length * ((ECON.profile && ECON.profile.roomXpPerBuddy) || 0.01);
+}
 function renderRoomTab() {
   const prof = ensureProfile();
   const spots = [
@@ -193,8 +203,8 @@ function renderRoomTab() {
     { left: '54%', top: '56%', dur: '3.7s' },
     { left: '78%', top: '60%', dur: '4.1s' }
   ];
-  const validShow = prof.showcase.filter(function (id) { return getOwnedIds().indexOf(id) !== -1; });
-  if (!validShow.length) validShow.push(state.activePet || 'dog');
+  const validShow = getSanctuaryIds();
+  const xpBonusPct = Math.round(getSanctuaryXpShare() * 100);
   let stage = '<div class="sanctuary-stage">';
   validShow.slice(0, ECON.profile.maxShowcase).forEach(function (id, idx) {
     const p = getPetById(id);
@@ -202,12 +212,12 @@ function renderRoomTab() {
     stage += '<button type="button" class="sanctuary-buddy" style="left:' + sp.left + '; top:' + sp.top + '; --wander-dur:' + sp.dur + '; background:none; border:none;" onclick="tapRoomBuddy(&quot;' + id + '&quot;)" aria-label="Pet ' + p.name + ' in Sanctuary">' +
       avatarHtml(p, 36) + '<span class="sanctuary-buddy-lbl">' + p.baseName + '</span></button>';
   });
-  stage += '<span class="sanctuary-decor">🪴 🛋️ ⭐ Sanctuary (' + validShow.length + '/' + ECON.profile.maxShowcase + ')</span></div>';
+  stage += '<span class="sanctuary-decor">🪴 🛋️ ⭐ Sanctuary (' + validShow.length + '/' + ECON.profile.maxShowcase + ' · +' + xpBonusPct + '% XP)</span></div>';
 
   const inRoom = validShow.indexOf(hubPet) !== -1;
   const curPet = getPetById(hubPet);
   let h = stage +
-    '<div class="care-row"><div><div class="t">' + curPet.icon + ' ' + curPet.baseName + ' in Sanctuary</div><div class="d">Pick up to ' + ECON.profile.maxShowcase + ' buddies to hang out in your room</div></div>' +
+    '<div class="care-row"><div><div class="t">' + curPet.icon + ' ' + curPet.baseName + ' in Sanctuary</div><div class="d">Pick up to ' + ECON.profile.maxShowcase + ' buddies (+1% battle XP per buddy — currently +' + xpBonusPct + '% XP!)</div></div>' +
     '<button type="button" class="claim-btn" onclick="toggleShowcaseBuddy(&quot;' + hubPet + '&quot;)">' + (inRoom ? 'Remove' : 'Add to Room') + '</button></div>';
 
   h += '<div style="font-size:0.78rem; font-weight:800; margin:6px 0 2px;">🏅 Trainer Titles (shown on Header &amp; Cards)</div>';

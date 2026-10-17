@@ -25,6 +25,15 @@ function rerenderShop() {
   updateStatsUI();
 }
 function openShop() { showModal('shop-modal', rerenderShop); }
+function openShieldShop() {
+  openShop();
+  const btn = document.getElementById('item-shield');
+  if (btn) {
+    if (typeof btn.scrollIntoView === 'function') btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    btn.focus();
+  }
+  buyItem('shield');
+}
 function closeShop() { hideModal('shop-modal', updateStatsUI); }
 
 function renderArmor() {
