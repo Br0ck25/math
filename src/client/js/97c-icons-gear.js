@@ -1,0 +1,73 @@
+// Icon pictures for buddy gear and costume pieces (see 97-icons.js, 98-icons.js).
+const ICON_BODIES_GEAR = (function () {
+  const two = function (d, color, w) { return '<path d="' + d + '" fill="none" stroke-width="' + (w + 7) + '"/><path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + w + '"/>'; };
+  const tee = function (c, sleeve) { return '<path d="M34 12Q50 24 66 12L92 28L82 48L70 42V90H30V42L18 48L8 28Z" fill="' + c + '"/>' + (sleeve || ''); };
+  const bloom = function (n, r, rr, c, mid) {
+    let s = '';
+    for (let i = 0; i < n; i++) { const a = (i * 360 / n - 90) * Math.PI / 180; s += '<circle cx="' + (50 + r * Math.cos(a)).toFixed(1) + '" cy="' + (50 + r * Math.sin(a)).toFixed(1) + '" r="' + rr + '" fill="' + c + '"/>'; }
+    return s + '<circle cx="50" cy="50" r="' + (rr - 2) + '" fill="' + mid + '"/>';
+  };
+  return {
+    '🕶': '<path d="M6 36H94" fill="none" stroke-width="6"/><rect x="8" y="34" width="38" height="30" rx="12" fill="#334155" stroke="#94A3B8"/><rect x="54" y="34" width="38" height="30" rx="12" fill="#334155" stroke="#94A3B8"/><path d="M16 42L24 40M62 42L70 40" fill="none" stroke="#94A3B8" stroke-width="4"/>',
+    '👓': '<circle cx="28" cy="54" r="20" fill="#BAE6FD" fill-opacity=".5"/><circle cx="72" cy="54" r="20" fill="#BAE6FD" fill-opacity=".5"/><path d="M48 52Q50 46 52 52M8 50L2 40M92 50L98 40" fill="none" stroke-width="5"/>',
+    '🎩': '<ellipse cx="50" cy="78" rx="44" ry="12" fill="#334155"/><path d="M24 78V24Q24 10 50 10Q76 10 76 24V78Z" fill="#475569"/><path d="M24 64H76V74Q50 84 24 74Z" fill="#EF4444"/>',
+    '🎀': '<path d="M50 50L10 24V76Z" fill="#EF4444"/><path d="M50 50L90 24V76Z" fill="#EF4444"/><rect x="38" y="38" width="24" height="24" rx="8" fill="#F87171"/>',
+    '🧣': '<path d="M14 26Q50 8 86 26V44Q50 30 14 44Z" fill="#EF4444"/><path d="M60 40H84V90L72 82L60 90Z" fill="#DC2626"/><path d="M60 52H84M60 66H84" fill="none" stroke="#FDE047" stroke-width="5"/>',
+    '🏴': '<rect x="10" y="6" width="9" height="90" rx="3" fill="#B45309"/><path d="M19 10H90L74 30L90 50H19Z" fill="#475569"/><circle cx="46" cy="28" r="7" fill="#F8FAFC" stroke="none"/>',
+    '🌺': bloom(5, 22, 18, '#EC4899', '#FDE047'),
+    '🌹': '<path d="M50 56V94" fill="none" stroke-width="7"/><path d="M50 78Q70 74 76 62Q60 62 50 76Z" fill="#22C55E"/><circle cx="50" cy="34" r="26" fill="#EF4444"/><path d="M34 30Q50 14 66 30M40 40Q50 28 60 40" fill="none" stroke="#B91C1C" stroke-width="4"/>',
+    '🪖': '<path d="M10 66Q10 14 52 14Q90 14 90 66Z" fill="#64748B"/><rect x="6" y="64" width="88" height="14" rx="6" fill="#475569"/><path d="M30 28Q40 22 52 24" fill="none" stroke="#CBD5E1" stroke-width="4"/>',
+    '🧹': two('M70 8L40 60', '#B45309', 7) + '<path d="M26 56L52 70L36 94Q20 88 14 74Z" fill="#FBBF24"/><path d="M26 70L34 76M20 78L28 84" fill="none" stroke-width="3"/>',
+    '🎧': two('M14 62V50Q14 14 50 14Q86 14 86 50V62', '#94A3B8', 7) + '<rect x="8" y="52" width="22" height="34" rx="8" fill="#EF4444"/><rect x="70" y="52" width="22" height="34" rx="8" fill="#EF4444"/>',
+    '👠': '<path d="M16 16H46L52 56Q80 56 90 70V82H20Q14 82 14 74Z" fill="#EC4899"/><path d="M18 82V94H28V82" fill="#BE185D" stroke-width="4"/>',
+    '🟡': '<circle cx="50" cy="50" r="40" fill="#FBBF24"/><path d="M26 36Q34 24 46 22" fill="none" stroke="#fff" stroke-width="5"/>',
+    '🔴': '<circle cx="50" cy="50" r="40" fill="#EF4444"/><path d="M26 36Q34 24 46 22" fill="none" stroke="#fff" stroke-width="5"/>',
+    '🪄': two('M16 84L64 36', '#F8FAFC', 9) + '<path d="M16 84L36 64" fill="none" stroke="#FBBF24" stroke-width="9"/>' + iconStar(76, 24, 16, 7, 4) + ' fill="#FDE047"/>',
+    '🪽': '<path d="M50 90Q10 86 8 40Q6 14 28 10Q22 30 34 38Q30 20 48 12Q60 40 50 90Z" fill="#F8FAFC"/><path d="M30 44Q40 50 44 64M26 28Q36 34 42 46" fill="none" stroke="#94A3B8" stroke-width="3"/>',
+    '🗡': '<path d="M84 8L90 14L46 62L38 54Z" fill="#E2E8F0"/><rect x="22" y="52" width="30" height="10" rx="3" transform="rotate(45 37 57)" fill="#B45309"/><path d="M32 68L14 86" fill="none" stroke-width="9"/><path d="M32 68L14 86" fill="none" stroke="#78350F" stroke-width="4"/>',
+    '👒': '<ellipse cx="50" cy="62" rx="46" ry="20" fill="#FDE68A"/><path d="M26 60Q26 20 50 20Q74 20 74 60Z" fill="#FBBF24"/><path d="M26 54Q50 64 74 54V62Q50 72 26 62Z" fill="#EF4444" stroke-width="3"/>',
+    '🌻': bloom(10, 30, 12, '#FACC15', '#92400E'),
+    '⛑': '<path d="M12 62Q12 14 50 14Q88 14 88 62Z" fill="#F8FAFC"/><rect x="6" y="60" width="88" height="14" rx="6" fill="#E2E8F0"/><path d="M42 28H58V42H72V54H58V60H42V54H28V42H42Z" fill="#EF4444" stroke-width="3"/>',
+    '🎃': '<path d="M46 20Q50 8 62 6" fill="none" stroke-width="8"/><ellipse cx="50" cy="56" rx="42" ry="34" fill="#F97316"/><path d="M50 22Q34 56 50 90M50 22Q66 56 50 90" fill="none" stroke="#C2410C" stroke-width="4"/><polygon points="30,48 40,48 35,38" fill="#1E293B" stroke-width="3"/><polygon points="60,48 70,48 65,38" fill="#1E293B" stroke-width="3"/><path d="M32 66Q50 80 68 66" fill="none" stroke-width="5"/>',
+    '🔱': two('M50 94V28M22 18V40Q22 54 50 54Q78 54 78 40V18', '#FBBF24', 8) + '<polygon points="50,4 58,24 42,24" fill="#FBBF24"/><polygon points="22,6 28,22 16,22" fill="#FBBF24"/><polygon points="78,6 84,22 72,22" fill="#FBBF24"/>',
+    '🥽': '<path d="M4 46Q4 30 20 30H80Q96 30 96 46V58Q96 72 80 72H64Q54 72 50 62Q46 72 36 72H20Q4 72 4 58Z" fill="#475569"/><rect x="12" y="38" width="30" height="26" rx="10" fill="#BAE6FD"/><rect x="58" y="38" width="30" height="26" rx="10" fill="#BAE6FD"/>',
+    '📿': '<circle cx="50" cy="26" r="9" fill="#F8FAFC"/><circle cx="26" cy="38" r="9" fill="#F8FAFC"/><circle cx="74" cy="38" r="9" fill="#F8FAFC"/><circle cx="18" cy="62" r="9" fill="#F8FAFC"/><circle cx="82" cy="62" r="9" fill="#F8FAFC"/><circle cx="34" cy="80" r="9" fill="#F8FAFC"/><circle cx="66" cy="80" r="9" fill="#F8FAFC"/>',
+    '🎗': '<path d="M50 8Q18 10 20 36Q22 52 50 56Q78 52 80 36Q82 10 50 8Z" fill="#EF4444"/><path d="M50 56L28 94L48 82L52 82L72 94Z" fill="#DC2626"/><circle cx="50" cy="34" r="9" fill="#F87171" stroke-width="3"/>',
+    '🧿': '<circle cx="50" cy="50" r="42" fill="#2563EB"/><circle cx="50" cy="50" r="30" fill="#F8FAFC"/><circle cx="50" cy="50" r="19" fill="#38BDF8"/><circle cx="50" cy="50" r="8" fill="#1E293B"/>',
+    '🎖': '<path d="M26 4H46L56 40H36Z" fill="#3B82F6"/><path d="M74 4H54L44 40H64Z" fill="#EF4444"/><circle cx="50" cy="64" r="28" fill="#FBBF24"/>' + iconStar(50, 64, 18, 8, 5) + ' fill="#FDE047" stroke-width="3"/>',
+    '🪁': '<polygon points="50,6 84,44 50,80 16,44" fill="#38BDF8"/><path d="M50 6V80M16 44H84" fill="none" stroke-width="3"/>' + two('M50 80Q38 88 50 92Q62 96 52 100', '#CBD5E1', 3),
+    '🎸': '<path d="M60 40L88 12" fill="none" stroke-width="12"/><path d="M60 40L88 12" fill="none" stroke="#78350F" stroke-width="6"/><path d="M52 34Q64 36 66 48Q74 56 62 66Q52 90 30 90Q8 88 10 66Q14 50 34 50Q36 38 52 34Z" fill="#F97316"/><circle cx="36" cy="68" r="8" fill="#1E293B"/>',
+    '🏹': two('M26 10Q80 20 90 74', '#B45309', 7) + '<path d="M26 10L90 74" fill="none" stroke="#CBD5E1" stroke-width="3"/><polygon points="94,94 66,84 84,66" fill="#94A3B8"/><path d="M92 92L40 40" fill="none" stroke-width="9"/><path d="M92 92L40 40" fill="none" stroke="#F1F5F9" stroke-width="4"/>',
+    '🔭': '<g transform="rotate(-30 50 50)"><rect x="6" y="38" width="30" height="24" rx="4" fill="#475569"/><rect x="34" y="34" width="34" height="32" rx="4" fill="#64748B"/><rect x="66" y="28" width="28" height="44" rx="5" fill="#94A3B8"/></g><path d="M50 62L34 94M50 62L66 94" fill="none" stroke-width="7"/>',
+    '🔨': '<path d="M44 46L76 84" fill="none" stroke-width="14"/><path d="M44 46L76 84" fill="none" stroke="#B45309" stroke-width="7"/><rect x="14" y="14" width="56" height="28" rx="6" transform="rotate(20 42 28)" fill="#94A3B8"/>',
+    '🎤': '<circle cx="42" cy="34" r="26" fill="#94A3B8"/><path d="M26 28Q32 18 44 18" fill="none" stroke="#fff" stroke-width="4"/><path d="M60 52L90 88" fill="none" stroke-width="16"/><path d="M60 52L90 88" fill="none" stroke="#475569" stroke-width="8"/>',
+    '🪓': '<path d="M50 40L82 90" fill="none" stroke-width="14"/><path d="M50 40L82 90" fill="none" stroke="#B45309" stroke-width="7"/><path d="M16 18Q40 4 62 26L56 52Q34 48 14 36Z" fill="#94A3B8"/>',
+    '🍃': '<path d="M14 80Q10 30 50 14Q92 10 90 36Q88 70 40 78Z" fill="#22C55E"/><path d="M14 82Q40 56 70 34" fill="none" stroke="#15803D" stroke-width="4"/>',
+    '🎆': '<path d="M50 94V54" fill="none" stroke-width="5"/>' + iconStar(50, 36, 32, 14, 8, -90) + ' fill="#FDE047"/><circle cx="18" cy="70" r="5" fill="#EC4899" stroke-width="3"/><circle cx="84" cy="64" r="5" fill="#38BDF8" stroke-width="3"/>',
+    '🪐': '<circle cx="50" cy="50" r="28" fill="#F59E0B"/><path d="M28 44Q50 52 72 44" fill="none" stroke="#B45309" stroke-width="4"/><ellipse cx="50" cy="52" rx="46" ry="12" transform="rotate(-18 50 52)" fill="none" stroke="#FDE68A" stroke-width="7"/>',
+    '🎭': '<path d="M10 14Q36 22 62 14V52Q62 76 36 82Q10 76 10 52Z" fill="#FBBF24"/><path d="M38 30Q62 38 88 30V68Q88 90 64 96Q40 90 38 68Z" fill="#A78BFA"/><path d="M18 34Q24 28 30 34M44 34Q50 28 56 34" fill="none" stroke-width="3"/><path d="M20 56Q36 68 52 56" fill="none" stroke-width="4"/>',
+    '🛹': '<path d="M6 46H94Q94 60 80 60H20Q6 60 6 46Z" fill="#F59E0B"/><circle cx="26" cy="74" r="10" fill="#EF4444"/><circle cx="74" cy="74" r="10" fill="#EF4444"/>',
+    '🎷': two('M70 8Q86 8 82 24L68 66Q60 94 36 92Q20 88 24 74', '#FBBF24', 14) + '<ellipse cx="26" cy="76" rx="14" ry="10" fill="#F59E0B"/><circle cx="68" cy="40" r="4" fill="#B45309" stroke-width="2"/><circle cx="62" cy="56" r="4" fill="#B45309" stroke-width="2"/>',
+    '⚜': '<path d="M50 6Q66 24 62 44Q76 34 88 40Q90 58 70 62Q58 62 56 72H66V82H56V94H44V82H34V72H44Q42 62 30 62Q10 58 12 40Q24 34 38 44Q34 24 50 6Z" fill="#FBBF24"/>',
+    '🏵': bloom(8, 28, 14, '#EF4444', '#FDE047'),
+    '🥇': '<path d="M26 4H46L56 40H36Z" fill="#3B82F6"/><path d="M74 4H54L44 40H64Z" fill="#EF4444"/><circle cx="50" cy="64" r="28" fill="#FBBF24"/><path d="M42 54L52 48V80M42 80H62" fill="none" stroke-width="6"/>',
+    '🎣': two('M20 92L70 14', '#B45309', 7) + '<path d="M70 14Q96 20 90 58" fill="none" stroke="#CBD5E1" stroke-width="3"/><path d="M90 58Q84 70 92 76" fill="none" stroke="#CBD5E1" stroke-width="3"/>',
+    '🏷': '<path d="M8 10H50L92 52L52 92L8 50Z" fill="#FBBF24"/><circle cx="26" cy="28" r="7" fill="#F8FAFC"/>',
+    '🛋': '<rect x="12" y="24" width="76" height="34" rx="12" fill="#A78BFA"/><rect x="4" y="44" width="22" height="34" rx="10" fill="#8B5CF6"/><rect x="74" y="44" width="22" height="34" rx="10" fill="#8B5CF6"/><rect x="22" y="52" width="56" height="26" rx="6" fill="#C4B5FD"/><path d="M20 78V92M80 78V92" fill="none" stroke-width="7"/>',
+    '👢': '<path d="M28 8H58V54Q74 56 92 66V90H20V60Z" fill="#92400E"/><rect x="26" y="6" width="34" height="14" rx="4" fill="#B45309"/><path d="M20 84H92" fill="none" stroke="#1E293B" stroke-width="6"/>',
+    '👕': tee('#38BDF8'),
+    '🦺': tee('#F97316') + '<path d="M38 46V90M62 46V90" fill="none" stroke="#FDE047" stroke-width="7"/>',
+    '🥼': '<path d="M30 8L50 30L70 8L90 24L82 48L72 44V92H28V44L18 48L10 24Z" fill="#F8FAFC"/><path d="M50 30V92M60 62H70" fill="none" stroke="#94A3B8" stroke-width="4"/>',
+    '🥋': tee('#F8FAFC') + '<path d="M34 12L58 56M66 12L58 56" fill="none" stroke="#CBD5E1" stroke-width="4"/><rect x="26" y="58" width="48" height="10" fill="#1E293B"/>',
+    '⛓': two('M30 42H20Q8 42 8 54Q8 66 20 66H44Q56 66 56 54', '#94A3B8', 8) + two('M70 58H80Q92 58 92 46Q92 34 80 34H56Q44 34 44 46', '#CBD5E1', 8),
+    '🧥': '<path d="M30 8L50 22L70 8L92 26V90H72V44L50 54L28 44V90H8V26Z" fill="#92400E"/><path d="M50 22V90" fill="none" stroke-width="3"/><circle cx="56" cy="50" r="3" fill="#FDE047" stroke="none"/>',
+    '💠': '<polygon points="50,6 94,50 50,94 6,50" fill="#38BDF8"/><polygon points="50,24 76,50 50,76 24,50" fill="#BAE6FD" stroke-width="3"/>',
+    '🔷': '<polygon points="50,6 94,50 50,94 6,50" fill="#3B82F6"/><path d="M50 6V94M6 50H94" fill="none" stroke="#93C5FD" stroke-width="3"/>',
+    '🔰': '<path d="M50 6L88 24V52Q88 76 50 94Q12 76 12 52V24Z" fill="#22C55E"/><path d="M50 6L88 24V52Q88 76 50 94Z" fill="#FACC15"/>',
+    '🩳': '<path d="M14 18H86L92 84H58L50 50L42 84H8Z" fill="#3B82F6"/><path d="M14 28H86" fill="none" stroke="#F8FAFC" stroke-width="5"/>',
+    '👗': '<path d="M38 6L50 22L62 6L66 40L90 92H10L34 40Z" fill="#EC4899"/><path d="M34 40H66" fill="none" stroke="#FBCFE8" stroke-width="5"/>',
+    '🎽': '<path d="M30 6Q50 38 70 6L82 10V90H18V10Z" fill="#EF4444"/><path d="M26 40H74" fill="none" stroke="#F8FAFC" stroke-width="6"/>',
+    '👔': '<path d="M30 8L50 24L70 8L90 30L80 90H20L10 30Z" fill="#F8FAFC"/><polygon points="50,24 42,10 58,10" fill="#E2E8F0" stroke-width="3"/><path d="M50 28L42 40L50 86L58 40Z" fill="#EF4444"/>',
+    '🎪': '<path d="M50 6L94 44H6Z" fill="#EF4444"/><path d="M6 44H94V90H6Z" fill="#F8FAFC"/><path d="M28 44V90M50 44V90M72 44V90" fill="none" stroke="#EF4444" stroke-width="10"/><path d="M40 90Q50 60 60 90Z" fill="#1E293B" stroke-width="3"/>'
+  };
+})();

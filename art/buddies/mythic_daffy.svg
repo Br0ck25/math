@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Daffy's Signature Head Tuft (Feather curls on top) -->
+  <path d="M 47 24 C 44 14 53 15 51 22 C 55 15 62 16 57 24 Z" fill="#0F172A" stroke="#020617" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Neck Base (Black) -->
+  <path d="M 38 78 L 36 88 L 64 88 L 62 78 Z" fill="#0F172A" stroke="#020617" stroke-width="3" stroke-linejoin="round" />
+
+  <!-- Daffy's White Neck Ring Collar -->
+  <path d="M 36 80 Q 50 85 64 80 L 63 84 Q 50 89 37 84 Z" fill="#FFFFFF" stroke="#020617" stroke-width="1.8" />
+
+  <!-- Main Duck Head Silhouette (Sleek Black Duck) -->
+  <rect x="25" y="24" width="50" height="54" rx="20" fill="#0F172A" stroke="#020617" stroke-width="3.5" />
+
+  <!-- Expressive / Suspicious Eyebrows -->
+  <path d="M 33 34 Q 40 31 46 36" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M 54 36 Q 60 31 67 34" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Tall Cartoony Duck Eyes -->
+  <ellipse cx="40" cy="45" rx="7" ry="10" fill="#FFFFFF" stroke="#020617" stroke-width="2" />
+  <circle cx="41.5" cy="45" r="3.2" fill="#0F172A" />
+  <circle cx="40" cy="43" r="1.1" fill="#FFFFFF" />
+
+  <ellipse cx="60" cy="45" rx="7" ry="10" fill="#FFFFFF" stroke="#020617" stroke-width="2" />
+  <circle cx="58.5" cy="45" r="3.2" fill="#0F172A" />
+  <circle cx="57" cy="43" r="1.1" fill="#FFFFFF" />
+
+  <!-- Signature Broad Orange Duck Bill / Beak -->
+  <!-- Upper Bill -->
+  <path d="M 22 62 C 20 53 34 52 50 52 C 66 52 80 53 78 62 C 76 71 66 74 50 74 C 34 74 24 71 22 62 Z" fill="#F97316" stroke="#C2410C" stroke-width="3" stroke-linejoin="round" />
+
+  <!-- Nostrils -->
+  <ellipse cx="45" cy="57" rx="1.5" ry="2.2" fill="#9A3412" />
+  <ellipse cx="55" cy="57" rx="1.5" ry="2.2" fill="#9A3412" />
+
+  <!-- Beak Smile / Smug Bill Curve -->
+  <path d="M 28 62 Q 50 67 72 62" fill="none" stroke="#C2410C" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Lower Bill Underside / Lip -->
+  <path d="M 33 68 C 33 78 67 78 67 68" fill="#EA580C" stroke="#C2410C" stroke-width="2" stroke-linejoin="round" />
+</svg>

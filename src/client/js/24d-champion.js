@@ -69,7 +69,7 @@ function championAfterHit(pet) {
   markDexSeen(next);
   monsterCurrentHp = c.hp[next] > 0 ? c.hp[next] : max;
   showPopup('🔄 ' + CHAMPION_NAME.split(' ')[1] + ' swaps to ' + getSpecies(next).name + '!');
-  toast('🔄 ' + CHAMPION_NAME + ' swaps in ' + getSpecies(next).icon + ' ' + getSpecies(next).name + '!');
+  toast('🔄 ' + CHAMPION_NAME + ' swaps in ' + emojiOf(getSpecies(next)) + ' ' + getSpecies(next).name + '!');
   setBossTaunt();
   saveState();
 }

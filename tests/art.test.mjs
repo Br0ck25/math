@@ -21,6 +21,14 @@ beforeEach(async () => {
   await page.reload();
   errors.length = 0;
   await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; });
+  // Every buddy now ships with a picture; these tests need some without one, so take the pictures of the plain animals off (the game shows emoji again).
+  await page.evaluate(() => {
+    window.__artCount = Object.keys(BUDDY_ART).length;
+    const undo = (x) => { if (x.emoji) { x.icon = x.emoji; delete x.emoji; } };
+    const keep = (b) => b.show || b.mythic || /Rocky|Tyson/.test(b.name);     // licensed pictures stay
+    allBuddies().filter((b) => !keep(b)).forEach((b) => { undo(b); (b.forms || []).forEach(undo); delete BUDDY_ART[b.id]; delete ART_URIS[b.id]; });
+    monstersList.filter((m) => !keep(m)).forEach(undo);
+  });
 });
 
 // A small picture made in the page, so the tests need no files.
@@ -190,7 +198,7 @@ test('a boss with art (Rocky, Tyson) shows the picture in the fight, the Dex and
 test('pictures are cheap: no image is decoded at load (200 of them made every page slow), a card asks for its picture and is redrawn when it arrives', async () => {
   const r = await page.evaluate(async () => {
     const out = {};
-    out.atLoad = [Object.keys(BUDDY_ART).length > 100, Object.keys(ART_IMGS).length];
+    out.atLoad = [window.__artCount > 100, Object.keys(ART_IMGS).length];
     const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
     CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
     const id = Object.keys(BUDDY_ART).find((k) => k.startsWith('secret_') && getSpecies(k));

@@ -124,3 +124,20 @@ test('with wide iPhone letters, windows stay inside the screen (book tabs too) a
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
+
+test('long multiple-choice answers (study vault) wrap inside the window instead of running off screen', async () => {
+  const r = await inPage(() => {
+    const m = document.getElementById('vault-modal'), box = document.getElementById('vault-options');
+    m.style.display = 'flex';
+    fillOptButtons(box, ['Spatial Geography', 'Human Geography', 'Geomorphology'], function () {});
+    const w = window.innerWidth, out = [];
+    box.querySelectorAll('button').forEach((b) => {
+      const r = b.getBoundingClientRect();
+      if (r.left < 0 || r.right > w) out.push(b.innerText + ' off screen');
+    });
+    if (box.scrollWidth > box.clientWidth) out.push('options scroll sideways');
+    m.style.display = 'none';
+    return out;
+  });
+  assert.deepEqual(r, []);
+});

@@ -125,8 +125,8 @@ function nextGoalText() {
   }
   if (nextBuddy) {
     return state.gems >= nextBuddy.cost
-      ? '🐾 You can unlock ' + nextBuddy.name + ' ' + nextBuddy.icon + ' in the Sanctuary!'
-      : '🐾 ' + (nextBuddy.cost - state.gems) + ' 💎 to unlock ' + nextBuddy.name + ' ' + nextBuddy.icon;
+      ? '🐾 You can unlock ' + nextBuddy.name + ' ' + emojiOf(nextBuddy) + ' in the Sanctuary!'
+      : '🐾 ' + (nextBuddy.cost - state.gems) + ' 💎 to unlock ' + nextBuddy.name + ' ' + emojiOf(nextBuddy);
   }
   return '';
 }

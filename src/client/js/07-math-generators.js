@@ -324,10 +324,12 @@ function makeMcq(opts) {
 }
 function fillOptButtons(box, opts, onPick) {
   box.innerHTML = '';
-  opts.forEach(function (v) {
+  const labels = opts.map(function (v) { return typeof v === 'string' ? v : fmtAns(v); });   // study questions use words
+  box.classList.toggle('long-opts', labels.some(function (t) { return String(t).length > 8; }));
+  opts.forEach(function (v, i) {
     const b = document.createElement('button');
     b.className = 'vault-btn';
-    b.innerText = typeof v === 'string' ? v : fmtAns(v);       // study questions use words
+    b.innerText = labels[i];
     b.onclick = function () { onPick(v, b); };
     box.appendChild(b);
   });

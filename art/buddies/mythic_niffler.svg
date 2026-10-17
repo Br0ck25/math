@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Small Rounded Mole/Platypus Ears -->
+  <!-- Left Ear -->
+  <ellipse cx="22" cy="42" rx="4" ry="5" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" />
+  <ellipse cx="23" cy="42" rx="2" ry="3" fill="#F472B6" opacity="0.6" />
+
+  <!-- Right Ear -->
+  <ellipse cx="78" cy="42" rx="4" ry="5" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" />
+  <ellipse cx="77" cy="42" rx="2" ry="3" fill="#F472B6" opacity="0.6" />
+
+  <!-- Fluffy Head Fur Spikes on Top -->
+  <path d="M 44 24 C 42 16 48 14 50 20 C 53 14 60 16 57 24 Z" fill="#1E293B" stroke="#0F172A" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Fluffy Cheek Fur Tufts -->
+  <polygon points="22,48 14,54 22,60" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round" />
+  <polygon points="78,48 86,54 78,60" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Main Head Squircle Base (Fluffy Midnight-Black Fur) -->
+  <rect x="22" y="22" width="56" height="58" rx="20" fill="#1E293B" stroke="#0F172A" stroke-width="3.5" />
+
+  <!-- Inquisitive / Sneaky Eyebrow Ridges -->
+  <path d="M 32 35 Q 40 31 46 36" fill="none" stroke="#64748B" stroke-width="2.4" stroke-linecap="round" />
+  <path d="M 68 35 Q 60 31 54 36" fill="none" stroke="#64748B" stroke-width="2.4" stroke-linecap="round" />
+
+  <!-- Large Shiny Inquisitive Eyes (Reflecting Gold/Treasure) -->
+  <!-- Left Eye -->
+  <ellipse cx="38" cy="44" rx="7.5" ry="8.5" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+  <circle cx="39" cy="44" r="4.5" fill="#0F172A" />
+  <circle cx="37.5" cy="42" r="1.5" fill="#FFFFFF" />
+  <circle cx="40.5" cy="45.5" r="0.9" fill="#FACC15" />
+
+  <!-- Right Eye -->
+  <ellipse cx="62" cy="44" rx="7.5" ry="8.5" fill="#FFFFFF" stroke="#0F172A" stroke-width="2" />
+  <circle cx="61" cy="44" r="4.5" fill="#0F172A" />
+  <circle cx="59.5" cy="42" r="1.5" fill="#FFFFFF" />
+  <circle cx="62.5" cy="45.5" r="0.9" fill="#FACC15" />
+
+  <!-- Rosy Tinted Cheeks -->
+  <circle cx="28" cy="56" r="4.5" fill="#F472B6" opacity="0.35" />
+  <circle cx="72" cy="56" r="4.5" fill="#F472B6" opacity="0.35" />
+
+  <!-- Iconic Broad Platypus/Duck-like Snout (Leathery Pinkish-Grey) -->
+  <!-- Upper Snout -->
+  <path d="M 28 60 C 26 50 36 49 50 49 C 64 49 74 50 72 60 C 70 70 62 74 50 74 C 38 74 30 70 28 60 Z" fill="#FBCFE8" stroke="#0F172A" stroke-width="2.8" stroke-linejoin="round" />
+
+  <!-- Nostril Slits -->
+  <ellipse cx="44" cy="56" rx="1.8" ry="2.6" fill="#9D174D" />
+  <ellipse cx="56" cy="56" rx="1.8" ry="2.6" fill="#9D174D" />
+
+  <!-- Mischievous Bill Smile Line -->
+  <path d="M 33 62 Q 50 67 67 62" fill="none" stroke="#0F172A" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Lower Snout Pouch / Underside -->
+  <path d="M 37 68 C 37 77 63 77 63 68" fill="#F472B6" stroke="#0F172A" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Shiny Gold Galleon Coin Stashed in Corner of Mouth -->
+  <circle cx="65" cy="67" r="5" fill="#FACC15" stroke="#CA8A04" stroke-width="1.6" />
+  <circle cx="65" cy="67" r="3.4" fill="none" stroke="#EAB308" stroke-width="1" />
+  <!-- Coin Sparkle -->
+  <line x1="71" y1="63" x2="75" y2="63" stroke="#FDE047" stroke-width="1.4" stroke-linecap="round" />
+  <line x1="73" y1="61" x2="73" y2="65" stroke="#FDE047" stroke-width="1.4" stroke-linecap="round" />
+</svg>

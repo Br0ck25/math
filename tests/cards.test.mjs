@@ -50,6 +50,7 @@ test('every emoji on every kind of card is drawn with a plain colour fill (the i
 test('the buddy picture itself is drawn at full strength unless the buddy is asleep', async () => {
   const r = await page.evaluate(() => {
     window.__emojiFills.length = 0;
+    const dog = getSpecies('dog'); if (dog.emoji) { dog.icon = dog.emoji; delete dog.emoji; delete ART_URIS.dog; }   // the emoji path: dog now has a picture
     state.activePet = 'dog'; state.activeAccessory = 'none'; state.activeArmor = 'none'; state.faintedPets = [];
     drawCard(document.createElement('canvas'), 'dog');
     const awake = window.__emojiFills.find((f) => f.text === '🐶');

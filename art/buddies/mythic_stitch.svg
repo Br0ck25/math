@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Large Bat-Like Alien Ears -->
+  <!-- Left Outer Ear with Signature Notch Cutout -->
+  <path d="
+    M 26 40 
+    C 18 28 6 12 2 4 
+    C 4 18 10 38 18 52 
+    C 15 54 13 56 16 57 
+    C 19 57 21 56 22 58 
+    Z" fill="#2563EB" stroke="#1E293B" stroke-width="3" stroke-linejoin="round" />
+  <!-- Left Inner Ear (Mauve / Violet-Pink) -->
+  <path d="M 23 40 C 17 30 9 17 6 11 C 9 22 13 36 19 46 Z" fill="#F472B6" />
+
+  <!-- Right Outer Ear -->
+  <path d="
+    M 74 40 
+    C 82 28 94 12 98 4 
+    C 96 18 90 38 82 52 
+    C 85 54 87 56 84 57 
+    C 81 57 79 56 78 58 
+    Z" fill="#2563EB" stroke="#1E293B" stroke-width="3" stroke-linejoin="round" />
+  <!-- Right Inner Ear (Mauve / Violet-Pink) -->
+  <path d="M 77 40 C 83 30 91 17 94 11 C 91 22 87 36 81 46 Z" fill="#F472B6" />
+
+  <!-- Scruffy Top Head Tuft -->
+  <path d="M 44 24 C 42 16 48 14 50 20 C 53 14 60 16 57 24 Z" fill="#1D4ED8" stroke="#1E293B" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Main Head Squircle Base (Stitch Medium Blue) -->
+  <rect x="22" y="22" width="56" height="58" rx="20" fill="#2563EB" stroke="#1E293B" stroke-width="3.5" />
+
+  <!-- Lighter Blue Eye Patch Rings / Facial Markings -->
+  <ellipse cx="37" cy="46" rx="12" ry="13" fill="#60A5FA" />
+  <ellipse cx="63" cy="46" rx="12" ry="13" fill="#60A5FA" />
+
+  <!-- Mischievous Eyebrow Ridges -->
+  <path d="M 30 35 Q 38 31 45 36" fill="none" stroke="#1E293B" stroke-width="2.6" stroke-linecap="round" />
+  <path d="M 70 35 Q 62 31 55 36" fill="none" stroke="#1E293B" stroke-width="2.6" stroke-linecap="round" />
+
+  <!-- Large Glossy Black Alien Eyes -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="46" rx="8" ry="9" fill="#0F172A" stroke="#1E293B" stroke-width="2" />
+  <circle cx="35" cy="43" r="2.2" fill="#FFFFFF" />
+  <circle cx="39" cy="48" r="1.1" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="46" rx="8" ry="9" fill="#0F172A" stroke="#1E293B" stroke-width="2" />
+  <circle cx="61" cy="43" r="2.2" fill="#FFFFFF" />
+  <circle cx="65" cy="48" r="1.1" fill="#FFFFFF" />
+
+  <!-- Signature Broad Koala-Style Alien Nose (Navy / Indigo) -->
+  <path d="M 40 52 C 40 48 44 47 50 47 C 56 47 60 48 60 52 C 60 57 56 61 50 61 C 44 61 40 57 40 52 Z" fill="#1E3A8A" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+  <!-- Nose Nostril Crease -->
+  <path d="M 45 54 Q 50 56 55 54" fill="none" stroke="#0F172A" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Cheek Fur Tufts -->
+  <polygon points="22,50 14,56 22,62" fill="#2563EB" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+  <polygon points="78,50 86,56 78,62" fill="#2563EB" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Wide Mischievous Alien Grin -->
+  <path d="M 30 64 Q 50 78 70 64" fill="none" stroke="#1E293B" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Sharp Little Alien Teeth -->
+  <polygon points="36,66 38,70 41,67" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.2" stroke-linejoin="round" />
+  <polygon points="59,67 62,70 64,66" fill="#FFFFFF" stroke="#1E293B" stroke-width="1.2" stroke-linejoin="round" />
+
+  <!-- Chin Under-Curve -->
+  <path d="M 44 74 Q 50 77 56 74" fill="none" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" />
+</svg>

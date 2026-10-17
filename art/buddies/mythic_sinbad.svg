@@ -1,47 +1,97 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-  <!-- Teal Sailor Vest (Shoulders) -->
-  <path d="M 12 94 C 14 76 30 68 50 68 C 70 68 86 76 88 94 Z" fill="#0F766E" stroke="#134E4A" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Ears & Gold Sailor Hoop Earring (Left Ear) -->
+  <!-- Left Ear -->
+  <ellipse cx="20" cy="54" rx="4.5" ry="6.5" fill="#D97706" stroke="#1E293B" stroke-width="2.5" />
+  <ellipse cx="18" cy="62" rx="2.2" ry="3.8" fill="none" stroke="#FACC15" stroke-width="2" />
+  <ellipse cx="18" cy="62" rx="1.2" ry="2.2" fill="none" stroke="#CA8A04" stroke-width="0.8" />
 
-  <!-- White Shirt V -->
-  <path d="M 37 69 L 50 88 L 63 69 Z" fill="#F8FAFC" stroke="#64748B" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Right Ear -->
+  <ellipse cx="80" cy="54" rx="4.5" ry="6.5" fill="#D97706" stroke="#1E293B" stroke-width="2.5" />
 
-  <!-- Gold Vest Trim -->
-  <path d="M 37 69 L 50 88 L 63 69" fill="none" stroke="#FACC15" stroke-width="2" stroke-linejoin="round"/>
-  <circle cx="22" cy="86" r="1.8" fill="#FACC15"/>
-  <circle cx="78" cy="86" r="1.8" fill="#FACC15"/>
+  <!-- Wild Dark Brown Swashbuckler Hair (Back Volume & Ponytail Tufts) -->
+  <path d="
+    M 20 44 
+    C 10 26 16 12 34 8 
+    C 44 6 56 6 66 8 
+    C 84 12 90 26 80 44 
+    C 88 58 86 76 80 84 
+    L 20 84 
+    C 14 76 12 58 20 44 
+    Z" fill="#292524" stroke="#1C1917" stroke-width="3.5" stroke-linejoin="round" />
 
-  <!-- Sun-Tanned Face -->
-  <ellipse cx="50" cy="48" rx="21" ry="23" fill="#DDA06B" stroke="#5B3A29" stroke-width="3"/>
+  <!-- Spiky Rogue Ponytail Tail (Right Side Flip) -->
+  <polygon points="80,48 91,44 82,56" fill="#292524" stroke="#1C1917" stroke-width="2.2" stroke-linejoin="round" />
 
-  <!-- Gold Hoop Earring -->
-  <circle cx="28" cy="56" r="3.4" fill="none" stroke="#FACC15" stroke-width="2.2"/>
+  <!-- Main Head Squircle Base (Warm Mediterranean/Arabic Tan Skin Tone) -->
+  <rect x="22" y="24" width="56" height="58" rx="20" fill="#D97706" stroke="#1E293B" stroke-width="3.5" />
 
-  <!-- Cream Turban -->
-  <ellipse cx="50" cy="28" rx="26" ry="15" fill="#F5F5F4" stroke="#78716C" stroke-width="3"/>
-  <path d="M 28 30 Q 50 40 72 30" fill="none" stroke="#A8A29E" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M 30 22 Q 50 32 70 22" fill="none" stroke="#A8A29E" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="50" cy="32" r="4" fill="#DC2626" stroke="#7F1D1D" stroke-width="1.8"/>
-  <circle cx="49" cy="31" r="1.1" fill="#FCA5A5"/>
+  <!-- Iconic Crimson Sailor Bandana / Headscarf -->
+  <!-- Main Bandana Cap Wrap -->
+  <path d="
+    M 21 33 
+    Q 50 16 79 33 
+    L 78 22 
+    Q 50 10 22 22 
+    Z" fill="#DC2626" stroke="#991B1B" stroke-width="2.8" stroke-linejoin="round" />
+  <!-- Front Rim Band with Brow Contour -->
+  <path d="M 21 33 Q 50 25 79 33 L 78 37 Q 50 29 22 37 Z" fill="#B91C1C" stroke="#7F1D1D" stroke-width="1.2" />
+  <!-- Bandana Hanging Knot Tails (Right Temple) -->
+  <polygon points="78,32 89,28 85,38" fill="#DC2626" stroke="#991B1B" stroke-width="1.6" stroke-linejoin="round" />
+  <polygon points="79,35 88,42 82,44" fill="#B91C1C" stroke="#7F1D1D" stroke-width="1.4" stroke-linejoin="round" />
 
-  <!-- Bold Brows -->
-  <path d="M 34 43 Q 41 38 47 42" fill="none" stroke="#3F2A1D" stroke-width="3.2" stroke-linecap="round"/>
-  <path d="M 66 43 Q 59 38 53 42" fill="none" stroke="#3F2A1D" stroke-width="3.2" stroke-linecap="round"/>
+  <!-- Spiky Wind-Blown Front Hair Bangs Peeking Below Bandana -->
+  <path d="
+    M 23 37 
+    Q 32 44 38 35 
+    Q 45 46 51 34 
+    Q 57 44 65 34 
+    Q 71 42 77 37 
+    L 76 34 
+    Q 50 27 24 34 
+    Z" fill="#292524" stroke="#1C1917" stroke-width="2.4" stroke-linejoin="round" />
 
-  <!-- Adventurous Eyes -->
-  <ellipse cx="41" cy="49" rx="4.6" ry="5.4" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
-  <circle cx="41.6" cy="50" r="2.7" fill="#1E293B"/>
-  <circle cx="40.6" cy="48.6" r="0.9" fill="#FFFFFF"/>
-  <ellipse cx="59" cy="49" rx="4.6" ry="5.4" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
-  <circle cx="58.4" cy="50" r="2.7" fill="#1E293B"/>
-  <circle cx="57.4" cy="48.6" r="0.9" fill="#FFFFFF"/>
+  <!-- Bold, Cocky Arched Eyebrows (Left Eyebrow Raised) -->
+  <path d="M 28 42 Q 36 34 44 39" fill="none" stroke="#1C1917" stroke-width="3" stroke-linecap="round" />
+  <path d="M 56 37 Q 64 30 72 36" fill="none" stroke="#1C1917" stroke-width="3" stroke-linecap="round" />
 
-  <!-- Nose -->
-  <path d="M 50 50 Q 54 56 49 57" fill="none" stroke="#A8693F" stroke-width="2" stroke-linecap="round"/>
+  <!-- Sharp, Dashing Swashbuckler Eyes -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="48" rx="8" ry="8" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="38" cy="48" r="4.2" fill="#78350F" />
+  <circle cx="38.5" cy="48" r="2.2" fill="#0F172A" />
+  <circle cx="36.8" cy="46" r="1.1" fill="#FFFFFF" />
 
-  <!-- Dark Beard and Curled Mustache -->
-  <path d="M 30 56 C 30 74 40 80 50 80 C 60 80 70 74 70 56 C 65 65 58 67 50 67 C 42 67 35 65 30 56 Z" fill="#3F2A1D" stroke="#1C1109" stroke-width="2.5" stroke-linejoin="round"/>
-  <path d="M 36 60 Q 43 55 50 60 Q 57 55 64 60 Q 66 56 62 55 M 36 60 Q 34 56 38 55" fill="none" stroke="#1C1109" stroke-width="3" stroke-linecap="round"/>
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="47" rx="8" ry="8" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="62" cy="47" r="4.2" fill="#78350F" />
+  <circle cx="61.5" cy="47" r="2.2" fill="#0F172A" />
+  <circle cx="59.8" cy="45" r="1.1" fill="#FFFFFF" />
 
-  <!-- Bright Grin -->
-  <path d="M 43 68 Q 50 74 57 68 Z" fill="#FFFFFF" stroke="#1C1109" stroke-width="1.8" stroke-linejoin="round"/>
+  <!-- Strong Chiseled Nose -->
+  <path d="M 49 48 L 52 55 L 47 57 L 52 58" fill="none" stroke="#92400E" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- Signature Goatee & Chin Soul Patch -->
+  <!-- Soul Patch under Lip -->
+  <polygon points="49,67 51,67 50,70" fill="#1C1917" />
+  <!-- Pointed Sailor Goatee -->
+  <path d="M 44 74 Q 50 83 56 74 Z" fill="#1C1917" stroke="#1C1917" stroke-width="1.4" stroke-linejoin="round" />
+  <!-- Stubble Accents Along Jawline -->
+  <circle cx="35" cy="71" r="0.8" fill="#78350F" />
+  <circle cx="40" cy="74" r="0.8" fill="#78350F" />
+  <circle cx="60" cy="74" r="0.8" fill="#78350F" />
+  <circle cx="65" cy="71" r="0.8" fill="#78350F" />
+
+  <!-- Cocky, Daring Half-Smirk -->
+  <path d="M 40 64 Q 51 69 62 61" fill="none" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round" />
+
+  <!-- Swashbuckler Open Tunic & Gold Band Collar Base -->
+  <g>
+    <!-- Navy Blue / Dark Slate Vest Fold -->
+    <path d="M 26 80 Q 50 86 74 80 L 74 88 Q 50 94 26 88 Z" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Deep V-Neck Open Chest Cutout -->
+    <polygon points="50,88 40,80 60,80" fill="#D97706" stroke="#1E293B" stroke-width="1.8" stroke-linejoin="round" />
+    <!-- Gold Sash Trim Lines -->
+    <path d="M 28 82 Q 38 85 43 83" fill="none" stroke="#FACC15" stroke-width="1.6" />
+    <path d="M 57 83 Q 62 85 72 82" fill="none" stroke="#FACC15" stroke-width="1.6" />
+  </g>
 </svg>

@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Drooping Bat/Elf Ears (Pointed Downward / Inverted Style) -->
+  <!-- Left Drooping Ear -->
+  <path d="M 24 38 C 12 36 2 46 4 60 C 5 68 12 74 18 72 C 22 70 24 58 24 48 Z" fill="#E2D4C0" stroke="#1E293B" stroke-width="3" stroke-linejoin="round" />
+  <!-- Left Ear Inner Flap -->
+  <path d="M 20 44 C 13 46 7 54 8 62 C 11 66 16 66 18 63" fill="#FBCFE8" opacity="0.65" />
+
+  <!-- Right Drooping Ear -->
+  <path d="M 76 38 C 88 36 98 46 96 60 C 95 68 88 74 82 72 C 78 70 76 58 76 48 Z" fill="#E2D4C0" stroke="#1E293B" stroke-width="3" stroke-linejoin="round" />
+  <!-- Right Ear Inner Flap -->
+  <path d="M 80 44 C 87 46 93 54 92 62 C 89 66 84 66 82 63" fill="#FBCFE8" opacity="0.65" />
+
+  <!-- Main House-Elf Head Squircle (Pale Warm Taupe/Skin Tone) -->
+  <rect x="24" y="24" width="52" height="58" rx="20" fill="#E2D4C0" stroke="#1E293B" stroke-width="3.5" />
+
+  <!-- Expressive Forehead Wrinkles -->
+  <path d="M 38 29 Q 50 26 62 29" fill="none" stroke="#A89F91" stroke-width="2" stroke-linecap="round" />
+  <path d="M 42 34 Q 50 32 58 34" fill="none" stroke="#A89F91" stroke-width="1.6" stroke-linecap="round" />
+
+  <!-- High-Set Anxious Eyebrow Ridges -->
+  <path d="M 30 38 Q 38 34 44 40" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" />
+  <path d="M 56 40 Q 62 34 70 38" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" />
+
+  <!-- Giant "Tennis-Ball Sized" Greenish Eyes -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="48" rx="10" ry="11" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.5" />
+  <circle cx="38" cy="48" r="6" fill="#84CC16" />
+  <circle cx="38.5" cy="48" r="3.2" fill="#0F172A" />
+  <circle cx="36" cy="45" r="1.5" fill="#FFFFFF" />
+  <circle cx="40.5" cy="50.5" r="0.7" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="48" rx="10" ry="11" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.5" />
+  <circle cx="62" cy="48" r="6" fill="#84CC16" />
+  <circle cx="61.5" cy="48" r="3.2" fill="#0F172A" />
+  <circle cx="59.5" cy="45" r="1.5" fill="#FFFFFF" />
+  <circle cx="64" cy="50.5" r="0.7" fill="#FFFFFF" />
+
+  <!-- Long Pointed Drooping House-Elf Nose -->
+  <path d="M 50 44 L 46 62 Q 50 67 54 62 Z" fill="#D6C5AE" stroke="#1E293B" stroke-width="2.2" stroke-linejoin="round" />
+  <!-- Nose Nostril Accents -->
+  <circle cx="48" cy="62" r="0.9" fill="#1E293B" />
+  <circle cx="52" cy="62" r="0.9" fill="#1E293B" />
+
+  <!-- Under-Eye Wrinkles / Bags -->
+  <path d="M 29 60 Q 36 63 43 59" fill="none" stroke="#A89F91" stroke-width="1.6" stroke-linecap="round" />
+  <path d="M 57 59 Q 64 63 71 60" fill="none" stroke="#A89F91" stroke-width="1.6" stroke-linecap="round" />
+
+  <!-- Sweet / Timid Smile -->
+  <path d="M 42 71 Q 50 76 58 71" fill="none" stroke="#1E293B" stroke-width="2.4" stroke-linecap="round" />
+  <path d="M 46 76 Q 50 78 54 76" fill="none" stroke="#A89F91" stroke-width="1.6" stroke-linecap="round" />
+
+  <!-- Tattered Pillowcase Collar (Hugging Base of Chin) -->
+  <path d="M 28 80 L 34 88 L 42 82 L 50 88 L 58 82 L 66 88 L 72 80 Z" fill="#D1C7BD" stroke="#1E293B" stroke-width="2.4" stroke-linejoin="round" />
+</svg>

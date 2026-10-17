@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Pointed Flat-Set Cat Ears with Inner Pink -->
+  <!-- Left Ear -->
+  <polygon points="26,38 12,18 36,24" fill="#C2410C" stroke="#7C2D12" stroke-width="3" stroke-linejoin="round" />
+  <polygon points="25,33 17,23 31,27" fill="#FBCFE8" />
+
+  <!-- Right Ear -->
+  <polygon points="74,38 88,18 64,24" fill="#C2410C" stroke="#7C2D12" stroke-width="3" stroke-linejoin="round" />
+  <polygon points="75,33 83,23 69,27" fill="#FBCFE8" />
+
+  <!-- Wild Scruffy Forehead Tufts (Kneazle Texture) -->
+  <polygon points="44,22 47,12 50,20" fill="#EA580C" stroke="#7C2D12" stroke-width="2" stroke-linejoin="round" />
+  <polygon points="50,20 53,12 56,22" fill="#EA580C" stroke="#7C2D12" stroke-width="2" stroke-linejoin="round" />
+
+  <!-- Bushy Spiky Cheek Fur Tufts (Bottle-brush Texture) -->
+  <polygon points="20,44 10,50 18,56 8,62 20,66" fill="#EA580C" stroke="#7C2D12" stroke-width="2.5" stroke-linejoin="round" />
+  <polygon points="80,44 90,50 82,56 92,62 80,66" fill="#EA580C" stroke="#7C2D12" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Main Head Squircle Base (Rich Ginger Marmalade Coat) -->
+  <rect x="20" y="22" width="60" height="60" rx="20" fill="#EA580C" stroke="#7C2D12" stroke-width="3.5" />
+
+  <!-- Distinctive Squashed / Grumpy Persian Cat Muzzle Patch -->
+  <path d="M 30 52 C 30 46 40 44 50 44 C 60 44 70 46 70 52 C 72 74 62 80 50 80 C 38 80 28 74 30 52 Z" fill="#FDBA74" stroke="#7C2D12" stroke-width="2.6" stroke-linejoin="round" />
+
+  <!-- Heavy / Suspicious Kneazle Brow Ridges -->
+  <path d="M 28 36 Q 37 32 45 38" fill="none" stroke="#7C2D12" stroke-width="3" stroke-linecap="round" />
+  <path d="M 72 36 Q 63 32 55 38" fill="none" stroke="#7C2D12" stroke-width="3" stroke-linecap="round" />
+
+  <!-- Large Piercing Yellow-Amber Eyes with Slit Pupils -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="45" rx="7.5" ry="8" fill="#FACC15" stroke="#7C2D12" stroke-width="2" />
+  <ellipse cx="37.5" cy="45" rx="2.4" ry="6.2" fill="#0F172A" />
+  <circle cx="36" cy="42.5" r="1.1" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="45" rx="7.5" ry="8" fill="#FACC15" stroke="#7C2D12" stroke-width="2" />
+  <ellipse cx="62.5" cy="45" rx="2.4" ry="6.2" fill="#0F172A" />
+  <circle cx="61" cy="42.5" r="1.1" fill="#FFFFFF" />
+
+  <!-- Flat / Squashed Nose (Typical Persian / Crookshanks Face) -->
+  <polygon points="50,56 45,51 55,51" fill="#F472B6" stroke="#7C2D12" stroke-width="1.8" stroke-linejoin="round" />
+
+  <!-- Scruffy Flattened Muzzle Crease & Grumpy Downturned Mouth -->
+  <line x1="50" y1="56" x2="50" y2="61" stroke="#7C2D12" stroke-width="2" stroke-linecap="round" />
+  <path d="M 40 65 Q 50 59 60 65" fill="none" stroke="#7C2D12" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Whisker Freckle Dots -->
+  <circle cx="37" cy="60" r="1.2" fill="#9A3412" />
+  <circle cx="35" cy="64" r="1.2" fill="#9A3412" />
+  <circle cx="63" cy="60" r="1.2" fill="#9A3412" />
+  <circle cx="65" cy="64" r="1.2" fill="#9A3412" />
+
+  <!-- Prominent Bristling Whiskers -->
+  <!-- Left Whiskers -->
+  <line x1="33" y1="59" x2="16" y2="57" stroke="#7C2D12" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="32" y1="63" x2="15" y2="66" stroke="#7C2D12" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Right Whiskers -->
+  <line x1="67" y1="59" x2="84" y2="57" stroke="#7C2D12" stroke-width="1.8" stroke-linecap="round" />
+  <line x1="68" y1="63" x2="85" y2="66" stroke="#7C2D12" stroke-width="1.8" stroke-linecap="round" />
+</svg>

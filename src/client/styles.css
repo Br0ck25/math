@@ -717,12 +717,16 @@
 
     .vault-answers-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       margin-top: 10px;
     }
+    .vault-answers-grid.long-opts { grid-template-columns: minmax(0, 1fr); }
+    .vault-answers-grid.long-opts .vault-btn { font-size: 1.1rem; padding: 12px 10px; }
 
     .vault-btn {
+      min-width: 0;
+      overflow-wrap: anywhere;
       background: #b45309;
       color: #fff;
       border: 2px solid #fde047;
@@ -1383,3 +1387,7 @@ body.trivia .math-only { display: none; }
 .study-fb.wrong { border-color: #f59e0b; }
 .study-missed { margin: 4px 0 8px 18px; font-size: 0.8rem; line-height: 1.35; text-align: left; }
 .study-missed li { margin-bottom: 6px; overflow-wrap: anywhere; }
+
+/* Custom pictures for everyday emoji (98-icons.js): the emoji stays as text but is hidden behind the picture. */
+.ico { display: inline-block; width: 1.1em; height: 1.1em; vertical-align: -0.2em; overflow: hidden; white-space: nowrap; line-height: 1;
+  color: transparent; -webkit-text-fill-color: transparent; text-shadow: none; background: center / contain no-repeat; }

@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Ears -->
+  <ellipse cx="20" cy="54" rx="4.5" ry="6.5" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
+  <ellipse cx="80" cy="54" rx="4.5" ry="6.5" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
+
+  <!-- Voluminous Platinum Blonde Hair (Back/Volume) -->
+  <path d="
+    M 20 46 
+    C 12 28 20 12 36 8 
+    C 44 6 56 6 64 8 
+    C 80 12 88 28 80 46 
+    C 86 58 84 76 80 84 
+    L 20 84 
+    C 16 76 14 58 20 46 
+    Z" fill="#F8FAFC" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
+
+  <!-- Main Head Squircle Base (Fair Skin Tone) -->
+  <rect x="22" y="24" width="56" height="58" rx="20" fill="#FED7AA" stroke="#1E293B" stroke-width="3.5" />
+
+  <!-- Signature Swept-Back Front Hair Tufts / Braided Volume -->
+  <path d="
+    M 21 34 
+    Q 28 38 34 26 
+    Q 42 38 50 24 
+    Q 58 38 66 26 
+    Q 72 36 79 32 
+    L 79 24 
+    Q 50 12 21 24 
+    Z" fill="#F8FAFC" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Hair Texture Strands -->
+  <path d="M 36 12 Q 40 22 36 28" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" />
+  <path d="M 50 10 Q 52 20 50 26" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" />
+  <path d="M 64 12 Q 60 22 64 28" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Signature Dark Brunette/Plum Shaped Eyebrows -->
+  <path d="M 28 38 Q 36 32 44 37" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round" />
+  <path d="M 56 37 Q 64 32 72 38" fill="none" stroke="#475569" stroke-width="2.6" stroke-linecap="round" />
+
+  <!-- Soft Purple Eyeshadow -->
+  <ellipse cx="37" cy="46" rx="9" ry="5.5" fill="#C084FC" opacity="0.45" />
+  <ellipse cx="63" cy="46" rx="9" ry="5.5" fill="#C084FC" opacity="0.45" />
+
+  <!-- Eyelashes / Eyeliner -->
+  <!-- Left Eye Lashes -->
+  <path d="M 28 44 Q 37 40 45 44" fill="none" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round" />
+  <line x1="28" y1="44" x2="25" y2="40" stroke="#1E293B" stroke-width="2" stroke-linecap="round" />
+  <line x1="32" y1="42" x2="30" y2="38" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Right Eye Lashes -->
+  <path d="M 55 44 Q 63 40 72 44" fill="none" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round" />
+  <line x1="72" y1="44" x2="75" y2="40" stroke="#1E293B" stroke-width="2" stroke-linecap="round" />
+  <line x1="68" y1="42" x2="70" y2="38" stroke="#1E293B" stroke-width="1.8" stroke-linecap="round" />
+
+  <!-- Large Ice Blue Eyes -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="48" rx="8" ry="8.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="38" cy="48" r="4.2" fill="#38BDF8" />
+  <circle cx="38.5" cy="48" r="2.2" fill="#0F172A" />
+  <circle cx="36.8" cy="46" r="1.1" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="48" rx="8" ry="8.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="62" cy="48" r="4.2" fill="#38BDF8" />
+  <circle cx="61.5" cy="48" r="2.2" fill="#0F172A" />
+  <circle cx="59.8" cy="46" r="1.1" fill="#FFFFFF" />
+
+  <!-- Dainty Ski-Jump Nose -->
+  <path d="M 49 55 Q 50 59 53 58" fill="none" stroke="#CA8A04" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Rosy Pink Cheeks -->
+  <circle cx="27" cy="58" r="4.5" fill="#FB7185" opacity="0.4" />
+  <circle cx="73" cy="58" r="4.5" fill="#FB7185" opacity="0.4" />
+
+  <!-- Confident Soft Berry Smile -->
+  <path d="M 41 67 Q 50 73 59 67" fill="none" stroke="#E11D48" stroke-width="2.6" stroke-linecap="round" />
+
+  <!-- Crystalline Ice Dress Collar Base -->
+  <g>
+    <!-- Base Shimmer Bodice Fold -->
+    <path d="M 26 80 Q 50 86 74 80 L 74 88 Q 50 94 26 88 Z" fill="#7DD3FC" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Snowflake / Ice Shard Facets -->
+    <polygon points="40,84 43,81 46,84 43,87" fill="#E0F2FE" />
+    <polygon points="50,84 53,81 56,84 53,87" fill="#FFFFFF" />
+    <polygon points="60,84 63,81 66,84 63,87" fill="#E0F2FE" />
+  </g>
+</svg>

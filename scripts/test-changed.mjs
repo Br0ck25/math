@@ -29,7 +29,7 @@ export const MAP = [
   [/js\/(03-state|10-save-load|31-account)|server\/10-/, ['backup', 'app', 'parents']],
   [/server\/(00-|30-)/, ['server']],
   [/styles\.css|index\.html/, ['layout', 'windows', 'ui', 'contrast', 'app']],
-  [/js\/(01-|05-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['app', 'ui']],
+  [/js\/(01-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['app', 'ui']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']]
 ];
