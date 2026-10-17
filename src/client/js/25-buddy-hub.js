@@ -108,19 +108,19 @@ function renderHub() {
 
 // ----- Trainer Profile & Showcase Sanctuary Room -----
 const PROFILE_TITLES = [
-  { id: 'Rookie Calculator', label: 'Rookie Calculator', icon: '🌱', cost: 0 },
-  { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', cost: ECON.profile.titles.apprentice },
-  { id: 'Gem Defender', label: 'Gem Defender', icon: '🛡️', cost: ECON.profile.titles.defender },
-  { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', cost: ECON.profile.titles.explorer },
-  { id: 'Dragon Tamer', label: 'Dragon Tamer', icon: '🐉', cost: ECON.profile.titles.dragon },
-  { id: 'Grand Arithmancer', label: 'Grand Arithmancer', icon: '👑', cost: ECON.profile.titles.arithmancer }
+  { id: 'Rookie Calculator', label: 'Rookie Calculator', icon: '🌱', desc: 'Your starting trainer title', cost: 0 },
+  { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', desc: 'Brave defender of the Number Kingdom', cost: ECON.profile.titles.apprentice },
+  { id: 'Gem Defender', label: 'Gem Defender', icon: '🛡️', desc: 'Guardian of the kingdom\'s math gems', cost: ECON.profile.titles.defender },
+  { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', desc: 'Traveller across all seven lands', cost: ECON.profile.titles.explorer },
+  { id: 'Dragon Tamer', label: 'Dragon Tamer', icon: '🐉', desc: 'Master of fierce elemental buddies', cost: ECON.profile.titles.dragon },
+  { id: 'Grand Arithmancer', label: 'Grand Arithmancer', icon: '👑', desc: 'Supreme wizard of math and magic', cost: ECON.profile.titles.arithmancer }
 ];
 const PROFILE_FRAMES = [
-  { id: 'classic', label: 'Classic', border: '#94a3b8', cost: 0 },
-  { id: 'gold', label: 'Golden Foil', border: '#facc15', cost: ECON.profile.frames.gold },
-  { id: 'neon', label: 'Neon Cyber', border: '#22d3ee', cost: ECON.profile.frames.neon },
-  { id: 'cosmic', label: 'Cosmic Void', border: '#e879f9', cost: ECON.profile.frames.cosmic },
-  { id: 'crystal', label: 'Crystal Prism', border: '#a5b4fc', cost: ECON.profile.frames.crystal }
+  { id: 'classic', label: 'Classic', border: '#94a3b8', desc: 'Standard element-colored trading card border', cost: 0 },
+  { id: 'gold', label: 'Golden Foil', border: '#facc15', desc: 'Gleaming championship gold card border', cost: ECON.profile.frames.gold },
+  { id: 'neon', label: 'Neon Cyber', border: '#22d3ee', desc: 'Electric cyan glow around every trading card', cost: ECON.profile.frames.neon },
+  { id: 'cosmic', label: 'Cosmic Void', border: '#e879f9', desc: 'Starlight magenta nebula card frame', cost: ECON.profile.frames.cosmic },
+  { id: 'crystal', label: 'Crystal Prism', border: '#a5b4fc', desc: 'Diamond-cut prism border for your cards', cost: ECON.profile.frames.crystal }
 ];
 function ensureProfile() {
   if (!state.profile || typeof state.profile !== 'object') {
@@ -210,23 +210,22 @@ function renderRoomTab() {
     '<div class="care-row"><div><div class="t">' + curPet.icon + ' ' + curPet.baseName + ' in Sanctuary</div><div class="d">Pick up to ' + ECON.profile.maxShowcase + ' buddies to hang out in your room</div></div>' +
     '<button type="button" class="claim-btn" onclick="toggleShowcaseBuddy(&quot;' + hubPet + '&quot;)">' + (inRoom ? 'Remove' : 'Add to Room') + '</button></div>';
 
-  h += '<div style="font-size:0.72rem; font-weight:800; color:#fde047; margin-top:4px; text-align:left;">🏅 Trainer Titles (shown on Header &amp; Cards)</div><div class="profile-grid">';
+  h += '<div style="font-size:0.78rem; font-weight:800; margin:6px 0 2px;">🏅 Trainer Titles (shown on Header &amp; Cards)</div>';
   PROFILE_TITLES.forEach(function (t) {
     const owned = prof.unlockedTitles.indexOf(t.id) !== -1;
     const eq = prof.title === t.id;
-    h += '<div class="profile-chip' + (eq ? ' equipped' : '') + '"><span>' + t.icon + ' ' + t.label + '</span>' +
-      '<button type="button" class="claim-btn" onclick="selectProfileTitle(&quot;' + t.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Equip' : t.cost + ' 💎') + '</button></div>';
+    h += '<div class="care-row"><div><div class="t">' + t.icon + ' ' + t.label + (eq ? ' ✅' : '') + '</div><div class="d">' + t.desc + '</div></div>' +
+      '<button type="button" class="claim-btn" ' + (eq ? 'disabled' : '') + ' onclick="selectProfileTitle(&quot;' + t.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Equip' : t.cost + ' 💎') + '</button></div>';
   });
-  h += '</div>';
 
-  h += '<div style="font-size:0.72rem; font-weight:800; color:#38bdf8; margin-top:4px; text-align:left;">🖼️ Trading Card Frames</div><div class="profile-grid">';
+  h += '<div style="font-size:0.78rem; font-weight:800; margin:6px 0 2px;">🖼️ Trading Card Frames</div>';
   PROFILE_FRAMES.forEach(function (f) {
     const owned = prof.unlockedFrames.indexOf(f.id) !== -1;
     const eq = prof.frame === f.id;
-    h += '<div class="profile-chip' + (eq ? ' equipped' : '') + '"><span style="color:' + f.border + ';">◆ ' + f.label + '</span>' +
-      '<button type="button" class="claim-btn" onclick="selectProfileFrame(&quot;' + f.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Use' : f.cost + ' 💎') + '</button></div>';
+    h += '<div class="care-row"><div><div class="t" style="color:' + f.border + ';">◆ ' + f.label + (eq ? ' ✅' : '') + '</div><div class="d">' + f.desc + '</div></div>' +
+      '<button type="button" class="claim-btn" ' + (eq ? 'disabled' : '') + ' onclick="selectProfileFrame(&quot;' + f.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Use' : f.cost + ' 💎') + '</button></div>';
   });
-  h += '</div>';
+  h += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">You have 💎 ' + state.gems + '</div>';
   document.getElementById('hub-body').innerHTML = h;
 }
 
