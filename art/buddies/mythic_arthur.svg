@@ -1,47 +1,97 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
-  <!-- Royal Red Cape (Shoulders) -->
-  <path d="M 12 94 C 14 76 30 68 50 68 C 70 68 86 76 88 94 Z" fill="#B91C1C" stroke="#7F1D1D" stroke-width="3" stroke-linejoin="round"/>
+  <!-- Ears -->
+  <ellipse cx="20" cy="54" rx="4.5" ry="6.5" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
+  <ellipse cx="80" cy="54" rx="4.5" ry="6.5" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
 
-  <!-- White Fur Collar with Dark Spots -->
-  <path d="M 28 72 Q 50 86 72 72 L 68 64 Q 50 76 32 64 Z" fill="#F8FAFC" stroke="#64748B" stroke-width="2.5" stroke-linejoin="round"/>
-  <circle cx="40" cy="72" r="1.4" fill="#1E293B"/>
-  <circle cx="50" cy="76" r="1.4" fill="#1E293B"/>
-  <circle cx="60" cy="72" r="1.4" fill="#1E293B"/>
+  <!-- Golden Blonde Shoulder-Length Regal Hair (Back Silhouette) -->
+  <path d="
+    M 20 44 
+    C 10 26 16 12 34 8 
+    C 44 6 56 6 66 8 
+    C 84 12 90 26 80 44 
+    C 88 58 86 76 80 84 
+    L 20 84 
+    C 14 76 12 58 20 44 
+    Z" fill="#EAB308" stroke="#1E293B" stroke-width="3.5" stroke-linejoin="round" />
 
-  <!-- Long Silver Hair (behind head) -->
-  <ellipse cx="50" cy="48" rx="31" ry="31" fill="#CBD5E1" stroke="#475569" stroke-width="3"/>
+  <!-- Main Head Squircle Base (Fair Skin Tone) -->
+  <rect x="22" y="24" width="56" height="58" rx="20" fill="#FED7AA" stroke="#1E293B" stroke-width="3.5" />
 
-  <!-- Kind Weathered Face -->
-  <ellipse cx="50" cy="46" rx="21" ry="23" fill="#F7C9A1" stroke="#5B3A29" stroke-width="3"/>
+  <!-- Golden Crown of Camelot -->
+  <!-- Crown Base & Fleur Peaks -->
+  <path d="
+    M 24 30 
+    L 22 14 
+    L 34 22 
+    L 50 10 
+    L 66 22 
+    L 78 14 
+    L 76 30 
+    Q 50 24 24 30 
+    Z" fill="#FACC15" stroke="#1E293B" stroke-width="3" stroke-linejoin="round" />
 
-  <!-- Full Silver Beard -->
-  <path d="M 29 52 C 29 72 40 82 50 82 C 60 82 71 72 71 52 C 66 62 58 64 50 64 C 42 64 34 62 29 52 Z" fill="#E2E8F0" stroke="#475569" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Crown Circlet Rim Band -->
+  <path d="M 24 28 Q 50 23 76 28 L 76 32 Q 50 27 24 32 Z" fill="#CA8A04" />
 
+  <!-- Crown Jewels (Ruby Center, Emerald Accents) -->
+  <circle cx="50" cy="20" r="2.8" fill="#DC2626" stroke="#991B1B" stroke-width="1" />
+  <circle cx="34" cy="23" r="2" fill="#16A34A" stroke="#14532D" stroke-width="0.8" />
+  <circle cx="66" cy="23" r="2" fill="#16A34A" stroke="#14532D" stroke-width="0.8" />
+  <circle cx="50" cy="29" r="1.4" fill="#38BDF8" />
+
+  <!-- Golden Forehead Fringe / Bangs Flowing Under Crown -->
+  <path d="
+    M 23 34 
+    Q 32 38 42 30 
+    Q 48 38 50 31 
+    Q 52 38 58 30 
+    Q 68 38 77 34 
+    L 76 30 
+    Q 50 25 24 30 
+    Z" fill="#EAB308" stroke="#1E293B" stroke-width="2.2" stroke-linejoin="round" />
+
+  <!-- Hair Texture Lines -->
+  <path d="M 23 48 Q 21 60 23 68" fill="none" stroke="#CA8A04" stroke-width="2" stroke-linecap="round" />
+  <path d="M 77 48 Q 79 60 77 68" fill="none" stroke="#CA8A04" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Noble / Determined Eyebrows -->
+  <path d="M 28 40 Q 36 34 44 39" fill="none" stroke="#854D0E" stroke-width="2.8" stroke-linecap="round" />
+  <path d="M 56 39 Q 64 34 72 40" fill="none" stroke="#854D0E" stroke-width="2.8" stroke-linecap="round" />
+
+  <!-- Resolute Blue Eyes -->
+  <!-- Left Eye -->
+  <ellipse cx="37" cy="48" rx="8" ry="8.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="38" cy="48" r="4.2" fill="#0284C7" />
+  <circle cx="38.5" cy="48" r="2.2" fill="#0F172A" />
+  <circle cx="36.8" cy="46" r="1.1" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <ellipse cx="63" cy="48" rx="8" ry="8.5" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.2" />
+  <circle cx="62" cy="48" r="4.2" fill="#0284C7" />
+  <circle cx="61.5" cy="48" r="2.2" fill="#0F172A" />
+  <circle cx="59.8" cy="46" r="1.1" fill="#FFFFFF" />
+
+  <!-- Chiseled Regal Nose -->
+  <path d="M 49 48 L 52 55 L 48 57 L 52 58" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Trimmed Golden-Blonde Beard & Mustache -->
   <!-- Mustache -->
-  <path d="M 36 57 Q 43 52 50 58 Q 57 52 64 57 Q 57 64 50 60 Q 43 64 36 57 Z" fill="#F1F5F9" stroke="#475569" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 40 62 Q 50 67 60 62" fill="none" stroke="#CA8A04" stroke-width="3" stroke-linecap="round" />
+  <!-- Short Chin Beard Contour -->
+  <path d="M 42 69 Q 50 78 58 69" fill="#EAB308" stroke="#CA8A04" stroke-width="2" stroke-linejoin="round" />
 
-  <!-- Warm Smile -->
-  <path d="M 45 66 Q 50 70 55 66" fill="none" stroke="#7F1D1D" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Confident Monarch Smile -->
+  <path d="M 42 64 Q 50 69 58 64" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" />
 
-  <!-- Eyes -->
-  <ellipse cx="41" cy="44" rx="4.8" ry="5.6" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
-  <circle cx="41.6" cy="45" r="2.7" fill="#1E293B"/>
-  <circle cx="40.6" cy="43.6" r="0.9" fill="#FFFFFF"/>
-  <ellipse cx="59" cy="44" rx="4.8" ry="5.6" fill="#FFFFFF" stroke="#5B3A29" stroke-width="2"/>
-  <circle cx="58.4" cy="45" r="2.7" fill="#1E293B"/>
-  <circle cx="57.4" cy="43.6" r="0.9" fill="#FFFFFF"/>
-
-  <!-- Bushy Silver Brows -->
-  <path d="M 34 37 Q 41 33 47 38" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
-  <path d="M 66 37 Q 59 33 53 38" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
-
-  <!-- Nose -->
-  <path d="M 50 46 Q 54 52 49 54" fill="none" stroke="#B9835A" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- Golden Crown with Jewels -->
-  <polygon points="30,30 31,12 41,22 50,8 59,22 69,12 70,30" fill="#FACC15" stroke="#92400E" stroke-width="3" stroke-linejoin="round"/>
-  <rect x="30" y="27" width="40" height="7" rx="2" fill="#FDE047" stroke="#92400E" stroke-width="2.5"/>
-  <circle cx="50" cy="30.5" r="2.4" fill="#DC2626" stroke="#7F1D1D" stroke-width="1"/>
-  <circle cx="39" cy="30.5" r="1.9" fill="#3B82F6" stroke="#1E3A8A" stroke-width="1"/>
-  <circle cx="61" cy="30.5" r="1.9" fill="#3B82F6" stroke="#1E3A8A" stroke-width="1"/>
+  <!-- Chainmail Coif & Royal Crimson/Gold Tunic Collar Base -->
+  <g>
+    <!-- Royal Tunic Fold -->
+    <path d="M 26 80 Q 50 86 74 80 L 74 88 Q 50 94 26 88 Z" fill="#991B1B" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Chainmail Peek Trim (Steel Slate Links) -->
+    <path d="M 32 78 Q 50 83 68 78 L 70 81 Q 50 86 30 81 Z" fill="#94A3B8" stroke="#1E293B" stroke-width="1.2" />
+    <!-- Gold Trim Border -->
+    <path d="M 28 82 Q 50 88 72 82" fill="none" stroke="#FACC15" stroke-width="1.8" />
+    <!-- Pendant / Crest Accent -->
+    <polygon points="50,83 48,86 50,89 52,86" fill="#FACC15" stroke="#CA8A04" stroke-width="0.8" />
+  </g>
 </svg>

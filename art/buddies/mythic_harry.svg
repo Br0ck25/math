@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Ears -->
+  <!-- Left Ear -->
+  <ellipse cx="20" cy="52" rx="4.5" ry="6" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
+  <!-- Right Ear -->
+  <ellipse cx="80" cy="52" rx="4.5" ry="6" fill="#FED7AA" stroke="#1E293B" stroke-width="2.5" />
+
+  <!-- Messy Dark Hair (Behind Head Silhouette) -->
+  <path d="
+    M 20 48 
+    C 16 30 24 16 38 12 
+    C 44 8 56 8 64 12 
+    C 76 16 84 30 80 48 
+    Z" fill="#1E293B" stroke="#0F172A" stroke-width="3.5" stroke-linejoin="round" />
+
+  <!-- Main Head Squircle Base (Skin Tone) -->
+  <rect x="22" y="24" width="56" height="58" rx="20" fill="#FED7AA" stroke="#1E293B" stroke-width="3.5" />
+
+  <!-- Iconic Lightning Bolt Scar -->
+  <polygon points="56,26 62,26 58,32 64,32 54,42 57,35 52,35" fill="#DC2626" stroke="#991B1B" stroke-width="0.8" />
+
+  <!-- Messy Front Hair Bangs / Fringe -->
+  <path d="
+    M 22 34 
+    Q 30 36 36 32 
+    Q 44 42 52 33 
+    Q 60 40 68 31 
+    Q 74 38 78 34 
+    L 78 24 
+    Q 50 16 22 24 
+    Z" fill="#1E293B" stroke="#0F172A" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- Expressive Eyebrows -->
+  <path d="M 28 41 Q 36 37 43 40" fill="none" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M 57 40 Q 64 37 72 41" fill="none" stroke="#1E293B" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Iconic Round Glasses (Thick Dark Wire Frames) -->
+  <!-- Left Lens -->
+  <circle cx="36" cy="52" r="11" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.8" />
+  <!-- Right Lens -->
+  <circle cx="64" cy="52" r="11" fill="#FFFFFF" stroke="#1E293B" stroke-width="2.8" />
+  <!-- Bridge -->
+  <path d="M 47 51 Q 50 48 53 51" fill="none" stroke="#1E293B" stroke-width="2.8" stroke-linecap="round" />
+
+  <!-- Bright Emerald Green Eyes -->
+  <!-- Left Eye -->
+  <circle cx="37" cy="52" r="4.2" fill="#16A34A" />
+  <circle cx="37" cy="52" r="2.3" fill="#0F172A" />
+  <circle cx="35.5" cy="50" r="1" fill="#FFFFFF" />
+
+  <!-- Right Eye -->
+  <circle cx="63" cy="52" r="4.2" fill="#16A34A" />
+  <circle cx="63" cy="52" r="2.3" fill="#0F172A" />
+  <circle cx="61.5" cy="50" r="1" fill="#FFFFFF" />
+
+  <!-- Nose -->
+  <path d="M 48 58 Q 50 61 53 59" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Friendly Youthful Smile -->
+  <path d="M 42 68 Q 50 74 58 68" fill="none" stroke="#1E293B" stroke-width="2.4" stroke-linecap="round" />
+
+  <!-- Gryffindor Striped Scarf Accent (Snug along base) -->
+  <g>
+    <!-- Scarf Base Fold -->
+    <path d="M 26 80 Q 50 86 74 80 L 74 88 Q 50 94 26 88 Z" fill="#991B1B" stroke="#1E293B" stroke-width="2.5" stroke-linejoin="round" />
+    <!-- Gold Stripes -->
+    <path d="M 36 82.5 L 39 83.2 L 39 90.2 L 36 89.5 Z" fill="#FACC15" />
+    <path d="M 48 83.8 L 52 83.8 L 52 91.8 L 48 91.8 Z" fill="#FACC15" />
+    <path d="M 61 83.2 L 64 82.5 L 64 89.5 L 61 90.2 Z" fill="#FACC15" />
+  </g>
+</svg>
