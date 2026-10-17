@@ -19,11 +19,23 @@ function cleanText(t, max, allowSubSup) {
   const bare = allowSubSup ? t.replace(/<\/?(sub|sup)>/g, '') : t;
   return /[<>&"`]/.test(bare) ? null : t;
 }
+// Plain text for trivia questions: any characters but control ones. The client always shows it as text (escHtml), never as HTML.
+function cleanPlain(t, max) {
+  return typeof t === 'string' && t.length >= 1 && t.length <= max && !/[\u0000-\u001f\u007f]/.test(t) ? t : null;
+}
 function cleanQuestions(qs) {
   if (!Array.isArray(qs) || [5, 10, 15].indexOf(qs.length) === -1) return null;
   const out = [];
   for (let i = 0; i < qs.length; i++) {
     const q = qs[i] || {};
+    if (q.t === 't') {                                                   // a trivia (study) question: words, not numbers
+      const te = cleanPlain(q.e, 520), ta = cleanPlain(q.a, 120);
+      if (!te || !ta || !Array.isArray(q.o) || q.o.length < 2 || q.o.length > 4) return null;
+      const to = q.o.map(function (x) { return cleanPlain(x, 120); });
+      if (to.some(function (x, k) { return !x || to.indexOf(x) !== k; }) || to.indexOf(ta) === -1) return null;
+      out.push({ t: 't', e: te, l: '', o: to, a: ta });
+      continue;
+    }
     const e = cleanText(q.e, 240, true);
     const l = cleanText(q.l == null ? '=' : q.l, 24, false);
     if (!e || l === null) return null;
@@ -74,7 +86,7 @@ async function handleDuel(path, request, url, kv, who, body) {
     const d = /^[A-Za-z0-9_-]{6,12}$/.test(id) ? await kv.get('duel:' + id, 'json') : null;
     if (!d || (d.from !== me && d.to !== me)) return json({ error: 'That duel is not available any more.' }, 404);
     const sum = await duelSummary(kv, d, me);
-    return json({ duel: { id: d.id, from: d.from, to: d.to, stake: d.stake, qs: d.qs.map(function (q) { return { e: q.e, l: q.l, o: q.o }; }) }, summary: sum });
+    return json({ duel: { id: d.id, from: d.from, to: d.to, stake: d.stake, qs: d.qs.map(function (q) { return q.t === 't' ? { t: 't', e: q.e, l: q.l, o: q.o } : { e: q.e, l: q.l, o: q.o }; }) }, summary: sum });
   }
 
   if (path === '/api/duel/create' && request.method === 'POST') {
@@ -116,7 +128,7 @@ async function handleDuel(path, request, url, kv, who, body) {
       const ans = Array.isArray(body.answers) ? body.answers : [];
       if (ans.length !== d.qs.length) return json({ error: 'Answer every question first.' }, 400);
       let score = 0;
-      d.qs.forEach(function (q, i) { if (Math.abs(Number(ans[i]) - q.a) < 0.0001) score += 1; });
+      d.qs.forEach(function (q, i) { if (q.t === 't' ? String(ans[i]) === q.a : Math.abs(Number(ans[i]) - q.a) < 0.0001) score += 1; });
       const ms = Math.min(900000, Math.max(d.qs.length * 400, Math.round(Number(body.ms) || 0)));
       await kv.put(resKey, JSON.stringify({ score: score, ms: ms, at: Date.now() }), { expirationTtl: DUEL_TTL });
       const other = d.from === me ? d.to : d.from;

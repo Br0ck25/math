@@ -82,7 +82,7 @@ function duelRender() {
       return;
     }
     const q = duel.qs[pl.i];
-    half.innerHTML = head + '<div class="duel-eq">' + q.html + '</div><div class="tour-opts"></div>';
+    half.innerHTML = head + '<div class="duel-eq' + (q.study ? ' trivia-q' : '') + '">' + q.html + '</div><div class="tour-opts' + (q.study ? ' study-opts' : '') + '"></div>';
     fillOptButtons(half.querySelector('.tour-opts'), q.opts, function (v) { duelAnswer(pi, v); });
   });
 }
@@ -91,7 +91,7 @@ function duelAnswer(pi, v) {
   const pl = duel.p[pi];
   if (pl.done || pl.lock) return;
   const q = duel.qs[pl.i];
-  if (Math.abs(v - q.ans) < 0.0001) {
+  if (mcqRight(v, q.ans)) {
     soundCorrect();
     pl.score += 1;
     pl.i += 1;

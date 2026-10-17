@@ -16,7 +16,7 @@ before(async () => {
   worker = await loadWorker();
   env = { MATH_KV: fakeKV() };
   ({ page, errors } = await openGame(browser, worker, env, { fast: true }));
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; checkForSecretLootDrop = function () {}; });          // beating foes while studying must not open the vault or a loot window over the test
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; checkForSecretLootDrop = function () {}; rollCatch = function () {}; });          // beating foes while studying must not open the vault or a loot window over the test
 });
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
@@ -545,7 +545,7 @@ test('study answers fight like math answers: right hits the foe, wrong hurts you
   const g = await openGame(browser, worker, env, { fast: true });
   const p = g.page;
   const ev = (fn, arg) => p.evaluate(fn, arg);
-  await ev(() => { openStudy(); studyStart('mcq'); });
+  await ev(() => { rollCatch = function () {}; checkForSecretLootDrop = function () {}; startGoldenVault = function () { modalDone(); }; openStudy(); studyStart('mcq'); });
   const answer = (right) => ev((right) => {
     const r = studyRound, q = r.qs[r.i];
     studyPickOpt(right ? q.a : r.opts.find((o) => o !== q.a));
@@ -600,9 +600,167 @@ test('study answers fight like math answers: right hits the foe, wrong hurts you
 
   // flashcards are self-marked, so they never hit anything
   await p.waitForFunction(() => monsterCurrentHp > 0);
-  const hpF = await ev(() => monsterCurrentHp);
-  await ev(() => { studyHome(); studyStart('cards'); for (let i = 0; i < 4; i++) { studyReveal(); studyMark(true); } });
-  await p.waitForTimeout(400);
+  await p.waitForTimeout(500);                                   // the next foe has arrived and everything has settled
+  const hpF = await ev(() => { studyHome(); studyStart('cards'); const h = monsterCurrentHp; for (let i = 0; i < 4; i++) { studyReveal(); studyMark(true); } return h; });
+  await p.waitForTimeout(500);
   assert.equal(await ev(() => monsterCurrentHp), hpF);
   await g.context.close();
+});
+
+// ---------------------------------------------------------------- wrong answers on the parent page, collapsible children
+const seenSave = (extra = {}) => ({ unlockedPets: ['dog'], gems: 5, grade: 2, study: { seen: { kaac1: [1, 3, 5], assess5: [4, 0, 5], quick9: [0, 1, 5], pAAAA: [2, 2, 5], 'bad id!': [1, 1, 1] } }, ...extra });
+
+test('the report to a parent lists the study questions a child got wrong, most often first, and how many times', async () => {
+  const e = { MATH_KV: fakeKV() };
+  const c = (p, m, b, t) => call(worker, e, p, m, b, t);
+  const kid = (await c('/api/register', 'POST', { name: 'kid_m', password: 'secret1', state: seenSave() })).data.token;
+  const mom = (await c('/api/parent/register', 'POST', { name: 'mom_m', password: 'secret1' })).data.token;
+  await c('/api/parent/claim', 'POST', { code: (await c('/api/link/code', 'POST', {}, kid)).data.code }, mom);
+  const k = (await c('/api/parent/kids', 'GET', null, mom)).data.kids[0];
+  assert.deepEqual(k.studyMissed, [['kaac1', 3, 1], ['pAAAA', 2, 2], ['quick9', 1, 0]], 'wrong-count first; only well-formed ids; questions never missed are left out');
+  assert.equal(k.studyMissedCount, 3);
+});
+
+test('the parent page shows which study questions were missed and how often, and children fold up so ten of them do not mean endless scrolling', async () => {
+  const e = { MATH_KV: fakeKV() };
+  const c = (p, m, b, t) => call(worker, e, p, m, b, t);
+  const mom = (await c('/api/parent/register', 'POST', { name: 'mom_big', password: 'secret1' })).data.token;
+  for (const n of ['kid_a1', 'kid_b1', 'kid_c1', 'kid_d1']) {
+    const t = (await c('/api/register', 'POST', { name: n, password: 'secret1', state: n === 'kid_a1' ? seenSave() : { unlockedPets: ['dog'], gems: 1 } })).data.token;
+    await c('/api/parent/claim', 'POST', { code: (await c('/api/link/code', 'POST', {}, t)).data.code }, mom);
+  }
+  const m = await openGame(browser, worker, e, { fast: true, init: `localStorage.setItem('math_quest_parent', JSON.stringify({ name: 'mom_big', token: '${mom}' }))` });
+  await m.page.goto('http://localhost/parent');
+  await m.page.waitForFunction(() => document.querySelectorAll('details.portal-kid').length === 4);
+  assert.equal(await m.page.locator('details.portal-kid[open]').count(), 0, 'with more than three children they start folded');
+  assert.match(await m.page.innerText('#kid-0 > summary'), /kid_a1.*3 missed/s, 'the name bar says how many questions are being missed');
+  assert.ok(await m.page.locator('#kid-1 > summary').isVisible());
+  // open one by tapping its name bar
+  await m.page.click('#kid-0 > summary');
+  assert.equal(await m.page.locator('details.portal-kid[open]').count(), 1);
+  await m.page.click('#kid-0 details.portal-more summary:has-text("answered wrong (3)")');
+  const text = await m.page.innerText('#kid-0 details.portal-more');
+  assert.match(text, /wrong 3 times · ✅ right 1/);
+  assert.match(text, /wrong 1 time ·/);
+  assert.match(text, /Answer: /);
+  // it stays open when the page refreshes its list
+  await m.page.click('button:has-text("Refresh")');
+  await m.page.waitForFunction(() => document.querySelectorAll('details.portal-kid').length === 4);
+  assert.equal(await m.page.locator('#kid-0[open]').count(), 1);
+  // open all / close all / a jump button opens the one it goes to
+  await m.page.click('text=Open all');
+  assert.equal(await m.page.locator('details.portal-kid[open]').count(), 4);
+  await m.page.click('text=Close all');
+  assert.equal(await m.page.locator('details.portal-kid[open]').count(), 0);
+  await m.page.click('.portal-nav-btn:has-text("kid_c1")');
+  assert.equal(await m.page.locator('#kid-2[open]').count(), 1);
+  assert.equal(await m.page.locator('details.portal-kid[open]').count(), 1);
+  assert.deepEqual(m.errors, []);
+  await m.context.close();
+
+  // the child's own parent report has the same list
+  const g = await openGame(browser, worker, e, { fast: true });
+  const own = await g.page.evaluate(() => { state.study.seen = { kaac1: [1, 3, 5], assess5: [4, 0, 5] }; openParent(); parentUnlocked = true; renderParent(); return document.getElementById('par-study').innerText; });
+  assert.match(own, /answered wrong \(1\)/i);
+  await g.context.close();
+});
+
+// ---------------------------------------------------------------- trivia mode: Study changes the whole game
+test('trivia mode: the Kingdom, settings, practice row and weak point change with Study, and switch back with Math', async () => {
+  const g = await openGame(browser, worker, env, { fast: true });
+  const p = g.page, ev = (fn, arg) => p.evaluate(fn, arg);
+  const shown = (sel) => ev((s) => { const el = document.querySelector(s); return !!el && getComputedStyle(el).display !== 'none'; }, sel);
+  // math mode
+  await ev(() => { renderMap(); });
+  assert.match(await ev(() => document.getElementById('map-title').innerText), /Number Kingdom Map/);
+  assert.equal(await shown('#grade-grid'), true);
+  assert.equal(await shown('.trivia-only'), false);
+  assert.match(await ev(() => document.getElementById('grade-chip').innerText), /📚 /);
+  assert.match(await ev(() => getWeakOp() && document.getElementById('weak-chip').innerText), /Weak/);
+  const mathWeak = await ev(() => document.getElementById('weak-chip').innerText);
+  // trivia mode
+  await ev(() => { openStudy(); renderMap(); });
+  assert.equal(await ev(() => document.body.classList.contains('trivia')), true);
+  assert.match(await ev(() => document.getElementById('map-title').innerText), /Trivia Kingdom Map/);
+  assert.equal(await ev(() => triviaWords('The Number Kingdom is saved. Number King Nova bows.')), 'The Trivia Kingdom is saved. Trivia King Nova bows.');
+  assert.equal(await shown('.math-only'), false, 'grade level and math types are not shown');
+  assert.equal(await shown('.trivia-only'), true);
+  assert.match(await ev(() => document.getElementById('grade-chip').innerText), /Trivia/);
+  const weak = await ev(() => document.getElementById('weak-chip').innerText);
+  assert.match(weak, /Weak: .*(Social studies|Science|Language arts|Arts|Math facts)/);
+  assert.notEqual(weak, mathWeak);
+  // the story windows use the Kingdom's new name too
+  await ev(() => { showStoryModal({ chapter: 'The Number Kingdom', title: 'The Number Kingdom Map', panels: [{ icon: '🏰', text: 'The Number Kingdom was peaceful.' }], btn: 'Go' }); });
+  assert.match(await ev(() => document.getElementById('raid-title').innerText + document.getElementById('raid-panels').innerText), /Trivia Kingdom Map[\s\S]*Trivia Kingdom was peaceful/);
+  await ev(() => { document.getElementById('raid-modal').style.display = 'none'; closeStudy(); renderMap(); });
+  assert.match(await ev(() => document.getElementById('map-title').innerText), /Number Kingdom Map/);
+  assert.equal(await shown('.math-only'), true);
+  assert.equal(await ev(() => document.getElementById('weak-chip').innerText), mathWeak);
+  await g.context.close();
+});
+
+test('trivia mode: the Cup, both kinds of duel and the vault ask study questions, and never a parent\'s own', async () => {
+  const g = await openGame(browser, worker, env, { fast: true });
+  const p = g.page, ev = (fn, arg) => p.evaluate(fn, arg);
+  await ev(() => { checkForSecretLootDrop = function () {}; });
+  // math mode: numbers
+  assert.equal(await ev(() => typeof makeMcq().ans), 'number');
+  await ev(() => { startSession('kid_t', 'tok', 1); setParentQs([{ id: 'pZZZZ', s: 'social', q: 'What does the parent ask?', a: 'Something private' }], 'kid_t', true); openStudy(); });
+  // words, four distinct choices with the answer, and never the parent's question or answer
+  const draws = await ev(() => { const out = []; for (let i = 0; i < 300; i++) { const q = makeMcq(); out.push({ study: !!q.study, parent: !!q.study && !!q.study.parent, four: q.opts.length === 4 && new Set(q.opts).size === 4 && q.opts.indexOf(q.ans) !== -1, leak: q.opts.concat(q.expr).some((t) => /Something private|parent ask/.test(t)), word: typeof q.ans === 'string', html: q.html === escHtml(q.expr) }); } return out; });
+  assert.ok(draws.every((d) => d.study && !d.parent && d.four && !d.leak && d.word && d.html));
+  // the Cup (tournament): a right pick is judged on the words
+  await ev(() => { tourStart(); });
+  const t = await ev(() => ({ eq: document.getElementById('tour-eq').innerText, same: document.getElementById('tour-eq').innerText === tour.q.expr, btns: document.querySelectorAll('#tour-opts button').length, ans: tour.answer }));
+  assert.equal(t.same, true);
+  assert.equal(t.btns, 4);
+  const hp = await ev(() => tour.foes.foes[tour.foe].hp);
+  await ev(() => { tourAnswer(tour.answer); });
+  assert.ok((await ev(() => tour.foes.foes[0].hp)) < hp || (await ev(() => tour.foe)) > 0, 'a right answer hurt the trainer\'s buddy');
+  assert.match(await ev(() => document.getElementById('tour-log').innerText), /✅/);
+  await ev(() => { tourQuit(); });
+  // the same-room duel
+  await ev(() => { duelStart(true); duel.started = true; });
+  const d = await ev(() => ({ study: duel.qs.every((q) => q.study), n: duel.qs.length, distinct: new Set(duel.qs.map((q) => q.expr)).size }));
+  assert.ok(d.study);
+  assert.ok(d.distinct >= d.n - 1, 'questions are not repeated');
+  await ev(() => { duelAnswer(0, duel.qs[0].ans); });
+  assert.equal(await ev(() => duel.p[0].score), 1);
+  await ev(() => { duelAnswer(1, duel.qs[0].opts.find((o) => o !== duel.qs[0].ans)); });
+  assert.equal(await ev(() => duel.p[1].score), 0);
+  await ev(() => { duelQuit(); });
+  // the golden vault: three choices, right is +2
+  await ev(() => { startGoldenVault(); clearInterval(vaultTimerInterval); });
+  const v = await ev(() => ({ eq: document.getElementById('vault-eq').innerText, buttons: document.querySelectorAll('#vault-options button').length, word: typeof vaultCurrentAnswer }));
+  assert.equal(v.buttons, 3);
+  assert.equal(v.word, 'string');
+  await ev(() => { handleVaultGuess(vaultCurrentAnswer); });
+  assert.equal(await ev(() => vaultGemsEarned), 2);
+  await ev(() => { document.getElementById('vault-modal').style.display = 'none'; acct = null; persistAcct(); setParentQs([], ''); });
+  assert.deepEqual(g.errors.filter((x) => !/401/.test(x)), [], 'the made-up sign-in is turned away by the server, nothing else goes wrong');
+  await g.context.close();
+});
+
+test('online duels can carry trivia questions: the server checks and scores them, and never sends the answers', async () => {
+  const e = { MATH_KV: fakeKV() };
+  const c = (p, m, b, t) => call(worker, e, p, m, b, t);
+  const a = (await c('/api/register', 'POST', { name: 'duel_a', password: 'secret1', state: { gems: 100 } })).data.token;
+  const b = (await c('/api/register', 'POST', { name: 'duel_b', password: 'secret1', state: { gems: 100 } })).data.token;
+  const qs = Array.from({ length: 5 }, (_, i) => ({ t: 't', e: 'Which one is question "' + i + '"? <b>&</b>', l: '', o: ['red', 'blue', 'green', 'quote " here'], a: i % 2 ? 'blue' : 'quote " here' }));
+  const made = await c('/api/duel/create', 'POST', { to: 'duel_b', stake: 0, qs }, a);
+  assert.equal(made.status, 200);
+  const got = await c('/api/duel/get?id=' + made.data.id, 'GET', null, b);
+  assert.equal(got.data.duel.qs[0].t, 't');
+  assert.equal(got.data.duel.qs[0].e, qs[0].e, 'text is kept exactly (the page shows it as text)');
+  assert.ok(!JSON.stringify(got.data).includes('"a":'), 'the answers stay on the server');
+  const done = await c('/api/duel/submit', 'POST', { id: made.data.id, answers: qs.map((q, i) => i < 3 ? q.a : 'red'), ms: 5000 }, b);
+  assert.equal(done.data.summary.mine.score, 3);
+  // not valid: the answer is not one of the choices, a repeated choice, a control character, too many choices, a mixed bag
+  const bad = [
+    { ...qs[0], a: 'purple' }, { ...qs[0], o: ['red', 'red', 'blue'] }, { ...qs[0], e: 'bell\u0007' }, { ...qs[0], o: ['a', 'b', 'c', 'd', 'e'] }, { ...qs[0], e: 'x'.repeat(521) }, { ...qs[0], o: ['red'] }
+  ];
+  for (const q of bad) assert.equal((await c('/api/duel/create', 'POST', { to: 'duel_b', stake: 0, qs: [q, ...qs.slice(1)] }, a)).status, 400, JSON.stringify(q).slice(0, 80));
+  // the math duels still work as before
+  const math = Array.from({ length: 5 }, () => ({ e: '2 + 2', l: '=', o: [3, 4, 5], a: 4 }));
+  assert.equal((await c('/api/duel/create', 'POST', { to: 'duel_b', stake: 0, qs: math }, a)).status, 200);
 });

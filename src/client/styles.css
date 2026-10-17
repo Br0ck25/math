@@ -1296,7 +1296,16 @@
 .portal h1 { font-size: 1.3rem; margin-bottom: 4px; }
 .portal-kid { --kid: var(--kid-1); background: #0f172a; border: 2px solid var(--kid); border-top-width: 6px; border-radius: 16px; padding: 0 10px 12px; margin-top: 40px; min-width: 0; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); scroll-margin-top: 8px; }
 /* the name bar stays pinned at the top while you scroll through this child's stats, and is pushed away by the next child's */
-.portal-kid-head { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 3; display: flex; align-items: center; gap: 10px; background: #0f172a; margin: 0 -10px 6px; padding: 10px 10px 8px; border-bottom: 2px solid var(--kid); border-radius: 10px 10px 0 0; }
+.portal-kid-sum { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 3; display: block; list-style: none; cursor: pointer; margin: 0 -10px 6px; min-height: 44px; }
+.portal-kid-sum::-webkit-details-marker { display: none; }
+.portal-kid-sum .portal-kid-head { margin: 0; }
+.portal-kid-head::after { content: '▾'; margin-left: auto; font-size: 1.1rem; color: var(--text-muted); flex: none; }
+details.portal-kid:not([open]) .portal-kid-head::after { content: '▸'; }
+details.portal-kid:not([open]) { padding-bottom: 0; }
+details.portal-kid:not([open]) .portal-kid-sum { margin-bottom: 0; }
+.study-miss { font-size: 0.78rem; line-height: 1.35; padding: 6px 0; border-bottom: 1px solid var(--card-border); text-align: left; overflow-wrap: anywhere; }
+.study-miss span { color: var(--text-muted); font-weight: 700; }
+.portal-kid-head { position: static; top: env(safe-area-inset-top, 0px); z-index: 3; display: flex; align-items: center; gap: 10px; background: #0f172a; margin: 0 -10px 6px; padding: 10px 10px 8px; border-bottom: 2px solid var(--kid); border-radius: 10px 10px 0 0; }
 .portal-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--kid); color: #0f172a; font-weight: 900; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; }
 .portal-kid-title { min-width: 0; }
 .portal-kid h2 { font-size: 1.3rem; line-height: 1.15; overflow-wrap: anywhere; }
@@ -1334,6 +1343,13 @@
 
 /* the buy confirmation opens on top of whatever window asked (the buddy hub, the Sanctuary, ...) */
 #confirm-modal { z-index: 250; }
+
+/* ---- Trivia mode (body.trivia while Study is on): math-only settings hide, trivia-only ones show ---- */
+.trivia-only { display: none; }
+body.trivia .trivia-only { display: block; }
+body.trivia .math-only { display: none; }
+.trivia-q { font-size: 1.05rem; line-height: 1.3; font-weight: 800; overflow-wrap: anywhere; }
+#vault-eq.trivia-q { font-size: 1rem; }
 
 /* ---- Study (38-study.js) ---- */
 .study-pane { position: relative; flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; margin-bottom: 8px; padding: 8px 10px; background: #0f172a; border: 2px solid #6366f1; border-radius: 16px; text-align: center; -webkit-overflow-scrolling: touch; }

@@ -416,13 +416,17 @@
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">⚙️ Settings</h2>
 
-      <details class="set-sec" open><summary class="settings-label">📚 Grade level</summary>
+      <details class="set-sec trivia-only" open><summary class="settings-label">📚 Trivia</summary>
+      <div class="settings-hint">Trivia mode asks school-subject questions everywhere: battles, the Cup, duels and the vault. Your buddies, bosses and progress stay the same.</div>
+      <button class="grade-btn" style="width:100%; min-height:44px;" onclick="closeSettings(); studyHome()">🎓 Choose subjects and how to study</button>
+      </details>
+      <details class="set-sec math-only" open><summary class="settings-label">📚 Grade level</summary>
       <div class="grade-grid" id="grade-grid"></div>
       <div class="settings-hint" id="ctl-note" role="status"></div>
       <div class="settings-hint">Picking a grade also switches on the math types that fit that level. You can change them below.</div>
 
       </details>
-      <details class="set-sec" open><summary class="settings-label">🧮 Math types</summary>
+      <details class="set-sec math-only" open><summary class="settings-label">🧮 Math types</summary>
       <div class="ops-grid" id="ops-grid"></div>
       <div class="settings-hint" id="ops-hint">Tap a type to turn it on or off. Higher grades unlock more types.</div>
 
@@ -695,7 +699,7 @@
   <!-- Map: regions, gyms and badges -->
   <div class="modal-overlay" id="map-modal" data-close="closeMap">
     <div class="modal-content">
-      <h2 style="font-size:1.3rem; margin-bottom:2px;">🗺️ Number Kingdom Map</h2>
+      <h2 style="font-size:1.3rem; margin-bottom:2px;" id="map-title">🗺️ Number Kingdom Map</h2>
       <div class="book-progress" id="map-progress"></div>
       <div id="map-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>

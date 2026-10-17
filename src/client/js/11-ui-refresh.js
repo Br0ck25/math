@@ -101,6 +101,12 @@ function updateBattleUI() {
 }
 
 function updatePracticeRow() {
+  if (studyOn) {                                                                       // trivia mode: the chip shows the subjects instead of the grade and math types
+    const sel = studySelected();
+    document.getElementById('grade-chip').innerText = '🎓 Trivia';
+    document.getElementById('ops-chip').innerText = sel[0] === 'all' ? '🌎 🔬 📚 🎨 🧮' : sel.map(function (id) { const s = STUDY_SUBJECTS.filter(function (x) { return x.id === id; })[0]; return s ? s.icon : (id === 'ky' ? '🏇' : '👪'); }).join(' ');
+    return;
+  }
   document.getElementById('grade-chip').innerText = '📚 ' + GRADES[state.grade].label;
   const icons = getActiveOps().map(function (id) { return OP_BY_ID[id].icon; });
   document.getElementById('ops-chip').innerText = icons.slice(0, 5).join(' ') + (icons.length > 5 ? ' +' + (icons.length - 5) : '');

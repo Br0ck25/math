@@ -133,7 +133,7 @@ function studyChoices(q) {
       return (studyType(o) === type ? 0 : 12) + (o.s === q.s ? 0 : 8) + (studyKind(o.a) === kind ? 0 : 5) + (/\d/.test(o.a) === digits ? 0 : 6) +
         Math.min(6, Math.abs(o.a.split(/\s+/).length - words) * 2) + Math.random() * 4;
     };
-    shuffled(studyAll().filter(function (o) { return o.id !== q.id; })).sort(function (x, y) { return rank(x) - rank(y); }).forEach(function (o) { if (wrong.length < 3) add(o.a); });
+    shuffled(studyAll().filter(function (o) { return o.id !== q.id && (q.parent || !o.parent); })).sort(function (x, y) { return rank(x) - rank(y); }).forEach(function (o) { if (wrong.length < 3) add(o.a); });
   }
   return shuffled([q.a].concat(wrong.slice(0, 3)));
 }
@@ -186,9 +186,48 @@ function studyPick(pool, n) {
   };
   take(shuffled(pool.filter(function (q) { return q.parent && (!st.seen[q.id] || st.miss.indexOf(q.id) !== -1); })), 2);
   take(shuffled(pool.filter(function (q) { return st.miss.indexOf(q.id) !== -1; })), 3);
+  const weak = studyWeakSubject();
+  if (weak) take(shuffled(pool.filter(function (q) { return q.s === weak.id; })), 2);          // a boss's weak point: ask its subject more often
   take(shuffled(pool.filter(function (q) { return !st.seen[q.id]; })), n);
   take(shuffled(pool).sort(function (a, b) { return studyKnown(a) - studyKnown(b); }), n);
   return shuffled(out);
+}
+
+// ---- trivia mode ------------------------------------------------------------------
+// While Study is on the whole game asks study questions: battles, tournaments, duels (same room and online) and the vault. The buddies, bosses, progress and
+// rewards are the same; the questions, the Kingdom's name and the weak points change. A parent's own questions are never used outside the player's own battles.
+function triviaWords(s) { return studyOn ? String(s).replace(/Number Kingdom/g, 'Trivia Kingdom').replace(/Number King\b/g, 'Trivia King') : s; }
+// Is this choice the right answer (for a math question, a number; for a study question, the words)?
+function mcqRight(v, ans) { return typeof ans === 'string' ? String(v) === ans : Math.abs(v - ans) < 0.0001; }
+// Parent-report numbers for one multiple-choice answer (math types for math, subjects for study).
+function mcqRecord(q, ok, secs) {
+  if (q.study) { studyRecord(q.study, ok); studyStat(q.study, ok, secs); } else recordStat(q.op, ok, secs, false);
+}
+function studyBuiltin(filters, level) { return STUDY_BANK.filter(function (q) { return filters.some(function (f) { return studyMatch(q, f, level); }); }); }
+// A multiple-choice study question in the shape makeMcq gives (so tournaments, duels and the vault need no other changes). `count` = number of choices.
+function studyMcq(count) {
+  let pool = studyBuiltin(studySelected(), state.study.level);
+  if (!pool.length) pool = STUDY_BANK;
+  const recent = studyMcq.recent || (studyMcq.recent = []);
+  const fresh = pool.filter(function (q) { return recent.indexOf(q.id) === -1; });
+  const q = pick(fresh.length ? fresh : pool);
+  recent.push(q.id);
+  if (recent.length > 15) recent.shift();
+  let opts = studyChoices(q);
+  if (count && count < opts.length) opts = shuffled([q.a].concat(shuffled(opts.filter(function (o) { return o !== q.a; })).slice(0, count - 1)));
+  return { op: 'study', study: q, ans: q.a, opts: opts, expr: q.q, lead: '', html: escHtml(q.q) };
+}
+// A boss's weak point is a math type; in trivia mode it is a school subject instead (the same boss always has the same one).
+const STUDY_MAIN = ['social', 'science', 'lang', 'arts', 'math'];
+function studyWeakSubject() {
+  const w = getWeakOp();
+  if (!w) return null;
+  const pool = studyBuiltin(studySelected(), state.study.level);
+  const have = STUDY_SUBJECTS.filter(function (s) { return STUDY_MAIN.indexOf(s.id) !== -1 && pool.some(function (q) { return q.s === s.id; }); });
+  if (!have.length) return null;
+  let h = 0;
+  for (let i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) % 997;
+  return have[h % have.length];
 }
 
 // ---- the window ---------------------------------------------------------------
@@ -198,6 +237,9 @@ function studySync() {
   document.getElementById('study-pane').style.display = studyOn ? '' : 'none';
   document.getElementById('study-toggle-text').innerText = studyOn ? '🧮 Math' : '📚 Study';
   document.getElementById('study-toggle').setAttribute('aria-label', studyOn ? 'Back to math problems' : 'Study school subjects');
+  document.body.classList.toggle('trivia', studyOn);              // settings, the map's name and the practice row change too
+  updatePracticeRow();
+  updateWeakChip();
 }
 function toggleStudy() { if (studyOn) closeStudy(); else openStudy(); }
 function openStudy() {
@@ -250,6 +292,8 @@ function studySetFilter(id) {
   else if (i === -1) sel.push(id);
   else sel.splice(i, 1);
   saveState();
+  updatePracticeRow();
+  updateWeakChip();
   studyRender();
 }
 function studyRender() {
@@ -360,14 +404,14 @@ function studyAnswered(ok, shown) {
     studyRecord(q, ok);
     studyStat(q, ok, secs);
     calDayEvent();
-    studyBattle(ok);
+    studyBattle(ok, q.s);
   }
   saveState();
   studyRender();
 }
 // The fight goes on while you study: a right answer hits the foe and a wrong one lets it hit your buddy, with the same damage, shields, fainting and victory
 // code as a math answer (triggerMonsterDamage, triggerBuddyDamage). Gems and XP for the answer itself come from the study round, not from here.
-function studyBattle(ok) {
+function studyBattle(ok, subjectId) {
   if (ok) {
     soundCorrect(state.streak + 1);
     buddyReact(state.streak >= 2 && (state.streak + 1) % 3 === 0 ? 'streak' : 'cheer');
@@ -376,7 +420,9 @@ function studyBattle(ok) {
     if (ultimateCharge < 3) ultimateCharge += 1;
     answerBonuses(false);
     showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
-    triggerMonsterDamage(0, false, false, 1);
+    questEvent('solve', 'study');
+    const weak = studyWeakSubject();
+    triggerMonsterDamage(0, !!weak && !!subjectId && weak.id === subjectId, false, 1);
   } else {
     soundWrong();
     bossMistakes += 1;

@@ -140,6 +140,25 @@ function reportParts(days, facts) {
   return out;
 }
 
+// Questions answered wrong, most often first: [[question id, times wrong, times right], ...]. `lookup(id)` gives the question (or nothing).
+function studyMissedHtml(list, count, lookup) {
+  if (!list || !list.length) return '<div style="font-size:0.78rem; color:var(--text-muted);">No study question has been answered wrong yet.</div>';
+  const rows = list.map(function (m) {
+    const q = lookup(m[0]);
+    return '<div class="study-miss"><b>' + (q ? escHtml(q.q) : 'A question that is no longer in the game') + '</b>' + (q ? '<br>Answer: ' + escHtml(q.a) : '') +
+      '<br><span>❌ wrong ' + m[1] + (m[1] === 1 ? ' time' : ' times') + ' · ✅ right ' + m[2] + '</span></div>';
+  }).join('');
+  return '<details class="portal-more"><summary>❌ Study questions answered wrong (' + (count || list.length) + ')</summary>' + rows +
+    (count > list.length ? '<div class="portal-sub">Showing the ' + list.length + ' missed most often.</div>' : '') + '</details>';
+}
+// This device's own list, from the save.
+function studyMissedMine() {
+  return Object.keys(state.study.seen).filter(function (id) { return state.study.seen[id][1] > 0; })
+    .map(function (id) { return [id, state.study.seen[id][1], state.study.seen[id][0]]; })
+    .sort(function (a, b) { return b[1] - a[1] || a[2] - b[2]; });
+}
+function studyLookupMine(id) { return studyAll().filter(function (q) { return q.id === id; })[0]; }
+
 // The last-7-days study numbers (answers to Quick Recall and Type it questions) by subject, as HTML rows.
 function studyParts(keys, days) {
   const total = [0, 0], by = {};
@@ -188,7 +207,8 @@ function renderParent() {
   document.getElementById('par-types').innerHTML = r.types;
   document.getElementById('par-strong').innerHTML = r.strong;
   document.getElementById('par-weak').innerHTML = r.weak;
-  document.getElementById('par-study').innerHTML = r.study;
+  const missed = studyMissedMine();
+  document.getElementById('par-study').innerHTML = r.study + studyMissedHtml(missed.slice(0, 40), missed.length, studyLookupMine);
   renderParentLink();
 
   const g = state.parentGoal;

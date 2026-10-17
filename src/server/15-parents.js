@@ -193,7 +193,13 @@ function kidSummary(save) {
     });
     days[k] = { s: num(d.s), a: num(d.a), ms: num(d.ms), h: num(d.h), w: num(d.w), ops: ops, st: Array.isArray(d.st) ? [num(d.st[0]), num(d.st[1])] : [0, 0], sub: sub };
   });
+  // study questions answered wrong: [question id, times wrong, times right], the most often missed first (at most 40)
+  const seen = (st.study && st.study.seen) || {};
+  const missed = Object.keys(seen).filter(function (id) { return /^[A-Za-z0-9_-]{3,16}$/.test(id) && Array.isArray(seen[id]) && num(seen[id][1], 1e6) > 0; })
+    .map(function (id) { return [id, num(seen[id][1], 1e6), num(seen[id][0], 1e6)]; })
+    .sort(function (a, b) { return b[1] - a[1] || a[2] - b[2]; });
   return {
+    studyMissed: missed.slice(0, 40), studyMissedCount: missed.length,
     updatedAt: save ? save.updatedAt || 0 : 0,
     grade: num(st.grade, 12),
     gems: num(st.gems),
