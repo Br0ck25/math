@@ -55,7 +55,7 @@ async function handleApi(request, env, url) {
     return json({ ok: true, version: next.version, updatedAt: next.updatedAt, ...parents });
   }
 
-  if (path === '/api/study' && request.method === 'GET') return json({ questions: await liveStudy(kv, who.name) });
+  if (path === '/api/study' && request.method === 'GET') return json(await liveStudy(kv, who.name));
 
   if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);
   if (path.indexOf('/api/challenge/') === 0) return handleChallenge(path, request, kv, who, body);

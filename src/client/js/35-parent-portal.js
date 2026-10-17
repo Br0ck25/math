@@ -366,7 +366,7 @@ async function portalUnlink(i) {
 }
 function portalLogout() {
   portal = null; portalKids = null;
-  portalStudy = {}; portalStudyReady = false; portalStudyOpen = false;
+  portalStudy = {}; portalStudyOnly = {}; portalStudyReady = false; portalStudyOpen = false;
   try { localStorage.removeItem(PORTAL_KEY); } catch (e) {}
   renderPortal();
 }

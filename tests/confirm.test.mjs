@@ -133,3 +133,16 @@ test('the buy window fits a small phone and its buttons are big enough to tap', 
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
+
+test('the buy confirmation opens on top of the buddy hub, not behind it', async () => {
+  const r = await page.evaluate(() => {
+    state.gems = 999;
+    openHub(); setHubTab('hold');
+    buyHeld('berry');
+    const box = document.querySelector('#confirm-modal .modal-content').getBoundingClientRect();
+    const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return { onTop: !!top && !!top.closest('#confirm-modal'), shown: document.getElementById('confirm-modal').style.display };
+  });
+  assert.equal(r.shown, 'flex');
+  assert.ok(r.onTop, 'the window the player must answer is the one on top');
+});

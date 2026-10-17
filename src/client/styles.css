@@ -1332,6 +1332,9 @@
 .portal-up { color: #fde047; font-weight: 900; }
 .op-toggle.locked { cursor: default; }
 
+/* the buy confirmation opens on top of whatever window asked (the buddy hub, the Sanctuary, ...) */
+#confirm-modal { z-index: 250; }
+
 /* ---- Study (38-study.js) ---- */
 .study-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .study-chips .grade-btn { min-height: 44px; padding: 6px 4px; }

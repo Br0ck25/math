@@ -369,3 +369,59 @@ test('a parent adds questions to all their children on the parent page, and the 
   assert.deepEqual(k.errors.filter((x) => !/401/.test(x)), []);
   await m.context.close(); await k.context.close();
 });
+
+test('a parent can show a child only their own questions; it needs questions, applies to the ticked children and stops with the link', async () => {
+  const { c, kids, mom, dad, link } = await setup();
+  await link('kid_a', mom);
+  await link('kid_b', mom);
+  await link('kid_a', dad);
+  assert.equal((await c('/api/study', 'GET', null, kids.kid_a)).data.only, false);
+  assert.equal((await c('/api/parent/study/only', 'POST', { children: ['kid_a'], only: 'yes' }, mom)).status, 400);
+  assert.equal((await c('/api/parent/study/only', 'POST', { children: ['kid_a'], only: true }, dad)).status, 403, 'a second parent can only look');
+  const r = await c('/api/parent/study/only', 'POST', { children: ['kid_a'], only: true }, mom);
+  assert.equal(r.status, 200);
+  await c('/api/parent/study/add', 'POST', { children: ['kid_a', 'kid_b'], questions: [Q('Does the flag survive adding questions?', 'Yes')] }, mom);
+  assert.equal((await c('/api/study', 'GET', null, kids.kid_a)).data.only, true, 'adding questions keeps the choice');
+  assert.equal((await c('/api/study', 'GET', null, kids.kid_b)).data.only, false, 'only the ticked child');
+  const list = await c('/api/parent/study/list', 'POST', { children: ['kid_a', 'kid_b'] }, mom);
+  assert.deepEqual(list.data.only, { kid_a: true, kid_b: false });
+  await c('/api/parent/study/only', 'POST', { children: ['kid_a'], only: false }, mom);
+  assert.equal((await c('/api/study', 'GET', null, kids.kid_a)).data.only, false);
+  await c('/api/parent/study/only', 'POST', { children: ['kid_a'], only: true }, mom);
+  await c('/api/parent/unlink', 'POST', { child: 'kid_a' }, mom);
+  assert.deepEqual((await c('/api/study', 'GET', null, kids.kid_a)).data, { questions: [], only: false });
+});
+
+test('with "only my questions" the child sees just those: no built-in subjects, no level row', async () => {
+  const r = await inPage(() => {
+    startSession('kid_x', 'tok', 1);
+    setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }, { id: 'pBBBB', s: 'social', q: 'Who lives at the north pole?', a: 'Santa' }], 'kid_x', true);
+    state.study.subject = 'ky';
+    openStudy();
+    const out = { pool: studyPool('all', 8).map((q) => q.id), html: document.getElementById('study-box').innerText, filters: studyFilters().map((f) => f[0]) };
+    setParentQs([], 'kid_x', true);
+    out.emptyFallsBack = studyPool('all', 6).length > 100;
+    setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }], 'kid_x', false);
+    out.mixed = studyPool('all', 6).length > 100;
+    closeStudy();
+    acct = null; persistAcct();
+    return out;
+  });
+  assert.deepEqual(r.pool, ['pAAAA', 'pBBBB']);
+  assert.match(r.html, /practise their own questions/);
+  assert.doesNotMatch(r.html, /Level\b/i);
+  assert.deepEqual(r.filters, ['all', 'social', 'science']);
+  assert.ok(r.emptyFallsBack, 'with no questions of theirs the built-in ones come back');
+  assert.ok(r.mixed);
+});
+
+test('the parent page always shows the study section, and says what to do first when no child lets this parent add questions', async () => {
+  const e = { MATH_KV: fakeKV() };
+  const tok = (await call(worker, e, '/api/parent/register', 'POST', { name: 'solo_mom', password: 'secret1' })).data.token;
+  const m = await openGame(browser, worker, e, { fast: true, init: `localStorage.setItem('math_quest_parent', JSON.stringify({ name: 'solo_mom', token: '${tok}' }))` });
+  await m.page.goto('http://localhost/parent');
+  await m.page.waitForSelector('#portal-study');
+  await m.page.click('#portal-study > summary');
+  assert.match(await m.page.innerText('#portal-study'), /Add a child first/);
+  await m.context.close();
+});

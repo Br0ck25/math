@@ -4,6 +4,7 @@
 //  screen mixes these in with the built-in questions. They are only ever shown to that child, never to other players.
 // =====================================================================
 let portalStudy = {};               // child name -> that child's questions, as the server listed them
+let portalStudyOnly = {};           // child name -> true when only the parent's questions are shown to that child
 let portalStudyOpen = false;
 let portalStudyReady = false;
 
@@ -11,8 +12,11 @@ function portalStudyKids() { return (portalKids || []).filter(function (k) { ret
 // Shown on the parent page between "add a child" and the children's cards (nothing when no child lets this parent change things).
 function studySection() {
   const kids = portalStudyKids();
-  if (!kids.length) return '';
   const L = ECON.study.parent;
+  if (!kids.length) {
+    return '<details class="portal-study" id="portal-study"><summary>📚 Study questions for my children</summary><div class="portal-sub">' +
+      (portalKids && portalKids.length ? 'Only the first parent linked to a child can add study questions for them.' : 'Add a child first (above). Then you can write your own study questions here for any or all of your children.') + '</div></details>';
+  }
   const boxes = kids.map(function (k, i) {
     return '<label class="portal-op"><input type="checkbox" data-pqkid="' + escHtml(k.child) + '" checked> ' + escHtml(k.child) + '</label>';
   }).join('');
@@ -22,11 +26,13 @@ function studySection() {
     '<div class="settings-label">Add to</div>' +
     '<div class="portal-ops" id="pstudy-kids">' + boxes + '</div>' +
     (kids.length > 1 ? '<div class="acct-btns"><button class="grade-btn" onclick="portalStudyTick(true)">All my children</button><button class="grade-btn" onclick="portalStudyTick(false)">None</button></div>' : '') +
+    '<div class="settings-label">Show</div><div class="acct-btns"><button class="grade-btn" onclick="portalStudySetOnly(true)">Only my questions</button><button class="grade-btn" onclick="portalStudySetOnly(false)">Mix with built-in</button></div>' +
+    '<div class="portal-sub">Applies to the ticked children. "Only my questions" hides the built-in subjects on their Study screen while they have questions from you.</div>' +
     '<div class="settings-label">Subject</div><select class="acct-input" id="pstudy-s" aria-label="Subject">' + subjects + '</select>' +
     '<div class="settings-label">Question</div><textarea class="acct-input" id="pstudy-q" rows="2" maxlength="' + L.qMax + '" placeholder="For example: What is the capital of Kentucky?" aria-label="Question"></textarea>' +
     '<div class="settings-label">Answer</div><input class="acct-input" id="pstudy-a" type="text" maxlength="' + L.aMax + '" placeholder="Frankfort" autocomplete="off" aria-label="Answer">' +
-    '<input class="acct-input" id="pstudy-alt" type="text" placeholder="Also accept (optional, separate with ;)" autocomplete="off" aria-label="Other accepted answers">' +
-    '<input class="acct-input" id="pstudy-wrong" type="text" placeholder="Wrong choices for multiple choice (optional, up to ' + L.extras + ', separate with ;)" autocomplete="off" aria-label="Wrong choices">' +
+    '<input class="acct-input" id="pstudy-alt" type="text" placeholder="Also accept (optional, use ;)" autocomplete="off" aria-label="Other accepted answers">' +
+    '<input class="acct-input" id="pstudy-wrong" type="text" placeholder="Wrong choices (optional, up to ' + L.extras + ', use ;)" autocomplete="off" aria-label="Wrong choices">' +
     '<button class="grade-btn" style="width:100%; margin-top:8px;" onclick="portalStudyAdd()">➕ Add question</button>' +
     '<details class="portal-study" style="margin-top:8px;"><summary>📋 Add many at once</summary>' +
     '<div class="portal-sub">One question per line: <b>question | answer | also accepted; another | wrong choice; another</b>. Only the first two parts are needed. Up to ' + L.bulk + ' lines at a time, all in the subject chosen above.</div>' +
@@ -52,7 +58,7 @@ async function portalStudyLoad() {
   if (!kids.length) return;
   try {
     const r = await portalApi('/api/parent/study/list', 'POST', { children: kids });
-    if (r.status === 200) { portalStudy = r.data.lists || {}; portalStudyReady = true; }
+    if (r.status === 200) { portalStudy = r.data.lists || {}; portalStudyOnly = r.data.only || {}; portalStudyReady = true; }
     else portalStudyMsg((r.data && r.data.error) || 'Could not load the questions.', 'err');
   } catch (e) { portalStudyMsg('Could not reach the server.', 'err'); }
   portalStudyLists();
@@ -68,7 +74,7 @@ function portalStudyLists() {
       return '<div class="par-row"><span style="flex:1; white-space:normal; overflow-wrap:anywhere;">' + (sub ? sub.icon + ' ' : '') + '<b>' + escHtml(q.q) + '</b> → ' + escHtml(q.a) + '</span>' +
         '<button class="grade-btn boost-btn" onclick="portalStudyRemove(\'' + escHtml(k.child) + '\', \'' + escHtml(q.id) + '\')" aria-label="Remove this question for ' + escHtml(k.child) + '">✕</button></div>';
     }).join('');
-    return '<div class="settings-label">' + escHtml(k.child) + ' · ' + list.length + ' of ' + ECON.study.parent.max + '</div>' + (rows || '<div class="portal-sub">No questions yet.</div>');
+    return '<div class="settings-label">' + escHtml(k.child) + ' · ' + list.length + ' of ' + ECON.study.parent.max + (portalStudyOnly[k.child] ? ' · only these are shown' : '') + '</div>' + (rows || '<div class="portal-sub">No questions yet.</div>');
   }).join('');
 }
 // "question | answer | also accepted; another | wrong; wrong" per line -> [{q, a, alt, wrong}] (the server checks them again).
@@ -108,6 +114,17 @@ function portalStudyBulk() {
   if (!rows.length) return portalStudyMsg('Type or paste at least one line.', 'err');
   if (rows.length > ECON.study.parent.bulk) return portalStudyMsg('Add at most ' + ECON.study.parent.bulk + ' lines at a time.', 'err');
   return portalStudySend(rows, true);
+}
+// "Only my questions" on or off for the ticked children.
+async function portalStudySetOnly(only) {
+  const kids = Array.prototype.filter.call(document.querySelectorAll('#pstudy-kids input[data-pqkid]'), function (el) { return el.checked; }).map(function (el) { return el.dataset.pqkid; });
+  if (!kids.length) return portalStudyMsg('Tick at least one child.', 'err');
+  try {
+    const r = await portalApi('/api/parent/study/only', 'POST', { children: kids, only: only });
+    if (r.status !== 200) return portalStudyMsg((r.data && r.data.error) || 'Could not save that.', 'err');
+    portalStudyMsg(only ? '✅ ' + kids.join(', ') + ': only your questions are shown.' : '✅ ' + kids.join(', ') + ': your questions are mixed with the built-in ones.', 'ok');
+    await portalStudyLoad();
+  } catch (e) { portalStudyMsg('Could not reach the server.', 'err'); }
 }
 async function portalStudyRemove(child, id) {
   try {

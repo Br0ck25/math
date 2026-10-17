@@ -7,6 +7,7 @@
 const STUDY_PARENT_KEY = 'math_quest_pq';
 const STUDY_ID_RE = /^[a-z]{3,7}[0-9]{1,4}$|^p[A-Za-z0-9_-]{3,12}$/;
 let parentQs = [];               // questions this player's parent added (already cleaned)
+let parentOnly = false;           // the parent chose "only my questions": the built-in ones are hidden
 let parentQsOwner = '';          // the player name they belong to (never show one player's to another)
 let studyScreen = 'home';        // 'home' | 'card' | 'done'
 let studyRound = null;           // { mode, qs, i, results, phase, t0 }
@@ -18,34 +19,39 @@ function cleanParentQ(r) {
   if (!c || typeof r.id !== 'string' || !/^p[A-Za-z0-9_-]{3,12}$/.test(r.id)) return null;
   return { id: r.id, s: c.s, g: ECON.study.minLevel, t: 'parent', q: c.q, a: c.a, alt: c.alt, x: '', wrong: c.wrong, parent: true };
 }
-function setParentQs(list, owner) {
+function setParentQs(list, owner, only) {
+  parentOnly = only === true;
   parentQs = (Array.isArray(list) ? list : []).map(cleanParentQ).filter(Boolean).slice(0, ECON.study.parent.max);
   parentQsOwner = owner || '';
   try {
-    if (parentQs.length) localStorage.setItem(STUDY_PARENT_KEY, JSON.stringify({ name: parentQsOwner, qs: parentQs.map(function (q) { return { id: q.id, s: q.s, q: q.q, a: q.a, alt: q.alt, wrong: q.wrong }; }) }));
+    if (parentQs.length) localStorage.setItem(STUDY_PARENT_KEY, JSON.stringify({ name: parentQsOwner, only: parentOnly, qs: parentQs.map(function (q) { return { id: q.id, s: q.s, q: q.q, a: q.a, alt: q.alt, wrong: q.wrong }; }) }));
     else localStorage.removeItem(STUDY_PARENT_KEY);
   } catch (e) {}
 }
 (function loadParentQs() {
   try {
     const c = JSON.parse(localStorage.getItem(STUDY_PARENT_KEY));
-    if (c && typeof c.name === 'string' && acct && acct.name === c.name) setParentQs(c.qs, c.name);
+    if (c && typeof c.name === 'string' && acct && acct.name === c.name) setParentQs(c.qs, c.name, c.only);
   } catch (e) {}
 })();
 // A parent's questions for the player who is signed in right now.
 function studyParent() { return acct && parentQsOwner === acct.name ? parentQs : []; }
+// Only the parent's questions are used (they must have added some, or Study would be empty).
+function studyOnlyParent() { return parentOnly && studyParent().length > 0; }
 async function studyLoadParent() {
   if (!acct) return;
   try {
     const r = await api('/api/study');
-    if (r.status === 200 && Array.isArray(r.data.questions)) { setParentQs(r.data.questions, acct.name); if (studyScreen === 'home') studyRender(); }
+    if (r.status === 200 && Array.isArray(r.data.questions)) { setParentQs(r.data.questions, acct.name, r.data.only); if (studyScreen === 'home') studyRender(); }
   } catch (e) {}
 }
 function studyAll() { return STUDY_BANK.concat(studyParent()); }
 
 // Questions for a subject filter ('all', a subject id, 'ky' or 'parent') at a level. A parent's questions ignore the level.
 function studyPool(filter, level) {
+  const only = studyOnlyParent();
   return studyAll().filter(function (q) {
+    if (only && !q.parent) return false;
     if (q.parent) return filter === 'all' || filter === 'parent' || filter === q.s;
     if (filter === 'parent' || q.g > level) return false;
     return filter === 'all' || (filter === 'ky' ? q.t === 'ky' : q.s === filter);
@@ -53,8 +59,9 @@ function studyPool(filter, level) {
 }
 function studyFilters() {
   const lvl = state.study.level;
-  const list = [['all', '🎓 All']];
+  const list = [['all', studyOnlyParent() ? '👪 My parent\'s questions' : '🎓 All']];
   STUDY_SUBJECTS.forEach(function (s) { if (studyPool(s.id, lvl).length) list.push([s.id, s.icon + ' ' + s.label]); });
+  if (studyOnlyParent()) return list;
   list.push(['ky', '🏇 Kentucky']);
   if (studyParent().length) list.push(['parent', '👪 From my parent']);
   return list;
@@ -243,7 +250,7 @@ function studyHomeHtml() {
   return '<h2 style="font-size:1.3rem;">📚 Study</h2>' +
     '<div class="settings-hint" style="margin-top:2px;">School subjects for grades 6–8. Right answers earn buddy XP and a few gems, up to ' + S.dayCap + ' 💎 a day.</div>' +
     (studyNote ? '<div class="study-note" role="status">' + escHtml(studyNote) + '</div>' : '') +
-    '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>' +
+    (studyOnlyParent() ? '<div class="study-note">👪 Your parent chose to practise their own questions.</div>' : '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>') +
     '<div class="settings-label">Subject</div><div class="study-chips">' + filterBtns + '</div>' +
     '<div class="study-stats" aria-live="polite">' + pool.length + ' questions · ' + studyMastered(pool) + ' learned' + (missed ? ' · ' + missed + ' to review' : '') + ' · today ' + st.gems + '/' + S.dayCap + ' 💎</div>' +
     '<div class="settings-label">How do you want to study?</div>' +
