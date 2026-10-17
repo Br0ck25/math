@@ -43,7 +43,7 @@ test('emoji inside a joined sequence stay emoji, and flex parents keep one text 
     const d = document.createElement('div');
     d.style.display = 'flex';
     document.body.appendChild(d);
-    d.textContent = '🧑‍🚀 and 🐕‍🦺 and 🍕';
+    d.textContent = '🧑‍🚀 and 👩‍🚒 and 🍕';
     await new Promise((res) => setTimeout(res, 50));
     const out = [];
     if (d.querySelectorAll('.ico').length !== 1) out.push('expected only the pizza, got ' + d.querySelectorAll('.ico').length);
@@ -52,4 +52,17 @@ test('emoji inside a joined sequence stay emoji, and flex parents keep one text 
     return out;
   });
   assert.deepEqual(r, []);
+});
+
+test('a buddy emoji in text shows that buddy\'s picture', async () => {
+  const r = await page.evaluate(async () => {
+    const d = document.createElement('div');
+    document.body.appendChild(d);
+    d.textContent = 'You caught a 🐺!';
+    await new Promise((res) => setTimeout(res, 50));
+    const ico = d.querySelector('.ico');
+    d.remove();
+    return ico ? [ico.style.backgroundImage.includes('data:image/svg+xml;base64'), ico.textContent] : null;
+  });
+  assert.deepEqual(r, [true, '🐺']);
 });

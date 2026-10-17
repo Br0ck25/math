@@ -4,10 +4,22 @@
 //  textContent, copy and screen readers still work) and CSS hides it behind the picture. A MutationObserver covers everything the
 //  page writes later. Buddy faces are not here (they have art/buddies). Emoji not in ICONS are left alone; canvas text is untouched.
 // =====================================================================
-Object.assign(ICON_BODIES, ICON_BODIES_UI, ICON_BODIES_GEAR);
+Object.assign(ICON_BODIES, ICON_BODIES_UI, ICON_BODIES_GEAR, ICON_BODIES_MORE);
 const ICON_URIS = {};
-// Not inside a ZWJ sequence (a person-astronaut, a service dog): those are one picture and stay emoji.
-const ICON_RE = new RegExp('(?<!\\u200D)(' + Object.keys(ICON_BODIES).join('|') + ')\\uFE0F?(?!\\u200D)', 'gu');
+// Buddy and boss emoji turn into that buddy's picture (the first buddy that uses the emoji), so toasts and lists show the art.
+(function addBuddyIcons() {
+  const add = function (e, id) {
+    const key = typeof e === 'string' ? e.replace(/\uFE0F/g, '') : '';
+    if (!key || key.charAt(0) === '<' || ICON_BODIES[key] || ICON_URIS[key] || !ART_URIS[id]) return;
+    ICON_URIS[key] = 'url("' + ART_URIS[id] + '")';
+  };
+  allBuddies().forEach(function (b) { add(b.emoji, b.id); (b.forms || []).forEach(function (f) { add(f.emoji, b.id); }); });
+  monstersList.forEach(function (m) { if (m.buddy) add(m.emoji, m.buddy); });
+})();
+// Not inside a ZWJ sequence unless the whole sequence has a picture. A variation selector may follow any character; longer emoji first.
+const ICON_RE = new RegExp('(?<!\\u200D)(' + Object.keys(ICON_BODIES).concat(Object.keys(ICON_URIS)).sort(function (x, y) { return y.length - x.length; }).map(function (k) {
+  return Array.from(k).map(function (c) { return c + '\\uFE0F?'; }).join('');
+}).join('|') + ')(?!\\u200D)', 'gu');
 function iconUri(e) {
   if (!ICON_URIS[e]) {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><g stroke="' + ICON_INK + '" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">' + ICON_BODIES[e] + '</g></svg>';
@@ -40,7 +52,7 @@ function iconizeText(t) {
     if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
     const sp = document.createElement('span');
     sp.className = 'ico';
-    sp.style.backgroundImage = iconUri(m[1]);
+    sp.style.backgroundImage = iconUri(m[1].replace(/\uFE0F/g, ''));
     sp.textContent = m[0];
     frag.appendChild(sp);
     last = m.index + m[0].length;
