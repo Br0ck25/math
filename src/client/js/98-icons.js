@@ -4,7 +4,7 @@
 //  textContent, copy and screen readers still work) and CSS hides it behind the picture. A MutationObserver covers everything the
 //  page writes later. Buddy faces are not here (they have art/buddies). Emoji not in ICONS are left alone; canvas text is untouched.
 // =====================================================================
-Object.assign(ICON_BODIES, ICON_BODIES_UI);
+Object.assign(ICON_BODIES, ICON_BODIES_UI, ICON_BODIES_GEAR);
 const ICON_URIS = {};
 // Not inside a ZWJ sequence (a person-astronaut, a service dog): those are one picture and stay emoji.
 const ICON_RE = new RegExp('(?<!\\u200D)(' + Object.keys(ICON_BODIES).join('|') + ')\\uFE0F?(?!\\u200D)', 'gu');
