@@ -1,7 +1,7 @@
 // The 2024 Governor's Cup Arts & Humanities elementary district test from KAAC, added word for word with KAAC's written permission (the owner has it; the Study screen
 // credits KAAC). The right answer is the choice marked in the answer key; the other three choices are the wrong choices. The four questions that need the picture printed
 // with them (1, 22, 32 and 35 on the test) are left out. The three matching questions (10, 20, 30) list their two columns in the question and use the printed choices.
-// Appended after the arts rows in 37d: only ever append to this file too. Topic "kaac" marks these (the Study screen shows the credit when they are in the mix).
+// Ids are kaac1, kaac2, ...: only ever append to this file. Topic "kaac" marks these (the Study screen shows the credit when they are in the mix).
 studyAdd('arts', [
   [6, "kaac", "Below are four solfège syllables. Which one—the syllable attached to the first note in the major scale—did Rodgers and Hammerstein associate with “a female deer”?", "do", "doh", "", "re|sol|mi"],  // test question 2
   [6, "kaac", "Which of the following notes consists of a solid black head, a stem, and two flags?", "sixteenth note", "16th note", "", "half note|quarter note|eighth note"],  // 3
@@ -35,4 +35,4 @@ studyAdd('arts', [
   [6, "kaac", "When a show ends, people tear down the set and clean the theater in a process known as what?", "strike", "a strike", "", "pit|run|stomp"],  // 33
   [6, "kaac", "It can be thinned with water and dries quickly. Which of the following paint types combines plastic particles with pigment?", "acrylic", "", "", "oil|watercolor|tempera"],  // 34
   [6, "kaac", "A wainwright was a colonial American who crafted which of the following objects?", "wagons", "wagon", "", "guns|hats|ships"]  // 36
-]);
+], 'kaac');

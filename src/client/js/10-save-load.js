@@ -203,15 +203,16 @@ const NORMALIZERS = [
     if (typeof t.subject === 'string' && t.subject !== 'all' && !t.subjects.length) t.subjects = [t.subject];      // saves from when only one subject could be picked
     delete t.subject;
     t.subjects = t.subjects.filter(function (id, i, a) { return typeof id === 'string' && (['parent', 'ky'].indexOf(id) !== -1 || STUDY_SUBJECTS.some(function (x) { return x.id === id; })) && a.indexOf(id) === i; });
+    const known = function (id) { return STUDY_ID_RE.test(id) && (id.charAt(0) === 'p' || STUDY_BANK.some(function (q) { return q.id === id; })); };      // a question that is no longer in the bank is forgotten (a parent's start with p)
     const seen = {};
-    Object.keys(t.seen).filter(function (id) { return STUDY_ID_RE.test(id) && Array.isArray(t.seen[id]); }).slice(0, 2000).forEach(function (id) {
+    Object.keys(t.seen).filter(function (id) { return known(id) && Array.isArray(t.seen[id]); }).slice(0, 2000).forEach(function (id) {
       const e = t.seen[id];
       seen[id] = [asInt(e[0], 0, 1e6, 0), asInt(e[1], 0, 1e6, 0), asInt(e[2], 0, 1e6, 0)];
     });
     t.seen = seen;
-    t.miss = t.miss.filter(function (id, i, a) { return typeof id === 'string' && STUDY_ID_RE.test(id) && a.indexOf(id) === i; }).slice(-S.missMax);
+    t.miss = t.miss.filter(function (id, i, a) { return typeof id === 'string' && known(id) && a.indexOf(id) === i; }).slice(-S.missMax);
     const paid = {};
-    Object.keys(t.paid).filter(function (id) { return STUDY_ID_RE.test(id); }).forEach(function (id) { const d = asInt(t.paid[id], 0, 1e7, -1); if (d >= 0 && today - d <= 14) paid[id] = d; });
+    Object.keys(t.paid).filter(known).forEach(function (id) { const d = asInt(t.paid[id], 0, 1e7, -1); if (d >= 0 && today - d <= 14) paid[id] = d; });
     t.paid = paid;
     t.day = typeof t.day === 'string' ? t.day.slice(0, 12) : '';
     t.gems = asInt(t.gems, 0, S.dayCap, 0);

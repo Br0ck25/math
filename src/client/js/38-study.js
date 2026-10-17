@@ -70,7 +70,7 @@ function studyFilters() {
   const list = [['all', studyOnlyParent() ? '👪 My parent\'s questions' : '🎓 All']];
   STUDY_SUBJECTS.forEach(function (s) { if (studyPool(s.id, lvl).length) list.push([s.id, s.icon + ' ' + s.label]); });
   if (studyOnlyParent()) return list;
-  list.push(['ky', '🏇 Kentucky']);
+  if (studyPool('ky', lvl).length) list.push(['ky', '🏇 Kentucky']);
   if (studyParent().length) list.push(['parent', '👪 From my parent']);
   return list;
 }
@@ -282,7 +282,7 @@ function studyHomeHtml() {
   return '<h2 style="font-size:1.3rem;">📚 Study</h2>' +
     '<div class="settings-hint" style="margin-top:2px;">School subjects for grades 6–8. Right answers earn buddy XP and a few gems, up to ' + S.dayCap + ' 💎 a day.</div>' +
     (studyNote ? '<div class="study-note" role="status">' + escHtml(studyNote) + '</div>' : '') +
-    (studyOnlyParent() ? '<div class="study-note">👪 Your parent chose to practise their own questions.</div>' : '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>') +
+    (studyOnlyParent() ? '<div class="study-note">👪 Your parent chose to practise their own questions.</div>' : !STUDY_BANK.some(function (q) { return q.g > ECON.study.minLevel; }) ? '' : '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>') +
     '<div class="settings-label">Subjects <small>(tap one or more)</small></div><div class="study-chips">' + filterBtns + '</div>' +
     '<div class="study-stats" aria-live="polite">' + pool.length + ' questions · ' + studyMastered(pool) + ' learned' + (missed ? ' · ' + missed + ' to review' : '') + ' · today ' + st.gems + '/' + S.dayCap + ' 💎</div>' +
     '<div class="settings-label">How do you want to study?</div>' +

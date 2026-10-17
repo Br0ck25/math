@@ -21,7 +21,7 @@ after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
 // ---------------------------------------------------------------- the question bank
-test('the study bank is complete, original in layout and sized for grades 6-8', () => {
+test('every question in the study bank is well formed, and the bank holds only the KAAC test', () => {
   const { STUDY_BANK, STUDY_SUBJECTS, ECON } = loadBank();
   const ids = new Set(), texts = new Set(), bad = [];
   STUDY_BANK.forEach((q) => {
@@ -39,10 +39,8 @@ test('the study bank is complete, original in layout and sized for grades 6-8', 
     if (!ECON.study.parent.aMax) bad.push('econ');
   });
   assert.deepEqual(bad, []);
-  const count = (s) => STUDY_BANK.filter((q) => q.s === s).length;
-  ['social', 'science', 'lang', 'arts', 'math'].forEach((s) => assert.ok(count(s) >= 60, s + ' needs at least 60 questions, has ' + count(s)));
-  assert.ok(STUDY_BANK.filter((q) => q.t === 'ky').length >= 20, 'a Kentucky set');
-  [6, 7, 8].forEach((g) => assert.ok(STUDY_BANK.filter((q) => q.g === g).length >= 50, 'enough at level ' + g));
+  assert.equal(STUDY_BANK.length, 32, 'the bank holds only the questions from the KAAC test, nothing written for the game');
+  assert.ok(STUDY_BANK.every((q) => q.t === 'kaac' && /^kaac\d+$/.test(q.id)));
 });
 
 test('ids follow the subject and position, so only appending is safe', async () => {
@@ -201,16 +199,16 @@ test('the parent report shows study answers by subject', async () => {
 
 test('saved study data is repaired on load', async () => {
   const r = await inPage(() => {
-    state.study = { level: 99, subject: 'zzz', seen: { '<script>': [1, 1, 1], social1: [-5, 'x', 3], bogus: 5, science2: [2, 1, 4] }, miss: ['social1', 'social1', 'nope!', 5], paid: { social1: -4, science2: dayNumber() - 30, math3: dayNumber() }, day: 7, gems: 999, rounds: 'x' };
+    state.study = { level: 99, subject: 'zzz', seen: { '<script>': [1, 1, 1], kaac1: [-5, 'x', 3], bogus: 5, kaac2: [2, 1, 4], social12: [1, 0, 1], pAAAA: [1, 0, 1] }, miss: ['kaac1', 'kaac1', 'nope!', 5, 'social12'], paid: { kaac1: -4, kaac2: dayNumber() - 30, kaac3: dayNumber() }, day: 7, gems: 999, rounds: 'x' };
     normalizeState();
     return state.study;
   });
   assert.equal(r.level, 8, 'clamped to the top level');
   assert.deepEqual(r.subjects, []);
-  assert.deepEqual(Object.keys(r.seen).sort(), ['science2', 'social1']);
-  assert.deepEqual(r.seen.social1, [0, 0, 3]);
-  assert.deepEqual(r.miss, ['social1']);
-  assert.deepEqual(Object.keys(r.paid), ['math3'], 'old rewards are forgotten');
+  assert.deepEqual(Object.keys(r.seen).sort(), ['kaac1', 'kaac2', 'pAAAA'], 'questions no longer in the bank are forgotten, a parent\'s are kept');
+  assert.deepEqual(r.seen.kaac1, [0, 0, 3]);
+  assert.deepEqual(r.miss, ['kaac1']);
+  assert.deepEqual(Object.keys(r.paid), ['kaac3'], 'old rewards are forgotten');
   assert.equal(r.day, '');
   assert.equal(r.gems, 20);
   assert.equal(r.rounds, 0);
@@ -401,9 +399,9 @@ test('with "only my questions" the child sees just those: no built-in subjects, 
     openStudy();
     const out = { pool: studyPool('all', 8).map((q) => q.id), html: document.getElementById('study-box').innerText, filters: studyFilters().map((f) => f[0]) };
     setParentQs([], 'kid_x', true);
-    out.emptyFallsBack = studyPool('all', 6).length > 100;
+    out.emptyFallsBack = studyPool('all', 6).length === 32;
     setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }], 'kid_x', false);
-    out.mixed = studyPool('all', 6).length > 100;
+    out.mixed = studyPool('all', 6).length === 33;
     closeStudy();
     acct = null; persistAcct();
     return out;
@@ -455,6 +453,8 @@ test('Study takes the place of the math problem and keypad on the main page, and
 
 test('several subjects can be studied together; All clears the choice; old saves keep their one subject', async () => {
   const r = await inPage(() => {
+    startSession('kid_x', 'tok', 1);
+    setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }, { id: 'pBBBB', s: 'social', q: 'Who lives at the north pole?', a: 'Santa' }], 'kid_x', false);
     state.study.subjects = []; state.study.level = 8;
     openStudy();
     const click = (id) => { studySetFilter(id); };
@@ -464,8 +464,8 @@ test('several subjects can be studied together; All clears the choice; old saves
     const pressed = [...document.querySelectorAll('#study-box .study-chips:not(.study-levels) .active')].map((b) => b.innerText.replace(/\d+$/, '').trim());
     click('science');
     const one = new Set(ids());
-    click('ky'); click('math');
-    const mixed = studyPool(studySelected(), 8).some((q) => q.t === 'ky') && studyPool(studySelected(), 8).some((q) => q.s === 'math');
+    click('social');
+    const three = [...new Set(ids())].sort();
     studyStart('mcq');
     const roundSubjects = new Set(studyRound.qs.map((q) => q.s));
     studyHome();
@@ -473,16 +473,19 @@ test('several subjects can be studied together; All clears the choice; old saves
     const cleared = state.study.subjects.length;
     closeStudy();
     // an older save kept a single subject
-    state.study = Object.assign(state.study, { subject: 'lang', subjects: [] });
+    state.study = Object.assign(state.study, { subject: 'arts', subjects: [] });
     normalizeState();
-    return { both: [...both].sort(), pressed, one: [...one], mixed, roundOk: roundSubjects.size >= 1, cleared, migrated: state.study.subjects, gone: 'subject' in state.study };
+    const out = { both: [...both].sort(), pressed, one: [...one], three, roundOk: [...roundSubjects].every((x) => ['arts', 'social'].includes(x)), cleared, migrated: state.study.subjects, gone: 'subject' in state.study };
+    acct = null; persistAcct(); setParentQs([], '');
+    return out;
   });
   assert.deepEqual(r.both, ['arts', 'science']);
   assert.equal(r.pressed.length, 2);
   assert.deepEqual(r.one, ['arts']);
-  assert.ok(r.mixed);
+  assert.deepEqual(r.three, ['arts', 'social']);
+  assert.ok(r.roundOk);
   assert.equal(r.cleared, 0);
-  assert.deepEqual(r.migrated, ['lang']);
+  assert.deepEqual(r.migrated, ['arts']);
   assert.equal(r.gone, false);
 });
 
@@ -521,6 +524,13 @@ test('the KAAC 2024 district arts test is in word for word (32 questions, no pic
   assert.ok(!k.some((q) => /seen here|shown here|pictured here/.test(q.q)), 'picture questions are left out');
   const credit = await inPage(() => { state.study.subjects = ['arts']; state.study.level = 8; if (studyOn) closeStudy(); openStudy(); const t = document.getElementById('study-box').innerText; closeStudy(); return t; });
   assert.match(credit, /Governor's Cup \(Kentucky Association for Academic Competition\), used with permission/);
-  const other = await inPage(() => { state.study.subjects = ['math']; openStudy(); const t = document.getElementById('study-box').innerText; closeStudy(); state.study.subjects = []; return t; });
-  assert.doesNotMatch(other, /Kentucky Association/);
+  const other = await inPage(() => {
+    startSession('kid_x', 'tok', 1);
+    setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }], 'kid_x', true);
+    state.study.subjects = []; openStudy();
+    const t = document.getElementById('study-box').innerText;
+    closeStudy(); acct = null; persistAcct(); setParentQs([], '');
+    return t;
+  });
+  assert.doesNotMatch(other, /Kentucky Association/, 'no credit when none of their questions are in the mix');
 });
