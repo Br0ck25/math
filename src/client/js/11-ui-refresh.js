@@ -177,7 +177,7 @@ function floatGain(text, anchorId, delay) {
 }
 
 function showPopup(text) {
-  const popup = document.getElementById('floating-popup');
+  const popup = document.getElementById(studyOn ? 'study-popup' : 'floating-popup');         // the math area (and its popup) is hidden while studying
   popup.innerText = text;
   popup.classList.add('show');
   setTimeout(function () { popup.classList.remove('show'); }, 850);

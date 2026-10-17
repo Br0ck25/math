@@ -16,6 +16,7 @@ before(async () => {
   worker = await loadWorker();
   env = { MATH_KV: fakeKV() };
   ({ page, errors } = await openGame(browser, worker, env, { fast: true }));
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; checkForSecretLootDrop = function () {}; });          // beating foes while studying must not open the vault or a loot window over the test
 });
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
@@ -97,7 +98,7 @@ test('a Quick Recall round plays through the window, pays a little and shows the
   assert.match(await page.innerText('#study-box'), /8 \/ 8/);
   assert.match(await page.innerText('#study-box'), /Perfect round/);
   const s = await inPage(() => ({ gems: state.gems, today: state.study.gems, stat: statDay().st, xp: getBuddyXp(state.activePet) }));
-  assert.equal(s.gems, 8 + 3, 'a gem per new right answer and a perfect-round bonus');
+  assert.ok(s.gems >= 8 + 3, 'a gem per new right answer and a perfect-round bonus (and any foe beaten on the way)');
   assert.equal(s.today, 11);
   assert.deepEqual(s.stat, [8, 8], 'the parent report counts them');
   assert.ok(s.xp >= 16);
@@ -430,7 +431,8 @@ test('the parent page always shows the study section, and says what to do first 
 });
 
 test('Study takes the place of the math problem and keypad on the main page, and the bottom-bar button switches back', async () => {
-  await inPage(() => { if (studyOn) closeStudy(); });
+  // the earlier tests beat foes, so a loot window may be open: clear every window first
+  await inPage(() => { Array.prototype.forEach.call(document.querySelectorAll('.modal-overlay'), (m) => { m.style.display = 'none'; }); modalQueue.length = 0; modalBusy = false; if (studyOn) closeStudy(); });
   assert.ok(await page.isVisible('.arena'));
   assert.ok(await page.isVisible('.keypad'));
   assert.equal(await page.locator('#study-pane').isVisible(), false);
@@ -537,4 +539,70 @@ test('the KAAC 2024 district arts test is in word for word (32 questions, no pic
     return t;
   });
   assert.doesNotMatch(other, /Kentucky Association/, 'no credit when none of their questions are in the mix');
+});
+
+test('study answers fight like math answers: right hits the foe, wrong hurts your buddy, shields, fainting and victory all work', async () => {
+  const g = await openGame(browser, worker, env, { fast: true });
+  const p = g.page;
+  const ev = (fn, arg) => p.evaluate(fn, arg);
+  await ev(() => { openStudy(); studyStart('mcq'); });
+  const answer = (right) => ev((right) => {
+    const r = studyRound, q = r.qs[r.i];
+    studyPickOpt(right ? q.a : r.opts.find((o) => o !== q.a));
+    return studyRound.results.length;
+  }, right);
+  const next = () => ev(() => { studyNext(); return studyRound ? studyRound.i : -1; });
+
+  // a right answer hits the foe, and the popup shows (it lives in the study pane while the math area is hidden)
+  const hp0 = await ev(() => monsterCurrentHp);
+  await answer(true);
+  await p.waitForFunction((h) => monsterCurrentHp < h, hp0);
+  assert.match(await ev(() => document.getElementById('study-popup').innerText), /\S/);
+  assert.equal(await ev(() => state.streak), 1);
+  assert.equal(await ev(() => ultimateCharge), 1, 'a right answer charges energy');
+  await next();
+
+  // a wrong answer lets the foe hit your buddy and ends the combo
+  const pet = await ev(() => state.activePet), php0 = await ev((id) => getPetHp(id), pet);
+  await answer(false);
+  await p.waitForFunction(([id, h]) => getPetHp(id) < h, [pet, php0]);
+  assert.equal(await ev(() => state.streak), 0);
+  assert.match(await ev(() => document.getElementById('study-fb').innerText), /Good try/);
+  await next();
+
+  // a streak shield soaks up one wrong answer
+  await ev(() => { state.shields = 1; });
+  const php1 = await ev((id) => getPetHp(id), pet);
+  await answer(false);
+  await p.waitForTimeout(400);
+  assert.equal(await ev(() => state.shields), 0);
+  assert.equal(await ev((id) => getPetHp(id), pet), php1, 'no damage while the shield holds');
+  await next();
+
+  // a fainted fighter cannot answer until a teammate is sent in
+  await ev(() => { state.unlockedPets.push('cat'); state.team = ['cat']; state.faintedPets = [state.activePet]; updateStatsUI(); studyRender(); });
+  assert.match(await ev(() => document.getElementById('study-box').innerText), /needs rest/);
+  const before = await ev(() => studyRound.results.length);
+  await ev(() => { studyPickOpt(studyRound.opts[0]); });
+  assert.equal(await ev(() => studyRound.results.length), before, 'the answer is not taken');
+  await ev(() => { sendInReplacement('cat'); });
+  assert.doesNotMatch(await ev(() => document.getElementById('study-box').innerText), /needs rest/);
+  assert.equal(await ev(() => state.activePet), 'cat');
+  await answer(true);
+  await next();
+
+  // beating the foe: the same victory as in math (a boss counts, the next foe appears)
+  await ev(() => { monsterCurrentHp = 1; });
+  const wins0 = await ev(() => state.monstersDefeated + state.wild.since);
+  await answer(true);
+  await p.waitForFunction((w) => state.monstersDefeated + state.wild.since > w, wins0, { timeout: 10000 });
+  assert.deepEqual(g.errors, []);
+
+  // flashcards are self-marked, so they never hit anything
+  await p.waitForFunction(() => monsterCurrentHp > 0);
+  const hpF = await ev(() => monsterCurrentHp);
+  await ev(() => { studyHome(); studyStart('cards'); for (let i = 0; i < 4; i++) { studyReveal(); studyMark(true); } });
+  await p.waitForTimeout(400);
+  assert.equal(await ev(() => monsterCurrentHp), hpF);
+  await g.context.close();
 });

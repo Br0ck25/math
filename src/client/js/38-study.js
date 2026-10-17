@@ -330,7 +330,7 @@ function studySubjectOf(q) { return STUDY_SUBJECTS.filter(function (s) { return 
 function studyCardHtml() {
   const r = studyRound, q = r.qs[r.i], sub = studySubjectOf(q);
   const pct = Math.round(r.i / r.qs.length * 100);
-  let body = r.mode === 'mcq' ? '<div class="tour-opts study-opts" id="study-opts"></div>' : '';
+  let body = (r.phase === 'ask' && r.mode !== 'cards' && needsSwitch() && aliveTeamIds().length ? '<div class="study-note" role="status">' + escHtml(studyFaintNote()) + '</div>' : '') + (r.mode === 'mcq' ? '<div class="tour-opts study-opts" id="study-opts"></div>' : '');
   if (r.phase === 'ask') {
     if (r.mode === 'type') body = '<input class="acct-input" id="study-in" type="text" maxlength="80" placeholder="Type your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" onkeydown="if(event.key===\'Enter\')studySubmitText()">' +
       '<button class="key-btn submit-btn study-go" onclick="studySubmitText()">Check ➔</button>';
@@ -344,7 +344,7 @@ function studyCardHtml() {
   return '<div class="study-top"><div class="raid-chapter" style="color:#a5b4fc;">Question ' + (r.i + 1) + ' of ' + r.qs.length + ' · ' + sub.icon + ' ' + escHtml(sub.label) + (q.parent ? ' · 👪 from your parent' : '') + '</div>' +
     '<button class="grade-btn study-exit" onclick="studyEsc()" aria-label="Stop this round and go back">⏸ Back</button></div>' +
     '<div class="study-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
-    '<div class="study-q">' + escHtml(q.q) + '</div>' + body;
+    '<div class="study-q' + (q.q.length > 300 ? ' xlong' : q.q.length > 170 ? ' long' : '') + '">' + escHtml(q.q) + '</div>' + body;
 }
 function studyFeedback(q, res) {
   if (res.shown) return '<b>Answer: ' + escHtml(q.a) + '</b>' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>Did you know it?';
@@ -360,20 +360,60 @@ function studyAnswered(ok, shown) {
     studyRecord(q, ok);
     studyStat(q, ok, secs);
     calDayEvent();
-    if (ok) soundCorrect(); else soundWrong();
+    studyBattle(ok);
   }
   saveState();
   studyRender();
 }
+// The fight goes on while you study: a right answer hits the foe and a wrong one lets it hit your buddy, with the same damage, shields, fainting and victory
+// code as a math answer (triggerMonsterDamage, triggerBuddyDamage). Gems and XP for the answer itself come from the study round, not from here.
+function studyBattle(ok) {
+  if (ok) {
+    soundCorrect(state.streak + 1);
+    buddyReact(state.streak >= 2 && (state.streak + 1) % 3 === 0 ? 'streak' : 'cheer');
+    state.streak += 1;
+    questEvent('streak', state.streak);
+    if (ultimateCharge < 3) ultimateCharge += 1;
+    answerBonuses(false);
+    showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
+    triggerMonsterDamage(0, false, false, 1);
+  } else {
+    soundWrong();
+    bossMistakes += 1;
+    buddyReact('wince');
+    if (state.shields > 0) {
+      state.shields -= 1;
+      soundShieldBreak();
+      showPopup('🛡️ STREAK SHIELD SAVED YOU!');
+      updateStatsUI();
+    } else triggerBuddyDamage();
+  }
+  tickStatus();
+  updateStatsUI();
+  setTimeout(studyAfterHit, 450);                 // the hit lands after a short animation: then say if the buddy fainted
+}
+function studyFaintNote() { return '💤 ' + getActivePetDisplay().name + ' needs rest! Tap a teammate above to send them in.'; }
+function studyAfterHit() {
+  if (!studyOn || !studyRound || studyScreen !== 'card' || !needsSwitch() || !aliveTeamIds().length) return;
+  const fb = document.getElementById('study-fb');
+  if (fb) fb.insertAdjacentHTML('beforeend', '<br><b>' + escHtml(studyFaintNote()) + '</b>');
+}
+// A fainted fighter must be replaced by a teammate first (the same rule as for math answers).
+function studyBlocked() {
+  if (!needsSwitch() || !aliveTeamIds().length) return false;
+  toast(studyFaintNote());
+  soundWrong();
+  return true;
+}
 function studyPickOpt(v) {
   const r = studyRound;
-  if (!r || r.phase !== 'ask') return;
+  if (!r || r.phase !== 'ask' || studyBlocked()) return;
   r.picked = String(v);
   studyAnswered(String(v) === r.qs[r.i].a, false);
 }
 function studySubmitText() {
   const r = studyRound, input = document.getElementById('study-in');
-  if (!r || r.phase !== 'ask' || !input) return;
+  if (!r || r.phase !== 'ask' || !input || studyBlocked()) return;
   if (!input.value.trim()) { toast('Type an answer first'); return; }
   studyAnswered(studyCheck(r.qs[r.i], input.value), false);
 }
