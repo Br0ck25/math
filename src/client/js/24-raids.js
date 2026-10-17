@@ -39,12 +39,12 @@ function startRaid() {
 }
 // One story window for raids and the map: {chapter, title, panels:[{icon,text}], note, btn, cleared}
 function showStoryModal(o) {
-  document.getElementById('raid-chapter').innerText = o.chapter;
-  document.getElementById('raid-title').innerText = o.title;
+  document.getElementById('raid-chapter').innerText = triviaWords(o.chapter);
+  document.getElementById('raid-title').innerText = triviaWords(o.title);
   document.getElementById('raid-panels').innerHTML = o.panels.map(function (pn) {
-    return '<div class="comic-panel"><span class="comic-icon">' + pn.icon + '</span><span class="comic-text">' + escHtml(pn.text) + '</span></div>';
+    return '<div class="comic-panel"><span class="comic-icon">' + pn.icon + '</span><span class="comic-text">' + escHtml(triviaWords(pn.text)) + '</span></div>';
   }).join('');
-  document.getElementById('raid-note').innerText = o.note || '';
+  document.getElementById('raid-note').innerText = triviaWords(o.note || '');
   document.getElementById('raid-btn').innerText = o.btn;
   soundFanfare(!!o.cleared);
   document.getElementById('raid-modal').style.display = 'flex';

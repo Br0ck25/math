@@ -131,6 +131,9 @@
       <div class="feedback-msg" id="feedback-msg">Type your answer or use keypad!</div>
     </div>
 
+    <!-- Study (38-study.js): while it is on, this takes the place of the arena and the keypad -->
+    <div class="study-pane" id="study-pane" style="display:none"><div class="floating-popup" id="study-popup" aria-live="polite"></div><div id="study-box"></div></div>
+
     <!-- Keypad (4 columns: includes +/- and decimal point) -->
     <div class="keypad">
       <button class="key-btn" onclick="pressKey('7')">7</button>
@@ -167,6 +170,9 @@
       </button>
       <button class="btn-secondary" onclick="openMap()">
         🗺️ Map
+      </button>
+      <button class="btn-secondary" id="study-toggle" onclick="toggleStudy()" aria-label="Study school subjects">
+        <span id="study-toggle-text">📚 Study</span>
       </button>
       <button class="btn-secondary" onclick="openSettings()">
         ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
@@ -410,13 +416,17 @@
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">⚙️ Settings</h2>
 
-      <details class="set-sec" open><summary class="settings-label">📚 Grade level</summary>
+      <details class="set-sec trivia-only" open><summary class="settings-label">📚 Trivia</summary>
+      <div class="settings-hint">Trivia mode asks school-subject questions everywhere: battles, the Cup, duels and the vault. Your buddies, bosses and progress stay the same.</div>
+      <button class="grade-btn" style="width:100%; min-height:44px;" onclick="closeSettings(); studyHome()">🎓 Choose subjects and how to study</button>
+      </details>
+      <details class="set-sec math-only" open><summary class="settings-label">📚 Grade level</summary>
       <div class="grade-grid" id="grade-grid"></div>
       <div class="settings-hint" id="ctl-note" role="status"></div>
       <div class="settings-hint">Picking a grade also switches on the math types that fit that level. You can change them below.</div>
 
       </details>
-      <details class="set-sec" open><summary class="settings-label">🧮 Math types</summary>
+      <details class="set-sec math-only" open><summary class="settings-label">🧮 Math types</summary>
       <div class="ops-grid" id="ops-grid"></div>
       <div class="settings-hint" id="ops-hint">Tap a type to turn it on or off. Higher grades unlock more types.</div>
 
@@ -427,6 +437,7 @@
         <button class="grade-btn" id="motion-btn" onclick="toggleMotion()">✨ Motion: Full</button>
         <button class="grade-btn" onclick="closeSettings(); openReportModal()">📊 Session report</button>
       </div>
+      <button class="grade-btn" style="width:100%; margin-top:6px; min-height:44px;" onclick="closeSettings(); openStudy()">📚 Study school subjects</button>
       <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>
 
       </details>
@@ -620,6 +631,8 @@
       <div class="settings-label">🔍 Weak spots</div>
       <div id="par-strong" style="font-size:0.8rem; text-align:left; margin-bottom:4px;"></div>
       <div id="par-weak" style="font-size:0.8rem; text-align:left;"></div>
+      <div class="settings-label" style="margin-top:8px;">📚 Study subjects</div>
+      <div id="par-study"></div>
       <div class="settings-label">🏆 Daily reward goal</div>
       <div class="par-goal">
         <div style="font-size:0.78rem;">Math time goal per day:
@@ -686,7 +699,7 @@
   <!-- Map: regions, gyms and badges -->
   <div class="modal-overlay" id="map-modal" data-close="closeMap">
     <div class="modal-content">
-      <h2 style="font-size:1.3rem; margin-bottom:2px;">🗺️ Number Kingdom Map</h2>
+      <h2 style="font-size:1.3rem; margin-bottom:2px;" id="map-title">🗺️ Number Kingdom Map</h2>
       <div class="book-progress" id="map-progress"></div>
       <div id="map-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>

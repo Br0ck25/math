@@ -75,10 +75,11 @@ function updateWeakChip() {
     chip.title = 'Chance to catch this buddy when you win. Better when your buddy is strong against it, and a win with no mistakes adds ' + Math.round((ECON.wild.flawless - 1) * 100) + '%. With Catch Nets you choose how many to throw after the win.';
     return;
   }
-  const w = getWeakOp();
+  const op = getWeakOp();
+  const w = !op ? null : studyOn ? studyWeakSubject() : { icon: OP_BY_ID[op].icon, label: OP_BY_ID[op].label };           // trivia mode: a school subject
   const head = (gym ? gym + ' Leader' + (w ? ' · ' : '') : '') + (r ? '👑 ' + (r.phase + 1) + '/' + r.total + (w ? ' · ' : '') : '');
-  chip.innerText = (w || r || gym) ? head + (w ? '🎯 Weak: ' + OP_BY_ID[w].icon + ' ' + OP_BY_ID[w].label : '') : '';
-  chip.title = w ? 'Weak point: solve ' + OP_BY_ID[w].label + ' problems to hit harder' + (r ? ' (raid phase ' + (r.phase + 1) + ' of ' + r.total + ')' : '') : '';
+  chip.innerText = (w || r || gym) ? head + (w ? '🎯 Weak: ' + w.icon + ' ' + w.label : '') : '';
+  chip.title = w ? 'Weak point: ' + (studyOn ? 'answer ' + w.label + ' questions' : 'solve ' + w.label + ' problems') + ' to hit harder' + (r ? ' (raid phase ' + (r.phase + 1) + ' of ' + r.total + ')' : '') : '';
 }
 
 function generateProblem() {

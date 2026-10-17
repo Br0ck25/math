@@ -89,7 +89,7 @@ function rdSettle(list) {
 
 function rdBuildQuestions(n) {
   const out = [];
-  for (let i = 0; i < n; i++) { const q = makeMcq(); out.push({ e: q.expr, l: q.lead, o: q.opts, a: q.ans }); }
+  for (let i = 0; i < n; i++) { const q = makeMcq(); out.push(q.study ? { t: 't', e: q.expr, l: '', o: q.opts, a: q.ans } : { e: q.expr, l: q.lead, o: q.opts, a: q.ans }); }      // trivia questions say so (t) and are shown as plain text
   return out;
 }
 async function rdCreate(to, stake) {
@@ -151,7 +151,7 @@ function rdShowQuestion() {
     '<div class="raid-chapter" style="color:#fde047;">⚔️ vs ' + escHtml(opp) + (c.duel.stake ? ' · ' + c.duel.stake + ' 💎 on the line' : ' · friendly') + '</div>' +
     '<div class="duel-bar" style="margin:8px 0 2px;"><i style="width:' + Math.round((c.i / n) * 100) + '%"></i></div>' +
     '<div style="font-size:0.72rem; color:var(--text-muted);">Question ' + (c.i + 1) + ' of ' + n + '</div>' +
-    '<div class="tour-eq">' + q.e + ' <span style="color:var(--text-muted);">' + escHtml(q.l) + ' ?</span></div><div class="tour-opts" id="rd-opts"></div>' +
+    (q.t === 't' ? '<div class="tour-eq trivia-q">' + escHtml(q.e) + '</div>' : '<div class="tour-eq">' + q.e + ' <span style="color:var(--text-muted);">' + escHtml(q.l) + ' ?</span></div>') + '<div class="tour-opts study-opts" id="rd-opts"></div>' +
     '<button class="key-btn" style="width:100%; height:34px; font-size:0.75rem; margin-top:10px;" onclick="rdCloseModal()">Leave (you can finish later)</button>';
   fillOptButtons(document.getElementById('rd-opts'), q.o, rdAnswer);
 }

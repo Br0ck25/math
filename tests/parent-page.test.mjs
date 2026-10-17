@@ -108,7 +108,7 @@ test('with several children each one is clearly separate: own colour, a gap, a p
       colours: cards.map((c) => getComputedStyle(c.querySelector('.portal-avatar')).backgroundColor),
       borders: cards.map((c) => getComputedStyle(c).borderTopColor),
       gaps: r.slice(1).map((b, i) => Math.round(b.top - r[i].bottom)),
-      nav: [...document.querySelectorAll('.portal-nav-btn')].map((b) => ({ t: b.innerText.trim(), h: Math.round(b.getBoundingClientRect().height) })),
+      nav: [...document.querySelectorAll('.portal-nav-btn:has(i)')].map((b) => ({ t: b.innerText.trim(), h: Math.round(b.getBoundingClientRect().height) })),
       sideways: document.getElementById('portal').scrollWidth > innerWidth
     };
   });

@@ -45,9 +45,11 @@ function vaultProblem(op) {
 }
 function nextVaultQuestion() {
   const basics = getActiveOps().filter(function (id) { return ['add', 'sub', 'mul', 'div'].indexOf(id) !== -1; });
-  const q = makeMcq({ op: basics.length ? pick(basics) : 'add', problem: vaultProblem, count: 3 });
+  const q = studyOn ? studyMcq(3) : makeMcq({ op: basics.length ? pick(basics) : 'add', problem: vaultProblem, count: 3 });
   vaultCurrentAnswer = q.ans;
-  document.getElementById('vault-eq').innerText = q.expr;
+  const eq = document.getElementById('vault-eq');
+  eq.innerText = q.expr;
+  eq.classList.toggle('trivia-q', !!q.study);
   fillOptButtons(document.getElementById('vault-options'), q.opts, handleVaultGuess);
 }
 function handleVaultGuess(chosenVal) {

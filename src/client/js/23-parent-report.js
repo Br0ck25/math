@@ -131,12 +131,53 @@ function reportParts(days, facts) {
 
   const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
   const strong = strongestOp(byOp);
+  out.study = studyParts(keys, days);
   out.weakIds = weak;
   out.strong = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
   out.weak = weak.length
     ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')
     : (ids.length ? '✅ No weak spots this week. Great work!' : '<span style="color:var(--text-muted);">Needs at least 5 tries of a type to show.</span>');
   return out;
+}
+
+// Questions answered wrong, most often first: [[question id, times wrong, times right], ...]. `lookup(id)` gives the question (or nothing).
+function studyMissedHtml(list, count, lookup) {
+  if (!list || !list.length) return '<div style="font-size:0.78rem; color:var(--text-muted);">No study question has been answered wrong yet.</div>';
+  const rows = list.map(function (m) {
+    const q = lookup(m[0]);
+    return '<div class="study-miss"><b>' + (q ? escHtml(q.q) : 'A question that is no longer in the game') + '</b>' + (q ? '<br>Answer: ' + escHtml(q.a) : '') +
+      '<br><span>❌ wrong ' + m[1] + (m[1] === 1 ? ' time' : ' times') + ' · ✅ right ' + m[2] + '</span></div>';
+  }).join('');
+  return '<details class="portal-more"><summary>❌ Study questions answered wrong (' + (count || list.length) + ')</summary>' + rows +
+    (count > list.length ? '<div class="portal-sub">Showing the ' + list.length + ' missed most often.</div>' : '') + '</details>';
+}
+// This device's own list, from the save.
+function studyMissedMine() {
+  return Object.keys(state.study.seen).filter(function (id) { return state.study.seen[id][1] > 0; })
+    .map(function (id) { return [id, state.study.seen[id][1], state.study.seen[id][0]]; })
+    .sort(function (a, b) { return b[1] - a[1] || a[2] - b[2]; });
+}
+function studyLookupMine(id) { return studyAll().filter(function (q) { return q.id === id; })[0]; }
+
+// The last-7-days study numbers (answers to Quick Recall and Type it questions) by subject, as HTML rows.
+function studyParts(keys, days) {
+  const total = [0, 0], by = {};
+  keys.forEach(function (k) {
+    const d = days[k];
+    if (!d || !d.st) return;
+    total[0] += d.st[0]; total[1] += d.st[1];
+    Object.keys(d.sub || {}).forEach(function (id) {
+      const o = by[id] || (by[id] = [0, 0]);
+      o[0] += d.sub[id][0]; o[1] += d.sub[id][1];
+    });
+  });
+  if (!total[0]) return '<div style="font-size:0.78rem; color:var(--text-muted);">No study questions answered this week.</div>';
+  const rows = STUDY_SUBJECTS.filter(function (s) { return by[s.id]; }).map(function (s) {
+    const a = by[s.id][0], c = by[s.id][1], pct = Math.round(c / a * 100);
+    const col = pct >= 85 ? '#10b981' : (pct >= 65 ? '#f59e0b' : '#ef4444');
+    return '<div class="par-row"><span class="lbl">' + s.icon + ' ' + escHtml(s.label) + '</span><span class="bar"><i style="width:' + pct + '%; background:' + col + '"></i></span><span class="pct">' + pct + '% (' + a + ')</span></div>';
+  }).join('');
+  return '<div style="font-size:0.8rem; margin-bottom:4px;">' + total[0] + ' answered, ' + Math.round(total[1] / total[0] * 100) + '% right this week.</div>' + rows;
 }
 
 function renderParent() {
@@ -166,6 +207,8 @@ function renderParent() {
   document.getElementById('par-types').innerHTML = r.types;
   document.getElementById('par-strong').innerHTML = r.strong;
   document.getElementById('par-weak').innerHTML = r.weak;
+  const missed = studyMissedMine();
+  document.getElementById('par-study').innerHTML = r.study + studyMissedHtml(missed.slice(0, 40), missed.length, studyLookupMine);
   renderParentLink();
 
   const g = state.parentGoal;

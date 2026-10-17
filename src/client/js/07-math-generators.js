@@ -304,6 +304,7 @@ function getActiveOps() {
 //   opts.count    number of answer buttons (default 4)
 function makeMcq(opts) {
   opts = opts || {};
+  if (studyOn && !opts.problem) return studyMcq(opts.count);              // trivia mode: tournaments and duels ask study questions
   const op = opts.op || pick(getActiveOps());
   const p = opts.problem ? opts.problem(op) : OP_BY_ID[op].gen(opGrade(OP_BY_ID[op]));
   const ans = Math.round(p.answer * 100) / 100;
@@ -326,7 +327,7 @@ function fillOptButtons(box, opts, onPick) {
   opts.forEach(function (v) {
     const b = document.createElement('button');
     b.className = 'vault-btn';
-    b.innerText = fmtAns(v);
+    b.innerText = typeof v === 'string' ? v : fmtAns(v);       // study questions use words
     b.onclick = function () { onPick(v, b); };
     box.appendChild(b);
   });

@@ -11,6 +11,7 @@
 //    cprog:<child>        {cid, startedAt, count, done, won}         written only by the child: the clock for the challenge (see 16-challenges.js)
 //    ctl:<child>          {minGrade, ops, duelsOnline, linkId, at}   the parent's settings; written only by the primary parent and
 //                         in force only while that link is still the child's primary link (so unlinking cannot be a way round them)
+//    pq:<child>           {linkId, at, qs}   study questions the primary parent added (see 17-study.js); in force under the same rule
 //  A parent sees a child only while the child's grant still lists the link, so the child can always unlink from their own device.
 //  The first link is the primary parent (the only one who can change settings); later parents can only look.
 // ---------------------------------------------------------------------
@@ -185,9 +186,20 @@ function kidSummary(save) {
     Object.keys(d.ops || {}).slice(0, 40).forEach(function (op) {
       if (/^[a-z0-9_]{1,20}$/.test(op) && Array.isArray(d.ops[op])) ops[op] = [num(d.ops[op][0]), num(d.ops[op][1])];
     });
-    days[k] = { s: num(d.s), a: num(d.a), ms: num(d.ms), h: num(d.h), w: num(d.w), ops: ops };
+    // study answers: st = [answered, right], sub = { subject id: [answered, right] }
+    const sub = {};
+    Object.keys(d.sub || {}).slice(0, 12).forEach(function (id) {
+      if (/^[a-z]{1,10}$/.test(id) && Array.isArray(d.sub[id])) sub[id] = [num(d.sub[id][0]), num(d.sub[id][1])];
+    });
+    days[k] = { s: num(d.s), a: num(d.a), ms: num(d.ms), h: num(d.h), w: num(d.w), ops: ops, st: Array.isArray(d.st) ? [num(d.st[0]), num(d.st[1])] : [0, 0], sub: sub };
   });
+  // study questions answered wrong: [question id, times wrong, times right], the most often missed first (at most 40)
+  const seen = (st.study && st.study.seen) || {};
+  const missed = Object.keys(seen).filter(function (id) { return /^[A-Za-z0-9_-]{3,16}$/.test(id) && Array.isArray(seen[id]) && num(seen[id][1], 1e6) > 0; })
+    .map(function (id) { return [id, num(seen[id][1], 1e6), num(seen[id][0], 1e6)]; })
+    .sort(function (a, b) { return b[1] - a[1] || a[2] - b[2]; });
   return {
+    studyMissed: missed.slice(0, 40), studyMissedCount: missed.length,
     updatedAt: save ? save.updatedAt || 0 : 0,
     grade: num(st.grade, 12),
     gems: num(st.gems),
@@ -260,6 +272,8 @@ async function handleParent(path, request, kv, body) {
 
   if (path === '/api/parent/challenge' && request.method === 'POST') return setChallenge(kv, parent, body);
 
+  if (path.indexOf('/api/parent/study/') === 0 && request.method === 'POST') return handleParentStudy(path, kv, parent, body);
+
   if (path === '/api/parent/delete' && request.method === 'POST') {
     if (!(await checkPassword(kv, parent, String(body.password || ''), PARENT_NS))) return json({ error: 'Wrong password.' }, 401);
     const mine = (await kv.get('plinks:' + parent, 'json')) || { kids: [] };
@@ -267,9 +281,10 @@ async function handleParent(path, request, kv, body) {
       const k = mine.kids[i];
       // tell the child the link ended, and remove what this parent wrote for them
       await kv.put('plink:' + k.linkId, JSON.stringify({ gone: true }), { expirationTtl: CODE_TTL });
-      const rows = await Promise.all([kv.get('ctl:' + k.child, 'json'), kv.get('chall:' + k.child, 'json')]);
+      const rows = await Promise.all([kv.get('ctl:' + k.child, 'json'), kv.get('chall:' + k.child, 'json'), kv.get('pq:' + k.child, 'json')]);
       if (rows[0] && rows[0].linkId === k.linkId) await kv.delete('ctl:' + k.child);
       if (rows[1] && rows[1].linkId === k.linkId) await kv.delete('chall:' + k.child);
+      if (rows[2] && rows[2].linkId === k.linkId) await kv.delete('pq:' + k.child);
     }
     await Promise.all(['plinks:' + parent, 'cfail:' + parent, PARENT_NS.acct + parent, PARENT_NS.fail + parent, PARENT_NS.sess + who.tokenHash].map(function (key) { return kv.delete(key); }));
     return json({ ok: true });

@@ -11,6 +11,7 @@ paths:
 ---
 
 ## Parents (portal, settings, timed challenge)
+- On the parent page each child is a `details.portal-kid` card: tap the name bar to fold or open it (`portalKidState`; with more than three children they start folded, and "Open all" / "Close all" / the jump buttons work on them). The name bar stays pinned while a card scrolls.
 - A parent has their own account at `/parent` (same page, `isPortal()`; the game never loads there, and `syncNow()` must never upload from it). No email, so no password recovery. Server: `15-parents.js`, `16-challenges.js`; client: `35-parent-portal.js` (child's "link a parent" section and the parent page), `03b-parent-controls.js`, `36-challenge.js`. Limits are in `ECON.parents`.
 - Linking: the child's device (PIN-gated Parent Report) makes a one-time code; the parent types it. Every key has one writer (`grant:` child, `plinks:` parent, `ctl:`/`chall:` primary parent, `cprog:` child). The first linked parent is the primary and the only one who can change settings; settings and challenges count only while their writer is still the child's primary link.
 - Parents get report numbers only (`kidSummary()`), never the save, the PIN hash or friend names. Reuse `reportParts()` for the report on both sides.

@@ -50,6 +50,7 @@ Use the file map below and the area rules in `.claude/rules/` (they load when yo
 - Practice: generators `07-math-generators.js`, problem flow and keypad `07a-`, difficulty `07b-adaptive.js`, quests `19-`, hints `21-`.
 - Social: tournament `27-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), account `31-`.
 - Parents: controls `03b-`, report `23-`, portal child side `35-`, parent page `35b-`, challenge `36-` (server `15-parents.js`, `16-challenges.js`). Shop `33-`, vault `15-`, cards `26-`, Dex `30-`.
+- Study (trivia mode, school subjects): `38-study.js`, question banks `37*-study-*.js`, `src/shared/study.js`, server `17-study.js`, parent questions `35b-parent-study.js`.
 - Server: accounts `10-`, router and security headers `30-router.js`. Page shell `src/client/index.html`, styles `styles.css`.
 - Tests: one area per file in `tests/`; `node scripts/test-changed.mjs --list` shows which cover your change. Add a row to `MAP` in `scripts/test-changed.mjs` for any new source file.
 

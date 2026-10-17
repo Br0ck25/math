@@ -23,6 +23,7 @@ export const MAP = [
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm']],
   [/js\/(15-vault|33-shop)/, ['confirm', 'ui']],
   [/js\/(03b-|23-|35-|35b-|36-)|server\/(15-|16-)/, ['parent-controls', 'parent-page', 'parents', 'challenge', 'challenge-ui']],
+  [/js\/(37|38-|35b-parent-study)|server\/17-|shared\/study/, ['study', 'confirm']],
   [/js\/26-trading/, ['cards']],
   [/js\/(27-|28-|29-)|server\/20-duels/, ['online-duel', 'server']],
   [/js\/(03-state|10-save-load|31-account)|server\/10-/, ['backup', 'app', 'parents']],

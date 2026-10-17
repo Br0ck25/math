@@ -160,6 +160,7 @@ function leaveGym() {
   renderMap();
 }
 function renderMap() {
+  document.getElementById('map-title').innerText = '🗺️ ' + triviaWords('Number Kingdom') + ' Map';
   const best = getBestLevel(), total = gymRegions().length;
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '');
   let h = championRowHtml() + legendRowHtml();

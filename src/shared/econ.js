@@ -89,6 +89,12 @@ const ECON = {
   parents: { codeMinutes: 10, codeTries: 8, maxLinks: 4, maxKids: 10, gradeBands: 6, goal: { minMinutes: 5, maxMinutes: 240, maxRewardChars: 60 },
     challenge: { maxProblems: 100, minMinutes: 1, maxMinutes: 60, gemPerProblem: 1, maxGemPerProblem: 10, maxGems: 100, minSecPerProblem: 2, graceSeconds: 15 },   // a parent's timed challenge: N correct answers in M minutes pays N x gems-per-answer (1 unless the parent sets more), at most maxGems in all; answers faster than 2 s each are not believed
     boost: { step: 10, maxPerType: 30, maxTotal: 40, maxTypes: 12 } },   // a parent's "extra practice": each click moves 10% of all problems to a type, up to 30% for one type and 40% in all   // link codes last 10 minutes; a child can have 4 parents linked; a parent can watch 10 children; gradeBands = GRADES.length (checked in tests)
+  // Study (38-study.js): question rounds in school subjects. A round is `roundSize` questions; only multiple-choice and typed rounds pay (flashcards are self-marked).
+  // A right answer to a question not rewarded in the last `freshDays` days ("fresh") pays `gemPerNew` gem and `xpPerNew` buddy XP; a perfect round adds `perfectBonus`.
+  // At most `dayCap` gems a day come from study, so repeating easy cards cannot be farmed. `missMax`: missed questions remembered for review.
+  // `parent`: limits for questions a parent adds from their phone (see src/shared/study.js and src/server/17-study.js).
+  study: { roundSize: 8, minLevel: 6, maxLevel: 8, gemPerNew: 1, perfectBonus: 3, dayCap: 20, xpPerNew: 2, freshDays: 3, missMax: 40,
+    parent: { max: 150, qMax: 200, aMax: 60, extras: 3, bulk: 50 } },
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 

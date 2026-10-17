@@ -75,6 +75,7 @@ function sendInReplacement(id) {
   buddyReact('cheer');
   saveState();
   updateStatsUI();
+  if (studyOn && studyScreen === 'card') studyRender();           // studying: the question is waiting for the new fighter
 }
 // Called whenever a new problem is made: if the fighter is fainted, wait for a teammate, or (no teammate left) revive the team.
 function holdForSwitch() {
