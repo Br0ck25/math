@@ -12,3 +12,4 @@ paths:
 - Every response gets the security headers in `30-router.js`. Do not loosen the CSP to make something work; fix the code.
 
 
+- Notifications (`ping`) carry a `kind`; decide what a new kind replaces, since a shared key overwrites. Add the kind to `tests/guards.test.mjs`.

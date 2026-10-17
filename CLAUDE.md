@@ -104,12 +104,5 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Do not open a pull request unless asked. Do not force-push. Do not commit `node_modules/`.
 - Keep commits focused: one feature or fix, with its tests and the rebuilt `worker.js`.
 
-## Mistakes that already happened (do not repeat)
-- A regex-based refactor of open/close functions deleted neighbouring functions (`hubStep`, `setDuelsOnline`) and no test noticed. Refactors of many files must be followed by `npm run lint`; do not edit code with greedy multi-line regexes.
-- A stray quote or backtick in the old single-file layout silently blanked the whole game. The new build catches syntax errors; still load the page after changes.
-- A shared single "ping" key overwrote an invitation with a result notification. Notifications carry a `kind`; decide what a new kind replaces.
-- Canvas emoji (trading cards) were grey silhouettes on iPhone Safari because a gradient was the current fillStyle. Draw every canvas emoji with `fillEmoji()`; `tests/cards.test.mjs` enforces it. Chrome hides this bug, so a green desktop test run is not proof for iOS.
-- Test pages must not register the service worker, and timers scaled by `fast` mean `setTimeout`-based waits in tests need generous multipliers.
-
 ## Area rules (load automatically when you open matching files)
 `.claude/rules/`: `content.md` (buddies, bosses, gear, art, packs), `battles.md` (wild, bosses, moves, map, Champion), `parents.md`, `server.md`, `ui.md` (layout, phones, accessibility), `tests.md`. If you change an area, read its rule file first if it did not load. Keep numbers like "353 buddies" in the tests, not in prose.
