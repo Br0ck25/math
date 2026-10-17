@@ -291,6 +291,7 @@ function studyHomeHtml() {
     '<button class="grade-btn study-go" onclick="studyStart(\'cards\')"' + off + '>🃏 Flashcards <small>no gems, just practice</small></button>' +
     (pool.length ? '' : '<div class="settings-hint">No questions here yet.' + (sel.indexOf('parent') !== -1 ? ' A parent can add some from the parent page.' : '') + '</div>') +
     '<div class="settings-hint">A question pays again after ' + S.freshDays + ' days. Missed questions come back first.</div>' +
+    (pool.some(function (q) { return q.t === 'kaac'; }) ? '<div class="settings-hint">Some arts questions are from the 2024 Governor\'s Cup (Kentucky Association for Academic Competition), used with permission.</div>' : '') +
     '<button class="key-btn submit-btn study-back" onclick="closeStudy()">🧮 Back to math</button>';
 }
 

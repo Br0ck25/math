@@ -509,3 +509,18 @@ test('the study pane fits phones: nothing sideways, and it stays above the botto
     await g.context.close();
   }
 });
+
+test('the KAAC 2024 district arts test is in word for word (32 questions, no picture ones) and Study credits KAAC', async () => {
+  const { STUDY_BANK } = loadBank();
+  const k = STUDY_BANK.filter((q) => q.t === 'kaac');
+  assert.equal(k.length, 32);
+  assert.ok(k.every((q) => q.s === 'arts' && q.wrong.length === 3));
+  assert.equal(k.find((q) => /Fonteyn/.test(q.q)).a, 'Rudolf Nureyev');
+  assert.equal(k.find((q) => /Schubert/.test(q.q)).a, 'x-1, y-2, z-3');
+  assert.equal(k.find((q) => /athlete/.test(q.q)).a, 'x-3, y-2, z-1');
+  assert.ok(!k.some((q) => /seen here|shown here|pictured here/.test(q.q)), 'picture questions are left out');
+  const credit = await inPage(() => { state.study.subjects = ['arts']; state.study.level = 8; if (studyOn) closeStudy(); openStudy(); const t = document.getElementById('study-box').innerText; closeStudy(); return t; });
+  assert.match(credit, /Governor's Cup \(Kentucky Association for Academic Competition\), used with permission/);
+  const other = await inPage(() => { state.study.subjects = ['math']; openStudy(); const t = document.getElementById('study-box').innerText; closeStudy(); state.study.subjects = []; return t; });
+  assert.doesNotMatch(other, /Kentucky Association/);
+});
