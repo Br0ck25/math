@@ -10,10 +10,10 @@ function easyScore(p) {
   const plain = (p.expr || (p.num1 + ' ' + p.num2)).replace(/<[^>]+>/g, '');
   return plain.length + String(Math.abs(p.answer)).length * 2;
 }
-// A gentler problem: one grade down (never below the type's own grade) and the simplest of five tries.
+// A gentler problem: one grade down (never below the type's own grade, or the lowest level a parent allows) and the simplest of five tries.
 function genEasy(id) {
   const op = OP_BY_ID[id];
-  const g = Math.max(op.minGrade, state.grade - 1);
+  const g = Math.max(op.minGrade, state.grade - 1, ctlFloor());
   let best = null;
   for (let i = 0; i < 5; i++) {
     const c = op.gen(g);
@@ -21,7 +21,7 @@ function genEasy(id) {
   }
   return best;
 }
-function genChallenge(id) { return OP_BY_ID[id].gen(Math.min(state.grade + 1, GRADES.length - 1)); }
+function genChallenge(id) { return OP_BY_ID[id].gen(Math.max(OP_BY_ID[id].minGrade, Math.min(state.grade + 1, GRADES.length - 1))); }
 
 function opTier(op) { return state.adapt.on ? (state.adapt.tier[op] || 0) : 0; }
 function canChallenge() { return state.grade < GRADES.length - 1; }
@@ -61,6 +61,20 @@ function challengeBudgetLeft() {
   return (state.adapt.served.match(/c/g) || []).length < ECON.adaptive.maxChallengeServed;
 }
 
+// A parent's "extra practice" (+N% of all problems for a type): that type gains N points of share and the others give them up evenly.
+function applyBoost(ops, p) {
+  const b = parentCtl && parentCtl.boost;
+  if (!b) return p;
+  let q = p.slice();
+  ops.forEach(function (op, i) {
+    const extra = (b[op] || 0) / 100;
+    if (!extra || q[i] >= 1) return;
+    const rest = 1 - q[i], add = Math.min(extra, rest - 1e-6);
+    q = q.map(function (x, j) { return j === i ? x + add : x * (rest - add) / rest; });
+  });
+  return q;
+}
+
 // Weights for picking the next math type: weaker types get more, the boss weak point gets its share, nobody exceeds the cap.
 function typeShares(ops, weakOp) {
   const E = ECON.adaptive;
@@ -73,7 +87,7 @@ function typeShares(ops, weakOp) {
   if (wi >= 0 && ops.length > 1 && w[wi] / sum(w) < E.bossWeakShare) {     // lift the boss weak point to its share, never lower it
     w[wi] = (sum(w) - w[wi]) * E.bossWeakShare / (1 - E.bossWeakShare);
   }
-  let p = w.map(function (x) { return x / sum(w); });
+  let p = applyBoost(ops, w.map(function (x) { return x / sum(w); }));
   const cap = Math.max(E.maxTypeShare, 1 / ops.length);
   for (let pass = 0; pass < 4; pass++) {          // clip anything over the cap and share the excess among the rest
     const over = p.filter(function (x) { return x > cap + 1e-9; }).length;
@@ -105,5 +119,5 @@ function pickNextProblem(lastOp) {
   else if (a.calm[id]) { delete a.calm[id]; }
   else if (opTier(id) < 0) kind = 'easier';
   else if (opTier(id) > 0 && canChallenge() && challengeBudgetLeft()) kind = 'challenge';
-  return { op: id, kind: kind, make: function () { return kind === 'warmup' || kind === 'easier' ? genEasy(id) : kind === 'challenge' ? genChallenge(id) : OP_BY_ID[id].gen(state.grade); } };
+  return { op: id, kind: kind, make: function () { return kind === 'warmup' || kind === 'easier' ? genEasy(id) : kind === 'challenge' ? genChallenge(id) : OP_BY_ID[id].gen(opGrade(OP_BY_ID[id])); } };
 }

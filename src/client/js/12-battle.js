@@ -293,6 +293,7 @@ function checkAnswer() {
     calDayEvent();
     recordStat(opId, true, solveTime, opId === getWeakOp());
     checkParentGoal();
+    challengeCorrect();
     if (sessionStats.fastestTime === null || solveTime < sessionStats.fastestTime) sessionStats.fastestTime = solveTime;
 
     state.streak += 1;

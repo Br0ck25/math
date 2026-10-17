@@ -39,6 +39,7 @@ function freshState() {
     duelsOnline: true,
     duelFriends: [],
     duelSettled: [],
+    challengePaid: [],                               // parent challenge ids already paid out on this save (the gems are added once per id)
     duelRecord: { w: 0, l: 0, t: 0 },
     team: [],
     tour: { day: '', runs: 0, trophies: 0, wins: 0 },

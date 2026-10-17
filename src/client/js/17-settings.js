@@ -19,22 +19,28 @@ function renderTypeChart() {
 
 function renderSettings() {
   renderTypeChart();
+  document.getElementById('ctl-note').innerText = ctlNote();
   const gg = document.getElementById('grade-grid');
   gg.innerHTML = '';
   GRADES.forEach(function (g) {
     const b = document.createElement('button');
-    b.className = 'grade-btn' + (state.grade === g.id ? ' active' : '');
+    const locked = g.id < ctlFloor();
+    b.className = 'grade-btn' + (state.grade === g.id ? ' active' : '') + (locked ? ' locked' : '');
     b.innerText = g.label;
+    if (locked) b.setAttribute('aria-label', g.long + ' (locked by a parent)');
     b.onclick = function () { setGrade(g.id); };
     gg.appendChild(b);
   });
 
   const og = document.getElementById('ops-grid');
   og.innerHTML = '';
-  MATH_OPS.filter(function (o) { return o.minGrade <= state.grade; }).forEach(function (o) {
-    const on = state.enabledOps.indexOf(o.id) !== -1;
+  document.getElementById('ops-hint').innerText = opsLocked() ? '🔒 A parent picked these math types for you.' : 'Tap a type to turn it on or off. Higher grades unlock more types.';
+  // a parent's list is shown as it is (locked on); otherwise the player's own choices among the types their grade has
+  const list = opsLocked() ? getActiveOps().map(function (id) { return OP_BY_ID[id]; }) : MATH_OPS.filter(function (o) { return o.minGrade <= state.grade; });
+  list.forEach(function (o) {
+    const on = opsLocked() || state.enabledOps.indexOf(o.id) !== -1;
     const b = document.createElement('button');
-    b.className = 'op-toggle' + (on ? ' on' : '');
+    b.className = 'op-toggle' + (on ? ' on' : '') + (opsLocked() ? ' locked' : '');
     b.innerHTML = `<span class="op-ic">${o.icon}</span><span class="op-lb">${o.label}</span><span class="op-sw">${on ? 'ON' : 'OFF'}</span>`;
     b.onclick = function () { toggleOp(o.id); };
     og.appendChild(b);
@@ -42,6 +48,7 @@ function renderSettings() {
 }
 
 function setGrade(g) {
+  if (g < ctlFloor()) { soundWrong(); toast('🔒 A parent set the lowest level you can play.'); return; }
   soundClick();
   state.grade = g;
   state.enabledOps = GRADE_DEFAULT_OPS[g].slice();
@@ -52,6 +59,7 @@ function setGrade(g) {
 }
 
 function toggleOp(id) {
+  if (opsLocked()) { soundWrong(); toast('🔒 A parent picked which math types you practise.'); return; }
   const idx = state.enabledOps.indexOf(id);
   if (idx !== -1) {
     if (getActiveOps().length <= 1 && getActiveOps()[0] === id) {

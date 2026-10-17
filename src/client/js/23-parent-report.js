@@ -1,10 +1,10 @@
 // =====================================================================
 //  PARENT REPORT
 // =====================================================================
-function sumDays(keys) {
+function sumDays(keys, days) {
   const t = { solved: 0, attempts: 0, ms: 0, hints: 0, played: 0, weak: 0, byOp: {} };
   keys.forEach(function (k) {
-    const d = state.stats.days[k];
+    const d = (days || state.stats.days)[k];
     if (!d) return;
     t.played += d.a > 0 ? 1 : 0;
     t.solved += d.s; t.attempts += d.a; t.ms += d.ms; t.hints += d.h; t.weak += d.w || 0;
@@ -22,8 +22,14 @@ function deltaText(now, before, unit) {
 }
 let parentUnlocked = false;
 // Parent switches. (setDuelsOnline was lost in an earlier rewrite; tests/parent-switches covers both now.)
-function setDuelsOnline(on) { state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off'); }
-function setAdaptive(on) { state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent(); }
+function setDuelsOnline(on) {
+  if (duelsLocked()) { toast('🔒 Online duels are switched off from a parent\'s phone.'); renderParent(); return; }
+  state.duelsOnline = !!on; saveState(); toast(on ? 'Online duels on' : 'Online duels off');
+}
+function setAdaptive(on) {
+  if (adaptiveLocked()) { toast('🔒 Difficulty matching is set from a parent\'s phone.'); renderParent(); return; }
+  state.adapt.on = !!on; saveState(); toast(on ? 'Adaptive practice on' : 'Adaptive practice off'); renderParent();
+}
 function parentLocked() { return !!state.parentPinHash && !parentUnlocked; }
 // 4-digit PIN stored only as a SHA-256 hash (a light lock against little fingers, not real security).
 async function hashPin(pin) {
@@ -91,44 +97,32 @@ function parentShare() {
   else toast(text);
 }
 
-function renderParent() {
-  const locked = parentLocked();
-  document.getElementById('par-lock').style.display = locked ? 'block' : 'none';
-  document.getElementById('par-content').style.display = locked ? 'none' : 'block';
-  if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
-  document.getElementById('par-duels').checked = !!state.duelsOnline;
-  document.getElementById('par-adaptive').checked = state.adapt.on;
-  const lv = getActiveOps().filter(function (op) { return state.adapt.on ? true : false; }).map(function (op) {
-    const t = opTier(op), acc = recentAccuracy(op);
-    const col = t > 0 ? '#fde047' : (t < 0 ? '#86efac' : 'var(--text-muted)');
-    return '<div class="par-row"><span class="lbl">' + OP_BY_ID[op].icon + ' ' + OP_BY_ID[op].label + '</span><span style="color:' + col + '; font-weight:800;">' + TIER_NAMES[t] + '</span><span class="pct">' + (acc === null ? 'new' : Math.round(acc * 100) + '% lately') + '</span></div>';
-  });
-  document.getElementById('par-levels').innerHTML = state.adapt.on ? lv.join('') : '<span style="color:var(--text-muted);">Off: every type uses the chosen grade.</span>';
-  document.getElementById('par-pin-note').innerText = state.parentPinHash ? 'PIN is on. You will be asked each time the app is reopened.' : 'Optional: stop little fingers from changing goals.';
-  document.getElementById('par-pin-clear').style.display = state.parentPinHash ? 'inline-block' : 'none';
+// The last-7-days report as HTML pieces, for a day-by-day record (this player's, or a child's on the parent page).
+// facts: { streak, raids, trophies }.
+function reportParts(days, facts) {
   const keys = lastDayKeys(7);
-  const days = state.stats.days;
-  const wk = sumDays(keys), pv = sumDays(lastDayKeys(7, 7));
+  const wk = sumDays(keys, days), pv = sumDays(lastDayKeys(7, 7), days);
   const solved = wk.solved, attempts = wk.attempts, ms = wk.ms, hints = wk.hints, played = wk.played, acc = wk.acc, byOp = wk.byOp;
   const tile = function (v, l) { return '<div class="par-tile"><b>' + v + '</b><span>' + l + '</span></div>'; };
-  document.getElementById('par-tiles').innerHTML =
+  const out = {};
+  out.tiles =
     tile(solved, 'Solved') + tile(attempts ? acc + '%' : '--', 'Accuracy') + tile(Math.round(ms / 60000) + 'm', 'Time played') +
-    tile(played + '/7', 'Days played') + tile(hints, 'Hints used') + tile(state.streakCal.count, 'Streak day') +
-    tile(wk.weak, 'Weak-point hits') + tile(state.raidsCleared, 'Raids cleared') + tile(state.tour.trophies, 'Trophies');
-  document.getElementById('par-compare').innerText = pv.attempts
+    tile(played + '/7', 'Days played') + tile(hints, 'Hints used') + tile(facts.streak, 'Streak day') +
+    tile(wk.weak, 'Weak-point hits') + tile(facts.raids, 'Raids cleared') + tile(facts.trophies, 'Trophies');
+  out.compare = pv.attempts
     ? 'vs last week: solved ' + deltaText(solved, pv.solved, '') + ' · accuracy ' + deltaText(acc, pv.acc, '%')
     : '';
 
   const maxMs = Math.max(60000, Math.max.apply(null, keys.map(function (k) { return days[k] ? days[k].ms : 0; })));
   const names = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  document.getElementById('par-days').innerHTML = keys.map(function (k) {
+  out.days = keys.map(function (k) {
     const m = days[k] ? days[k].ms : 0;
     const dt = new Date(k + 'T12:00:00');
     return '<div class="par-day">' + (m ? Math.round(m / 60000) : '') + '<i style="height:' + Math.round((m / maxMs) * 52) + 'px"></i>' + names[dt.getDay()] + '</div>';
   }).join('');
 
   const ids = Object.keys(byOp).filter(function (id) { return OP_BY_ID[id]; }).sort(function (a, b) { return byOp[b][0] - byOp[a][0]; });
-  document.getElementById('par-types').innerHTML = ids.length ? ids.map(function (id) {
+  out.types = ids.length ? ids.map(function (id) {
     const a = byOp[id][0], c = byOp[id][1];
     const pct = Math.round((c / a) * 100);
     const col = pct >= 85 ? '#10b981' : (pct >= 65 ? '#f59e0b' : '#ef4444');
@@ -137,10 +131,42 @@ function renderParent() {
 
   const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
   const strong = strongestOp(byOp);
-  document.getElementById('par-strong').innerHTML = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
-  document.getElementById('par-weak').innerHTML = weak.length
+  out.weakIds = weak;
+  out.strong = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
+  out.weak = weak.length
     ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')
     : (ids.length ? '✅ No weak spots this week. Great work!' : '<span style="color:var(--text-muted);">Needs at least 5 tries of a type to show.</span>');
+  return out;
+}
+
+function renderParent() {
+  const locked = parentLocked();
+  document.getElementById('par-lock').style.display = locked ? 'block' : 'none';
+  document.getElementById('par-content').style.display = locked ? 'none' : 'block';
+  if (locked) { document.getElementById('par-lock-msg').innerText = ''; return; }
+  document.getElementById('par-duels').checked = !!state.duelsOnline;
+  document.getElementById('par-duels').disabled = duelsLocked();
+  document.getElementById('par-ctl-note').innerText = ctlNote();
+  document.getElementById('par-adaptive').checked = state.adapt.on;
+  document.getElementById('par-adaptive').disabled = adaptiveLocked();
+  document.getElementById('par-minutes').disabled = goalLocked();
+  document.getElementById('par-reward').disabled = goalLocked();
+  const lv = getActiveOps().filter(function (op) { return state.adapt.on ? true : false; }).map(function (op) {
+    const t = opTier(op), acc = recentAccuracy(op);
+    const col = t > 0 ? '#fde047' : (t < 0 ? '#86efac' : 'var(--text-muted)');
+    return '<div class="par-row"><span class="lbl">' + OP_BY_ID[op].icon + ' ' + OP_BY_ID[op].label + '</span><span style="color:' + col + '; font-weight:800;">' + TIER_NAMES[t] + '</span><span class="pct">' + (acc === null ? 'new' : Math.round(acc * 100) + '% lately') + '</span></div>';
+  });
+  document.getElementById('par-levels').innerHTML = state.adapt.on ? lv.join('') : '<span style="color:var(--text-muted);">Off: every type uses the chosen grade.</span>';
+  document.getElementById('par-pin-note').innerText = state.parentPinHash ? 'PIN is on. You will be asked each time the app is reopened.' : 'Optional: stop little fingers from changing goals.';
+  document.getElementById('par-pin-clear').style.display = state.parentPinHash ? 'inline-block' : 'none';
+  const r = reportParts(state.stats.days, { streak: state.streakCal.count, raids: state.raidsCleared, trophies: state.tour.trophies });
+  document.getElementById('par-tiles').innerHTML = r.tiles;
+  document.getElementById('par-compare').innerText = r.compare;
+  document.getElementById('par-days').innerHTML = r.days;
+  document.getElementById('par-types').innerHTML = r.types;
+  document.getElementById('par-strong').innerHTML = r.strong;
+  document.getElementById('par-weak').innerHTML = r.weak;
+  renderParentLink();
 
   const g = state.parentGoal;
   const sel = document.getElementById('par-minutes');
@@ -154,13 +180,18 @@ function renderParent() {
     ? '🎉 Goal reached today!' + (g.reward ? ' Time for: ' + g.reward : '')
     : Math.floor(mins) + ' of ' + g.minutes + ' minutes today' + (g.reward ? ' — reward: ' + g.reward : '');
 }
-function setParentGoal() {
+// Sets the daily time goal (also used when a parent sets it from their phone).
+function applyGoal(minutes, reward) {
   const g = state.parentGoal;
-  g.minutes = clamp(parseInt(document.getElementById('par-minutes').value, 10) || 20, 5, 240);
-  g.reward = document.getElementById('par-reward').value.slice(0, 60);
+  g.minutes = clamp(parseInt(minutes, 10) || 20, ECON.parents.goal.minMinutes, ECON.parents.goal.maxMinutes);
+  g.reward = String(reward || '').slice(0, ECON.parents.goal.maxRewardChars);
   g.notified = minutesToday() >= g.minutes ? dayKey() : '';
+}
+function setParentGoal() {
+  if (goalLocked()) { toast('🔒 The daily goal is set from a parent\'s phone.'); renderParent(); return; }
+  applyGoal(document.getElementById('par-minutes').value, document.getElementById('par-reward').value);
   saveState();
   renderParent();
 }
-function openParent() { showModal('parent-modal', function () { parentUnlocked = false; renderParent(); }); }
+function openParent() { showModal('parent-modal', function () { parentUnlocked = false; linkLoaded = false; renderParent(); }); }
 function closeParent() { hideModal('parent-modal'); }

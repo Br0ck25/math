@@ -24,9 +24,11 @@ function persistAcct() {
   } catch (e) {}
 }
 
-async function api(path, method, body, keepalive) {
+// `token` is for the parent page, which signs in as a parent rather than as the player (null = send none).
+async function api(path, method, body, keepalive, token) {
   const headers = { 'content-type': 'application/json' };
-  if (acct && acct.token) headers.authorization = 'Bearer ' + acct.token;
+  const tok = token === undefined ? (acct && acct.token) : token;
+  if (tok) headers.authorization = 'Bearer ' + tok;
   const payload = body ? JSON.stringify(body) : undefined;
   const res = await fetch(path, {
     method: method || 'GET',
@@ -148,6 +150,7 @@ async function acctLogin() {
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not sign in.', 'err');
     const save = r.data.save;
     startSession(r.data.name, r.data.token, save ? save.version : 0);
+    applyParentData(r.data);
     syncProblem = '';
     if (!save) {
       acct.dirty = true; persistAcct();
@@ -165,17 +168,27 @@ async function acctLogin() {
   } catch (e) { setAcctMsg('Could not reach the server. Check your internet and try again.', 'err'); }
 }
 
+// While a parent's settings are on and the parent PIN is set, signing out or deleting the account needs the PIN first:
+// otherwise it would be a way round them.
+function acctNeedsParent() {
+  if (!ctlActive() || !parentLocked()) return false;
+  toast('🔒 A parent has settings on. Unlock the Parent Report with the PIN first.');
+  return true;
+}
 function acctLogout() {
+  if (acctNeedsParent()) return;
   const t = acct && acct.token;
   if (t) { try { api('/api/logout', 'POST', {}); } catch (e) {} }
   acct = null;
   persistAcct();
+  applyParentData(null);
   clearTimeout(syncTimer);
   setAcctMsg('Signed out. Your progress is still saved on this device.', 'ok');
   renderAccount();
 }
 
 function acctShowDelete() {
+  if (acctNeedsParent()) return;
   document.getElementById('acct-delete-area').innerHTML =
     '<div class="settings-hint">This deletes your online account and saved progress. Your progress on this device stays.</div>' +
     '<input class="acct-input" id="acct-del-pass" type="password" placeholder="Enter your password to confirm" autocomplete="current-password">' +
@@ -188,6 +201,7 @@ async function acctDelete() {
     const r = await api('/api/delete', 'POST', { password: p.value });
     if (r.status !== 200) return setAcctMsg((r.data && r.data.error) || 'Could not delete the account.', 'err');
     acct = null; persistAcct();
+    applyParentData(null);
     setAcctMsg('Account deleted. Your progress is still on this device.', 'ok');
     renderAccount();
   } catch (e) { setAcctMsg('Could not reach the server.', 'err'); }
@@ -214,7 +228,7 @@ function acctExpired() {
 }
 
 async function syncNow(force) {
-  if (!acct || syncing || pendingConflict) return;
+  if (!acct || syncing || pendingConflict || isPortal()) return;   // the parent page never loads a save, so it must never upload one
   syncing = true;
   updateAcctStatus();
   const seq = dirtySeq;
@@ -226,6 +240,7 @@ async function syncNow(force) {
       acct.lastSync = Date.now();
       syncProblem = '';
       persistAcct();
+      applyParentData(r.data);
     } else if (r.status === 409) {
       pendingConflict = { cloud: r.data.save };
       openConflict();
@@ -286,6 +301,7 @@ async function acctStartup() {
     const r = await api('/api/save');
     if (r.status === 401) return acctExpired();
     if (r.status !== 200) return;
+    applyParentData(r.data);
     const save = r.data.save;
     if (!save) { acct.dirty = true; return syncNow(false); }
     if (save.version > acct.version) {

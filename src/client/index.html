@@ -35,6 +35,9 @@
       </div>
     </div>
 
+    <!-- A parent's timed challenge: the call to action, then the countdown -->
+    <button class="chal-bar" id="chal-bar" style="display:none" onclick="openChal()">🎯 Parent challenge</button>
+
     <!-- Active Session Tracker + practice settings chip (one row) -->
     <div class="session-info-row">
       <span class="session-line" title="Session goal: solve problems to earn a bonus">🎯 <span id="session-count-text">0</span>/<span id="session-goal-text">25</span> <span id="session-badge">🎁 25</span></span>
@@ -409,12 +412,13 @@
 
       <details class="set-sec" open><summary class="settings-label">📚 Grade level</summary>
       <div class="grade-grid" id="grade-grid"></div>
+      <div class="settings-hint" id="ctl-note" role="status"></div>
       <div class="settings-hint">Picking a grade also switches on the math types that fit that level. You can change them below.</div>
 
       </details>
       <details class="set-sec" open><summary class="settings-label">🧮 Math types</summary>
       <div class="ops-grid" id="ops-grid"></div>
-      <div class="settings-hint">Tap a type to turn it on or off. Higher grades unlock more types.</div>
+      <div class="settings-hint" id="ops-hint">Tap a type to turn it on or off. Higher grades unlock more types.</div>
 
       </details>
       <details class="set-sec" open><summary class="settings-label">🔧 Options</summary>
@@ -500,6 +504,9 @@
     </div>
   </div>
 
+  <!-- Parent page (/parent): the game is hidden and this takes its place -->
+  <div id="portal" class="portal" style="display:none"></div>
+
   <div id="toast"></div>
 
   <div class="milestone-overlay" id="milestone-overlay"><div class="milestone-big" id="milestone-big"></div><div class="milestone-sub" id="milestone-sub"></div></div>
@@ -580,6 +587,17 @@
     </div>
   </div>
 
+  <!-- Parent challenge: start window -->
+  <div class="modal-overlay" id="chal-modal" data-close="closeChal">
+    <div class="modal-content">
+      <h2 style="font-size:1.3rem;">🎯 Parent challenge</h2>
+      <p style="font-size:0.9rem; margin:10px 0;" id="chal-text"></p>
+      <p style="font-size:0.78rem; color:var(--text-muted);">The clock starts when you tap Start, and it keeps running if you close the game.</p>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="chalStart()">⏱️ Start now</button>
+      <button class="grade-btn" style="width:100%; margin-top:8px; min-height:44px;" onclick="closeChal()">Not yet</button>
+    </div>
+  </div>
+
   <!-- Parent report modal -->
   <div class="modal-overlay" id="parent-modal" data-close="closeParent">
     <div class="modal-content">
@@ -592,6 +610,7 @@
       </div>
       <div id="par-content">
       <p style="font-size:0.72rem; color:var(--text-muted);">Last 7 days on this device or account.</p>
+      <div class="settings-hint" id="par-ctl-note" role="status" style="margin-top:0;"></div>
       <div class="par-tiles" id="par-tiles"></div>
       <div style="font-size:0.74rem; font-weight:700; margin-bottom:2px;" id="par-compare"></div>
       <div class="settings-label">📅 Minutes per day</div>
@@ -615,6 +634,8 @@
       <div id="par-levels" style="font-size:0.76rem; text-align:left; margin-top:4px;"></div>
       <div class="settings-label">🌍 Online duels</div>
       <label style="font-size:0.78rem; display:block; text-align:left;"><input type="checkbox" id="par-duels" onchange="setDuelsOnline(this.checked)"> Let this player challenge friends by player name (no chat, gem stakes up to half their gems)</label>
+      <div class="settings-label">📱 See stats on a parent's phone</div>
+      <div id="par-link"></div>
       <div class="settings-label">🔒 Parent PIN</div>
       <div class="par-goal" style="flex-direction:row; align-items:center; flex-wrap:wrap;">
         <input id="par-pin-new" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="width:90px;" />

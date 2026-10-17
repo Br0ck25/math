@@ -282,14 +282,19 @@ const MATH_OPS = [
 const OP_BY_ID = {};
 MATH_OPS.forEach(function (o) { OP_BY_ID[o.id] = o; });
 
+// The level a type's problems are made at: the player's grade, but never below the type's own starting level (a parent may pick a
+// type above the player's grade; it then starts at its easiest).
+function opGrade(op) { return Math.max(state.grade, op.minGrade); }
+
 function getActiveOps() {
-  const g = state.grade;
-  let ops = (state.enabledOps || []).filter(function (id) {
-    return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g;
-  });
-  if (ops.length === 0) {
-    ops = GRADE_DEFAULT_OPS[g].filter(function (id) { return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g; });
+  if (opsLocked()) {                       // a parent chose exactly which types are asked, at any grade
+    const chosen = parentCtl.ops.filter(function (id) { return OP_BY_ID[id]; });
+    if (chosen.length) return chosen;
   }
+  const g = state.grade;
+  const usable = function (id) { return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g; };
+  let ops = (state.enabledOps || []).filter(usable);
+  if (ops.length === 0) ops = GRADE_DEFAULT_OPS[g].filter(usable);
   return ops.length ? ops : ['add'];
 }
 
@@ -300,7 +305,7 @@ function getActiveOps() {
 function makeMcq(opts) {
   opts = opts || {};
   const op = opts.op || pick(getActiveOps());
-  const p = opts.problem ? opts.problem(op) : OP_BY_ID[op].gen(state.grade);
+  const p = opts.problem ? opts.problem(op) : OP_BY_ID[op].gen(opGrade(OP_BY_ID[op]));
   const ans = Math.round(p.answer * 100) / 100;
   const expr = p.layout === 'vertical' ? p.num1 + ' ' + p.operator + ' ' + p.num2 : p.expr;
   const mag = Math.abs(ans);
