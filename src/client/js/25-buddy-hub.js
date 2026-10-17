@@ -88,7 +88,7 @@ function renderHub() {
   ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
   document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
-  const tabs = [['care', '💖 Care'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold']];
+  const tabs = [['care', '💖 Care'], ['room', '🏠 Room'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold']];
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
@@ -99,10 +99,135 @@ function renderHub() {
     tb.appendChild(b);
   });
   if (hubTab === 'care') renderCare();
+  else if (hubTab === 'room') renderRoomTab();
   else if (hubTab === 'card') renderCardTab();
   else if (hubTab === 'duel') renderDuelTab();
   else if (hubTab === 'hold') renderHoldTab();
   else renderTourTab();
+}
+
+// ----- Trainer Profile & Showcase Sanctuary Room -----
+const PROFILE_TITLES = [
+  { id: 'Rookie Calculator', label: 'Rookie Calculator', icon: '🌱', cost: 0 },
+  { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', cost: ECON.profile.titles.apprentice },
+  { id: 'Gem Defender', label: 'Gem Defender', icon: '🛡️', cost: ECON.profile.titles.defender },
+  { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', cost: ECON.profile.titles.explorer },
+  { id: 'Dragon Tamer', label: 'Dragon Tamer', icon: '🐉', cost: ECON.profile.titles.dragon },
+  { id: 'Grand Arithmancer', label: 'Grand Arithmancer', icon: '👑', cost: ECON.profile.titles.arithmancer }
+];
+const PROFILE_FRAMES = [
+  { id: 'classic', label: 'Classic', border: '#94a3b8', cost: 0 },
+  { id: 'gold', label: 'Golden Foil', border: '#facc15', cost: ECON.profile.frames.gold },
+  { id: 'neon', label: 'Neon Cyber', border: '#22d3ee', cost: ECON.profile.frames.neon },
+  { id: 'cosmic', label: 'Cosmic Void', border: '#e879f9', cost: ECON.profile.frames.cosmic },
+  { id: 'crystal', label: 'Crystal Prism', border: '#a5b4fc', cost: ECON.profile.frames.crystal }
+];
+function ensureProfile() {
+  if (!state.profile || typeof state.profile !== 'object') {
+    state.profile = { title: 'Rookie Calculator', frame: 'classic', unlockedTitles: ['Rookie Calculator'], unlockedFrames: ['classic'], showcase: ['dog'] };
+  }
+  return state.profile;
+}
+function tapRoomBuddy(id) {
+  const sp = getPetById(id);
+  if (!sp) return;
+  if (typeof soundBuddyCry === 'function') soundBuddyCry(id, sp.element);
+  toast(sp.icon + ' ' + sp.name + ' waves happily from the Sanctuary! 💖');
+}
+function toggleShowcaseBuddy(id) {
+  const prof = ensureProfile();
+  const idx = prof.showcase.indexOf(id);
+  if (idx !== -1) {
+    if (prof.showcase.length <= 1) { toast('Keep at least 1 buddy in your Sanctuary Room!'); return; }
+    prof.showcase.splice(idx, 1);
+  } else {
+    if (prof.showcase.length >= ECON.profile.maxShowcase) prof.showcase.pop();
+    prof.showcase.unshift(id);
+  }
+  soundClick();
+  saveState();
+  renderRoomTab();
+}
+function selectProfileTitle(id) {
+  const prof = ensureProfile();
+  const def = PROFILE_TITLES.find(function (t) { return t.id === id; });
+  if (!def) return;
+  if (prof.unlockedTitles.indexOf(id) === -1) {
+    if (state.gems < def.cost) { toast('Need ' + def.cost + ' 💎 to unlock ' + def.label); return; }
+    state.gems -= def.cost;
+    prof.unlockedTitles.push(id);
+    soundCoinChirp();
+    toast('🏅 Unlocked Trainer Title: ' + def.icon + ' ' + def.label + '!');
+  } else {
+    soundClick();
+  }
+  prof.title = id;
+  saveState();
+  updateStatsUI();
+  renderRoomTab();
+}
+function selectProfileFrame(id) {
+  const prof = ensureProfile();
+  const def = PROFILE_FRAMES.find(function (f) { return f.id === id; });
+  if (!def) return;
+  if (prof.unlockedFrames.indexOf(id) === -1) {
+    if (state.gems < def.cost) { toast('Need ' + def.cost + ' 💎 to unlock ' + def.label + ' Frame'); return; }
+    state.gems -= def.cost;
+    prof.unlockedFrames.push(id);
+    soundCoinChirp();
+    toast('🖼️ Unlocked Card Frame: ' + def.label + '!');
+  } else {
+    soundClick();
+  }
+  prof.frame = id;
+  saveState();
+  renderRoomTab();
+}
+function renderRoomTab() {
+  const prof = ensureProfile();
+  const spots = [
+    { left: '16%', top: '26%', dur: '3.6s' },
+    { left: '46%', top: '22%', dur: '4.2s' },
+    { left: '74%', top: '28%', dur: '3.9s' },
+    { left: '24%', top: '58%', dur: '4.4s' },
+    { left: '54%', top: '56%', dur: '3.7s' },
+    { left: '78%', top: '60%', dur: '4.1s' }
+  ];
+  const validShow = prof.showcase.filter(function (id) { return getOwnedIds().indexOf(id) !== -1; });
+  if (!validShow.length) validShow.push(state.activePet || 'dog');
+  let stage = '<div class="sanctuary-stage">';
+  validShow.slice(0, ECON.profile.maxShowcase).forEach(function (id, idx) {
+    const p = getPetById(id);
+    const sp = spots[idx % spots.length];
+    stage += '<button type="button" class="sanctuary-buddy" style="left:' + sp.left + '; top:' + sp.top + '; --wander-dur:' + sp.dur + '; background:none; border:none;" onclick="tapRoomBuddy(&quot;' + id + '&quot;)" aria-label="Pet ' + p.name + ' in Sanctuary">' +
+      avatarHtml(p, 36) + '<span class="sanctuary-buddy-lbl">' + p.baseName + '</span></button>';
+  });
+  stage += '<span class="sanctuary-decor">🪴 🛋️ ⭐ Sanctuary (' + validShow.length + '/' + ECON.profile.maxShowcase + ')</span></div>';
+
+  const inRoom = validShow.indexOf(hubPet) !== -1;
+  const curPet = getPetById(hubPet);
+  let h = stage +
+    '<div class="care-row"><div><div class="t">' + curPet.icon + ' ' + curPet.baseName + ' in Sanctuary</div><div class="d">Pick up to ' + ECON.profile.maxShowcase + ' buddies to hang out in your room</div></div>' +
+    '<button type="button" class="claim-btn" onclick="toggleShowcaseBuddy(&quot;' + hubPet + '&quot;)">' + (inRoom ? 'Remove' : 'Add to Room') + '</button></div>';
+
+  h += '<div style="font-size:0.72rem; font-weight:800; color:#fde047; margin-top:4px; text-align:left;">🏅 Trainer Titles (shown on Header &amp; Cards)</div><div class="profile-grid">';
+  PROFILE_TITLES.forEach(function (t) {
+    const owned = prof.unlockedTitles.indexOf(t.id) !== -1;
+    const eq = prof.title === t.id;
+    h += '<div class="profile-chip' + (eq ? ' equipped' : '') + '"><span>' + t.icon + ' ' + t.label + '</span>' +
+      '<button type="button" class="claim-btn" onclick="selectProfileTitle(&quot;' + t.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Equip' : t.cost + ' 💎') + '</button></div>';
+  });
+  h += '</div>';
+
+  h += '<div style="font-size:0.72rem; font-weight:800; color:#38bdf8; margin-top:4px; text-align:left;">🖼️ Trading Card Frames</div><div class="profile-grid">';
+  PROFILE_FRAMES.forEach(function (f) {
+    const owned = prof.unlockedFrames.indexOf(f.id) !== -1;
+    const eq = prof.frame === f.id;
+    h += '<div class="profile-chip' + (eq ? ' equipped' : '') + '"><span style="color:' + f.border + ';">◆ ' + f.label + '</span>' +
+      '<button type="button" class="claim-btn" onclick="selectProfileFrame(&quot;' + f.id + '&quot;)">' + (eq ? 'Active' : owned ? 'Use' : f.cost + ' 💎') + '</button></div>';
+  });
+  h += '</div>';
+  document.getElementById('hub-body').innerHTML = h;
 }
 
 // ----- care -----

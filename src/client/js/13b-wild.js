@@ -64,6 +64,7 @@ function pickNextWild() {
   state.wild.id = sp.id;
   state.wild.trainer = '';
   markDexSeen(sp.id);
+  if (typeof soundBuddyCry === 'function') soundBuddyCry(sp.id, sp.element);
   bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
   state.bossSwapped = false;
@@ -82,6 +83,52 @@ function pickNextFoe() {
   else pickNextWild();
 }
 
+// Animated 3-wobble capture sequence on the battle stage (tick... tick... CLICK!)
+let catchAnimTimers = [];
+function playCatchAnimation(sp, caught, nets) {
+  const ov = document.getElementById('catch-anim-overlay');
+  if (!ov || !sp) return;
+  if (!document.getElementById('catch-orb')) {
+    ov.innerHTML = '<div class="catch-orb" id="catch-orb">🔴</div>' +
+      '<div class="catch-ticks"><span class="catch-tick" id="catch-tick-0"></span><span class="catch-tick" id="catch-tick-1"></span><span class="catch-tick" id="catch-tick-2"></span></div>' +
+      '<div class="catch-status-text" id="catch-status-text">Tick...</div>';
+  }
+  const orb = document.getElementById('catch-orb');
+  const txt = document.getElementById('catch-status-text');
+  catchAnimTimers.forEach(clearTimeout);
+  catchAnimTimers = [];
+  ov.classList.add('show');
+  orb.className = 'catch-orb';
+  orb.innerText = nets > 0 ? '🕸️' : '🔴';
+  txt.innerText = (nets > 0 ? 'Net ×' + nets + ' — ' : '') + 'Tick...';
+  const ticks = [0, 1, 2].map(function (i) { return document.getElementById('catch-tick-' + i); });
+  ticks.forEach(function (t) { if (t) t.className = 'catch-tick'; });
+  const wobbles = caught ? 3 : rnd(1, 2);
+  for (let w = 0; w < wobbles; w++) {
+    catchAnimTimers.push(setTimeout(function () {
+      if (ticks[w]) ticks[w].classList.add('lit');
+      txt.innerText = w === 0 ? 'Tick...' : w === 1 ? 'Tick... tick...' : 'Almost...';
+      if (typeof soundCatchWobble === 'function') soundCatchWobble(w + 1);
+    }, w * 420 + 80));
+  }
+  catchAnimTimers.push(setTimeout(function () {
+    if (caught) {
+      orb.className = 'catch-orb caught';
+      orb.innerText = '🌟';
+      txt.innerText = 'CLICK! Caught ' + sp.name + '!';
+      if (typeof soundCatchSuccess === 'function') soundCatchSuccess();
+    } else {
+      orb.className = 'catch-orb broke';
+      orb.innerText = '💨';
+      txt.innerText = 'Poof! ' + sp.name + ' broke free!';
+      ticks.forEach(function (t) { if (t) t.className = 'catch-tick fail'; });
+    }
+  }, wobbles * 420 + 140));
+  catchAnimTimers.push(setTimeout(function () {
+    ov.classList.remove('show');
+  }, wobbles * 420 + 950));
+}
+
 // After a wild win: roll to catch it. With Catch Nets in stock the player chooses how many to throw (0-3) first.
 // A buddy you already own becomes a spare.
 function rollCatch(wildId, flawless) {
@@ -97,8 +144,14 @@ function resolveCatch(data, nets) {
   nets = Math.max(0, Math.min(nets, state.nets, ECON.wild.net.mult.length - 1));
   const chance = wildCatchChance(sp, { flawless: data.flawless, shiny: data.shiny, nets: nets });
   if (nets) { state.nets -= nets; toast('🕸️ ' + nets + ' Catch Net' + (nets > 1 ? 's' : '') + ' thrown (' + state.nets + ' left)'); }
-  if (sp.legend && Math.random() >= chance) { legendMiss(sp); return; }
-  if (Math.random() >= chance) { if (data.shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!'); return; }
+  const roll = Math.random();
+  if (sp.legend && roll >= chance) { playCatchAnimation(sp, false, nets); legendMiss(sp); return; }
+  if (roll >= chance) {
+    playCatchAnimation(sp, false, nets);
+    if (data.shiny) toast('✨ The golden ' + sp.name + ' got away... a new one comes tomorrow!');
+    return;
+  }
+  playCatchAnimation(sp, true, nets);
   const raced = sp.legend ? legendCaught(sp) : false;
   if (data.shiny && !state.shinies[sp.id]) toast('✨ A shiny ' + sp.name + '! It will glow from now on.');
   if (getOwnedIds().indexOf(sp.id) !== -1) {

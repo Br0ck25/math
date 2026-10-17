@@ -162,25 +162,50 @@ function leaveGym() {
 function renderMap() {
   document.getElementById('map-title').innerText = '🗺️ ' + triviaWords('Number Kingdom') + ' Map';
   const best = getBestLevel(), total = gymRegions().length;
+  const myPet = getActivePetDisplay();
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '');
-  let h = championRowHtml() + legendRowHtml();
+  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml();
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
-    const need = regionLevel(r);
+    const need = regionLevel(r), badge = hasBadge(r.id);
     let actions = '';
     if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your best: Lv ' + best + ')</div>';
     else {
       actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>';
       if (r.element) {
-        if (hasBadge(r.id) && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
-        else if (hasBadge(r.id)) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');
+        if (badge && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
+        else if (badge) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');
         else if (g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave gym (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else actions += '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🏟️ Gym</button>';
       }
     }
     const desc = r.element ? 'More ' + r.element + ' buddies · gym leader: a ' + r.element + ' boss' : 'Buddies of every type';
-    h += '<div class="care-row map-row' + (here ? ' here' : '') + (open ? '' : ' locked') + '"><div><div class="t">' + r.icon + ' ' + r.name + (r.element ? ' <span class="element-pill elem-' + r.element + '">' + r.element + '</span>' : '') + '</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>';
+    let trail = '';
+    if (open && r.element) {
+      const nodes = [
+        { icon: '🌿', lbl: 'Tall Grass' },
+        { icon: '🧒', lbl: 'Scout Mia' },
+        { icon: '🧢', lbl: 'Rival Riley' },
+        { icon: '🧭', lbl: 'Ranger Ava' },
+        { icon: '🏰', lbl: 'Gym Leader' }
+      ];
+      const activeIdx = g ? Math.min(nodes.length - 1, state.gym.step + 1) : (here ? 0 : -1);
+      trail = '<div class="map-trail-nodes">';
+      nodes.forEach(function (nd, idx) {
+        const done = badge || (g && idx > 0 && idx <= state.gym.step);
+        const cur = idx === activeIdx;
+        if (idx > 0) trail += '<div class="map-node-link' + (done ? ' done' : '') + '"></div>';
+        trail += '<div class="map-step-node' + (done ? ' done' : '') + (cur ? ' active' : '') + '">' +
+          '<div class="map-node-dot">' + (cur ? '<span class="map-player-token" title="You are here">' + myPet.icon + '</span>' : '') + nd.icon + '</div>' +
+          '<span class="map-node-lbl">' + nd.lbl + '</span></div>';
+      });
+      trail += '</div>';
+    } else if (open && !r.element && here) {
+      trail = '<div class="map-trail-nodes"><div class="map-step-node active"><div class="map-node-dot"><span class="map-player-token">' + myPet.icon + '</span>🌼</div><span class="map-node-lbl">Meadow Trail</span></div></div>';
+    }
+    h += '<div class="care-row map-row' + (here ? ' here' : '') + (open ? '' : ' locked') + '" style="flex-direction:column; align-items:stretch;"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div><div class="t">' + r.icon + ' ' + r.name + (r.element ? ' <span class="element-pill elem-' + r.element + '">' + r.element + '</span>' : '') + '</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>' + trail + '</div>';
   });
+  h += '</div>';
   document.getElementById('map-body').innerHTML = h;
   if (!state.storySeen.map) {
     state.storySeen.map = 1;
@@ -198,4 +223,66 @@ function checkRegionUnlocks() {
     state.storySeen['open_' + r.id] = 1;
     toast('🗺️ New land open: ' + r.icon + ' ' + r.name + '! Check the Map.');
   });
+}
+
+// =====================================================================
+//  CHOOSE YOUR STARTER (3-Panel Adventure Comic + Fire/Water/Nature Pick)
+// =====================================================================
+const STARTER_CHOICES = [
+  { id: 'fox', element: 'fire', badge: '🔥 Fire Starter', role: 'Striker · +20% Attack' },
+  { id: 'otter', element: 'water', badge: '🌊 Water Starter', role: 'Scholar · +25% XP' },
+  { id: 'dog', element: 'nature', badge: '🌿 Nature Starter', role: 'Lucky · +25% Gems' }
+];
+function openStarterModal() {
+  showModal('starter-modal', renderStarterModal);
+}
+function closeStarterModal() {
+  hideModal('starter-modal', updateStatsUI);
+}
+function renderStarterModal() {
+  const body = document.getElementById('starter-body');
+  if (!body) return;
+  body.innerHTML =
+    '<div class="comic" style="margin-bottom:8px;">' +
+      '<div class="comic-panel"><span class="comic-icon">🗺️</span><span class="comic-text">Welcome to the Number Kingdom! Every math problem powers up your buddy.</span></div>' +
+      '<div class="comic-panel"><span class="comic-icon">🧢</span><span class="comic-text">Rival Riley grins: "Pick your partner! I\'ll race you to all 6 Gym Badges!"</span></div>' +
+      '<div class="comic-panel"><span class="comic-icon">⚡</span><span class="comic-text">Choose a Fire, Water, or Nature starter buddy to begin your quest:</span></div>' +
+    '</div>' +
+    '<div id="starter-choices-row" style="display:flex; gap:6px;"></div>';
+  const row = document.getElementById('starter-choices-row');
+  STARTER_CHOICES.forEach(function (ch) {
+    const sp = getSpecies(ch.id) || storePets[0];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'claim-btn';
+    btn.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 6px; border-radius:12px;';
+    btn.setAttribute('aria-label', 'Choose ' + sp.name + ' (' + ch.element + ' starter)');
+    btn.innerHTML = '<span style="font-size:1.9rem; line-height:1;">' + sp.icon + '</span>' +
+      '<b style="font-size:0.78rem;">' + sp.name + '</b>' +
+      '<span class="element-pill elem-' + ch.element + '" style="font-size:0.56rem;">' + ch.badge + '</span>' +
+      '<small style="font-size:0.55rem; opacity:0.85;">' + ch.role + '</small>';
+    btn.onclick = function () { chooseStarter(ch.id); };
+    row.appendChild(btn);
+  });
+}
+function chooseStarter(id) {
+  const sp = getSpecies(id);
+  if (!sp) return;
+  if (state.unlockedPets.indexOf(id) === -1) state.unlockedPets.push(id);
+  grantBuddy(id);
+  state.activePet = id;
+  if (Array.isArray(state.team) && state.team.indexOf(id) === -1) {
+    state.team.unshift(id);
+    if (state.team.length > 3) state.team.length = 3;
+  }
+  state.storySeen.starter = 1;
+  if (state.profile && state.profile.showcase.indexOf(id) === -1) {
+    state.profile.showcase.unshift(id);
+    if (state.profile.showcase.length > ECON.profile.maxShowcase) state.profile.showcase.length = ECON.profile.maxShowcase;
+  }
+  if (typeof soundBuddyCry === 'function') soundBuddyCry(id, sp.element);
+  launchConfetti();
+  saveState();
+  closeStarterModal();
+  toast('🌟 You chose ' + sp.icon + ' ' + sp.name + ' as your partner! Rival Riley is waiting on the Map!');
 }

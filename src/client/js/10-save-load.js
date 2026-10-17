@@ -221,6 +221,38 @@ const NORMALIZERS = [
   function raid(s) {
     const r = s.raid;
     if (!r || typeof r !== 'object' || !Array.isArray(r.weaks) || !(r.total >= 2) || !(r.phase >= 0 && r.phase < r.total)) s.raid = null;
+  },
+  function egg(s) {
+    const e = s.egg;
+    const validElems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic'];
+    const validRarities = ['common', 'rare', 'mythic'];
+    if (!e || typeof e !== 'object' || validElems.indexOf(e.element) === -1) {
+      s.egg = null;
+    } else {
+      const rar = validRarities.indexOf(e.rarity) !== -1 ? e.rarity : 'common';
+      const defTarget = (ECON.egg && ECON.egg.steps && ECON.egg.steps[rar]) || 5;
+      const target = asInt(e.target, 1, 50, defTarget);
+      s.egg = { element: e.element, rarity: rar, steps: asInt(e.steps, 0, target, 0), target: target };
+    }
+  },
+  function profile(s) {
+    if (!isPlainObject(s.profile)) s.profile = { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
+    const p = s.profile;
+    if (!Array.isArray(p.unlockedTitles) || p.unlockedTitles.indexOf('Rookie Calculator') === -1) {
+      p.unlockedTitles = ['Rookie Calculator'].concat(Array.isArray(p.unlockedTitles) ? p.unlockedTitles : []);
+    }
+    p.unlockedTitles = p.unlockedTitles.filter(function (t, i, a) { return typeof t === 'string' && t.length <= 40 && a.indexOf(t) === i; });
+    if (typeof p.title !== 'string' || p.unlockedTitles.indexOf(p.title) === -1) p.title = 'Rookie Calculator';
+    const validFrames = ['classic', 'gold', 'neon', 'cosmic', 'crystal'];
+    if (!Array.isArray(p.unlockedFrames) || p.unlockedFrames.indexOf('classic') === -1) {
+      p.unlockedFrames = ['classic'].concat(Array.isArray(p.unlockedFrames) ? p.unlockedFrames : []);
+    }
+    p.unlockedFrames = p.unlockedFrames.filter(function (f, i, a) { return validFrames.indexOf(f) !== -1 && a.indexOf(f) === i; });
+    if (validFrames.indexOf(p.frame) === -1 || p.unlockedFrames.indexOf(p.frame) === -1) p.frame = 'classic';
+    const owned = s.unlockedPets.concat(s.unlockedSecrets);
+    p.showcase = (Array.isArray(p.showcase) ? p.showcase : []).filter(function (id, i, a) {
+      return owned.indexOf(id) !== -1 && a.indexOf(id) === i;
+    }).slice(0, (ECON.profile && ECON.profile.maxShowcase) || 6);
   }
 ];
 function normalizeState() {

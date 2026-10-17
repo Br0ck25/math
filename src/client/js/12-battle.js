@@ -29,6 +29,57 @@ function screenShake(strong) {
   setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
 }
 
+const ELEM_PROJ = { fire: '🔥', water: '🌊', nature: '🌿', electric: '⚡', dark: '🌑', magic: '✨', shadow: '🌌' };
+
+function awardEgg(element, rarity) {
+  if (state.egg) return false;
+  const validElems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic'];
+  const el = validElems.indexOf(element) !== -1 ? element : 'fire';
+  const rar = ['common', 'rare', 'mythic'].indexOf(rarity) !== -1 ? rarity : 'common';
+  const target = (ECON.egg && ECON.egg.steps && ECON.egg.steps[rar]) || 5;
+  state.egg = { element: el, rarity: rar, steps: 0, target: target };
+  toast('🥚 Found a ' + rar.toUpperCase() + ' ' + el.toUpperCase() + ' Egg! Solve ' + target + ' math problems to hatch it!');
+  return true;
+}
+
+function inspectEgg() {
+  if (!state.egg) return;
+  soundClick();
+  const rem = Math.max(0, state.egg.target - state.egg.steps);
+  toast('🥚 ' + state.egg.rarity.toUpperCase() + ' ' + state.egg.element.toUpperCase() + ' Egg: ' + rem + ' more correct answer' + (rem === 1 ? '' : 's') + ' to hatch!');
+}
+
+function tickEgg() {
+  if (!state.egg) return null;
+  state.egg.steps += 1;
+  if (state.egg.steps < state.egg.target) return null;
+  return hatchEgg();
+}
+
+function hatchEgg() {
+  if (!state.egg) return null;
+  const egg = state.egg;
+  state.egg = null;
+  const owned = getOwnedIds();
+  const pool = wildPool().filter(function (p) { return p.element === egg.element && owned.indexOf(p.id) === -1; });
+  const fallbackPool = wildPool().filter(function (p) { return owned.indexOf(p.id) === -1; });
+  const chosen = pool.length ? pick(pool) : (fallbackPool.length ? pick(fallbackPool) : null);
+  soundSecretFound();
+  launchConfetti('level');
+  if (chosen) {
+    grantBuddy(chosen.id);
+    (isStoreBuddy(chosen) ? state.unlockedPets : state.unlockedSecrets).push(chosen.id);
+    if (typeof soundBuddyCry === 'function') soundBuddyCry(chosen.id);
+    checkEarnedGear();
+    toast('🐣 Your ' + egg.element + ' Egg hatched into ' + chosen.name + ' ' + emojiOf(chosen) + '!');
+    return chosen;
+  }
+  const xpBonus = (ECON.egg && ECON.egg.duplicateXp) || 25;
+  awardBuddyXp(xpBonus);
+  toast('🐣 Your ' + egg.element + ' Egg hatched! +' + xpBonus + ' Buddy XP!');
+  return null;
+}
+
 function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
   const weakened = hasStatus('weak');               // read now: the status may run out at the end of this answer
   extraDamage = extraDamage || 0;
@@ -37,6 +88,11 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
   const petFx = document.getElementById('pet-attack-fx');
   const pet = getActivePetDisplay();
   const boss = getBossInfo();
+  const pElem = battleElement(pet) || pet.element || 'fire';
+  if (petFx) {
+    petFx.innerText = ELEM_PROJ[pElem] || '⚡';
+    petFx.setAttribute('data-fx', pElem);
+  }
 
   petIconWrapper.classList.remove('tackle-right');
   void petIconWrapper.offsetWidth;
@@ -54,6 +110,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
     void monsterIcon.offsetWidth;
     monsterIcon.classList.add('hurt-flash');
     soundHitSlash();
+    if (typeof soundElementHit === 'function') soundElementHit(pElem);
 
     let damage = getPetAttack(pet.id) + extraDamage;
     const rel = getTypeRelation(battleElement(pet), boss.element);
@@ -103,6 +160,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         state.monstersDefeated += 1;
         markBossWin(currentMonsterIndex, boss.form);
         checkBossBuddy(currentMonsterIndex, boss.form);
+        awardEgg(boss.element, boss.form >= 2 ? 'mythic' : boss.form === 1 ? 'rare' : 'common');
       }
       buddyReact('win');
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
@@ -184,6 +242,11 @@ function triggerBuddyDamage() {
   const monsterIcon = document.getElementById('monster-icon');
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterFx = document.getElementById('monster-attack-fx');
+  const bElem = boss.element || 'fire';
+  if (monsterFx) {
+    monsterFx.innerText = ELEM_PROJ[bElem] || '💥';
+    monsterFx.setAttribute('data-fx', bElem);
+  }
 
   monsterIcon.classList.remove('tackle-left');
   void monsterIcon.offsetWidth;
@@ -201,6 +264,7 @@ function triggerBuddyDamage() {
     void petIconWrapper.offsetWidth;
     petIconWrapper.classList.add('hurt-flash');
     soundHitSlash();
+    if (typeof soundElementHit === 'function') soundElementHit(bElem);
     screenShake(false);
     bossReact('laugh');
 
@@ -300,6 +364,8 @@ function checkAnswer() {
     recordAllTime(opId, true, solveTime, hintUsed);
     questEvent('streak', state.streak);
     if (ultimateCharge < 3) ultimateCharge += 1;
+    const armedBonus = typeof consumeArmedMove === 'function' ? consumeArmedMove() : 0;
+    tickEgg();
 
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
@@ -310,8 +376,8 @@ function checkAnswer() {
     if (isFast) {
       speedBonusGems = ECON.solve.speedGem;
       questEvent('fast');
-      showPopup('⚡ SPEED STRIKE! +1 💎');
-    } else {
+      if (!armedBonus) showPopup('⚡ SPEED STRIKE! +1 💎');
+    } else if (!armedBonus) {
       showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
     }
 
@@ -324,7 +390,7 @@ function checkAnswer() {
 
     const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
     if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
-    triggerMonsterDamage(isFast && activeRole('Attacker') ? 1 : 0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
+    triggerMonsterDamage((isFast && activeRole('Attacker') ? 1 : 0) + armedBonus, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
     let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
     if (state.cloverLeft > 0) {

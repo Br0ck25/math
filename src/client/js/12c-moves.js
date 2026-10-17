@@ -143,3 +143,78 @@ function useMove(id) {
   }
   updateBattleUI();
 }
+
+function renderInlineMoves() {
+  const bar = document.getElementById('inline-moves-bar');
+  if (!bar) return;
+  const pet = getActivePetDisplay();
+  const moves = equippedMoves(pet).filter(function (m) { return m.minLevel <= pet.level; }).slice(0, 3);
+  if (armedMove && !moves.some(function (m) { return m.id === armedMove; })) armedMove = '';
+  const eq = document.getElementById('equation-mount');
+  if (eq) eq.classList.toggle('move-armed', !!armedMove);
+  bar.innerHTML = moves.map(function (m) {
+    const nm = moveName(m, pet);
+    const shortNm = nm.length > 9 ? nm.slice(0, 8) + '…' : nm;
+    const isArmed = armedMove === m.id;
+    const canArm = (ultimateCharge + 1) >= m.cost;
+    const cls = 'inline-move-pill' + (isArmed ? ' armed' : '') + (!canArm ? ' dim' : '');
+    return '<button type="button" class="' + cls + '" onclick="armMove(\'' + m.id + '\')" aria-pressed="' + (isArmed ? 'true' : 'false') + '" aria-label="Arm ' + escHtml(nm) + ' (' + m.cost + ' energy)" title="' + escHtml(nm) + ': ' + escHtml(moveDesc(m, pet)) + ' (tap to arm for next math answer)">' +
+      m.icon + ' ' + escHtml(shortNm) + ' ⚡' + m.cost + '</button>';
+  }).join('');
+}
+
+function armMove(id) {
+  if (inputLocked) return;
+  const pet = getActivePetDisplay();
+  const m = MOVES.find(function (x) { return x.id === id; });
+  if (!m || m.minLevel > pet.level || !isEquipped(pet, id)) return;
+  soundClick();
+  if (armedMove === id) {
+    armedMove = '';
+    toast('Move disarmed');
+  } else {
+    armedMove = id;
+    const nm = moveName(m, pet);
+    const need = Math.max(0, m.cost - (ultimateCharge + 1));
+    toast(need > 0 ? ('⚡ ' + nm + ' queued! Solve ' + (need + 1) + ' problems to cast!') : ('⚡ ' + nm + ' armed! Solve this problem to unleash it!'));
+  }
+  renderInlineMoves();
+}
+
+function consumeArmedMove() {
+  if (!armedMove) return 0;
+  const pet = getActivePetDisplay();
+  const m = MOVES.find(function (x) { return x.id === armedMove; });
+  if (!m || m.minLevel > pet.level || !isEquipped(pet, armedMove)) {
+    armedMove = '';
+    return 0;
+  }
+  if (ultimateCharge < m.cost) return 0;
+  armedMove = '';
+  ultimateCharge -= m.cost;
+  if (m.kind === 'ult') questEvent('ult');
+  if (m.kind === 'guard') {
+    guardUp = true;
+    soundShieldBreak();
+    showPopup('🛡️ ' + moveName(m, pet).toUpperCase() + ' ARMED!');
+    return 0;
+  }
+  if (m.kind === 'cleanse') {
+    clearBuddyStatus();
+    soundCoinChirp();
+    showPopup('🧼 ' + moveName(m, pet).toUpperCase() + '!');
+    return 0;
+  }
+  if (m.kind === 'heal') {
+    const max = getPetMaxHp(pet.id);
+    setPetHp(pet.id, Math.min(max, getPetHp(pet.id) + Math.max(1, Math.ceil(max * ECON.moves.healShare))));
+    clearBuddyStatus();
+    soundCoinChirp();
+    showPopup('💚 ' + moveName(m, pet).toUpperCase() + '!');
+    return 0;
+  }
+  soundSuperMove();
+  showPopup(m.icon + ' ' + moveName(m, pet).toUpperCase() + '!');
+  if (m.drain) setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
+  return moveDamage(m, pet.level);
+}

@@ -95,6 +95,8 @@ const ECON = {
   // `parent`: limits for questions a parent adds from their phone (see src/shared/study.js and src/server/17-study.js).
   study: { roundSize: 8, minLevel: 6, maxLevel: 8, gemPerNew: 1, perfectBonus: 3, dayCap: 20, xpPerNew: 2, freshDays: 3, missMax: 40,
     parent: { max: 150, qMax: 200, aMax: 60, extras: 3, bulk: 50 } },
+  egg: { steps: { common: 5, rare: 8, mythic: 12 }, duplicateGems: 15, duplicateXp: 25 },
+  profile: { maxShowcase: 6, titles: { apprentice: 20, defender: 45, explorer: 60, dragon: 90, arithmancer: 150 }, frames: { gold: 35, neon: 50, cosmic: 80, crystal: 120 } },
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 

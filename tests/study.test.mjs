@@ -83,7 +83,7 @@ test('every question gives four different choices with exactly one right answer,
 // ---------------------------------------------------------------- a round
 test('a Quick Recall round plays through the window, pays a little and shows the result', async () => {
   await inPage(() => { state.gems = 0; state.study.gems = 0; state.study.day = dayKey(); updateStatsUI(); });
-  await page.click('.bottom-bar >> text=Study');
+  await page.click('#study-toggle');
   await page.waitForSelector('#study-box .study-go');
   assert.match(await page.innerText('#study-box'), /Quick Recall/);
   await page.click('text=Quick Recall');

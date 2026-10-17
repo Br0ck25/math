@@ -65,12 +65,15 @@ function freshState() {
     shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
     packClaims: [],                                  // pack ids whose completion reward was claimed
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
+    egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null
+    profile: { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] },
   };
 }
 
 let state = freshState();
 let pendingLootPet = null;
 let ultimateCharge = 0;
+let armedMove = '';
 let currentMonsterIndex = 0;
 let monsterCurrentHp = 4;
 let bossLevel = 1;

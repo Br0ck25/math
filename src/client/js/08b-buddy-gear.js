@@ -88,16 +88,23 @@ function elemColor(element) { return ELEM_COLORS[element] || '#a855f7'; }
 // Decoration layer for a buddy at evolution `stage` (0 = none). Sized from the --u of the box it is placed in.
 function formMarkup(stage, element) {
   if (!stage) return '';
-  let h = '<span class="evo-badge" style="width:calc(var(--u) * 0.34); height:calc(var(--u) * 0.34); font-size:calc(var(--u) * 0.2);">' + (ELEM_EMOJI[element] || '⭐') + '</span>';
+  const em = ELEM_EMOJI[element] || '⭐';
+  let h = '<span class="evo-badge" style="width:calc(var(--u) * 0.34); height:calc(var(--u) * 0.34); font-size:calc(var(--u) * 0.2);">' + em + '</span>';
+  if (stage === 1) {
+    h += '<span class="evo-crest" aria-hidden="true"></span>';
+  }
   if (stage >= 2) {
-    h += '<span class="evo-aura" style="font-size:calc(var(--u) * 1.15);">' + (ELEM_EMOJI[element] || '⭐') + '</span>';
+    h += '<span class="evo-wings" aria-hidden="true"></span>';
+    h += '<span class="evo-crown" aria-hidden="true" style="font-size:calc(var(--u) * 0.28);">👑</span>';
+    h += '<span class="evo-runes" aria-hidden="true">✦</span>';
+    h += '<span class="evo-aura" style="font-size:calc(var(--u) * 1.15);">' + em + '</span>';
     h += '<span class="evo-spark" style="font-size:calc(var(--u) * 0.26);">✨</span>';
   }
   return h;
 }
 // A buddy picture of `px` pixels with its evolution look (and optional extra gear markup) for menus and modals.
 function avatarHtml(pet, px, gearHtml) {
-  return '<span class="buddy-avatar' + (state.shinies[pet.id] ? ' shiny' : '') + '" style="--u:' + px + 'px; --evo:' + elemColor(pet.element) + ';"><span class="buddy-glyph stage-' + pet.stage + '">' + pet.icon +
+  return '<span class="buddy-avatar' + (state.shinies[pet.id] ? ' shiny' : '') + ' stage-wrap-' + (pet.stage || 0) + '" style="--u:' + px + 'px; --evo:' + elemColor(pet.element) + ';"><span class="buddy-glyph stage-' + pet.stage + '">' + pet.icon +
     '</span><span class="gear-layer">' + formMarkup(pet.stage, pet.element) + (gearHtml || '') + '</span></span>';
 }
 // Same look on the trading card canvas. layer 'behind' draws the aura, 'front' the badge and sparkle.
@@ -107,7 +114,18 @@ function drawForm(ctx, stage, element, cx, cy, size, layer) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   const glyph = ELEM_EMOJI[element] || '⭐';
+  const col = elemColor(element);
+  if (layer === 'behind' && stage === 1) {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(3, size * 0.03);
+    ctx.globalAlpha = 0.45;
+    ctx.beginPath(); ctx.arc(cx, cy, size * 0.52, 0, Math.PI * 2); ctx.stroke();
+  }
   if (layer === 'behind' && stage >= 2) {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = Math.max(4, size * 0.04);
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.arc(cx, cy, size * 0.58, 0, Math.PI * 2); ctx.stroke();
     ctx.globalAlpha = 0.22;
     ctx.font = size * 1.15 + 'px ' + EMOJI_FONT;
     fillEmoji(ctx, glyph, cx, cy);
@@ -115,12 +133,16 @@ function drawForm(ctx, stage, element, cx, cy, size, layer) {
   if (layer === 'front') {
     const d = size * 0.34, bx = cx - size / 2 + d * 0.15, by = cy - size / 2 + d * 0.15;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-    ctx.strokeStyle = elemColor(element);
+    ctx.strokeStyle = col;
     ctx.lineWidth = Math.max(3, d * 0.07);
     ctx.beginPath(); ctx.arc(bx, by, d / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.font = size * 0.2 + 'px ' + EMOJI_FONT;
     fillEmoji(ctx, glyph, bx, by + d * 0.03);
-    if (stage >= 2) { ctx.font = size * 0.26 + 'px ' + EMOJI_FONT; fillEmoji(ctx, '✨', cx + size * 0.42, cy - size * 0.42); }
+    if (stage >= 2) {
+      ctx.font = size * 0.26 + 'px ' + EMOJI_FONT;
+      fillEmoji(ctx, '✨', cx + size * 0.42, cy - size * 0.42);
+      fillEmoji(ctx, '👑', cx, cy - size * 0.46);
+    }
   }
   ctx.restore();
 }

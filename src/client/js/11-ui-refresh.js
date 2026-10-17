@@ -6,6 +6,26 @@ function setStageClass(el, prefix, n) {
   el.classList.add(prefix + n);
 }
 
+const REGION_BACKDROPS = {
+  meadow: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-m" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.35"/><stop offset="100%" stop-color="#15803d" stop-opacity="0.5"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-m)"/><circle cx="340" cy="26" r="18" fill="#fde047" opacity="0.45"/><path d="M0 95 Q95 65 200 90 T400 80 L400 130 L0 130 Z" fill="#166534" opacity="0.55"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#22c55e" opacity="0.35"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#4ade80" opacity="0.32"/></svg>',
+  ember: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-e" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7f1d1d" stop-opacity="0.55"/><stop offset="100%" stop-color="#f97316" stop-opacity="0.45"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-e)"/><polygon points="40,130 110,38 180,130" fill="#450a0a" opacity="0.65"/><polygon points="220,130 295,28 370,130" fill="#7c2d12" opacity="0.6"/><path d="M100 38 Q110 55 120 38 Z" fill="#facc15" opacity="0.8"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#ea580c" opacity="0.4"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#fb923c" opacity="0.38"/></svg>',
+  tide: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-t" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.45"/><stop offset="100%" stop-color="#0c4a6e" stop-opacity="0.65"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-t)"/><path d="M0 78 Q50 64 100 78 T200 78 T300 78 T400 78 L400 130 L0 130 Z" fill="#0369a1" opacity="0.5"/><path d="M0 98 Q60 86 120 98 T240 98 T360 98 T400 98 L400 130 L0 130 Z" fill="#38bdf8" opacity="0.3"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#38bdf8" opacity="0.38"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#7dd3fc" opacity="0.35"/></svg>',
+  grove: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#064e3b" stop-opacity="0.55"/><stop offset="100%" stop-color="#14532d" stop-opacity="0.65"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-g)"/><circle cx="60" cy="30" r="45" fill="#15803d" opacity="0.4"/><circle cx="340" cy="25" r="50" fill="#166534" opacity="0.4"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#4ade80" opacity="0.35"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#86efac" opacity="0.32"/></svg>',
+  volt: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-v" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e1b4b" stop-opacity="0.65"/><stop offset="100%" stop-color="#713f12" stop-opacity="0.5"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-v)"/><polyline points="80,10 65,48 85,50 68,90" stroke="#fde047" stroke-width="3" fill="none" opacity="0.55"/><polyline points="320,8 305,42 325,44 308,82" stroke="#38bdf8" stroke-width="3" fill="none" opacity="0.5"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#facc15" opacity="0.35"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#fde047" opacity="0.32"/></svg>',
+  gloom: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-d" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#18181b" stop-opacity="0.7"/><stop offset="100%" stop-color="#3b0764" stop-opacity="0.55"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-d)"/><circle cx="330" cy="28" r="16" fill="#e9d5ff" opacity="0.35"/><path d="M0 95 Q110 80 220 96 T400 88 L400 130 L0 130 Z" fill="#2e1065" opacity="0.55"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#a855f7" opacity="0.35"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#c084fc" opacity="0.32"/></svg>',
+  mystic: '<svg viewBox="0 0 400 130" preserveAspectRatio="none"><defs><linearGradient id="bg-y" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4c1d95" stop-opacity="0.6"/><stop offset="100%" stop-color="#831843" stop-opacity="0.55"/></linearGradient></defs><rect width="400" height="130" fill="url(#bg-y)"/><circle cx="70" cy="24" r="3" fill="#fff" opacity="0.8"/><circle cx="190" cy="18" r="2.5" fill="#fde047" opacity="0.8"/><circle cx="280" cy="30" r="3" fill="#f0abfc" opacity="0.8"/><ellipse cx="90" cy="112" rx="68" ry="14" fill="#ec4899" opacity="0.38"/><ellipse cx="310" cy="64" rx="64" ry="12" fill="#f472b6" opacity="0.35"/></svg>'
+};
+let lastBackdropRegion = '';
+function renderArenaBackdrop(regionId) {
+  const el = document.getElementById('arena-backdrop');
+  if (!el) return;
+  const key = REGION_BACKDROPS[regionId] ? regionId : 'meadow';
+  if (lastBackdropRegion !== key) {
+    lastBackdropRegion = key;
+    el.innerHTML = REGION_BACKDROPS[key];
+  }
+}
+
 function updateBattleUI() {
   const boss = getBossInfo();
   const pet = getActivePetDisplay();
@@ -72,6 +92,7 @@ function updateBattleUI() {
   document.getElementById('boss-box').classList.toggle('shiny', !!(boss.shiny || boss.legend));
   const region = currentRegion();
   document.getElementById('battle-header-arena').style.setProperty('--region', region.element ? elemColor(region.element) : '');
+  renderArenaBackdrop(region.id);
   if (region.element) hint.innerText = region.icon + ' ' + hint.innerText;           // the land you are in
 
   document.getElementById('ult-bar').style.width = `${Math.round((ultimateCharge / 3) * 100)}%`;
@@ -83,6 +104,7 @@ function updateBattleUI() {
     ultBtn.className = 'ult-btn';
     ultBtn.innerHTML = `<span class="ult-word">MOVES </span>⚡${ultimateCharge}/3`;       // the word steps aside on narrow phones
   }
+  if (typeof renderInlineMoves === 'function') renderInlineMoves();
 
   document.getElementById('comp-count-badge').innerText = getOwnedIds().length;
   document.getElementById('shield-display').innerText = state.shields;
@@ -141,16 +163,43 @@ function updateStatsUI() {
   document.getElementById('gems-display').innerText = state.gems;
   document.getElementById('streak-display').innerText = state.streak;
   document.getElementById('shop-gems').innerText = state.gems;
+  const miniAv = document.getElementById('trainer-mini-avatar');
+  if (miniAv) miniAv.innerText = pet.emoji || '🐶';
+  const titleEl = document.getElementById('trainer-title-display');
+  if (titleEl && state.profile) titleEl.innerText = state.profile.title || 'Rookie Calculator';
 
   const xp = getBuddyXp(pet.id);
   const base = xpForLevel(pet.level);
   const next = xpForLevel(pet.level + 1);
+  let pct = 100;
   if (pet.level >= MAX_LEVEL) {
     document.getElementById('xp-bar').style.width = '100%';
     document.getElementById('xp-text').innerText = 'MAX';
   } else {
-    document.getElementById('xp-bar').style.width = `${Math.min(100, Math.round(((xp - base) / (next - base)) * 100))}%`;
+    pct = Math.min(100, Math.round(((xp - base) / (next - base)) * 100));
+    document.getElementById('xp-bar').style.width = `${pct}%`;
     document.getElementById('xp-text').innerText = `${xp - base}/${next - base}`;
+  }
+  const xpRing = document.getElementById('xp-ring');
+  if (xpRing) {
+    xpRing.value = pct;
+    xpRing.style.setProperty('--xp-pct', pct + '%');
+  }
+  const eggBtn = document.getElementById('egg-pill');
+  if (eggBtn) {
+    if (state.egg) {
+      const rem = Math.max(0, state.egg.target - state.egg.steps);
+      const crack = state.egg.steps >= state.egg.target - 1 ? '🐣' : '🥚';
+      eggBtn.style.display = 'inline-flex';
+      eggBtn.innerText = crack + ' ' + state.egg.steps + '/' + state.egg.target;
+      eggBtn.title = rem + ' more correct math answer' + (rem === 1 ? '' : 's') + ' to hatch your ' + state.egg.rarity + ' ' + state.egg.element + ' Egg!';
+    } else {
+      eggBtn.style.display = 'none';
+    }
+  }
+  const starterBtn = document.getElementById('starter-pill');
+  if (starterBtn) {
+    starterBtn.style.display = (!state.storySeen || !state.storySeen.starter) && state.unlockedPets.length <= 1 ? 'inline-flex' : 'none';
   }
   document.getElementById('next-goal').innerText = nextGoalText();
   document.getElementById('rank-display').innerText = pet.name + (pet.stage > 0 ? '  ' + (pet.stage === 1 ? '★' : '★★') : '');
