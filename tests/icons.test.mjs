@@ -37,3 +37,19 @@ test('the page shows pictures and has no errors', async () => {
   assert.ok(await page.evaluate(() => document.querySelectorAll('.ico').length > 0));
   assert.deepEqual(errors, []);
 });
+
+test('emoji inside a joined sequence stay emoji, and flex parents keep one text box', async () => {
+  const r = await page.evaluate(async () => {
+    const d = document.createElement('div');
+    d.style.display = 'flex';
+    document.body.appendChild(d);
+    d.textContent = '🧑‍🚀 and 🐕‍🦺 and 🍕';
+    await new Promise((res) => setTimeout(res, 50));
+    const out = [];
+    if (d.querySelectorAll('.ico').length !== 1) out.push('expected only the pizza, got ' + d.querySelectorAll('.ico').length);
+    if (d.children.length !== 1) out.push('flex parent has ' + d.children.length + ' items');
+    d.remove();
+    return out;
+  });
+  assert.deepEqual(r, []);
+});
