@@ -100,6 +100,15 @@ function studyCheck(q, text) {
   return good.some(function (g) { return !/\d/.test(g) && g.length >= 6 && oneEditApart(g, t); });
 }
 function studyKind(a) { return /^-?[\d,]*\.?\d+$/.test(a) ? 'num' : (/^-?\d+\/\d+$/.test(a) ? 'frac' : 'word'); }
+// What a question asks for, guessed from its words: a person, a place, a work (book, song, painting...) or a term. Wrong choices of the same type look right.
+function studyType(q) {
+  if (/^x-\d/.test(q.a)) return 'match';
+  const t = q.q.toLowerCase();
+  if (/\b(who|this (man|woman|person|author|poet|writer|artist|composer|president|leader|explorer|general|inventor|philosopher|scientist|dancer|architect|sculptor|painter|king|queen|emperor|ruler|conquistador|playwright|activist|politician|musician|singer|congressman|senator|justice|mathematician|pioneer|abolitionist|aviator|astronaut|physicist|chemist|choreographer|conductor))\b/.test(t)) return 'person';
+  if (/\b(where|which (river|city|country|state|mountain|island|continent|ocean|sea|lake|desert|region|colony|empire)|this (river|city|country|state|mountain|island|continent|ocean|sea|lake|desert|region|colony|empire|territory|park|range|capital))\b/.test(t)) return 'place';
+  if (/\b(this (novel|book|poem|story|painting|song|musical|opera|play|ballet|symphony|film|sculpture|fable|essay|speech|work|series|show|novella|tragedy|comedy|biography|document|battle|war)|title of)\b/.test(t)) return 'work';
+  return 'term';
+}
 // Four choices: the answer and three wrong ones. A parent's own wrong choices come first; then nearby numbers or fractions; then answers of
 // other questions on the same topic or subject.
 function studyChoices(q) {
@@ -119,7 +128,11 @@ function studyChoices(q) {
     [[p[0] + 1, p[1]], [Math.max(1, p[0] - 1), p[1]], [p[0], p[1] + 1], [p[1], p[0]], [p[0] + 1, p[1] + 1], [p[0] + 2, p[1]]].forEach(function (f) { add(f[0] + '/' + f[1]); });
   }
   if (wrong.length < 3) {
-    const rank = function (o) { return (o.t === q.t ? 0 : (o.s === q.s ? 1 : 2)) * 10 + (studyKind(o.a) === kind ? 0 : 5) + Math.random() * 4; };
+    const type = studyType(q), words = q.a.split(/\s+/).length, digits = /\d/.test(q.a);
+    const rank = function (o) {
+      return (studyType(o) === type ? 0 : 12) + (o.s === q.s ? 0 : 8) + (studyKind(o.a) === kind ? 0 : 5) + (/\d/.test(o.a) === digits ? 0 : 6) +
+        Math.min(6, Math.abs(o.a.split(/\s+/).length - words) * 2) + Math.random() * 4;
+    };
     shuffled(studyAll().filter(function (o) { return o.id !== q.id; })).sort(function (x, y) { return rank(x) - rank(y); }).forEach(function (o) { if (wrong.length < 3) add(o.a); });
   }
   return shuffled([q.a].concat(wrong.slice(0, 3)));
@@ -291,7 +304,7 @@ function studyHomeHtml() {
     '<button class="grade-btn study-go" onclick="studyStart(\'cards\')"' + off + '>🃏 Flashcards <small>no gems, just practice</small></button>' +
     (pool.length ? '' : '<div class="settings-hint">No questions here yet.' + (sel.indexOf('parent') !== -1 ? ' A parent can add some from the parent page.' : '') + '</div>') +
     '<div class="settings-hint">A question pays again after ' + S.freshDays + ' days. Missed questions come back first.</div>' +
-    (pool.some(function (q) { return q.t === 'kaac'; }) ? '<div class="settings-hint">Some arts questions are from the 2024 Governor\'s Cup (Kentucky Association for Academic Competition), used with permission.</div>' : '') +
+    (pool.some(function (q) { return q.t.indexOf('kaac') === 0; }) ? '<div class="settings-hint">Questions are from the Governor\'s Cup practice materials of the Kentucky Association for Academic Competition (KAAC), used with permission.</div>' : '') +
     '<button class="key-btn submit-btn study-back" onclick="closeStudy()">🧮 Back to math</button>';
 }
 

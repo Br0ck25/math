@@ -31,16 +31,20 @@ test('every question in the study bank is well formed, and the bank holds only t
     texts.add(q.q.toLowerCase());
     if (!STUDY_SUBJECTS.some((s) => s.id === q.s)) bad.push(q.id + ' has an unknown subject');
     if (![6, 7, 8].includes(q.g)) bad.push(q.id + ' level must be 6, 7 or 8');
-    if (!q.t || !q.q || q.q.length < 10 || q.q.length > 260) bad.push(q.id + ' question text');
-    if (!q.a || q.a.length > 60) bad.push(q.id + ' answer must be 1-60 letters');
+    if (!q.t || !q.q || q.q.length < 10 || q.q.length > 600) bad.push(q.id + ' question text');
+    if (!q.a || q.a.length > 100) bad.push(q.id + ' answer must be 1-100 letters');
     if (/[<>]/.test(q.q + q.a + q.alt.join('') + q.x)) bad.push(q.id + ' has markup');
     if (q.alt.some((a) => !a || a.length > 60)) bad.push(q.id + ' alt');
-    if (q.wrong.length && (q.wrong.length < 3 || q.wrong.map((w) => w.toLowerCase()).includes(q.a.toLowerCase()))) bad.push(q.id + ' wrong choices must be 3+ and differ from the answer');
+    if (q.wrong.length && (q.wrong.length < 3 || q.wrong.some((w) => !w || w.length > 100) || q.wrong.map((w) => w.toLowerCase()).includes(q.a.toLowerCase()))) bad.push(q.id + ' wrong choices must be 3+ and differ from the answer');
+    if (/[�-]|\s{2,}/.test(q.q + q.a + q.wrong.join(''))) bad.push(q.id + ' has garbled text');
     if (!ECON.study.parent.aMax) bad.push('econ');
   });
   assert.deepEqual(bad, []);
-  assert.equal(STUDY_BANK.length, 32, 'the bank holds only the questions from the KAAC test, nothing written for the game');
-  assert.ok(STUDY_BANK.every((q) => q.t === 'kaac' && /^kaac\d+$/.test(q.id)));
+  assert.ok(STUDY_BANK.every((q) => q.t.indexOf('kaac') === 0 && /^(kaac|assess|quick)\d+$/.test(q.id)), 'the bank holds only KAAC practice questions, nothing written for the game');
+  const count = (s) => STUDY_BANK.filter((q) => q.s === s).length;
+  ['social', 'science', 'lang', 'arts', 'math'].forEach((s) => assert.ok(count(s) >= 100, s + ' has ' + count(s)));
+  assert.equal(STUDY_BANK.length, 32 + 248 + 550, '2024 elementary test + 2025 district assessments + 2025 quick recall rounds');
+  assert.ok(!STUDY_BANK.some((q) => /\b(shown here|seen here|pictured|shown below|the map shows|the table shows|the graph|the diagram|the figure)\b/i.test(q.q)), 'questions that come with a picture are left out');
 });
 
 test('ids follow the subject and position, so only appending is safe', async () => {
@@ -399,9 +403,9 @@ test('with "only my questions" the child sees just those: no built-in subjects, 
     openStudy();
     const out = { pool: studyPool('all', 8).map((q) => q.id), html: document.getElementById('study-box').innerText, filters: studyFilters().map((f) => f[0]) };
     setParentQs([], 'kid_x', true);
-    out.emptyFallsBack = studyPool('all', 6).length === 32;
+    out.emptyFallsBack = studyPool('all', 6).length === 830;
     setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }], 'kid_x', false);
-    out.mixed = studyPool('all', 6).length === 33;
+    out.mixed = studyPool('all', 6).length === 831;
     closeStudy();
     acct = null; persistAcct();
     return out;
@@ -523,7 +527,7 @@ test('the KAAC 2024 district arts test is in word for word (32 questions, no pic
   assert.equal(k.find((q) => /athlete/.test(q.q)).a, 'x-3, y-2, z-1');
   assert.ok(!k.some((q) => /seen here|shown here|pictured here/.test(q.q)), 'picture questions are left out');
   const credit = await inPage(() => { state.study.subjects = ['arts']; state.study.level = 8; if (studyOn) closeStudy(); openStudy(); const t = document.getElementById('study-box').innerText; closeStudy(); return t; });
-  assert.match(credit, /Governor's Cup \(Kentucky Association for Academic Competition\), used with permission/);
+  assert.match(credit, /Kentucky Association for Academic Competition \(KAAC\), used with permission/);
   const other = await inPage(() => {
     startSession('kid_x', 'tok', 1);
     setParentQs([{ id: 'pAAAA', s: 'science', q: 'What gas do plants take in?', a: 'Carbon dioxide' }], 'kid_x', true);
