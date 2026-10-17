@@ -5,10 +5,11 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "check": "node scripts/build.mjs --check",
-    "test": "node scripts/build.mjs && node scripts/lint.mjs && node --test --test-concurrency=1 \"tests/*.test.mjs\"",
+    "test": "node scripts/build.mjs && node scripts/lint.mjs && node --test --test-reporter=dot --test-concurrency=1 \"tests/*.test.mjs\"",
     "sim": "node scripts/economy-sim.mjs",
     "art": "node scripts/art-list.mjs",
-    "lint": "node scripts/lint.mjs"
+    "lint": "node scripts/lint.mjs",
+    "test:quick": "node scripts/test-changed.mjs"
   },
   "devDependencies": {
     "eslint": "^9.39.5",
