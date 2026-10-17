@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { launch, loadWorker, fakeKV, openGame, signUp } from './helpers.mjs';
+import { launch, loadWorker, fakeKV, openGame, signUp, call } from './helpers.mjs';
 
 let browser, worker, env;
 before(async () => { browser = await launch(); worker = await loadWorker(); env = { MATH_KV: fakeKV() }; });
@@ -80,5 +80,72 @@ test('the parent page on a child\'s device never uploads a blank save over the c
   const after = await env.MATH_KV.get('save:kid_two', 'json');
   assert.equal(after.version, before.version, 'no upload happened');
   assert.equal(after.state.gems, 321);
+  await g.context.close();
+});
+
+test('with several children each one is clearly separate: own colour, a gap, a pinned name bar and jump buttons', async () => {
+  const mom = (await call(worker, env, '/api/parent/register', 'POST', { name: 'mom_many', password: 'secret1' })).data.token;
+  const kids = [];
+  for (const n of ['amy_k', 'ben_k', 'cat_k']) {
+    const k = await openGame(browser, worker, env, { fast: true });
+    await k.page.evaluate(() => { state.stats.days[dayKey()] = { s: 6, a: 10, ms: 600000, h: 0, w: 0, ops: { add: [10, 9] } }; saveState(); });
+    await signUp(k.page, n);
+    const code = (await call(worker, env, '/api/link/code', 'POST', {}, await k.page.evaluate(() => acct.token))).data.code;
+    assert.equal((await call(worker, env, '/api/parent/claim', 'POST', { code }, mom)).status, 200);
+    kids.push(k);
+  }
+  const g = await openGame(browser, worker, env, { fast: true, viewport: { width: 360, height: 640 } });
+  await g.page.goto('http://localhost/parent');
+  await g.page.fill('#portal-name', 'mom_many'); await g.page.fill('#portal-pass', 'secret1');
+  await g.page.click('text=Sign in');
+  await g.page.waitForFunction(() => document.querySelectorAll('.portal-kid').length === 3);
+  const m = await g.page.evaluate(() => {
+    const cards = [...document.querySelectorAll('.portal-kid')];
+    const r = cards.map((c) => c.getBoundingClientRect());
+    return {
+      names: cards.map((c) => c.querySelector('.portal-kid-head h2').innerText),
+      labels: cards.map((c) => c.querySelector('.portal-kid-head small').innerText),
+      colours: cards.map((c) => getComputedStyle(c.querySelector('.portal-avatar')).backgroundColor),
+      borders: cards.map((c) => getComputedStyle(c).borderTopColor),
+      gaps: r.slice(1).map((b, i) => Math.round(b.top - r[i].bottom)),
+      nav: [...document.querySelectorAll('.portal-nav-btn')].map((b) => ({ t: b.innerText.trim(), h: Math.round(b.getBoundingClientRect().height) })),
+      sideways: document.getElementById('portal').scrollWidth > innerWidth
+    };
+  });
+  assert.deepEqual(m.names, ['amy_k', 'ben_k', 'cat_k']);
+  assert.deepEqual(m.labels.map((l) => l.replace(/ ·.*/, '')), ['Child 1 of 3', 'Child 2 of 3', 'Child 3 of 3']);
+  assert.equal(new Set(m.colours).size, 3, 'each child has their own colour');
+  assert.equal(new Set(m.borders).size, 3);
+  assert.ok(m.gaps.every((x) => x >= 32), 'a clear gap between children: ' + m.gaps);
+  assert.deepEqual(m.nav.map((n) => n.t), ['amy_k', 'ben_k', 'cat_k']);
+  assert.ok(m.nav.every((n) => n.h >= 44), 'jump buttons are easy to tap');
+  assert.equal(m.sideways, false);
+
+  // the jump button brings that child to the top of the screen
+  await g.page.click('.portal-nav-btn:has-text("ben_k")');
+  await g.page.waitForFunction(() => { const t = document.getElementById('kid-1').getBoundingClientRect().top; return t >= -2 && t <= 20; });
+
+  // scrolling through a child keeps their name bar on screen, and the next child's bar takes over at their card
+  const bars = await g.page.evaluate(async () => {
+    const p = document.getElementById('portal'), card = (i) => document.getElementById('kid-' + i);
+    const head = (i) => card(i).querySelector('.portal-kid-head').getBoundingClientRect();
+    p.scrollTop = card(0).offsetTop + card(0).offsetHeight / 2; await new Promise((r) => setTimeout(r, 50));
+    const inFirst = { first: Math.round(head(0).top), second: Math.round(head(1).top) };
+    p.scrollTop = card(1).offsetTop + card(1).offsetHeight / 2; await new Promise((r) => setTimeout(r, 50));
+    const inSecond = { first: Math.round(head(0).bottom), second: Math.round(head(1).top) };
+    return { inFirst, inSecond };
+  });
+  assert.ok(Math.abs(bars.inFirst.first) <= 1, 'amy\'s name bar is pinned at the top while her stats scroll: ' + bars.inFirst.first);
+  assert.ok(bars.inFirst.second > 100, 'ben\'s bar is still down in his own card');
+  assert.ok(Math.abs(bars.inSecond.second) <= 1, 'ben\'s name bar takes over in his card');
+  assert.ok(bars.inSecond.first < 0, 'amy\'s bar has left the screen');
+
+  // a single child needs no jump buttons
+  for (const n of ['ben_k', 'cat_k']) await call(worker, env, '/api/parent/unlink', 'POST', { child: n }, mom);
+  await g.page.click('button:has-text("Refresh")');
+  await g.page.waitForFunction(() => document.querySelectorAll('.portal-kid').length === 1);
+  assert.equal(await g.page.locator('.portal-nav').count(), 0);
+  assert.doesNotMatch(await g.page.innerText('.portal-kid-head small'), /Child 1 of/);
+  for (const k of kids) await k.context.close();
   await g.context.close();
 });

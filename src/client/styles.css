@@ -9,6 +9,8 @@
       --danger: #ef4444;
       --text: #f8fafc;
       --text-muted: #94a3b8;
+      /* one colour per child on the parent page, so it is obvious whose stats are on screen */
+      --kid-1: #6366f1; --kid-2: #10b981; --kid-3: #f59e0b; --kid-4: #38bdf8; --kid-5: #ec4899; --kid-6: #a78bfa;
     }
 
     * {
@@ -1289,12 +1291,20 @@
 
 /* ===== Parent page (/parent) ===== */
 .portal-mode .game-container { display: none; }
-.portal { position: fixed; inset: 0; overflow-y: auto; padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(16px, env(safe-area-inset-bottom, 0px)); }
-.portal-inner { max-width: 490px; margin: 0 auto; background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 20px; padding: 14px; text-align: left; min-width: 0; }
+.portal { position: fixed; inset: 0; overflow-y: auto; padding: 0 12px max(16px, env(safe-area-inset-bottom, 0px)); }   /* no top padding here: a pinned name bar would stop short of the edge by that much (the top space is the card's margin) */
+.portal-inner { max-width: 490px; margin: max(12px, env(safe-area-inset-top, 0px)) auto 0; background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 20px; padding: 14px; text-align: left; min-width: 0; }
 .portal h1 { font-size: 1.3rem; margin-bottom: 4px; }
-.portal-kid { background: #0f172a; border: 1px solid var(--card-border); border-radius: 14px; padding: 10px; margin-top: 12px; min-width: 0; }
-.portal-kid h2 { font-size: 1.05rem; display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
-.portal-kid h2 small { font-size: 0.68rem; color: var(--text-muted); font-weight: 700; }
+.portal-kid { --kid: var(--kid-1); background: #0f172a; border: 2px solid var(--kid); border-top-width: 6px; border-radius: 16px; padding: 0 10px 12px; margin-top: 40px; min-width: 0; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); scroll-margin-top: 8px; }
+/* the name bar stays pinned at the top while you scroll through this child's stats, and is pushed away by the next child's */
+.portal-kid-head { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 3; display: flex; align-items: center; gap: 10px; background: #0f172a; margin: 0 -10px 6px; padding: 10px 10px 8px; border-bottom: 2px solid var(--kid); border-radius: 10px 10px 0 0; }
+.portal-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--kid); color: #0f172a; font-weight: 900; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; }
+.portal-kid-title { min-width: 0; }
+.portal-kid h2 { font-size: 1.3rem; line-height: 1.15; overflow-wrap: anywhere; }
+.portal-kid-title small { display: block; font-size: 0.7rem; color: var(--text-muted); font-weight: 700; }
+.portal-nav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 10px 0 0; }
+.portal-nav-label { font-size: 0.74rem; font-weight: 700; color: var(--text-muted); }
+.portal-nav-btn { min-height: 44px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; border: 2px solid var(--kid); background: #0f172a; color: var(--text); font-family: inherit; font-weight: 800; font-size: 0.85rem; cursor: pointer; max-width: 100%; }
+.portal-nav-btn i { width: 12px; height: 12px; border-radius: 50%; background: var(--kid); flex: none; }
 .portal-sub { font-size: 0.74rem; color: var(--text-muted); margin: 2px 0 6px; }
 .portal a { color: #93c5fd; }
 .link-code { font-size: 1.7rem; font-weight: 900; letter-spacing: 4px; text-align: center; color: #fde047; background: #0f172a; border: 2px dashed #facc15; border-radius: 12px; padding: 8px 4px; margin: 8px 0 4px; user-select: all; }

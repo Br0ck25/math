@@ -248,13 +248,32 @@ async function portalChallenge(i, cancel) {
     await portalLoad();
   } catch (e) { setPortalMsg('Could not reach the server.', 'err'); }
 }
+// Each child has their own colour (the same one on their card, their name bar and their button at the top).
+function kidAccent(i) { return 'var(--kid-' + (i % 6 + 1) + ')'; }
+// The name bar at the top of a child's card; it stays on screen while that child's stats scroll.
+function kidHead(k, i, note) {
+  const total = portalKids ? portalKids.length : 1;
+  return '<div class="portal-kid-head"><span class="portal-avatar" aria-hidden="true">' + escHtml(k.child.charAt(0).toUpperCase()) + '</span>' +
+    '<div class="portal-kid-title"><h2>' + escHtml(k.child) + '</h2><small>' + (total > 1 ? 'Child ' + (i + 1) + ' of ' + total + ' · ' : '') + note + '</small></div></div>';
+}
+function portalJump(i) {
+  const el = document.getElementById('kid-' + i);
+  if (el) el.scrollIntoView({ behavior: motionReduced() ? 'auto' : 'smooth', block: 'start' });
+}
+function kidNav(kids) {
+  if (kids.length < 2) return '';
+  return '<div class="portal-nav" role="navigation" aria-label="Jump to a child"><span class="portal-nav-label">Jump to:</span>' + kids.map(function (k, i) {
+    return '<button class="portal-nav-btn" style="--kid:' + kidAccent(i) + '" onclick="portalJump(' + i + ')"><i aria-hidden="true"></i>' + escHtml(k.child) + '</button>';
+  }).join('') + '</div>';
+}
 function kidCard(k, i) {
+  const open = '<div class="portal-kid" id="kid-' + i + '" style="--kid:' + kidAccent(i) + '">';
   if (k.revoked) {
-    return '<div class="portal-kid"><h2>' + escHtml(k.child) + '</h2><div class="portal-sub">This player unlinked you, or the account was deleted.</div>' +
+    return open + kidHead(k, i, 'unlinked') + '<div class="portal-sub">This player unlinked you, or the account was deleted.</div>' +
       '<button class="grade-btn" onclick="portalUnlink(' + i + ')">Remove from my list</button></div>';
   }
   const r = reportParts(k.days, { streak: k.streak, raids: k.raids, trophies: k.trophies });
-  return '<div class="portal-kid"><h2>' + escHtml(k.child) + ' <small>' + (k.primary ? 'you can change settings' : 'view only') + '</small></h2>' +
+  return open + kidHead(k, i, k.primary ? 'you can change settings' : 'view only') +
     '<div class="portal-sub">' + (GRADES[k.grade] ? escHtml(GRADES[k.grade].long) : 'Grade ' + k.grade) + ' · ' + k.gems + ' 💎 · ' + (k.updatedAt ? 'saved ' + timeAgo(k.updatedAt) : 'nothing saved online yet') + '</div>' +
     challengeBox(k, i) + controlsBox(k, i) +
     '<div class="par-tiles">' + r.tiles + '</div>' +
@@ -276,6 +295,7 @@ function renderPortal() {
     '<div class="acct-btns"><button class="grade-btn" onclick="portalClaim()">' + (kids.length ? 'Add another child' : 'Add child') + '</button><button class="grade-btn" onclick="portalLogout()">Sign out</button></div>' +
     '<button class="grade-btn" style="width:100%; margin-top:6px;" onclick="portalLoad()">🔄 Refresh</button>' +
     '<div class="acct-msg ' + portalMsg.kind + '" id="portal-msg" role="status">' + escHtml(portalMsg.text) + '</div>' +
+    kidNav(kids) +
     (portalKids === null ? '<div class="portal-sub">Loading…</div>' : (kids.length ? kids.map(kidCard).join('') : '<div class="portal-sub">No children yet. Add one with a code.</div>')) +
     '<div id="portal-delete-area"><button class="danger-btn" style="margin-top:12px;" onclick="portalShowDelete()">Delete my parent account</button></div>' +
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';
