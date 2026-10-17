@@ -131,12 +131,34 @@ function reportParts(days, facts) {
 
   const weak = ids.filter(function (id) { return byOp[id][0] >= 5 && byOp[id][1] / byOp[id][0] < 0.7; });
   const strong = strongestOp(byOp);
+  out.study = studyParts(keys, days);
   out.weakIds = weak;
   out.strong = strong ? '🌟 Strongest: ' + OP_BY_ID[strong].icon + ' ' + OP_BY_ID[strong].label + ' (' + Math.round(byOp[strong][1] / byOp[strong][0] * 100) + '%)' : '';
   out.weak = weak.length
     ? weak.map(function (id) { return '⚠️ ' + OP_BY_ID[id].icon + ' ' + OP_BY_ID[id].label + ' — worth some extra practice'; }).join('<br>')
     : (ids.length ? '✅ No weak spots this week. Great work!' : '<span style="color:var(--text-muted);">Needs at least 5 tries of a type to show.</span>');
   return out;
+}
+
+// The last-7-days study numbers (answers to Quick Recall and Type it questions) by subject, as HTML rows.
+function studyParts(keys, days) {
+  const total = [0, 0], by = {};
+  keys.forEach(function (k) {
+    const d = days[k];
+    if (!d || !d.st) return;
+    total[0] += d.st[0]; total[1] += d.st[1];
+    Object.keys(d.sub || {}).forEach(function (id) {
+      const o = by[id] || (by[id] = [0, 0]);
+      o[0] += d.sub[id][0]; o[1] += d.sub[id][1];
+    });
+  });
+  if (!total[0]) return '<div style="font-size:0.78rem; color:var(--text-muted);">No study questions answered this week.</div>';
+  const rows = STUDY_SUBJECTS.filter(function (s) { return by[s.id]; }).map(function (s) {
+    const a = by[s.id][0], c = by[s.id][1], pct = Math.round(c / a * 100);
+    const col = pct >= 85 ? '#10b981' : (pct >= 65 ? '#f59e0b' : '#ef4444');
+    return '<div class="par-row"><span class="lbl">' + s.icon + ' ' + escHtml(s.label) + '</span><span class="bar"><i style="width:' + pct + '%; background:' + col + '"></i></span><span class="pct">' + pct + '% (' + a + ')</span></div>';
+  }).join('');
+  return '<div style="font-size:0.8rem; margin-bottom:4px;">' + total[0] + ' answered, ' + Math.round(total[1] / total[0] * 100) + '% right this week.</div>' + rows;
 }
 
 function renderParent() {
@@ -166,6 +188,7 @@ function renderParent() {
   document.getElementById('par-types').innerHTML = r.types;
   document.getElementById('par-strong').innerHTML = r.strong;
   document.getElementById('par-weak').innerHTML = r.weak;
+  document.getElementById('par-study').innerHTML = r.study;
   renderParentLink();
 
   const g = state.parentGoal;

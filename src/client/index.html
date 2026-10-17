@@ -168,6 +168,9 @@
       <button class="btn-secondary" onclick="openMap()">
         🗺️ Map
       </button>
+      <button class="btn-secondary" onclick="openStudy()" aria-label="Study school subjects">
+        📚 Study
+      </button>
       <button class="btn-secondary" onclick="openSettings()">
         ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
       </button>
@@ -427,6 +430,7 @@
         <button class="grade-btn" id="motion-btn" onclick="toggleMotion()">✨ Motion: Full</button>
         <button class="grade-btn" onclick="closeSettings(); openReportModal()">📊 Session report</button>
       </div>
+      <button class="grade-btn" style="width:100%; margin-top:6px; min-height:44px;" onclick="closeSettings(); openStudy()">📚 Study school subjects</button>
       <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>
 
       </details>
@@ -558,6 +562,13 @@
   </div>
   <div class="duel-chip" id="duel-chip" onclick="rdOpenFromChip()" style="display:none;"></div>
 
+  <!-- Study: school-subject questions (38-study.js). Escape goes back a step; a stray tap on the backdrop must not end a round. -->
+  <div class="modal-overlay" id="study-modal" data-esc="studyEsc">
+    <div class="modal-content" style="border-color:#6366f1;">
+      <div id="study-box"></div>
+    </div>
+  </div>
+
   <!-- Tournament battle -->
   <div class="modal-overlay" id="tour-modal" data-esc="tourQuit">
     <div class="modal-content" style="border-color:#fbbf24;">
@@ -620,6 +631,8 @@
       <div class="settings-label">🔍 Weak spots</div>
       <div id="par-strong" style="font-size:0.8rem; text-align:left; margin-bottom:4px;"></div>
       <div id="par-weak" style="font-size:0.8rem; text-align:left;"></div>
+      <div class="settings-label" style="margin-top:8px;">📚 Study subjects</div>
+      <div id="par-study"></div>
       <div class="settings-label">🏆 Daily reward goal</div>
       <div class="par-goal">
         <div style="font-size:0.78rem;">Math time goal per day:

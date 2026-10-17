@@ -326,7 +326,7 @@ function fillOptButtons(box, opts, onPick) {
   opts.forEach(function (v) {
     const b = document.createElement('button');
     b.className = 'vault-btn';
-    b.innerText = fmtAns(v);
+    b.innerText = typeof v === 'string' ? v : fmtAns(v);       // study questions use words
     b.onclick = function () { onPick(v, b); };
     box.appendChild(b);
   });

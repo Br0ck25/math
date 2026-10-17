@@ -281,6 +281,7 @@ function kidCard(k, i) {
     '<div class="settings-label">📅 Minutes per day</div><div class="par-days">' + r.days + '</div>' +
     '<div class="settings-label">🎯 Accuracy by math type</div>' + r.types +
     '<div class="settings-label">🔍 Weak spots</div><div style="font-size:0.8rem; margin-bottom:4px;">' + r.strong + '</div><div style="font-size:0.8rem;">' + r.weak + '</div>' + boostBox(k, i, r.weakIds) +
+    '<div class="settings-label">📚 Study subjects</div>' + r.study +
     '<button class="grade-btn" style="margin-top:10px;" onclick="portalUnlink(' + i + ')">Stop watching ' + escHtml(k.child) + '</button></div>';
 }
 function renderPortal() {
@@ -295,10 +296,12 @@ function renderPortal() {
     '<div class="acct-btns"><button class="grade-btn" onclick="portalClaim()">' + (kids.length ? 'Add another child' : 'Add child') + '</button><button class="grade-btn" onclick="portalLogout()">Sign out</button></div>' +
     '<button class="grade-btn" style="width:100%; margin-top:6px;" onclick="portalLoad()">🔄 Refresh</button>' +
     '<div class="acct-msg ' + portalMsg.kind + '" id="portal-msg" role="status">' + escHtml(portalMsg.text) + '</div>' +
+    studySection() +
     kidNav(kids) +
     (portalKids === null ? '<div class="portal-sub">Loading…</div>' : (kids.length ? kids.map(kidCard).join('') : '<div class="portal-sub">No children yet. Add one with a code.</div>')) +
     '<div id="portal-delete-area"><button class="danger-btn" style="margin-top:12px;" onclick="portalShowDelete()">Delete my parent account</button></div>' +
     '<p class="portal-sub"><a href="/">← Back to the game</a></p></div>';
+  if (portalStudyOpen) { if (portalStudyReady) portalStudyLists(); else portalStudyLoad(); }
 }
 function portalShowDelete() {
   document.getElementById('portal-delete-area').innerHTML =
@@ -363,6 +366,7 @@ async function portalUnlink(i) {
 }
 function portalLogout() {
   portal = null; portalKids = null;
+  portalStudy = {}; portalStudyReady = false; portalStudyOpen = false;
   try { localStorage.removeItem(PORTAL_KEY); } catch (e) {}
   renderPortal();
 }

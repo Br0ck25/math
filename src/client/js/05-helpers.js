@@ -6,6 +6,8 @@ function getRandomInt(min, max) {
 }
 const rnd = getRandomInt;
 function pick(arr) { return arr[rnd(0, arr.length - 1)]; }
+// A shuffled copy of a list.
+function shuffled(arr) { return arr.map(function (v) { return [Math.random(), v]; }).sort(function (x, y) { return x[0] - y[0]; }).map(function (x) { return x[1]; }); }
 function gcd(a, b) { return b ? gcd(b, a % b) : a; }
 function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
 function sgnStr(n) { return n < 0 ? '− ' + (-n) : '+ ' + n; }

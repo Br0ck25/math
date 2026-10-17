@@ -55,6 +55,8 @@ async function handleApi(request, env, url) {
     return json({ ok: true, version: next.version, updatedAt: next.updatedAt, ...parents });
   }
 
+  if (path === '/api/study' && request.method === 'GET') return json({ questions: await liveStudy(kv, who.name) });
+
   if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);
   if (path.indexOf('/api/challenge/') === 0) return handleChallenge(path, request, kv, who, body);
   if (path.indexOf('/api/link/') === 0) return handleLink(path, request, kv, who, body);
@@ -69,6 +71,7 @@ async function handleApi(request, env, url) {
     await kv.delete('acct:' + who.name);
     await kv.delete('save:' + who.name);
     await kv.delete('grant:' + who.name);   // parents lose sight of a deleted account
+    await kv.delete('pq:' + who.name);
     await kv.delete('sess:' + who.tokenHash);
     return json({ ok: true });
   }

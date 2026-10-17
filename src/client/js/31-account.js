@@ -182,6 +182,7 @@ function acctLogout() {
   acct = null;
   persistAcct();
   applyParentData(null);
+  setParentQs([], '');                                       // a parent's study questions belong to the player who signed out
   clearTimeout(syncTimer);
   setAcctMsg('Signed out. Your progress is still saved on this device.', 'ok');
   renderAccount();
