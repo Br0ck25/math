@@ -173,8 +173,11 @@ function tourQuestion() {
   const q = makeMcq();
   tour.answer = q.ans;
   tour.op = q.op;
+  tour.q = q;
   tour.t0 = Date.now();
   document.getElementById('tour-eq').innerHTML = q.html;
+  document.getElementById('tour-eq').classList.toggle('trivia-q', !!q.study);
+  document.getElementById('tour-opts').classList.toggle('study-opts', !!q.study);
   fillOptButtons(document.getElementById('tour-opts'), q.opts, function (v) { tourAnswer(v); });
   tour.busy = false;
 }
@@ -189,9 +192,9 @@ function tourAnswer(v) {
   tour.busy = true;
   const r = tourCur();
   const me = tour.mine[tour.me], foe = r.foes[tour.foe];
-  const ok = Math.abs(v - tour.answer) < 0.0001;
+  const ok = mcqRight(v, tour.answer);
   const secs = (Date.now() - tour.t0) / 1000;
-  recordStat(tour.op, ok, secs, false);
+  mcqRecord(tour.q, ok, secs);
   calDayEvent();
   let msg;
   let next = 700;

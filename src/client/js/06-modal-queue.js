@@ -15,6 +15,7 @@ let modalBusy = false;
 let clockPausedAt = null;
 function pauseClock() { if (clockPausedAt === null) clockPausedAt = Date.now(); }
 function resumeClock() {
+  if (studyOn) return;                                         // the math question is not on screen while studying
   if (clockPausedAt !== null) { questionStartTime += Date.now() - clockPausedAt; clockPausedAt = null; }
 }
 

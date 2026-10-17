@@ -64,6 +64,7 @@ function freshState() {
     bookClaims: [],
     shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
     packClaims: [],                                  // pack ids whose completion reward was claimed
+    study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
   };
 }
 

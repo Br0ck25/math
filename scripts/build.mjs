@@ -54,7 +54,7 @@ function artChunk() {
 
 export function assemble() {
   const css = read('src/client/styles.css');
-  const shared = read('src/shared/econ.js');
+  const shared = [read('src/shared/econ.js'), read('src/shared/study.js')].join('\n');
   const js = [shared, artChunk()].concat(readDir('src/client/js', '.js')).join('\n');
   new vm.Script(js, { filename: 'client script (src/shared + src/client/js)' });   // throws on a syntax error
   if (/<\/script/i.test(js)) throw new Error('src/client/js must not contain "</script"');
