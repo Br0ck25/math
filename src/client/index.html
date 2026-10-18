@@ -17,49 +17,61 @@
   <canvas id="confetti-canvas"></canvas>
 
   <div class="game-container">
-    <div class="top-bar">
-      <div class="stat-pill" title="Active buddy level">
-        <span>⭐ Lv <span id="lvl-display">1</span></span>
+    <div class="trainer-header">
+      <div class="top-bar">
+        <div class="stat-pill trainer-avatar-pill" title="Active buddy level &amp; XP progress" onclick="openHub()">
+          <span class="xp-ring-wrap"><progress class="progress-ring" id="xp-ring" max="100" value="0" aria-label="Buddy XP progress"></progress><span class="trainer-mini-avatar" id="trainer-mini-avatar">🐶</span></span>
+          <span>Lv <span id="lvl-display">1</span></span>
+        </div>
+        <div class="stat-pill" id="gems-pill" title="Math Gems — tap to open Shop" onclick="openShop()" role="button" tabindex="0" aria-label="Math Gems: open Shop">
+          <span>💎 <span id="gems-display">0</span></span>
+        </div>
+        <div class="stat-pill" title="Current Streak">
+          <span>🔥 <span id="streak-display">0</span></span>
+        </div>
+        <div class="stat-pill" id="shield-pill" title="Streak Shields Owned — tap to buy shields" onclick="openShieldShop()" role="button" tabindex="0" aria-label="Streak Shields: buy shields">
+          <span>🛡️ <span id="shield-display">0</span></span>
+        </div>
+        <div class="stat-pill goal-pill" title="Session goal: solve problems to earn a bonus">
+          <span>🎯 <span id="goal-pill-text">0/25</span></span>
+        </div>
+        <button class="study-top-btn" id="study-toggle" onclick="toggleStudy()" aria-label="Study school subjects">
+          <span id="study-toggle-text">📚 Study</span>
+        </button>
       </div>
-      <div class="stat-pill" title="Math Gems">
-        <span>💎 <span id="gems-display">0</span></span>
-      </div>
-      <div class="stat-pill" title="Current Streak">
-        <span>🔥 <span id="streak-display">0</span></span>
-      </div>
-      <div class="stat-pill" title="Streak Shields Owned">
-        <span>🛡️ <span id="shield-display">0</span></span>
-      </div>
-      <div class="stat-pill goal-pill" title="Session goal: solve problems to earn a bonus">
-        <span>🎯 <span id="goal-pill-text">0/25</span></span>
-      </div>
-    </div>
 
-    <!-- A parent's timed challenge: the call to action, then the countdown -->
-    <button class="chal-bar" id="chal-bar" style="display:none" onclick="openChal()">🎯 Parent challenge</button>
+      <!-- A parent's timed challenge: the call to action, then the countdown -->
+      <button class="chal-bar" id="chal-bar" style="display:none" onclick="openChal()">🎯 Parent challenge</button>
 
-    <!-- Active Session Tracker + practice settings chip (one row) -->
-    <div class="session-info-row">
-      <span class="session-line" title="Session goal: solve problems to earn a bonus">🎯 <span id="session-count-text">0</span>/<span id="session-goal-text">25</span> <span id="session-badge">🎁 25</span></span>
-      <span id="clover-status" style="color:#4ade80; display:none;">🍀 2x Gems (0)</span>
-      <button class="practice-chip" onclick="openSettings()" aria-label="Practice settings: grade and math types">
-        <span id="grade-chip">📚 3–5</span><span id="ops-chip">➕</span><span class="practice-gear">⚙️</span>
-      </button>
-    </div>
+      <!-- Active Session Tracker + Egg Incubator + Starter + Settings (one row) -->
+      <div class="session-info-row">
+        <span class="session-line" title="Session goal: solve problems to earn a bonus">🎯 <span id="session-count-text">0</span>/<span id="session-goal-text">25</span> <span id="session-badge">🎁 25</span></span>
+        <button type="button" class="egg-pill" id="egg-pill" style="display:none;" onclick="inspectEgg()" aria-label="Mystery Egg Incubator"></button>
+        <button type="button" class="starter-pill" id="starter-pill" style="display:none;" onclick="openStarterModal()" aria-label="Choose your starter buddy">🌟 Starter</button>
+        <button type="button" class="tree-pill" id="tree-pill" onclick="openTree()" aria-label="Tree of Knowledge: tap to view tech tree">🌳 <span id="stars-display">0</span>★</button>
+        <span id="clover-status" style="color:#4ade80; display:none;">🍀 2x Gems (0)</span>
+        <button class="practice-chip" onclick="openSettings()" aria-label="Practice settings: grade and math types">
+          <span id="grade-chip">📚 3–5</span><span id="ops-chip">➕</span><span class="practice-gear">⚙️</span>
+        </button>
+      </div>
 
-    <div class="xp-section">
-      <div class="xp-header">
-        <span id="rank-display">Pup</span>
-        <span>XP: <span id="xp-text">0/100</span></span>
+      <div class="xp-section">
+        <div class="xp-header">
+          <span id="rank-display">Pup</span>
+          <span class="trainer-title-badge" id="trainer-title-display">Rookie Calculator</span>
+          <span>XP: <span id="xp-text">0/100</span></span>
+        </div>
+        <div class="xp-bar-bg">
+          <div id="xp-bar" class="xp-bar-fill"></div>
+        </div>
+        <div class="next-goal" id="next-goal"></div>
       </div>
-      <div class="xp-bar-bg">
-        <div id="xp-bar" class="xp-bar-fill"></div>
-      </div>
-      <div class="next-goal" id="next-goal"></div>
     </div>
 
     <!-- Battle Arena -->
     <div class="battle-header" id="battle-header-arena">
+      <div class="arena-backdrop" id="arena-backdrop" aria-hidden="true"></div>
+      <div class="catch-anim-overlay" id="catch-anim-overlay" aria-hidden="true"></div>
       <div class="battle-title-row">
         <span class="battle-goal-hint" id="type-match-hint">Neutral matchup</span>
         <span class="weak-chip" id="weak-chip"></span>
@@ -114,12 +126,14 @@
         </div>
         <button id="ult-btn" class="ult-btn" onclick="openMoves()" aria-label="Moves: spend energy on a move">MOVES</button>
       </div>
+      <div class="inline-moves-bar" id="inline-moves-bar" role="group" aria-label="Inline battle moves: tap to arm for next math answer"></div>
     </div>
 
     <!-- Arena Container (Zero-Scroll Flex Mount) -->
     <div class="arena">
       <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)" aria-label="Open drawing pad">✏️<span class="tool-label">Pad</span></button>
       <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Hint: spend 1 gem to see the first step" aria-label="Hint, costs 1 gem">💡<span class="tool-label">Hint</span><span class="hint-cost">1💎</span></button>
+      <button class="speak-btn" id="arena-speak-btn" type="button" onclick="speakCurrentProblem(true)" title="Read problem aloud" aria-label="Read problem aloud">🔊</button>
       <div class="streak-banner" id="streak-msg">READY TO SOLVE?</div>
       <div class="floating-popup" id="floating-popup">CRITICAL HIT! 💥</div>
       
@@ -127,6 +141,7 @@
         <!-- Injected via renderEquationUI() -->
       </div>
       
+      <div class="hint-visual" id="hint-visual"></div>
       <div class="hint-box" id="hint-box"></div>
       <div class="feedback-msg" id="feedback-msg">Type your answer or use keypad!</div>
     </div>
@@ -156,26 +171,17 @@
     </div>
 
     <div class="bottom-bar">
-      <button class="btn-secondary" onclick="openShop()">
-        🐾 <span class="lbl-long">Sanctuary</span><span class="lbl-short">Pets</span> <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
+      <button class="btn-secondary" onclick="openMap()" aria-label="Battle Map">
+        🗺️ <span class="lbl-long">Battle Map</span><span class="lbl-short">Map</span>
       </button>
-      <button class="btn-secondary" onclick="openQuests()">
-        📜 Quests<span class="notif-dot" id="quest-badge">0</span>
+      <button class="btn-secondary" onclick="openHub()" aria-label="Team and Buddy Hub">
+        🐾 <span class="lbl-long">Team &amp; Hub</span><span class="lbl-short">Team</span> <span id="comp-count-badge" style="background:#4f46e5;color:#fff;border-radius:999px;padding:0 4px;font-size:0.65rem;">1</span>
       </button>
-      <button class="btn-secondary" onclick="openCal()">
-        📅 <span class="lbl-long">Calendar</span><span class="lbl-short">Days</span><span class="notif-dot" id="cal-badge">0</span>
+      <button class="btn-secondary" onclick="openBook()" aria-label="Buddy Dex and Quests">
+        📖 <span class="lbl-long">Dex &amp; Quests</span><span class="lbl-short">Dex</span><span class="notif-dot" id="quest-badge">0</span><span class="notif-dot" id="cal-badge">0</span>
       </button>
-      <button class="btn-secondary" onclick="openBook()">
-        📖 Dex
-      </button>
-      <button class="btn-secondary" onclick="openMap()">
-        🗺️ Map
-      </button>
-      <button class="btn-secondary" id="study-toggle" onclick="toggleStudy()" aria-label="Study school subjects">
-        <span id="study-toggle-text">📚 Study</span>
-      </button>
-      <button class="btn-secondary" onclick="openSettings()">
-        ⚙️ <span class="lbl-long">Settings</span><span class="lbl-short">Setup</span>
+      <button class="btn-secondary" onclick="openShop()" aria-label="Sanctuary Shop">
+        🏪 <span class="lbl-long">Shop</span><span class="lbl-short">Shop</span>
       </button>
     </div>
   </div>
@@ -187,7 +193,7 @@
       <div class="shop-wallet" aria-live="polite">You have <b>💎 <span id="shop-gems">0</span></b></div>
       <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Adopt companions, customize body gear, or buy boosters!</p>
 
-      <button class="shop-link" onclick="closeShop(); openHub()"><span>💖 Buddy care · 🃏 Cards · 🏆 Tournament</span><span aria-hidden="true">›</span></button>
+      <button class="shop-link" onclick="closeShop(); openHub()"><span>💖 Buddy care · 🏠 Sanctuary Room · 🃏 Cards · 🏆 Cup</span><span aria-hidden="true">›</span></button>
 
       <!-- Battle supplies. Prices come from ECON.items (the candy from the buddy's level); renderItemButtons() fills the labels. -->
       <div class="shop-title" style="color:#38bdf8;">🧪 Battle Supplies &amp; Items</div>
@@ -208,10 +214,10 @@
         </div>
         <div class="item-card">
           <div>
-            <div class="item-name">⚡ Ult Battery</div>
-            <div class="item-desc">Fills Ultimate (3/3) instantly</div>
+            <div class="item-name">💖 Super Potion</div>
+            <div class="item-desc">Fully restores buddy HP &amp; revives fainted</div>
           </div>
-          <button class="key-btn submit-btn item-btn" id="item-ult" onclick="buyItem('ult')">-- 💎</button>
+          <button class="key-btn submit-btn item-btn" id="item-potion" onclick="buyItem('potion')">-- 💎</button>
         </div>
         <div class="item-card">
           <div>
@@ -226,6 +232,20 @@
             <div class="item-desc">After a wild win, throw up to 3 at once for a better catch chance. You have <span id="net-count">0</span></div>
           </div>
           <button class="key-btn submit-btn item-btn" id="item-net" onclick="buyItem('net')">-- 💎</button>
+        </div>
+        <div class="item-card">
+          <div>
+            <div class="item-name">🔔 Boss Whistle</div>
+            <div class="item-desc">Summons the next big Boss immediately!</div>
+          </div>
+          <button class="key-btn submit-btn item-btn" id="item-whistle" onclick="buyItem('whistle')">-- 💎</button>
+        </div>
+        <div class="item-card">
+          <div>
+            <div class="item-name">⚡ Ult Battery</div>
+            <div class="item-desc">Fills Ultimate (3/3) instantly</div>
+          </div>
+          <button class="key-btn submit-btn item-btn" id="item-ult" onclick="buyItem('ult')">-- 💎</button>
         </div>
       </div>
 
@@ -313,6 +333,7 @@
       <div id="miss-said" style="font-size:0.85rem; color:var(--text-muted); margin:4px 0;"></div>
       <div style="font-size:0.85rem;">The answer is</div>
       <div id="miss-answer" style="font-size:2.4rem; font-weight:800; color:#4ade80;"></div>
+      <div class="miss-visual" id="miss-visual"></div>
       <div id="miss-how" style="font-size:0.85rem; color:var(--text-muted); margin:6px 0; line-height:1.3;"></div>
       <div class="miss-bar-track"><div id="miss-bar"></div></div>
       <button class="key-btn submit-btn" style="width:100%; height:44px; margin-top:8px; font-size:1rem;" onclick="closeMissCard()">Got it!</button>
@@ -434,8 +455,10 @@
       <details class="set-sec" open><summary class="settings-label">🔧 Options</summary>
       <div class="grade-grid" style="grid-template-columns: 1fr 1fr;">
         <button class="grade-btn" onclick="toggleMute()"><span id="sound-icon">🔊</span> Sound</button>
+        <button class="grade-btn" onclick="toggleMusic()"><span id="music-icon">🔕</span> Music</button>
         <button class="grade-btn" id="motion-btn" onclick="toggleMotion()">✨ Motion: Full</button>
         <button class="grade-btn" onclick="closeSettings(); openReportModal()">📊 Session report</button>
+        <button class="grade-btn" id="read-aloud-btn" onclick="toggleReadAloud()" style="grid-column: span 2;" aria-pressed="false">🗣️ Read aloud: OFF</button>
       </div>
       <button class="grade-btn" style="width:100%; margin-top:6px; min-height:44px;" onclick="closeSettings(); openStudy()">📚 Study school subjects</button>
       <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>
@@ -537,6 +560,22 @@
       <div class="hub-tabs" id="hub-tabs"></div>
       <div id="hub-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeHub()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Tree of Knowledge: Tech Tree modal -->
+  <div class="modal-overlay" id="tree-modal" data-close="closeTree">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h2 style="font-size:1.15rem; margin:0;">🌳 Tree of Knowledge</h2>
+        <div style="display:flex; align-items:center; gap:8px; font-weight:900; font-size:0.95rem;">
+          <span style="color:#facc15;" title="Star Sparks">★ <span id="tree-stars">0</span></span>
+          <span style="color:#38bdf8;" title="Math Gems">💎 <span id="tree-gems">0</span></span>
+        </div>
+      </div>
+      <div class="tree-branch-grid" id="tree-branch-tabs"></div>
+      <div id="tree-branch-container" style="flex:1; overflow-y:auto; padding-right:2px;"></div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeTree()">Back to Game</button>
     </div>
   </div>
 
@@ -666,6 +705,11 @@
   <div class="modal-overlay" id="cal-modal" data-close="closeCal">
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">🔥 Daily Streak</h2>
+      <div class="dex-quest-switch">
+        <button class="grade-btn" onclick="closeCal(); openBook()">📖 Dex</button>
+        <button class="grade-btn" onclick="closeCal(); openQuests()">📜 Quests</button>
+        <button class="grade-btn active" onclick="renderCal()">🔥 Streak</button>
+      </div>
       <p style="font-size: 0.78rem; color: var(--text-muted);" id="cal-status"></p>
       <div class="cal-grid" id="cal-grid"></div>
       <p style="font-size: 0.7rem; color: var(--text-muted);" id="cal-foot"></p>
@@ -677,6 +721,11 @@
   <div class="modal-overlay" id="quest-modal" data-close="closeQuests">
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">📜 Daily Quests</h2>
+      <div class="dex-quest-switch">
+        <button class="grade-btn" onclick="closeQuests(); openBook()">📖 Dex</button>
+        <button class="grade-btn active" onclick="renderQuests()">📜 Quests</button>
+        <button class="grade-btn" onclick="closeQuests(); openCal()">🔥 Streak</button>
+      </div>
       <p style="font-size: 0.75rem; color: var(--text-muted);" id="quest-reset-note">New quests every day!</p>
       <div id="quest-list"></div>
       <div id="quest-chest"></div>
@@ -688,6 +737,11 @@
   <div class="modal-overlay" id="book-modal" data-close="closeBook">
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">📖 Buddy Dex</h2>
+      <div class="dex-quest-switch">
+        <button class="grade-btn active" onclick="renderBook()">📖 Dex</button>
+        <button class="grade-btn" onclick="closeBook(); openQuests()">📜 Quests</button>
+        <button class="grade-btn" onclick="closeBook(); openCal()">🔥 Streak</button>
+      </div>
       <div class="book-progress" id="book-progress">0 / 0 discovered</div>
       <div class="ms-row" id="book-milestones"></div>
       <div class="book-tabs" id="book-tabs"></div>
@@ -703,6 +757,16 @@
       <div class="book-progress" id="map-progress"></div>
       <div id="map-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Choose Your Starter Buddy Modal (3-panel comic + Fire/Water/Nature starter choice) -->
+  <div class="modal-overlay" id="starter-modal" data-close="closeStarterModal">
+    <div class="modal-content" style="border-color:#facc15;">
+      <div class="raid-chapter" style="color:#fde047;">CHAPTER 0 · NEW ADVENTURE</div>
+      <h2 style="font-size:1.25rem; margin-bottom:6px;" id="starter-title">🌟 Choose Your Starter Buddy!</h2>
+      <div id="starter-body"></div>
+      <button class="key-btn action-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:0.95rem;" onclick="closeStarterModal()">Keep Pup (Nature)</button>
     </div>
   </div>
 

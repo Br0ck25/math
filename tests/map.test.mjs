@@ -224,4 +224,99 @@ test('the first time the map opens, the journey story shows once; new lands anno
   assert.match(r.msg, /New land open: 🌋 Ember Hills/);
 });
 
+test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline moves, starter comic, egg incubator, 3-stage evo visuals, map trail, math manipulatives, and sanctuary room', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    // 1 & 2. Consolidated Trainer Header + Circular XP Ring + 4-Tab Bottom Bar
+    out.xpRing = !!document.querySelector('progress.progress-ring#xp-ring');
+    out.bottomTabs = document.querySelectorAll('.bottom-bar button').length;
+    // 3. Regional SVG Backdrop
+    state.region = 'ember'; updateStatsUI();
+    out.backdropSvg = document.getElementById('arena-backdrop').innerHTML.includes('<svg');
+    // 4. Inline Move Pills
+    ultimateCharge = 3; renderInlineMoves();
+    out.inlinePills = document.querySelectorAll('#inline-moves-bar .inline-move-pill').length;
+    armMove('strike');
+    out.armed = armedMove === 'strike' && document.getElementById('equation-mount').classList.contains('move-armed');
+    consumeArmedMove();
+    out.consumed = armedMove === '';
+    // 5. Starter Picker Comic
+    openStarterModal();
+    out.starterChoices = document.querySelectorAll('#starter-choices-row button').length;
+    chooseStarter('fox');
+    out.choseFox = state.activePet === 'fox' && state.unlockedPets.includes('fox');
+    // 6. 3-Wobble Capture Sequence
+    playCatchAnimation(getSpecies('fox'), true, 1);
+    out.catchOverlay = document.getElementById('catch-anim-overlay').classList.contains('show');
+    // 7. Mystery Egg Incubator
+    state.egg = null; awardEgg('water', 'common');
+    out.eggAwarded = state.egg && state.egg.steps === 0 && state.egg.target === 5;
+    tickEgg();
+    out.eggTicked = state.egg && state.egg.steps === 1;
+    // 8. 3-Stage Evolution Visuals
+    out.stage1Crest = formMarkup(1, 'fire').includes('evo-crest');
+    out.stage2Wings = formMarkup(2, 'fire').includes('evo-wings') && formMarkup(2, 'fire').includes('evo-crown') && formMarkup(2, 'fire').includes('evo-runes');
+    // 9. Winding Map Trail
+    state.buddyXp.fox = xpForLevel(15); openMap();
+    out.mapTrail = document.querySelectorAll('#map-body .map-trail-nodes').length > 0 && document.querySelectorAll('#map-body .map-player-token').length > 0;
+    closeMap();
+    // 10. Visual Math Manipulatives
+    out.tenFrame = mathManipulativeHtml({ modeTag: 'add', num1: 6, num2: 3, layout: 'inline' }).includes('ten-frame');
+    out.borrowCol = mathManipulativeHtml({ modeTag: 'sub', num1: 42, num2: 17, layout: 'vertical' }).includes('manip-cols');
+    out.mulArray = mathManipulativeHtml({ modeTag: 'mul', expr: '4 × 5' }).includes('manip-array');
+    out.fracPie = mathManipulativeHtml({ modeTag: 'frac', expr: '3/4 of 12' }).includes('manip-pie');
+    // 11. Sanctuary Room & Trainer Profile
+    state.gems = 500; state.raidsCleared = 5; openHub(); setHubTab('room');
+    out.sanctuary = document.querySelectorAll('#hub-body .sanctuary-buddy').length > 0;
+    selectProfileTitle('Number Knight');
+    out.titleUnlocked = state.profile.title === 'Number Knight' && document.getElementById('trainer-title-display').innerText.includes('Number Knight');
+    selectProfileFrame('gold');
+    out.frameUnlocked = state.profile.frame === 'gold';
+    closeHub();
+    // 12. Top bar Gems & Shield clicks + Sanctuary Room XP bonus (1% per buddy in room)
+    document.getElementById('gems-pill').click();
+    out.gemsOpensShop = document.getElementById('shop-modal').style.display === 'flex';
+    closeShop();
+    state.gems = 500;
+    document.getElementById('shield-pill').click();
+    out.shieldOpensBuy = document.getElementById('shop-modal').style.display === 'flex' && document.getElementById('confirm-modal').style.display === 'flex';
+    closeConfirm();
+    closeShop();
+    const sixIds = storePets.slice(0, 6).map((p) => p.id);
+    state.unlockedPets = sixIds.slice();
+    state.activePet = sixIds[0];
+    state.profile.showcase = sixIds.slice();
+    sixIds.forEach((id) => { state.buddyXp[id] = xpForLevel(10); });
+    const gainedActive = awardBattleXp(100);
+    out.roomSixActiveXp = gainedActive === 106 && state.buddyXp[sixIds[0]] - xpForLevel(10) === 106;
+    out.roomSixPassiveXp = state.buddyXp[sixIds[1]] - xpForLevel(10) === 0;
+    return out;
+  });
+  assert.equal(r.xpRing, true);
+  assert.equal(r.bottomTabs, 4);
+  assert.equal(r.backdropSvg, true);
+  assert.ok(r.inlinePills >= 2);
+  assert.equal(r.armed, true);
+  assert.equal(r.consumed, true);
+  assert.equal(r.starterChoices, 3);
+  assert.equal(r.choseFox, true);
+  assert.equal(r.catchOverlay, true);
+  assert.equal(r.eggAwarded, true);
+  assert.equal(r.eggTicked, true);
+  assert.equal(r.stage1Crest, true);
+  assert.equal(r.stage2Wings, true);
+  assert.equal(r.mapTrail, true);
+  assert.equal(r.tenFrame, true);
+  assert.equal(r.borrowCol, true);
+  assert.equal(r.mulArray, true);
+  assert.equal(r.fracPie, true);
+  assert.equal(r.sanctuary, true);
+  assert.equal(r.titleUnlocked, true);
+  assert.equal(r.frameUnlocked, true);
+  assert.equal(r.gemsOpensShop, true);
+  assert.equal(r.shieldOpensBuy, true);
+  assert.equal(r.roomSixActiveXp, true);
+  assert.equal(r.roomSixPassiveXp, true);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

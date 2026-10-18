@@ -257,6 +257,7 @@ function openStudy() {
 }
 function closeStudy() {
   if (!studyOn) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   studyOn = false;
   studyRound = null;
@@ -267,6 +268,7 @@ function closeStudy() {
 }
 // Escape and the ✕: from a round go back to the start (what was answered is remembered), from the start close.
 function studyEsc() {
+  if (typeof stopSpeech === 'function') stopSpeech();
   if (studyScreen === 'home') return closeStudy();
   soundClick();
   studyNote = studyScreen === 'card' ? 'Round paused. Everything you answered is remembered.' : '';
@@ -369,6 +371,7 @@ function studyAsk() {
   r.opts = r.mode === 'mcq' ? studyChoices(q) : null;
   r.picked = '';
   studyRender();
+  if (typeof speakCurrentStudy === 'function') speakCurrentStudy(false);
 }
 function studySubjectOf(q) { return STUDY_SUBJECTS.filter(function (s) { return s.id === q.s; })[0] || STUDY_SUBJECTS[STUDY_SUBJECTS.length - 1]; }
 function studyCardHtml() {
@@ -386,7 +389,8 @@ function studyCardHtml() {
     else body += '<button class="key-btn submit-btn study-go" id="study-next" onclick="studyNext()">' + (r.i + 1 >= r.qs.length ? 'See results ➔' : 'Next ➔') + '</button>';
   }
   return '<div class="study-top"><div class="raid-chapter" style="color:#a5b4fc;">Question ' + (r.i + 1) + ' of ' + r.qs.length + ' · ' + sub.icon + ' ' + escHtml(sub.label) + (q.parent ? ' · 👪 from your parent' : '') + '</div>' +
-    '<button class="grade-btn study-exit" onclick="studyEsc()" aria-label="Stop this round and go back">⏸ Back</button></div>' +
+    '<div class="study-actions"><button class="grade-btn study-speak" id="study-speak-btn" onclick="speakCurrentStudy(true)" aria-label="Read question and choices aloud" title="Read question aloud">🔊 Read</button>' +
+    '<button class="grade-btn study-exit" onclick="studyEsc()" aria-label="Stop this round and go back">⏸ Back</button></div></div>' +
     '<div class="study-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
     '<div class="study-q' + (q.q.length > 300 ? ' xlong' : q.q.length > 170 ? ' long' : '') + '">' + escHtml(q.q) + '</div>' + body;
 }
@@ -454,25 +458,32 @@ function studyBlocked() {
 function studyPickOpt(v) {
   const r = studyRound;
   if (!r || r.phase !== 'ask' || studyBlocked()) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   r.picked = String(v);
   studyAnswered(String(v) === r.qs[r.i].a, false);
 }
 function studySubmitText() {
   const r = studyRound, input = document.getElementById('study-in');
   if (!r || r.phase !== 'ask' || !input || studyBlocked()) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   if (!input.value.trim()) { toast('Type an answer first'); return; }
   studyAnswered(studyCheck(r.qs[r.i], input.value), false);
 }
 function studyReveal() {
   const r = studyRound;
   if (!r || r.phase !== 'ask') return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   studyAnswered(false, true);
+  if (state && state.readAloud && typeof speakText === 'function') {
+    speakText('The answer is: ' + r.qs[r.i].a);
+  }
 }
 // Flashcards: the player says whether they knew it.
 function studyMark(knew) {
   const r = studyRound;
   if (!r || r.phase !== 'reveal') return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   const q = r.qs[r.i];
   r.results[r.results.length - 1].ok = knew;
   studyRecord(q, knew);
@@ -483,6 +494,7 @@ function studyMark(knew) {
 function studyNext() {
   const r = studyRound;
   if (!r) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   r.i += 1;
   if (r.i >= r.qs.length) return studyFinish();

@@ -66,15 +66,26 @@ function drawCardFromDesc(cv, c) {
   cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
   const ec = ELEM_COLORS[c.element] || '#6366f1';
+  const frameStyle = (state.profile && state.profile.frame) || 'classic';
+  const frameCols = {
+    classic: c.rarity.col,
+    gold: '#facc15',
+    neon: '#22d3ee',
+    cosmic: '#e879f9',
+    crystal: '#a5b4fc'
+  };
+  const borderCol = frameCols[frameStyle] || c.rarity.col;
   const g = ctx.createLinearGradient(0, 0, W, H);
   g.addColorStop(0, ec);
-  g.addColorStop(0.55, '#1e1b4b');
+  g.addColorStop(0.55, frameStyle === 'cosmic' ? '#3b0764' : frameStyle === 'gold' ? '#422006' : '#1e1b4b');
   g.addColorStop(1, '#0f172a');
   ctx.fillStyle = g;
   rrect(ctx, 0, 0, W, H, 36); ctx.fill();
-  ctx.lineWidth = 12; ctx.strokeStyle = c.rarity.col;
+  ctx.lineWidth = frameStyle === 'gold' || frameStyle === 'crystal' ? 14 : 12;
+  ctx.strokeStyle = borderCol;
   rrect(ctx, 8, 8, W - 16, H - 16, 30); ctx.stroke();
-  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = frameStyle === 'neon' ? '#38bdf8' : frameStyle === 'gold' ? '#fef08a' : 'rgba(255,255,255,0.35)';
   rrect(ctx, 26, 26, W - 52, H - 52, 20); ctx.stroke();
   ctx.textBaseline = 'middle';
   // name + level
@@ -90,7 +101,7 @@ function drawCardFromDesc(cv, c) {
   art.addColorStop(1, 'rgba(0,0,0,0.35)');
   ctx.fillStyle = art;
   rrect(ctx, 48, 110, W - 96, 440, 24); ctx.fill();
-  ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+  ctx.lineWidth = 4; ctx.strokeStyle = borderCol; ctx.stroke();
   ctx.textAlign = 'center';
   let fs = 250;
   ctx.font = fs + 'px ' + EMOJI_FONT;
@@ -140,8 +151,9 @@ function drawCardFromDesc(cv, c) {
   ctx.font = '900 20px system-ui, sans-serif';
   ctx.textAlign = 'left'; ctx.fillStyle = c.rarity.col;
   ctx.fillText('◆ ' + c.rarity.name, 52, 800);
-  ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.fillText('MATH QUEST', W - 52, 800);
+  ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  const tTitle = (state.profile && state.profile.title) ? state.profile.title.toUpperCase() : 'MATH QUEST';
+  ctx.fillText(tTitle, W - 52, 800);
 }
 function drawCard(cv, id) { drawCardFromDesc(cv, buddyCard(id)); }
 function renderCardTab() {

@@ -20,6 +20,7 @@ export const MAP = [
   [/js\/24b-map/, ['map']],
   [/js\/24c-legend/, ['legend']],
   [/js\/24d-champion/, ['champion']],
+  [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm']],
   [/js\/(15-vault|33-shop)/, ['confirm', 'ui']],
   [/js\/(03b-|23-|35-|35b-|36-)|server\/(15-|16-)/, ['parent-controls', 'parent-page', 'parents', 'challenge', 'challenge-ui']],
@@ -29,7 +30,7 @@ export const MAP = [
   [/js\/(03-state|10-save-load|31-account)|server\/10-/, ['backup', 'app', 'parents']],
   [/server\/(00-|30-)/, ['server']],
   [/styles\.css|index\.html/, ['layout', 'windows', 'ui', 'contrast', 'app']],
-  [/js\/(01-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['app', 'ui']],
+  [/js\/(01-|01b-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['speech', 'app', 'ui']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']]
 ];

@@ -1,5 +1,8 @@
 // Bump SCHEMA_VERSION and add a MIGRATIONS entry (10-save-load.js) whenever a saved field changes shape.
 const SCHEMA_VERSION = 1;
+function defaultProfile() {
+  return { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
+}
 function freshState() {
   return {
     v: SCHEMA_VERSION,
@@ -47,6 +50,7 @@ function freshState() {
     raidsCleared: 0,
     lastRaidAt: 0,
     region: 'meadow',                                // where you are on the map (wild buddies of its type are more common)
+    regionsVisited: ['meadow'],                      // regions visited in the Number Kingdom
     daily: { day: '', fights: 0, spawned: false },   // today's count of wild buddies beaten, and whether the daily rare has appeared yet
     badges: [],                                      // gym badges: region ids
     rematch: { day: '', lands: [], wins: 0 },        // Champion rematches: the lands paid today, and how many rematches were won in all
@@ -65,12 +69,19 @@ function freshState() {
     shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
     packClaims: [],                                  // pack ids whose completion reward was claimed
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
+    egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null
+    profile: defaultProfile(),
+    stars: 0,                                        // Star Sparks (★): earned from solving problems, badges & goals, spent in the Tree of Knowledge
+    techUnlocked: [],                                // tech node ids unlocked in the Tree of Knowledge
+    techSolves: 0,                                   // correct answers toward the next Star Spark
+    readAloud: false,                                // whether math and study problems are read aloud
   };
 }
 
 let state = freshState();
 let pendingLootPet = null;
 let ultimateCharge = 0;
+let armedMove = '';
 let currentMonsterIndex = 0;
 let monsterCurrentHp = 4;
 let bossLevel = 1;

@@ -29,6 +29,65 @@ function screenShake(strong) {
   setTimeout(function () { el.classList.remove(cls); }, strong ? 520 : 320);
 }
 
+const ELEM_PROJ = { fire: '🔥', water: '🌊', nature: '🌿', electric: '⚡', dark: '🌑', magic: '✨', shadow: '🌌' };
+
+function awardEgg(element, rarity) {
+  if (state.egg) return false;
+  const validElems = ['fire', 'water', 'nature', 'electric', 'dark', 'magic'];
+  const el = validElems.indexOf(element) !== -1 ? element : 'fire';
+  const rar = ['common', 'rare', 'mythic'].indexOf(rarity) !== -1 ? rarity : 'common';
+  const baseTarget = (ECON.egg && ECON.egg.steps && ECON.egg.steps[rar]) || 5;
+  const target = (typeof hasTech === 'function' && hasTech('fast_incubator')) ? Math.max(2, baseTarget - 2) : baseTarget;
+  state.egg = { element: el, rarity: rar, steps: 0, target: target };
+  toast('🥚 Found a ' + rar.toUpperCase() + ' ' + el.toUpperCase() + ' Egg! Solve ' + target + ' math problems to hatch it!');
+  return true;
+}
+
+function inspectEgg() {
+  if (!state.egg) return;
+  soundClick();
+  const rem = Math.max(0, state.egg.target - state.egg.steps);
+  toast('🥚 ' + state.egg.rarity.toUpperCase() + ' ' + state.egg.element.toUpperCase() + ' Egg: ' + rem + ' more correct answer' + (rem === 1 ? '' : 's') + ' to hatch!');
+}
+
+function tickEgg() {
+  if (!state.egg) return null;
+  state.egg.steps += 1;
+  if (state.egg.steps < state.egg.target) return null;
+  return hatchEgg();
+}
+
+function hatchEgg() {
+  if (!state.egg) return null;
+  const egg = state.egg;
+  state.egg = null;
+  const owned = getOwnedIds();
+  const pool = wildPool().filter(function (p) { return p.element === egg.element && owned.indexOf(p.id) === -1; });
+  const fallbackPool = wildPool().filter(function (p) { return owned.indexOf(p.id) === -1; });
+  const chosen = pool.length ? pick(pool) : (fallbackPool.length ? pick(fallbackPool) : null);
+  soundSecretFound();
+  launchConfetti('level');
+  if (chosen) {
+    grantBuddy(chosen.id);
+    (isStoreBuddy(chosen) ? state.unlockedPets : state.unlockedSecrets).push(chosen.id);
+    if (typeof soundBuddyCry === 'function') soundBuddyCry(chosen.id);
+    checkEarnedGear();
+    toast('🐣 Your ' + egg.element + ' Egg hatched into ' + chosen.name + ' ' + emojiOf(chosen) + '!');
+    return chosen;
+  }
+  const xpBonus = (ECON.egg && ECON.egg.duplicateXp) || 25;
+  awardBuddyXp(xpBonus);
+  toast('🐣 Your ' + egg.element + ' Egg hatched! +' + xpBonus + ' Buddy XP!');
+  return null;
+}
+
+function awardBattleXp(baseXp) {
+  const share = typeof getSanctuaryXpShare === 'function' ? getSanctuaryXpShare() : 0;
+  const totalXp = baseXp + Math.round(baseXp * share);
+  awardBuddyXp(totalXp);
+  return totalXp;
+}
+
 function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
   const weakened = hasStatus('weak');               // read now: the status may run out at the end of this answer
   extraDamage = extraDamage || 0;
@@ -37,6 +96,11 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
   const petFx = document.getElementById('pet-attack-fx');
   const pet = getActivePetDisplay();
   const boss = getBossInfo();
+  const pElem = battleElement(pet) || pet.element || 'fire';
+  if (petFx) {
+    petFx.innerText = ELEM_PROJ[pElem] || '⚡';
+    petFx.setAttribute('data-fx', pElem);
+  }
 
   petIconWrapper.classList.remove('tackle-right');
   void petIconWrapper.offsetWidth;
@@ -54,6 +118,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
     void monsterIcon.offsetWidth;
     monsterIcon.classList.add('hurt-flash');
     soundHitSlash();
+    if (typeof soundElementHit === 'function') soundElementHit(pElem);
 
     let damage = getPetAttack(pet.id) + extraDamage;
     const rel = getTypeRelation(battleElement(pet), boss.element);
@@ -63,7 +128,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
     } else if (battleElement(pet) === 'shadow') {
       damage = Math.ceil(damage * 1.25);
     } else if (rel === 1) {
-      damage = Math.ceil(damage * 1.5) + (activeHolds('charm') ? 1 : 0);
+      damage = Math.ceil(damage * 1.5) + (activeHolds('charm') ? (typeof hasTech === 'function' && hasTech('second_heart') ? 2 : 1) : 0) + (typeof hasTech === 'function' && hasTech('elemental_strike') ? 1 : 0);
       showPopup('SUPER EFFECTIVE! 💥');
     } else if (rel === -1) {
       damage = Math.max(1, Math.floor(damage * 0.5));
@@ -99,10 +164,15 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       if (wild) { if (!state.gym && !state.wild.legend) state.wild.since += 1; }       // gym battles do not count toward the next boss
       else {
         questEvent('boss');
-        if (bossMistakes === 0) questEvent('flawless');
+        if (bossMistakes === 0) {
+          questEvent('flawless');
+          const flawStars = (ECON.tech && ECON.tech.flawlessStars) || 1;
+          state.stars = (state.stars || 0) + flawStars;
+        }
         state.monstersDefeated += 1;
         markBossWin(currentMonsterIndex, boss.form);
         checkBossBuddy(currentMonsterIndex, boss.form);
+        awardEgg(boss.element, boss.form >= 2 ? 'mythic' : boss.form === 1 ? 'rare' : 'common');
       }
       buddyReact('win');
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
@@ -117,7 +187,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBuddyXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
+      awardBattleXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
 
       const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {
@@ -159,7 +229,7 @@ function triggerSuperMove() {
   const pet = getActivePetDisplay();
   showPopup(`⚡ ${pet.superMove}!`);
   inputLocked = true;
-  triggerMonsterDamage(2 + Math.floor(pet.level / 10));
+  triggerMonsterDamage(2 + Math.floor(pet.level / 10) + (typeof hasTech === 'function' && hasTech('alpha_surge') ? 2 : 0));
   updateBattleUI();
   setTimeout(function () { inputLocked = false; }, 700);
 }
@@ -172,7 +242,7 @@ function triggerBuddyDamage() {
   const shellBlock = holds(id, 'shell') && !heldUsed.shell;      // Hard Shell: the first hit of each battle                // read now: the status may run out at the end of this answer
   if (guardUp || shellBlock) {                     // Guard (or a Hard Shell) blocks this hit completely (the combo still ends)
     if (guardUp) guardUp = false; else heldUsed.shell = true;
-    state.streak = 0;
+    state.streak = (typeof hasTech === 'function' && hasTech('streak_cushion') && state.streak > 1) ? state.streak - 1 : 0;
     soundShieldBreak();
     showPopup('🛡️ BLOCKED! NO DAMAGE');
     document.getElementById('feedback-msg').innerText = 'Guard held! ' + missLine(parseFloat(userInput), currentProblem.answer);
@@ -184,6 +254,11 @@ function triggerBuddyDamage() {
   const monsterIcon = document.getElementById('monster-icon');
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterFx = document.getElementById('monster-attack-fx');
+  const bElem = boss.element || 'fire';
+  if (monsterFx) {
+    monsterFx.innerText = ELEM_PROJ[bElem] || '💥';
+    monsterFx.setAttribute('data-fx', bElem);
+  }
 
   monsterIcon.classList.remove('tackle-left');
   void monsterIcon.offsetWidth;
@@ -201,6 +276,7 @@ function triggerBuddyDamage() {
     void petIconWrapper.offsetWidth;
     petIconWrapper.classList.add('hurt-flash');
     soundHitSlash();
+    if (typeof soundElementHit === 'function') soundElementHit(bElem);
     screenShake(false);
     bossReact('laugh');
 
@@ -216,11 +292,17 @@ function triggerBuddyDamage() {
     showPopup(slayer ? `☠️ STRONG AGAINST ${pet.baseName.toUpperCase()}! -${incoming} HP 💔` : rel === 1 ? `SUPER EFFECTIVE ON BUDDY! -${incoming} HP 💔` : `OUCH! BUDDY HIT -${incoming} HP 💔`);
 
     setPetHp(id, getPetHp(id) - incoming);
-    state.streak = 0;
+    if (getPetHp(id) <= 0 && typeof hasTech === 'function' && hasTech('guardian_aegis') && !heldUsed.aegis) {
+      heldUsed.aegis = true;
+      setPetHp(id, 1);
+      toast('🛡️ Guardian Aegis saved ' + pet.baseName + ' at 1 HP!');
+    }
+    state.streak = (typeof hasTech === 'function' && hasTech('streak_cushion') && state.streak > 1) ? state.streak - 1 : 0;
     if (getPetHp(id) > 0) maybeInflictStatus(boss);
     if (getPetHp(id) > 0 && holds(id, 'berry') && !heldUsed.berry && getPetHp(id) <= getPetMaxHp(id) / 3) {
       heldUsed.berry = true;
-      setPetHp(id, Math.min(getPetMaxHp(id), getPetHp(id) + ECON.held.berryHeal));
+      const berryHeal = ECON.held.berryHeal * (typeof hasTech === 'function' && hasTech('second_heart') ? 2 : 1);
+      setPetHp(id, Math.min(getPetMaxHp(id), getPetHp(id) + berryHeal));
       toast('🫐 ' + pet.baseName + ' ate its Oran Berry!');
     }
     ultimateCharge = 0;
@@ -268,6 +350,7 @@ function scheduleNextProblem(delay, msg) {
 
 function checkAnswer() {
   if (inputLocked) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   if (userInput === '' || userInput === '-' || userInput === '.' || userInput === '-.') return;
   const numVal = parseFloat(userInput);
   if (isNaN(numVal)) return;
@@ -300,6 +383,15 @@ function checkAnswer() {
     recordAllTime(opId, true, solveTime, hintUsed);
     questEvent('streak', state.streak);
     if (ultimateCharge < 3) ultimateCharge += 1;
+    const armedBonus = typeof consumeArmedMove === 'function' ? consumeArmedMove() : 0;
+    tickEgg();
+    state.techSolves = (state.techSolves || 0) + 1;
+    const solvesTarget = (ECON.tech && ECON.tech.solvesPerStar) || 15;
+    if (state.techSolves >= solvesTarget) {
+      state.techSolves = 0;
+      state.stars = (state.stars || 0) + 1;
+      toast('⭐ Earned a Star Spark! (★ ' + state.stars + ')');
+    }
 
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
@@ -308,10 +400,10 @@ function checkAnswer() {
     answerBonuses(isFast);
     let speedBonusGems = 0;
     if (isFast) {
-      speedBonusGems = ECON.solve.speedGem;
+      speedBonusGems = ECON.solve.speedGem + (typeof hasTech === 'function' && hasTech('quick_sparks') ? 1 : 0);
       questEvent('fast');
-      showPopup('⚡ SPEED STRIKE! +1 💎');
-    } else {
+      if (!armedBonus) showPopup('⚡ SPEED STRIKE! +1 💎');
+    } else if (!armedBonus) {
       showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
     }
 
@@ -320,13 +412,18 @@ function checkAnswer() {
     if (wasChallenge) xpEarned = Math.round(xpEarned * (1 + ECON.adaptive.challengeXpBonus));
     if (cloverOn) xpEarned = Math.round(xpEarned * 1.5);
     recordAdaptive(opId, true, isFast);
-    awardBuddyXp(xpEarned);
+    xpEarned = awardBattleXp(xpEarned);
 
     const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
     if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
-    triggerMonsterDamage(isFast && activeRole('Attacker') ? 1 : 0, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
+    triggerMonsterDamage((isFast && activeRole('Attacker') ? 1 : 0) + armedBonus, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
-    let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % ECON.solve.streakEvery === 0 ? ECON.solve.streakBonus : 0);
+    const streakEvery = (typeof hasTech === 'function' && hasTech('mind_over_matter')) ? 2 : ECON.solve.streakEvery;
+    let gemsEarned = ECON.solve.gem + speedBonusGems + (state.streak % streakEvery === 0 ? ECON.solve.streakBonus : 0);
+    if (typeof hasTech === 'function' && hasTech('lucky_number') && state.streak >= 2 && Math.random() < 0.15) {
+      gemsEarned += 3;
+      toast('✨ Lucky Number! +3 💎');
+    }
     if (state.cloverLeft > 0) {
       gemsEarned *= 2;
       state.cloverLeft -= 1;
@@ -343,8 +440,12 @@ function checkAnswer() {
     if (sessionStats.solved >= sessionStats.goal && !sessionStats.goalClaimed) {
       sessionStats.goalClaimed = true;
       const reached = sessionStats.goal;
-      const goalReward = sessionGoalReward(reached);
+      const goalMult = (typeof hasTech === 'function' && hasTech('master_scholar')) ? 2 : 1;
+      const goalReward = sessionGoalReward(reached) * goalMult;
       state.gems += goalReward;
+      const goalStars = (ECON.tech && ECON.tech.goalStars) || 1;
+      state.stars = (state.stars || 0) + goalStars;
+      toast('⭐ Earned ' + goalStars + ' Star Spark from Session Goal! (★ ' + state.stars + ')');
       setTimeout(function () {
         enqueueModal(function () {
           soundSecretFound();

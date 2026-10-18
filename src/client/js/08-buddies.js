@@ -77,7 +77,7 @@ function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
 function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
 function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
-function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage); }
+function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
 function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }

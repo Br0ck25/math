@@ -65,7 +65,7 @@ const ECON = {
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
-  items: { shield: 100, ult: 33, clover: 25, net: 30 },
+  items: { shield: 100, potion: 20, clover: 25, net: 30, whistle: 45, ult: 33 },
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,
@@ -95,6 +95,47 @@ const ECON = {
   // `parent`: limits for questions a parent adds from their phone (see src/shared/study.js and src/server/17-study.js).
   study: { roundSize: 8, minLevel: 6, maxLevel: 8, gemPerNew: 1, perfectBonus: 3, dayCap: 20, xpPerNew: 2, freshDays: 3, missMax: 40,
     parent: { max: 150, qMax: 200, aMax: 60, extras: 3, bulk: 50 } },
+  egg: { steps: { common: 5, rare: 8, mythic: 12 }, duplicateGems: 15, duplicateXp: 25 },
+  tech: {
+    solvesPerStar: 15,
+    badgeStars: 2,
+    goalStars: 1,
+    flawlessStars: 1,
+    nodes: [
+      // Branch: mind (Arithmancy)
+      { id: 'quick_sparks', branch: 'mind', tier: 1, name: 'Quick Sparks I', icon: '⚡', desc: 'Fast answers (<5s) grant +1 bonus Gem', stars: 1, gems: 20, pre: null },
+      { id: 'gentle_guide', branch: 'mind', tier: 1, name: 'Gentle Guide', icon: '💡', desc: 'First hint in every battle is completely free', stars: 1, gems: 25, pre: null },
+      { id: 'streak_cushion', branch: 'mind', tier: 2, name: 'Streak Cushion', icon: '🛡️', desc: 'A mistake drops your streak by 1 instead of 0', stars: 2, gems: 50, pre: 'quick_sparks' },
+      { id: 'lucky_number', branch: 'mind', tier: 2, name: 'Lucky Number', icon: '✨', desc: '15% chance on streak for +3 bonus Gems', stars: 2, gems: 60, pre: 'gentle_guide' },
+      { id: 'mind_over_matter', branch: 'mind', tier: 3, name: 'Mind Over Matter', icon: '🧠', desc: 'Streak bonus activates every 2 answers instead of 3', stars: 3, gems: 100, pre: 'streak_cushion' },
+      { id: 'master_scholar', branch: 'mind', tier: 4, name: 'Master Scholar', icon: '👑', desc: 'Daily session goal rewards are doubled', stars: 5, gems: 200, pre: 'mind_over_matter' },
+
+      // Branch: valor (Valor & Tactics)
+      { id: 'energize', branch: 'valor', tier: 1, name: 'Energize I', icon: '⚡', desc: 'Start battles with 1 Energy charged', stars: 1, gems: 25, pre: null },
+      { id: 'iron_will', branch: 'valor', tier: 1, name: 'Iron Will', icon: '❤️', desc: '+1 Max HP for your active buddy in battle', stars: 1, gems: 30, pre: null },
+      { id: 'swift_recovery', branch: 'valor', tier: 2, name: 'Swift Recovery', icon: '💚', desc: 'Recover move costs 1 Energy instead of 2', stars: 2, gems: 60, pre: 'energize' },
+      { id: 'elemental_strike', branch: 'valor', tier: 2, name: 'Elemental Strike', icon: '🔥', desc: '+1 damage on Super Effective attacks', stars: 2, gems: 75, pre: 'iron_will' },
+      { id: 'guardian_aegis', branch: 'valor', tier: 3, name: 'Guardian Aegis', icon: '🛡️', desc: 'Survive a fatal blow at 1 HP once per battle', stars: 3, gems: 120, pre: 'swift_recovery' },
+      { id: 'alpha_surge', branch: 'valor', tier: 4, name: 'Alpha Surge', icon: '💥', desc: 'Ultimate attacks deal +2 bonus damage', stars: 5, gems: 250, pre: 'guardian_aegis' },
+
+      // Branch: wild (Exploration & Discovery)
+      { id: 'net_crafter', branch: 'wild', tier: 1, name: 'Net Crafter', icon: '🕸️', desc: 'Max Catch Net stock increased from 9 to 15', stars: 1, gems: 20, pre: null },
+      { id: 'track_finder', branch: 'wild', tier: 1, name: 'Track Finder', icon: '🐾', desc: 'Wild encounters appear 1 battle sooner', stars: 1, gems: 30, pre: null },
+      { id: 'sticky_net', branch: 'wild', tier: 2, name: 'Sticky Net', icon: '🍯', desc: '+5% base catch chance per Catch Net thrown', stars: 2, gems: 75, pre: 'net_crafter' },
+      { id: 'golden_scent', branch: 'wild', tier: 2, name: 'Golden Scent', icon: '⭐', desc: 'Daily golden rare spawns 1 fight earlier', stars: 2, gems: 60, pre: 'track_finder' },
+      { id: 'legendary_tracker', branch: 'wild', tier: 3, name: 'Legendary Tracker', icon: '🏃', desc: 'Riley catches the Legend 1 day later in races', stars: 3, gems: 125, pre: 'golden_scent' },
+      { id: 'dex_collector', branch: 'wild', tier: 4, name: 'Dex Collector', icon: '📖', desc: 'Claiming packs grants +50% Gems & +2 Nets', stars: 5, gems: 220, pre: 'sticky_net' },
+
+      // Branch: care (Sanctuary & Bond)
+      { id: 'chefs_touch', branch: 'care', tier: 1, name: "Chef's Touch", icon: '🍰', desc: 'Snacks and treats give +25% Buddy XP', stars: 1, gems: 20, pre: null },
+      { id: 'warm_hearth', branch: 'care', tier: 1, name: 'Warm Hearth', icon: '✋', desc: 'Daily cuddles increased from 3 to 5 per buddy', stars: 1, gems: 25, pre: null },
+      { id: 'fast_incubator', branch: 'care', tier: 2, name: 'Fast Incubator', icon: '🥚', desc: 'Elemental eggs hatch 2 problems faster', stars: 2, gems: 50, pre: 'warm_hearth' },
+      { id: 'appraiser', branch: 'care', tier: 2, name: 'Appraiser', icon: '💰', desc: 'Selling spare duplicate buddies pays +50% Gems', stars: 2, gems: 60, pre: 'chefs_touch' },
+      { id: 'deep_harmony', branch: 'care', tier: 3, name: 'Deep Harmony', icon: '💖', desc: 'Maximum buddy bond raised to 7 hearts', stars: 3, gems: 100, pre: 'fast_incubator' },
+      { id: 'second_heart', branch: 'care', tier: 4, name: 'Second Heart', icon: '🌟', desc: 'Held item passive effects doubled', stars: 5, gems: 200, pre: 'deep_harmony' }
+    ]
+  },
+  profile: { maxShowcase: 6, roomXpPerBuddy: 0.01, titles: { knight: 20, defender: 45, explorer: 60, tamer: 90, dragon: 90, arithmancer: 150 }, frames: { gold: 35, neon: 50, cosmic: 80, crystal: 120 } },
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 
