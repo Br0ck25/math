@@ -1234,8 +1234,8 @@
 .answer-box { font-size: var(--fs, 1.6rem); height: calc(var(--fs, 1.6rem) * 1.35); min-width: calc(var(--fs, 1.6rem) * 3.2); border-bottom-width: 3px; }
 .eq-expr, .eq-ans { font-size: var(--fs, 1.2rem); }
 /* When the area is short, the least useful lines step aside first (kept in the page for screen readers and tests): banner, then feedback. */
-@container arena (max-height: 150px) { .streak-banner { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; min-height: 0; margin: 0; } }
-@container arena (max-height: 118px) { .feedback-msg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-height: 0; margin: 0; } }
+@container arena (max-height: 195px) { .streak-banner { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); padding: 0; min-height: 0; margin: 0; } }
+@container arena (max-height: 195px) { .feedback-msg { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); min-height: 0; margin: 0; } }
 .hint-box { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
 .hint-box:empty { display: none; }
 @container arena (max-height: 150px) { .hint-box { -webkit-line-clamp: 1; line-clamp: 1; } }
