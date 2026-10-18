@@ -272,6 +272,7 @@ function toggleMusic() {
 
 function toggleMute() {
   isMuted = !isMuted;
+  if (isMuted && typeof stopSpeech === 'function') stopSpeech();
   const el = document.getElementById('sound-icon');
   if (el) el.innerText = isMuted ? '🔇' : '🔊';
 }

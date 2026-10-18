@@ -133,6 +133,7 @@
     <div class="arena">
       <button class="pad-open-btn" id="pad-open-btn" onclick="togglePad()" title="Drawing pad (P)" aria-label="Open drawing pad">✏️<span class="tool-label">Pad</span></button>
       <button class="hint-btn" id="hint-btn" onclick="useHint()" title="Hint: spend 1 gem to see the first step" aria-label="Hint, costs 1 gem">💡<span class="tool-label">Hint</span><span class="hint-cost">1💎</span></button>
+      <button class="speak-btn" id="arena-speak-btn" type="button" onclick="speakCurrentProblem(true)" title="Read problem aloud" aria-label="Read problem aloud">🔊</button>
       <div class="streak-banner" id="streak-msg">READY TO SOLVE?</div>
       <div class="floating-popup" id="floating-popup">CRITICAL HIT! 💥</div>
       
@@ -450,6 +451,7 @@
         <button class="grade-btn" onclick="toggleMusic()"><span id="music-icon">🔕</span> Music</button>
         <button class="grade-btn" id="motion-btn" onclick="toggleMotion()">✨ Motion: Full</button>
         <button class="grade-btn" onclick="closeSettings(); openReportModal()">📊 Session report</button>
+        <button class="grade-btn" id="read-aloud-btn" onclick="toggleReadAloud()" style="grid-column: span 2;" aria-pressed="false">🗣️ Read aloud: OFF</button>
       </div>
       <button class="grade-btn" style="width:100%; margin-top:6px; min-height:44px;" onclick="closeSettings(); openStudy()">📚 Study school subjects</button>
       <button class="grade-btn" style="width:100%; margin-top:6px;" onclick="closeSettings(); openParent()">👨‍👩‍👧 Parent report &amp; goals</button>

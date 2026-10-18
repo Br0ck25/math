@@ -7,6 +7,7 @@ if (isPortal()) {
   addCloseButtons();
   initAccessibility();
   applyMotionPref();
+  if (typeof applyReadAloudPref === 'function') applyReadAloudPref();
   setBossTaunt();
   updateStatsUI();
   generateProblem();

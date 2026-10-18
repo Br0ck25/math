@@ -870,6 +870,10 @@
 
     .pad-open-btn { position: absolute; top: 2px; right: 4px; z-index: 6; background: #1e1b4b; border: 1px solid #6366f1; color: #fff; border-radius: 999px; width: 44px; height: 44px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .pad-open-btn.on { background: var(--primary); }
+    .speak-btn { position: absolute; bottom: 4px; right: 6px; z-index: 6; background: #1e1b4b; border: 1px solid #6366f1; color: #c7d2fe; border-radius: 999px; width: 38px; height: 38px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: transform 0.15s, background 0.15s; }
+    .speak-btn:hover { background: #312e81; border-color: #818cf8; color: #fff; }
+    .speak-btn:active { transform: scale(0.92); }
+    .speak-btn.speaking { background: #4338ca; border-color: #a5b4fc; color: #fff; animation: pulseGlow 1s infinite alternate; }
     .pad-sheet { position: fixed; z-index: 150; display: none; flex-direction: column; background: #0b1120; border: 2px solid #6366f1; border-radius: 14px; overflow: hidden; touch-action: none; }
     .pad-sheet.open { display: flex; }
     .pad-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 10px; background: #1e1b4b; font-weight: 800; flex-shrink: 0; }
@@ -1363,6 +1367,10 @@ body.trivia .math-only { display: none; }
 .study-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .study-top .raid-chapter { flex: 1; min-width: 0; }
 .study-exit { min-height: 44px; min-width: 44px; padding: 0 10px; font-size: 0.75rem; }
+.study-actions { display: inline-flex; align-items: center; gap: 6px; }
+.study-speak { min-height: 44px; min-width: 44px; padding: 0 10px; font-size: 0.75rem; background: #1e1b4b; border-color: #6366f1; color: #c7d2fe; }
+.study-speak:hover { background: #312e81; color: #fff; }
+.study-speak.speaking { background: #4338ca; border-color: #a5b4fc; color: #fff; animation: pulseGlow 1s infinite alternate; }
 .study-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .study-chips .grade-btn { min-height: 44px; padding: 6px 4px; }
 .study-chips .grade-btn small { color: inherit; opacity: 0.8; font-weight: 700; }

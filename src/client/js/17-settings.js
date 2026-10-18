@@ -19,6 +19,7 @@ function renderTypeChart() {
 
 function renderSettings() {
   renderTypeChart();
+  if (typeof applyReadAloudPref === 'function') applyReadAloudPref();
   document.getElementById('ctl-note').innerText = ctlNote();
   const gg = document.getElementById('grade-grid');
   gg.innerHTML = '';

@@ -268,6 +268,9 @@ const NORMALIZERS = [
     s.techUnlocked = (Array.isArray(s.techUnlocked) ? s.techUnlocked : []).filter(function (id, i, a) {
       return validIds.indexOf(id) !== -1 && a.indexOf(id) === i;
     });
+  },
+  function readAloud(s) {
+    s.readAloud = s.readAloud === true;
   }
 ];
 function normalizeState() {

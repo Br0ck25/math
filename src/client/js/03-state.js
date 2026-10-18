@@ -74,6 +74,7 @@ function freshState() {
     stars: 0,                                        // Star Sparks (★): earned from solving problems, badges & goals, spent in the Tree of Knowledge
     techUnlocked: [],                                // tech node ids unlocked in the Tree of Knowledge
     techSolves: 0,                                   // correct answers toward the next Star Spark
+    readAloud: false,                                // whether math and study problems are read aloud
   };
 }
 

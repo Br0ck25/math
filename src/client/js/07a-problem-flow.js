@@ -109,6 +109,7 @@ function generateProblem() {
   padReset();
   renderEquationUI();
   holdForSwitch();
+  if (typeof speakCurrentProblem === 'function') speakCurrentProblem(false);
 }
 
 function renderEquationUI() {
@@ -150,6 +151,7 @@ function renderEquationUI() {
 
 function pressKey(key) {
   if (inputLocked) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   if (key === 'backspace') {
     userInput = userInput.slice(0, -1);

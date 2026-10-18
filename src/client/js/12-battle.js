@@ -350,6 +350,7 @@ function scheduleNextProblem(delay, msg) {
 
 function checkAnswer() {
   if (inputLocked) return;
+  if (typeof stopSpeech === 'function') stopSpeech();
   if (userInput === '' || userInput === '-' || userInput === '.' || userInput === '-.') return;
   const numVal = parseFloat(userInput);
   if (isNaN(numVal)) return;
