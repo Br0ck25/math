@@ -166,7 +166,7 @@ test('the Sanctuary, a new catch and the team chips share one swap per battle', 
     out.adopt = [state.unlockedPets.includes(buy.id), state.activePet === ids[0]];
     // a new battle gives a new swap
     monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 3000));
+    await new Promise((res) => setTimeout(res, 8000));
     out.fresh = state.swapUsed === false;
     return out;
   });

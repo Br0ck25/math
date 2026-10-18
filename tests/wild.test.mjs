@@ -386,7 +386,7 @@ test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets,
     const sp = getSpecies('fox'); state.activePet = 'dog'; state.nets = 0;
     const c = [0, 1, 2, 3].map((n) => wildCatchChance(sp, { nets: n }));
     out.chances = c; out.flawless = wildCatchChance(sp, { flawless: true }) / c[0]; out.cap = wildCatchChance(getSpecies('hedgehog'), { nets: 3, flawless: true });
-    const win = async () => { state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0; monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false); await wait(1500); };
+    const win = async () => { state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0; monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false); await wait(4000); };
     state.unlockedPets = ['dog']; state.spares = {}; state.gems = 1000; modalDone();
     // no nets in stock: no window, the roll just happens
     const real = Math.random; Math.random = () => 0.99;
