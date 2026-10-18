@@ -109,7 +109,7 @@ function renderHub() {
 // ----- Trainer Profile & Showcase Sanctuary Room -----
 const PROFILE_TITLES = [
   { id: 'Rookie Calculator', label: 'Rookie Calculator', icon: '🌱', desc: 'Your starting trainer title', cost: 0 },
-  { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', desc: 'Brave defender of the Number Kingdom', cost: ECON.profile.titles.apprentice },
+  { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', desc: 'Brave defender of the Number Kingdom', cost: ECON.profile.titles.knight },
   { id: 'Gem Defender', label: 'Gem Defender', icon: '🛡️', desc: 'Guardian of the kingdom\'s math gems', cost: ECON.profile.titles.defender },
   { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', desc: 'Traveller across all seven lands', cost: ECON.profile.titles.explorer },
   { id: 'Dragon Tamer', label: 'Dragon Tamer', icon: '🐉', desc: 'Master of fierce elemental buddies', cost: ECON.profile.titles.dragon },
@@ -124,7 +124,7 @@ const PROFILE_FRAMES = [
 ];
 function ensureProfile() {
   if (!state.profile || typeof state.profile !== 'object') {
-    state.profile = { title: 'Rookie Calculator', frame: 'classic', unlockedTitles: ['Rookie Calculator'], unlockedFrames: ['classic'], showcase: ['dog'] };
+    state.profile = defaultProfile();
   }
   return state.profile;
 }
@@ -191,7 +191,7 @@ function getSanctuaryIds() {
   return valid;
 }
 function getSanctuaryXpShare() {
-  return getSanctuaryIds().length * ((ECON.profile && ECON.profile.roomXpPerBuddy) || 0.01);
+  return getSanctuaryIds().length * ECON.profile.roomXpPerBuddy;
 }
 function renderRoomTab() {
   const prof = ensureProfile();

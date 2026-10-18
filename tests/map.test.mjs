@@ -289,7 +289,7 @@ test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline 
     sixIds.forEach((id) => { state.buddyXp[id] = xpForLevel(10); });
     const gainedActive = awardBattleXp(100);
     out.roomSixActiveXp = gainedActive === 106 && state.buddyXp[sixIds[0]] - xpForLevel(10) === 106;
-    out.roomSixPassiveXp = state.buddyXp[sixIds[1]] - xpForLevel(10) === 6;
+    out.roomSixPassiveXp = state.buddyXp[sixIds[1]] - xpForLevel(10) === 0;
     return out;
   });
   assert.equal(r.xpRing, true);

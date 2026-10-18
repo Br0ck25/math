@@ -236,7 +236,7 @@ const NORMALIZERS = [
     }
   },
   function profile(s) {
-    if (!isPlainObject(s.profile)) s.profile = { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
+    if (!isPlainObject(s.profile)) s.profile = defaultProfile();
     const p = s.profile;
     if (!Array.isArray(p.unlockedTitles) || p.unlockedTitles.indexOf('Rookie Calculator') === -1) {
       p.unlockedTitles = ['Rookie Calculator'].concat(Array.isArray(p.unlockedTitles) ? p.unlockedTitles : []);

@@ -1,5 +1,8 @@
 // Bump SCHEMA_VERSION and add a MIGRATIONS entry (10-save-load.js) whenever a saved field changes shape.
 const SCHEMA_VERSION = 1;
+function defaultProfile() {
+  return { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
+}
 function freshState() {
   return {
     v: SCHEMA_VERSION,
@@ -66,7 +69,7 @@ function freshState() {
     packClaims: [],                                  // pack ids whose completion reward was claimed
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
     egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null
-    profile: { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] },
+    profile: defaultProfile(),
   };
 }
 

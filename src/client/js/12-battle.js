@@ -81,17 +81,8 @@ function hatchEgg() {
 }
 
 function awardBattleXp(baseXp) {
-  const roomIds = typeof getSanctuaryIds === 'function' ? getSanctuaryIds() : [];
-  const share = roomIds.length * ((ECON.profile && ECON.profile.roomXpPerBuddy) || 0.01);
-  const roomXp = Math.round(baseXp * share);
-  const totalXp = baseXp + roomXp;
+  const totalXp = baseXp + Math.round(baseXp * getSanctuaryXpShare());
   awardBuddyXp(totalXp);
-  if (roomIds.length > 0 && baseXp > 0) {
-    const passiveXp = Math.max(1, roomXp);
-    roomIds.forEach(function (id) {
-      if (id !== state.activePet) addXpTo(id, passiveXp);
-    });
-  }
   return totalXp;
 }
 

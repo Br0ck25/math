@@ -76,7 +76,7 @@ function claimQuest(i) {
   if (!q || !q.done || q.claimed) return;
   q.claimed = true;
   grantGems(q.reward, '+' + q.reward + ' 💎 quest reward!');
-  if (!state.egg && typeof awardEgg === 'function') awardEgg(currentRegion().element || pick(['fire', 'water', 'nature', 'electric', 'dark', 'magic']), 'common');
+  if (!state.egg) awardEgg(currentRegion().element || pick(['fire', 'water', 'nature', 'electric', 'dark', 'magic']), 'common');
   renderQuests();
 }
 function claimQuestChest() {
@@ -84,7 +84,7 @@ function claimQuestChest() {
   if (qs.chestClaimed || !qs.list.every(function (q) { return q.claimed; })) return;
   qs.chestClaimed = true;
   grantGems(ECON.quest.chest, '🎁 Daily chest! +' + ECON.quest.chest + ' 💎', true);
-  if (!state.egg && typeof awardEgg === 'function') awardEgg(currentRegion().element || pick(['fire', 'water', 'nature', 'electric', 'dark', 'magic']), 'rare');
+  if (!state.egg) awardEgg(currentRegion().element || pick(['fire', 'water', 'nature', 'electric', 'dark', 'magic']), 'rare');
   renderQuests();
 }
 
