@@ -1842,11 +1842,40 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
   overflow: hidden;
   margin-bottom: 8px;
 }
-@keyframes sanctuaryWander {
+@keyframes sanctuaryWander1 {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(6px, -4px); }
-  50% { transform: translate(-5px, 2px); }
-  75% { transform: translate(4px, 3px); }
+  25% { transform: translate(7px, -5px); }
+  50% { transform: translate(-4px, 3px); }
+  75% { transform: translate(5px, 4px); }
+}
+@keyframes sanctuaryWander2 {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 3px); }
+  50% { transform: translate(5px, -4px); }
+  80% { transform: translate(-3px, -3px); }
+}
+@keyframes sanctuaryWander3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(4px, -6px) scale(1.04); }
+  60% { transform: translate(-5px, -2px) scale(0.97); }
+  80% { transform: translate(2px, 3px) scale(1.02); }
+}
+@keyframes sanctuaryWander4 {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5px, -4px); }
+  55% { transform: translate(6px, 2px); }
+  75% { transform: translate(-2px, 5px); }
+}
+@keyframes sanctuaryWander5 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  35% { transform: translate(3px, 6px); }
+  70% { transform: translate(-6px, -4px); }
+}
+@keyframes sanctuaryWander6 {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(5px, -6px); }
+  50% { transform: translate(-6px, -2px); }
+  75% { transform: translate(3px, 5px); }
 }
 .sanctuary-buddy {
   position: absolute;
@@ -1861,7 +1890,71 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  animation: sanctuaryWander 4.2s ease-in-out infinite;
+  animation-name: var(--wander-anim, sanctuaryWander1);
+  animation-duration: var(--wander-dur, 4.2s);
+  animation-delay: var(--wander-delay, 0s);
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.sanctuary-bubble {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.6);
+  background: #1e1b4b;
+  border: 1.5px solid #818cf8;
+  color: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease, visibility 0.18s;
+  z-index: 12;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+.sanctuary-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px 4px 0 4px;
+  border-style: solid;
+  border-color: #818cf8 transparent transparent transparent;
+}
+.sanctuary-bubble.show {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  visibility: visible;
+}
+.sanctuary-buddy:nth-child(1) .sanctuary-bubble {
+  left: 0;
+  transform: translateX(0) scale(0.6);
+}
+.sanctuary-buddy:nth-child(1) .sanctuary-bubble::after {
+  left: 18px;
+}
+.sanctuary-buddy:nth-child(1) .sanctuary-bubble.show {
+  transform: translateX(0) scale(1);
+}
+.sanctuary-buddy:nth-child(3) .sanctuary-bubble,
+.sanctuary-buddy:nth-child(6) .sanctuary-bubble {
+  left: auto;
+  right: 0;
+  transform: translateX(0) scale(0.6);
+}
+.sanctuary-buddy:nth-child(3) .sanctuary-bubble::after,
+.sanctuary-buddy:nth-child(6) .sanctuary-bubble::after {
+  left: auto;
+  right: 18px;
+}
+.sanctuary-buddy:nth-child(3) .sanctuary-bubble.show,
+.sanctuary-buddy:nth-child(6) .sanctuary-bubble.show {
+  transform: translateX(0) scale(1);
 }
 .profile-chips {
   display: grid;

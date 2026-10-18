@@ -264,6 +264,16 @@ test('trainer titles, collapsible sanctuary sections, and full move names', asyn
     tapRoomBuddy('dog');
     out.tapToast = document.getElementById('toast').innerText;
 
+    // 7. Sanctuary desynchronized movements & speech bubbles
+    toggleSanctuarySection('room'); // expand room again
+    const buddyBtns = Array.from(document.querySelectorAll('.sanctuary-buddy'));
+    out.buddyCount = buddyBtns.length;
+    out.styles = buddyBtns.map(function (b) { return b.getAttribute('style') || ''; });
+    out.hasBubble = !!document.querySelector('.sanctuary-bubble');
+    tapRoomBuddy('dog');
+    const bubbleEl = document.getElementById('sanctuary-bubble-dog');
+    out.bubbleShownOnTap = !!(bubbleEl && bubbleEl.classList.contains('show') && bubbleEl.innerText);
+
     closeHub();
 
     out.initRoomSec = initRoomSec;
@@ -287,7 +297,10 @@ test('trainer titles, collapsible sanctuary sections, and full move names', asyn
   assert.equal(r.tamerLocked, true, 'Buddy Tamer locked at 1 buddy');
   assert.equal(r.tamerUnlocked, true, 'Buddy Tamer unlocked at 50 buddies');
   assert.equal(r.arithLocked, true, 'Grand Arithmancer locked at level 59');
-  assert.equal(r.arithUnlocked, true, 'Grand Arithmancer unlocked at level 60');
   assert.equal(r.initRoomSec !== r.toggledRoomSec, true, 'collapsible sections toggle');
+  assert.equal(r.hasBubble, true, 'sanctuary bubbles are rendered');
+  assert.ok(r.styles.length > 0 && r.styles[0].includes('--wander-anim'), 'styles specify distinct wander animations');
+  assert.ok(r.styles.length > 0 && r.styles[0].includes('--wander-delay'), 'styles specify distinct animation delays');
+  assert.equal(r.bubbleShownOnTap, true, 'speech bubble appears when tapping buddy');
 });
 

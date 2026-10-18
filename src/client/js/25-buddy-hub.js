@@ -76,7 +76,7 @@ function buddyReact(kind) {
 let hubPet = 'dog';
 let hubTab = 'care';
 function openHub() { showModal('hub-modal', function () { state.seen.hub = true; hubPet = getOwnedIds().indexOf(state.activePet) !== -1 ? state.activePet : 'dog'; renderHub(); }); }
-function closeHub() { hideModal('hub-modal', function () { saveState(); updateStatsUI(); }); }
+function closeHub() { stopSanctuaryChatter(); hideModal('hub-modal', function () { saveState(); updateStatsUI(); }); }
 // ‹ › in the hub header: previous / next buddy you own
 function hubStep(dir) {
   const ids = getOwnedIds();
@@ -84,7 +84,12 @@ function hubStep(dir) {
   soundClick();
   renderHub();
 }
-function setHubTab(t) { soundClick(); hubTab = t; renderHub(); }
+function setHubTab(t) {
+  if (hubTab === 'room' && t !== 'room') stopSanctuaryChatter();
+  soundClick();
+  hubTab = t;
+  renderHub();
+}
 function renderHub() {
   const d = getPetById(hubPet);
   const sleepy = isSleepy(hubPet);
@@ -165,12 +170,106 @@ function checkTitleUnlocks() {
   if (dtIdx !== -1) prof.unlockedTitles[dtIdx] = 'Buddy Tamer';
 }
 
+const SANCTUARY_CHAT = [
+  'High five! 🐾',
+  'You are doing great! ⭐',
+  'Got any snacks? 🍰',
+  'Let\'s go explore! 🧭',
+  'I love math quest! 🧮',
+  'Together we are strong! 💪',
+  'Who wants a cuddle? 💖',
+  'Nap time soon? 💤',
+  'Watch this hop! ✨',
+  'Team power! 🔥',
+  'I found a star spark! ★',
+  'Best buddies forever! 🐾',
+  'Practicing pays off! 💎',
+  'Nice moves out there! ⚡',
+  'You rock, trainer! 👑'
+];
+
+const SANCTUARY_CONVOS = [
+  { a: 'Ready for adventure? 🧭', b: 'Right behind you! 🚀' },
+  { a: 'Who wants a snack? 🍰', b: 'Me me me! 😋' },
+  { a: 'Let\'s solve some math! 🧮', b: '1 + 1 = friends! 🐾' },
+  { a: 'Together we\'re strong! 💪', b: 'Unstoppable! 🔥' },
+  { a: 'Look at that star spark! ★', b: 'So shiny! ✨' },
+  { a: 'Best team in the Kingdom! 👑', b: 'We rock! 🌟' },
+  { a: 'Time for a quick snooze? 💤', b: 'Zzz... 😴' },
+  { a: 'High five, buddy! 🐾', b: 'High paw! 🐾' },
+  { a: 'What a cozy room! 🛋️', b: 'I love it here! 🪴' },
+  { a: 'Did you level up today? ⭐', b: 'Getting stronger every day! 💪' }
+];
+
+const BUDDY_TAP_REACTIONS = [
+  'Yay! 💖',
+  'Hehe, tickles! 🐾',
+  'Ready to help! ⭐',
+  'You are the best! 🌸',
+  'Woosh! ✨',
+  'Let\'s do it! 🚀'
+];
+
+let sanctuaryChatterTimer = null;
+
+function showSanctuaryBubble(id, text, dur) {
+  const el = document.getElementById('sanctuary-bubble-' + id);
+  if (!el) return;
+  el.innerText = text;
+  el.classList.add('show');
+  if (el._hideTimer) clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(function () {
+    el.classList.remove('show');
+  }, dur || 2600);
+}
+
+function stepSanctuaryChatter() {
+  if (hubTab !== 'room' || !sanctuarySections.room) {
+    stopSanctuaryChatter();
+    return;
+  }
+  const ids = getSanctuaryIds();
+  if (!ids || ids.length === 0) return;
+  if (ids.length === 1) {
+    showSanctuaryBubble(ids[0], pick(SANCTUARY_CHAT), 2600);
+    return;
+  }
+  const firstIdx = Math.floor(Math.random() * ids.length);
+  let secondIdx = Math.floor(Math.random() * (ids.length - 1));
+  if (secondIdx >= firstIdx) secondIdx++;
+  const idA = ids[firstIdx];
+  const idB = ids[secondIdx];
+  const convo = pick(SANCTUARY_CONVOS);
+
+  showSanctuaryBubble(idA, convo.a, 2400);
+  setTimeout(function () {
+    if (hubTab === 'room' && sanctuarySections.room) {
+      showSanctuaryBubble(idB, convo.b, 2400);
+    }
+  }, 1800);
+}
+
+function startSanctuaryChatter() {
+  stopSanctuaryChatter();
+  sanctuaryChatterTimer = setInterval(stepSanctuaryChatter, 6200);
+  setTimeout(stepSanctuaryChatter, 900);
+}
+
+function stopSanctuaryChatter() {
+  if (sanctuaryChatterTimer) {
+    clearInterval(sanctuaryChatterTimer);
+    sanctuaryChatterTimer = null;
+  }
+}
+
 function tapRoomBuddy(id) {
   const sp = getPetById(id);
   if (!sp) return;
   if (typeof soundBuddyCry === 'function') soundBuddyCry(id, sp.element);
+  const reaction = pick(BUDDY_TAP_REACTIONS);
+  showSanctuaryBubble(id, reaction, 2400);
   const icon = (sp.icon && sp.icon.indexOf('<') === -1) ? sp.icon + ' ' : '💖 ';
-  toast(icon + sp.baseName + ' waves happily from the Sanctuary! 💖');
+  toast(icon + sp.baseName + ' waves happily from the Sanctuary! 💖 ("' + reaction + '")');
 }
 function toggleShowcaseBuddy(id) {
   const prof = ensureProfile();
@@ -258,6 +357,7 @@ let sanctuarySections = {
 function toggleSanctuarySection(sec) {
   soundClick();
   sanctuarySections[sec] = !sanctuarySections[sec];
+  if (!sanctuarySections.room) stopSanctuaryChatter();
   renderRoomTab();
 }
 
@@ -265,12 +365,12 @@ function renderRoomTab() {
   checkTitleUnlocks();
   const prof = ensureProfile();
   const spots = [
-    { left: '16%', top: '26%', dur: '3.6s' },
-    { left: '46%', top: '22%', dur: '4.2s' },
-    { left: '74%', top: '28%', dur: '3.9s' },
-    { left: '24%', top: '58%', dur: '4.4s' },
-    { left: '54%', top: '56%', dur: '3.7s' },
-    { left: '78%', top: '60%', dur: '4.1s' }
+    { left: '14%', top: '22%', dur: '3.4s', delay: '-0.8s', anim: 'sanctuaryWander1' },
+    { left: '44%', top: '18%', dur: '4.6s', delay: '-2.1s', anim: 'sanctuaryWander2' },
+    { left: '74%', top: '24%', dur: '3.9s', delay: '-1.4s', anim: 'sanctuaryWander3' },
+    { left: '20%', top: '56%', dur: '4.2s', delay: '-3.3s', anim: 'sanctuaryWander4' },
+    { left: '50%', top: '54%', dur: '3.7s', delay: '-1.9s', anim: 'sanctuaryWander5' },
+    { left: '76%', top: '58%', dur: '4.5s', delay: '-0.5s', anim: 'sanctuaryWander6' }
   ];
   const validShow = getSanctuaryIds();
   const xpBonusPct = Math.round(getSanctuaryXpShare() * 100);
@@ -285,17 +385,21 @@ function renderRoomTab() {
     '<span>' + (sanctuarySections.room ? '▼' : '▶') + '</span></button>';
 
   if (sanctuarySections.room) {
+    startSanctuaryChatter();
     let stage = '<div class="sanctuary-stage">';
     validShow.slice(0, ECON.profile.maxShowcase).forEach(function (id, idx) {
       const p = getPetById(id);
       const sp = spots[idx % spots.length];
-      stage += '<button type="button" class="sanctuary-buddy" style="left:' + sp.left + '; top:' + sp.top + '; --wander-dur:' + sp.dur + '; background:none; border:none;" onclick="tapRoomBuddy(&quot;' + id + '&quot;)" aria-label="Pet ' + p.name + ' in Sanctuary">' +
+      stage += '<button type="button" class="sanctuary-buddy" style="left:' + sp.left + '; top:' + sp.top + '; --wander-dur:' + sp.dur + '; --wander-delay:' + sp.delay + '; --wander-anim:' + sp.anim + '; background:none; border:none;" onclick="tapRoomBuddy(&quot;' + id + '&quot;)" aria-label="Pet ' + p.name + ' in Sanctuary">' +
+        '<span class="sanctuary-bubble" id="sanctuary-bubble-' + id + '"></span>' +
         avatarHtml(p, 36) + '<span class="sanctuary-buddy-lbl">' + p.baseName + '</span></button>';
     });
     stage += '<span class="sanctuary-decor">🪴 🛋️ ⭐ Sanctuary (' + validShow.length + '/' + ECON.profile.maxShowcase + ' · +' + xpBonusPct + '% XP)</span></div>';
     h += stage +
       '<div class="care-row"><div><div class="t">' + curPet.icon + ' ' + curPet.baseName + ' in Sanctuary</div><div class="d">Pick up to ' + ECON.profile.maxShowcase + ' buddies (+1% battle XP per buddy — currently +' + xpBonusPct + '% XP!)</div></div>' +
       '<button type="button" class="claim-btn" onclick="toggleShowcaseBuddy(&quot;' + hubPet + '&quot;)">' + (inRoom ? 'Remove' : 'Add to Room') + '</button></div>';
+  } else {
+    stopSanctuaryChatter();
   }
 
   // Section 2: Trainer Titles
