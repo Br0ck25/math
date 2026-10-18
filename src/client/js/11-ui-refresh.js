@@ -163,6 +163,12 @@ function updateStatsUI() {
   document.getElementById('gems-display').innerText = state.gems;
   document.getElementById('streak-display').innerText = state.streak;
   document.getElementById('shop-gems').innerText = state.gems;
+  const starsEl = document.getElementById('stars-display');
+  if (starsEl) starsEl.innerText = state.stars || 0;
+  const treeStarsEl = document.getElementById('tree-stars');
+  if (treeStarsEl) treeStarsEl.innerText = state.stars || 0;
+  const treeGemsEl = document.getElementById('tree-gems');
+  if (treeGemsEl) treeGemsEl.innerText = state.gems;
   const miniAv = document.getElementById('trainer-mini-avatar');
   if (miniAv) miniAv.innerText = pet.emoji || '🐶';
   const titleEl = document.getElementById('trainer-title-display');

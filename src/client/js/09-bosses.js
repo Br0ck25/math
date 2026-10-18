@@ -114,7 +114,8 @@ function pickNextBoss() {
   state.wild.shiny = false;
   state.wild.legend = false;
   state.wild.since = 0;
-  state.wild.next = rnd(ECON.wild.bossEvery[0], ECON.wild.bossEvery[1]);
+  const nextWild = rnd(ECON.wild.bossEvery[0], ECON.wild.bossEvery[1]);
+  state.wild.next = (typeof hasTech === 'function' && hasTech('track_finder')) ? Math.max(3, nextWild - 1) : nextWild;
   if (!state.recentBossTypes) state.recentBossTypes = [];
   let excludedType = null;
   const len = state.recentBossTypes.length;

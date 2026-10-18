@@ -1458,7 +1458,7 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 }
 .study-top-btn:active { background: #1e1b4b; }
 
-.egg-pill, .starter-pill {
+.egg-pill, .starter-pill, .tree-pill {
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -1475,6 +1475,7 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
   white-space: nowrap;
 }
 .starter-pill { background: #1e1b4b; border-color: #818cf8; color: #e0e7ff; }
+.tree-pill { background: #064e3b; border-color: #34d399; color: #a7f3d0; }
 @media (max-width: 400px) {
   #session-badge, .starter-pill { display: none !important; }
   .top-bar { gap: 3px; }
@@ -1703,6 +1704,7 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 /* 8. Number Kingdom Map Winding Visual Node Path */
 .map-board-trail, .map-board { display: flex; flex-direction: column; gap: 6px; position: relative; }
 .map-row { flex-direction: column; align-items: stretch; gap: 6px; }
+.map-row.champion-row, .map-row.legend-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
 .map-row-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
 .map-trail-nodes {
   display: flex;
@@ -1864,5 +1866,39 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
   padding: 6px 4px;
   font-size: 0.72rem;
   overflow-wrap: anywhere;
+}
+.tree-branch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.tree-branch-grid .grade-btn {
+  padding: 6px 2px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+}
+.sanctuary-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: #1e1b4b;
+  border: 1px solid #4338ca;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px 0 4px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #e0e7ff;
+  cursor: pointer;
+  text-align: left;
+}
+.sanctuary-section-header:hover {
+  background: #312e81;
+  border-color: #6366f1;
 }
 

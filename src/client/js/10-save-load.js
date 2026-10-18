@@ -76,6 +76,13 @@ const NORMALIZERS = [
   function map(s) {
     s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
+    const regList = REGIONS.map(function (r) { return r.id; });
+    s.regionsVisited = (Array.isArray(s.regionsVisited) ? s.regionsVisited : ['meadow']).filter(function (id, i, a) {
+      return regList.indexOf(id) !== -1 && a.indexOf(id) === i;
+    });
+    if (s.regionsVisited.indexOf('meadow') === -1) s.regionsVisited.unshift('meadow');
+    if (s.region && s.regionsVisited.indexOf(s.region) === -1) s.regionsVisited.push(s.region);
+    s.badges.forEach(function (b) { if (s.regionsVisited.indexOf(b) === -1) s.regionsVisited.push(b); });
     const g = s.gym;
     const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
     if (g && isPlainObject(g) && g.region === 'champion' && gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; })) {      // the Champion's Hall needs all six badges
@@ -253,6 +260,14 @@ const NORMALIZERS = [
     p.showcase = (Array.isArray(p.showcase) ? p.showcase : []).filter(function (id, i, a) {
       return owned.indexOf(id) !== -1 && a.indexOf(id) === i;
     }).slice(0, (ECON.profile && ECON.profile.maxShowcase) || 6);
+  },
+  function tech(s) {
+    s.stars = asInt(s.stars, 0, 1e6, 0);
+    s.techSolves = asInt(s.techSolves, 0, 100, 0);
+    const validIds = (ECON.tech && ECON.tech.nodes) ? ECON.tech.nodes.map(function (n) { return n.id; }) : [];
+    s.techUnlocked = (Array.isArray(s.techUnlocked) ? s.techUnlocked : []).filter(function (id, i, a) {
+      return validIds.indexOf(id) !== -1 && a.indexOf(id) === i;
+    });
   }
 ];
 function normalizeState() {

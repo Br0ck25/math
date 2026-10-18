@@ -6,7 +6,11 @@
 // =====================================================================
 // Which day of the week it is (0 = Monday), and the day Riley catches this week's legend (never random: it only depends on the week).
 function weekDay(d) { return 6 - (weekDaysLeft(d) - 1); }
-function rileyDay() { const R = ECON.legend.riley; return R.firstDay + ((weekNumber() * 3 + 1) % (R.lastDay - R.firstDay + 1)); }
+function rileyDay() {
+  const R = ECON.legend.riley;
+  const base = R.firstDay + ((weekNumber() * 3 + 1) % (R.lastDay - R.firstDay + 1));
+  return (typeof hasTech === 'function' && hasTech('legendary_tracker')) ? base + 1 : base;
+}
 function rileyLeft() { return rileyDay() - weekDay(); }                      // days until Riley catches it; 0 or less: Riley already has
 const RIVAL_LEGEND = [
   { track: 'Riley is on the trail of {n} too!', done: 'Riley already caught {n}, but you can still hunt it!', won: 'Riley arrives, out of breath: "You got {n} first! Wow, you are fast!"', lost: 'Riley grins: "I got to {n} first this time! You caught it too, so we are both legends!"' },

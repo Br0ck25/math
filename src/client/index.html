@@ -48,6 +48,7 @@
         <span class="session-line" title="Session goal: solve problems to earn a bonus">🎯 <span id="session-count-text">0</span>/<span id="session-goal-text">25</span> <span id="session-badge">🎁 25</span></span>
         <button type="button" class="egg-pill" id="egg-pill" style="display:none;" onclick="inspectEgg()" aria-label="Mystery Egg Incubator"></button>
         <button type="button" class="starter-pill" id="starter-pill" style="display:none;" onclick="openStarterModal()" aria-label="Choose your starter buddy">🌟 Starter</button>
+        <button type="button" class="tree-pill" id="tree-pill" onclick="openTree()" aria-label="Tree of Knowledge: tap to view tech tree">🌳 <span id="stars-display">0</span>★</button>
         <span id="clover-status" style="color:#4ade80; display:none;">🍀 2x Gems (0)</span>
         <button class="practice-chip" onclick="openSettings()" aria-label="Practice settings: grade and math types">
           <span id="grade-chip">📚 3–5</span><span id="ops-chip">➕</span><span class="practice-gear">⚙️</span>
@@ -212,10 +213,10 @@
         </div>
         <div class="item-card">
           <div>
-            <div class="item-name">⚡ Ult Battery</div>
-            <div class="item-desc">Fills Ultimate (3/3) instantly</div>
+            <div class="item-name">💖 Super Potion</div>
+            <div class="item-desc">Fully restores buddy HP &amp; revives fainted</div>
           </div>
-          <button class="key-btn submit-btn item-btn" id="item-ult" onclick="buyItem('ult')">-- 💎</button>
+          <button class="key-btn submit-btn item-btn" id="item-potion" onclick="buyItem('potion')">-- 💎</button>
         </div>
         <div class="item-card">
           <div>
@@ -230,6 +231,13 @@
             <div class="item-desc">After a wild win, throw up to 3 at once for a better catch chance. You have <span id="net-count">0</span></div>
           </div>
           <button class="key-btn submit-btn item-btn" id="item-net" onclick="buyItem('net')">-- 💎</button>
+        </div>
+        <div class="item-card">
+          <div>
+            <div class="item-name">🔔 Boss Whistle</div>
+            <div class="item-desc">Summons the next big Boss immediately!</div>
+          </div>
+          <button class="key-btn submit-btn item-btn" id="item-whistle" onclick="buyItem('whistle')">-- 💎</button>
         </div>
       </div>
 
@@ -543,6 +551,22 @@
       <div class="hub-tabs" id="hub-tabs"></div>
       <div id="hub-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeHub()">Back to Game</button>
+    </div>
+  </div>
+
+  <!-- Tree of Knowledge: Tech Tree modal -->
+  <div class="modal-overlay" id="tree-modal" data-close="closeTree">
+    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h2 style="font-size:1.15rem; margin:0;">🌳 Tree of Knowledge</h2>
+        <div style="display:flex; align-items:center; gap:8px; font-weight:900; font-size:0.95rem;">
+          <span style="color:#facc15;" title="Star Sparks">★ <span id="tree-stars">0</span></span>
+          <span style="color:#38bdf8;" title="Math Gems">💎 <span id="tree-gems">0</span></span>
+        </div>
+      </div>
+      <div class="tree-branch-grid" id="tree-branch-tabs"></div>
+      <div id="tree-branch-container" style="flex:1; overflow-y:auto; padding-right:2px;"></div>
+      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeTree()">Back to Game</button>
     </div>
   </div>
 

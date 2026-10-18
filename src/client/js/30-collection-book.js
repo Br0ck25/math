@@ -86,13 +86,18 @@ function claimBookReward(i) {
 
 // A pack is complete when you own every buddy in it. It pays once: gems per member and some Catch Nets.
 function packComplete(g) { return g.members.every(function (sp) { return getOwnedIds().indexOf(sp.id) !== -1; }); }
-function packReward(g) { return { gems: g.members.length * ECON.dex.packGemsPer, nets: ECON.dex.packNets }; }
+function packReward(g) {
+  const mult = (typeof hasTech === 'function' && hasTech('dex_collector')) ? 1.5 : 1;
+  const extraNets = (typeof hasTech === 'function' && hasTech('dex_collector')) ? 2 : 0;
+  return { gems: Math.round(g.members.length * ECON.dex.packGemsPer * mult), nets: ECON.dex.packNets + extraNets };
+}
 function claimPackReward(id) {
   const g = buddyPacks().find(function (x) { return x.pack.id === id; });
   if (!g || !packComplete(g) || state.packClaims.indexOf(id) !== -1) return;
   const r = packReward(g);
   state.packClaims.push(id);
-  state.nets = Math.min(ECON.wild.net.stock, state.nets + r.nets);
+  const cap = typeof maxNets === 'function' ? maxNets() : ECON.wild.net.stock;
+  state.nets = Math.min(cap, state.nets + r.nets);
   grantGems(r.gems, g.pack.icon + ' ' + g.pack.name + ' complete! +' + r.gems + ' 💎 and ' + r.nets + ' 🕸️', true);
   renderBook();
 }

@@ -124,6 +124,12 @@ function mathManipulativeHtml(p) {
   return '';
 }
 
+let battleHintUsed = false;
+
+function hintCost() {
+  return (typeof hasTech === 'function' && hasTech('gentle_guide') && !battleHintUsed) ? 0 : ECON.hint.cost;
+}
+
 function renderHintUI() {
   const btn = document.getElementById('hint-btn');
   const box = document.getElementById('hint-box');
@@ -133,7 +139,10 @@ function renderHintUI() {
     box.innerText = '';
     if (vis) vis.innerHTML = '';
   }
-  btn.disabled = hintUsed || state.gems < ECON.hint.cost;
+  const cost = hintCost();
+  btn.disabled = hintUsed || (cost > 0 && state.gems < cost);
+  const costSpan = btn.querySelector('.hint-cost');
+  if (costSpan) costSpan.innerText = cost === 0 ? 'Free' : cost + '💎';
 }
 // After a wrong answer, show how to do it. The next problem waits long enough to read it.
 let explainHold = 0;
@@ -172,8 +181,10 @@ function closeMissCard() {
 }
 function useHint() {
   if (hintUsed || inputLocked) return;
-  if (state.gems < ECON.hint.cost) { toast('You need ' + ECON.hint.cost + ' 💎 for a hint'); return; }
-  state.gems -= ECON.hint.cost;
+  const cost = hintCost();
+  if (cost > 0 && state.gems < cost) { toast('You need ' + cost + ' 💎 for a hint'); return; }
+  if (cost > 0) state.gems -= cost;
+  battleHintUsed = true;
   hintUsed = true;
   statDay().h += 1;
   soundClick();

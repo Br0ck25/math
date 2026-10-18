@@ -28,15 +28,19 @@ function wildCatchChance(sp, opts) {
   let chance = (sp.legend ? ECON.legend.catchChance + ECON.legend.pity * legendState().misses : base) * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
-  if (activeHolds('bait')) chance *= 1.25;
+  if (activeHolds('bait')) chance *= (typeof hasTech === 'function' && hasTech('second_heart') ? 1.5 : 1.25);
   const nets = opts && opts.nets ? Math.min(opts.nets, ECON.wild.net.mult.length - 1) : 0;
-  if (nets) chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult[nets], ECON.wild.net.max));       // nets never lower a chance
+  if (nets) {
+    chance = Math.max(chance, Math.min(chance * ECON.wild.net.mult[nets], ECON.wild.net.max));       // nets never lower a chance
+    if (typeof hasTech === 'function' && hasTech('sticky_net')) chance = Math.min(1, chance + 0.05 * nets);
+  }
   if (opts && opts.shiny) chance = Math.min(chance, Math.max(ECON.daily.catchMax, base));
   return Math.min(1, chance);
 }
 function spareValueOf(id) {
   const sp = getSpecies(id);
-  return sp ? spareValue(isStoreBuddy(sp), sp.cost, sp.legend) : 0;
+  const base = sp ? spareValue(isStoreBuddy(sp), sp.cost, sp.legend) : 0;
+  return (typeof hasTech === 'function' && hasTech('appraiser')) ? Math.round(base * 1.5) : base;
 }
 
 function pickNextWild() {
@@ -54,7 +58,8 @@ function pickNextWild() {
   }
   const d = state.daily, today = dayKey();
   if (d.day !== today) { d.day = today; d.fights = 0; d.spawned = false; }
-  if (!d.spawned && d.fights >= ECON.daily.after && !state.gym) {   // the daily rare
+  const dailyAfter = (typeof hasTech === 'function' && hasTech('golden_scent')) ? Math.max(1, ECON.daily.after - 1) : ECON.daily.after;
+  if (!d.spawned && d.fights >= dailyAfter && !state.gym) {   // the daily rare
     d.spawned = true;
     sp = getSpecies(dailyRareId());
     state.wild.shiny = true;

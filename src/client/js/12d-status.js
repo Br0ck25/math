@@ -11,7 +11,13 @@ const ELEMENT_STATUS = { fire: 'burn', electric: 'burn', water: 'frozen', magic:
 let buddyStatus = { kind: '', left: 0 };
 
 function clearBuddyStatus() { buddyStatus = { kind: '', left: 0 }; renderStatus(); }
-function resetBattleEffects() { guardUp = false; heldUsed = {}; clearBuddyStatus(); }
+function resetBattleEffects() {
+  guardUp = false;
+  heldUsed = {};
+  if (typeof battleHintUsed !== 'undefined') battleHintUsed = false;
+  clearBuddyStatus();
+  if (typeof hasTech === 'function' && hasTech('energize')) ultimateCharge = Math.max(ultimateCharge, 1);
+}
 function hasStatus(kind) { return buddyStatus.kind === kind && buddyStatus.left > 0; }
 
 // Called when a foe's hit lands (and the buddy is still standing).

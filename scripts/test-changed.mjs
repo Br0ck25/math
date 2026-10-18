@@ -20,6 +20,7 @@ export const MAP = [
   [/js\/24b-map/, ['map']],
   [/js\/24c-legend/, ['legend']],
   [/js\/24d-champion/, ['champion']],
+  [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm']],
   [/js\/(15-vault|33-shop)/, ['confirm', 'ui']],
   [/js\/(03b-|23-|35-|35b-|36-)|server\/(15-|16-)/, ['parent-controls', 'parent-page', 'parents', 'challenge', 'challenge-ui']],

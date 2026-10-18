@@ -99,6 +99,9 @@ function advanceGym(leaderWon) {
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
   state.gems += ECON.map.badgeGems;
+  const badgeStars = (ECON.tech && ECON.tech.badgeStars) || 2;
+  state.stars = (state.stars || 0) + badgeStars;
+  toast('⭐ Earned ' + badgeStars + ' Star Sparks from Gym Badge! (★ ' + state.stars + ')');
   return { region: r, hall: state.badges.length >= gymRegions().length };       // the sixth badge opens the Champion's Hall
 }
 function showBadgeStory(res) {
@@ -117,11 +120,26 @@ function showBadgeStory(res) {
 // ----- the map window -----
 function openMap() { showModal('map-modal', renderMap); }
 function closeMap() { hideModal('map-modal', updateStatsUI); }
+function markRegionVisited(id) {
+  if (!state.regionsVisited) state.regionsVisited = ['meadow'];
+  if (id && state.regionsVisited.indexOf(id) === -1) state.regionsVisited.push(id);
+}
+function getVisitedKingdomsCount() {
+  const visited = (state.regionsVisited || ['meadow']).slice();
+  if (state.region && visited.indexOf(state.region) === -1) visited.push(state.region);
+  if (Array.isArray(state.badges)) {
+    state.badges.forEach(function (b) {
+      if (visited.indexOf(b) === -1) visited.push(b);
+    });
+  }
+  return REGIONS.filter(function (r) { return visited.indexOf(r.id) !== -1; }).length;
+}
 function travelTo(id) {
   const r = regionById(id);
   if (!regionUnlocked(r)) { soundWrong(); toast('🔒 Reach level ' + regionLevel(r) + ' to visit ' + r.name); return; }
   if (state.gym && (state.gym.champ || state.gym.region !== id)) { soundWrong(); toast('Finish or leave the gym first'); return; }
   state.region = id;
+  markRegionVisited(id);
   soundClick();
   saveState();
   renderMap();
@@ -132,6 +150,7 @@ function startGym(id) {
   const rematch = hasBadge(id);
   if (!r.element || !regionUnlocked(r) || (rematch && !isChampion()) || state.gym) return;
   state.region = id;
+  markRegionVisited(id);
   state.gym = rematch ? { region: id, step: 0, rematch: true } : { region: id, step: 0 };
   closeMap();
   pickGymFoe();

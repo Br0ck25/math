@@ -266,7 +266,7 @@ test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline 
     out.mulArray = mathManipulativeHtml({ modeTag: 'mul', expr: '4 × 5' }).includes('manip-array');
     out.fracPie = mathManipulativeHtml({ modeTag: 'frac', expr: '3/4 of 12' }).includes('manip-pie');
     // 11. Sanctuary Room & Trainer Profile
-    state.gems = 500; openHub(); setHubTab('room');
+    state.gems = 500; state.raidsCleared = 5; openHub(); setHubTab('room');
     out.sanctuary = document.querySelectorAll('#hub-body .sanctuary-buddy').length > 0;
     selectProfileTitle('Number Knight');
     out.titleUnlocked = state.profile.title === 'Number Knight' && document.getElementById('trainer-title-display').innerText.includes('Number Knight');
