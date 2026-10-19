@@ -49,7 +49,7 @@ function rematchPays(id) {
 function regionById(id) { return REGIONS.find(function (r) { return r.id === id; }) || REGIONS[0]; }
 function currentRegion() { return regionById(state.region); }
 function regionLevel(r) { return ECON.map.levels[r.id] || 1; }
-function regionUnlocked(r) { return getBestLevel() >= regionLevel(r); }
+function regionUnlocked(r) { return journeyLevel() >= regionLevel(r); }
 function hasBadge(id) { return state.badges.indexOf(id) !== -1; }
 function gymRegions() { return REGIONS.filter(function (r) { return r.element; }); }
 
@@ -189,7 +189,7 @@ function leaveGym() {
 }
 function renderMap() {
   document.getElementById('map-title').innerText = '🗺️ ' + triviaWords('Number Kingdom') + ' Map';
-  const best = getBestLevel(), total = gymRegions().length;
+  const best = journeyLevel(), total = gymRegions().length;
   const myPet = getActivePetDisplay();
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '') + ' · ' + weatherToday().icon + ' ' + weatherToday().name;
   let h = '<div class="map-board">' + championRowHtml() + legendRowHtml();
@@ -197,7 +197,7 @@ function renderMap() {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
     const need = regionLevel(r), badge = hasBadge(r.id);
     let actions = '';
-    if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your best: Lv ' + best + ')</div>';
+    if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your team: Lv ' + best + (getBestLevel() > best ? '). Level up your other buddies too!' : ')') + '</div>';
     else {
       actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>' +
         '<button class="claim-btn" aria-label="Explore ' + r.name + '" onclick="openTrail(&quot;' + r.id + '&quot;)">' + (trailFinished(r.id) ? '🧭 ✅' : '🧭 Explore') + '</button>';
@@ -245,7 +245,7 @@ function renderMap() {
       { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all six badges to open the Champion\'s Hall!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
   }
 }
-// A new region opens when your best buddy reaches its level.
+// A new region opens when your journey level (your best buddy, held back if the rest of your team is far behind) reaches its level.
 function checkRegionUnlocks() {
   REGIONS.forEach(function (r) {
     if (!r.element || !regionUnlocked(r) || state.storySeen['open_' + r.id]) return;

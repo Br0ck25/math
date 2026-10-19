@@ -191,7 +191,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
       const fullXp = Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio);
-      awardBattleXp(Math.round(fullXp * easy));
+      awardBattleXp(Math.round(fullXp * easy * (plainWild ? restedShare(state.activePet) : 1)));
       if (plainWild) shareTeamXp(fullXp);
 
       const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss

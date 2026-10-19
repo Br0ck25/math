@@ -484,6 +484,7 @@ function renderCare() {
   };
   let h = '<div class="hearts" title="Bond">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.68rem; color:var(--text-muted);">Bond ' + bond + '/' + maxB + (bond ? ' · +' + Math.round(bond * ECON.care.bondXpBonus * 100) + '% XP for this buddy' : ' · feed the favorite snack to grow it') + '</div>' +
+    '<div style="font-size:0.66rem; color:var(--text-muted);">' + (restedLeft(id) > 0 ? '😊 Rested: +' + Math.round(ECON.farm.restedXp * 100) + '% XP for ' + restedLeft(id) + ' more wild wins today' : '😴 Rested bonus used up today. Try another buddy!') + '</div>' +
     (getPetById(id).stage === 0 ? '<div style="font-size:0.66rem; color:var(--text-muted);">✨ ' + ECON.evo.bondMin + ' hearts (or its favorite snack on the day) make a Radiant form when it first evolves.</div>' : '');
   if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Beat a boss to wake everyone up!</div>';
   h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + maxP + ' · +' + ECON.care.petXp + ' XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= maxP));

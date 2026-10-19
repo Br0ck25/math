@@ -77,6 +77,23 @@ function teamPower() {
 function foeBaseLevel() {
   return Math.min(getBuddyLevel(state.activePet), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
 }
+// The level that opens lands and Alpha hunts: your best buddy's, but one buddy far ahead of the rest cannot carry the journey alone.
+function journeyLevel() {
+  return Math.min(getBestLevel(), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
+}
+// Plain wild wins this buddy has left today with the rested bonus.
+function restedLeft(id) {
+  const r = state.rested;
+  return r.day === dayKey() ? Math.max(0, ECON.farm.restedWins - (r.fights[id] || 0)) : ECON.farm.restedWins;
+}
+// Counts a plain wild win by this buddy and returns its XP multiplier: its first restedWins wins of the day earn extra.
+function restedShare(id) {
+  const r = state.rested;
+  if (r.day !== dayKey()) { r.day = dayKey(); r.fights = {}; }
+  const left = restedLeft(id);
+  r.fights[id] = (r.fights[id] || 0) + 1;
+  return left > 0 ? 1 + ECON.farm.restedXp : 1;
+}
 // A plain wild win pays less when the foe is weaker than your buddy (never below ECON.farm.minShare).
 function easyShare(foeLevel) {
   return clamp(foeLevel / Math.max(1, getBuddyLevel(state.activePet)), ECON.farm.minShare, 1);
