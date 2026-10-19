@@ -16,8 +16,86 @@ const MOVES = [
   { id: 'cleanse', cost: 1, minLevel: 24, kind: 'cleanse', icon: '🧼', name: 'Cleanse', optional: true },
   { id: 'heal', cost: 2, minLevel: 30, kind: 'heal', icon: '💚', name: 'Recover' },
   { id: 'drain', cost: 2, minLevel: 36, kind: 'damage', icon: '🌿', name: 'Absorb', drain: true, optional: true },
+  { id: 'sig', cost: 2, minLevel: 12, kind: 'damage', icon: '🌟', sig: true, optional: true },
   { id: 'ult', cost: 3, minLevel: 1, kind: 'ult', icon: '⚡' }
 ];
+// Signature moves: every buddy has a move of its own (a name and one extra effect). It is learned at level 12 and costs 2 energy.
+// Store buddies have hand-written ones here; every other buddy gets one made from its name and element (see signatureOf).
+// effect: drain (heals 1 HP), surge (refunds 1 energy), ward (raises Guard), purify (clears a status effect).
+const SIGNATURE_MOVES = {
+  dog:      { name: 'Loyal Bite',      effect: 'ward' },
+  jimothy:  { name: 'Bin Raid',        effect: 'surge' },
+  fox:      { name: 'Cinder Dash',     effect: 'surge' },
+  bunny:    { name: 'Moon Hop',        effect: 'purify' },
+  otter:    { name: 'Pebble Juggle',   effect: 'surge' },
+  hedgehog: { name: 'Quill Roll',      effect: 'ward' },
+  ignis:    { name: 'Dragon Breath',   effect: 'drain' },
+  penguin:  { name: 'Belly Slide',     effect: 'ward' },
+  bear:     { name: 'Honey Smash',     effect: 'drain' },
+  hedwig:   { name: 'Owl Post Dive',   effect: 'surge' },
+  dolphin:  { name: 'Echo Leap',       effect: 'purify' },
+  byte:     { name: 'Bit Burst',       effect: 'surge' },
+  tiger:    { name: 'Stripe Rush',     effect: 'drain' },
+  panther:  { name: 'Moonlit Pounce',  effect: 'purify' },
+  bat:      { name: 'Echo Screech',    effect: 'drain' },
+  olaf:     { name: 'Snowman Hug',     effect: 'ward' },
+  pascal:   { name: 'Camo Flick',      effect: 'purify' },
+  crookshanks: { name: 'Sneaky Pounce', effect: 'surge' },
+  rhino:    { name: 'Horn Charge',     effect: 'ward' },
+  griffin:  { name: 'Sky Talons',      effect: 'surge' },
+  cosmo:    { name: 'Comet Tail',      effect: 'drain' },
+  lion:     { name: 'Mane Flare',      effect: 'ward' },
+  phoenix:  { name: 'Ember Rebirth',   effect: 'drain' },
+  frostfang: { name: 'Icicle Fang',    effect: 'purify' },
+  pegasus:  { name: 'Cloud Gallop',    effect: 'surge' },
+  panda:    { name: 'Bamboo Bonk',     effect: 'drain' },
+  koala:    { name: 'Sleepy Hug',      effect: 'purify' },
+  monkey:   { name: 'Banana Swing',    effect: 'surge' },
+  turtle:   { name: 'Shell Spin',      effect: 'ward' },
+  octopus:  { name: 'Ink Swirl',       effect: 'purify' },
+  wolf:     { name: 'Pack Howl',       effect: 'ward' },
+  zephyr:   { name: 'Gust Wyrm',       effect: 'surge' },
+  shark:    { name: 'Fin Dash',        effect: 'drain' },
+  raptor:   { name: 'Swoop Strike',    effect: 'surge' },
+  scorpion: { name: 'Tail Flick',      effect: 'drain' },
+  butterfly: { name: 'Wing Dust',      effect: 'purify' },
+  gorilla:  { name: 'Chest Thump',     effect: 'ward' },
+  toon_bluey:     { name: 'Keepy Uppy',    effect: 'surge' },
+  toon_spongebob: { name: 'Jellyfishing',  effect: 'purify' },
+  toon_chase:     { name: 'Case Closed',   effect: 'ward' },
+  toon_peppa:     { name: 'Muddy Puddles', effect: 'drain' },
+  toon_bugs:      { name: 'Doc Dodge',     effect: 'surge' },
+  toon_homer:     { name: 'Donut Break',   effect: 'drain' },
+  bandit:   { name: 'Shadow Snatch',   effect: 'surge' }
+};
+const SIG_EFFECT_TEXT = { drain: 'heals 1 HP', surge: 'gives 1 energy back', ward: 'raises Guard', purify: 'clears a status effect' };
+// Every other buddy gets one made from its own name and element ("Leo's Flare"); the same buddy always gets the same move.
+const SIG_WORDS = {
+  fire: ['Flare', 'Scorch', 'Ember', 'Blaze', 'Singe', 'Sparks'], water: ['Splash', 'Tide', 'Bubbles', 'Wave', 'Drizzle', 'Surf'],
+  nature: ['Bloom', 'Roots', 'Vines', 'Thorns', 'Moss', 'Petals'], electric: ['Zap', 'Volt', 'Static', 'Spark', 'Arc', 'Jolt'],
+  dark: ['Shade', 'Gloom', 'Dusk', 'Fang', 'Mist', 'Moonbite'], magic: ['Glimmer', 'Charm', 'Wish', 'Rune', 'Sparkle', 'Starlight'],
+  shadow: ['Twist', 'Echo', 'Warp', 'Flicker', 'Phase', 'Swirl']
+};
+const SIG_EFFECTS = {
+  fire: ['surge', 'drain'], water: ['purify', 'ward'], nature: ['drain', 'ward'], electric: ['surge', 'purify'],
+  dark: ['ward', 'drain'], magic: ['purify', 'surge'], shadow: ['surge', 'ward']
+};
+const madeSignatures = {};
+// A well-mixed number from text (FNV-1a), so neighbouring ids do not get neighbouring moves.
+function mixHash(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function signatureOf(pet) {
+  if (!pet) return null;
+  if (SIGNATURE_MOVES[pet.id]) return SIGNATURE_MOVES[pet.id];
+  if (madeSignatures[pet.id]) return madeSignatures[pet.id];
+  const sp = getSpecies(pet.id);
+  if (!sp) return null;
+  const h = mixHash(pet.id), words = sp.name.split(' '), el = SIG_WORDS[sp.element] ? sp.element : 'shadow', owner = words[words.length - 1];
+  return (madeSignatures[pet.id] = { name: owner + (/s$/i.test(owner) ? "' " : "'s ") + SIG_WORDS[el][h % SIG_WORDS[el].length], effect: SIG_EFFECTS[el][(h >>> 16) % 2] });
+}
 let guardUp = false;                       // Guard is up: the next hit on your buddy is blocked
 
 function moveCost(m) {
@@ -26,30 +104,34 @@ function moveCost(m) {
 
 function moveName(m, pet) {
   if (m.kind === 'ult') return pet.superMove;
+  if (m.sig) return signatureOf(pet) ? signatureOf(pet).name : 'Signature';
   if (m.name) return m.name;
   const names = MOVE_NAMES[pet.element] || MOVE_NAMES.magic;
   return names[m.id === 'power' ? 1 : 0];
 }
 // Extra damage of a damage move at a level: kept near the ultimate's damage per energy, so moves are a choice and not a free speed-up.
 function moveDamage(m, level) {
+  if (m.sig) return 1 + Math.floor(level / 12);
   return m.id === 'power' ? 1 + Math.floor(level / 12) : m.id === 'strike' ? 1 : m.id === 'drain' ? 1 + Math.floor(level / 20) : 2 + Math.floor(level / 10);
 }
 function moveDesc(m, pet) {
   if (m.kind === 'guard') return 'Blocks the next hit on your buddy';
   if (m.kind === 'cleanse') return 'Clears a status effect from your buddy';
+  if (m.sig) return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type, ' + SIG_EFFECT_TEXT[signatureOf(pet).effect];
   if (m.drain) return '+' + moveDamage(m, pet.level) + ' damage and heals 1 HP, ' + pet.element + ' type';
   if (m.kind === 'heal') return 'Heals ' + Math.round(ECON.moves.healShare * 100) + '% of your buddy\'s HP';
   return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type';
 }
-function movesLearned(level) { return MOVES.filter(function (m) { return m.minLevel <= level; }); }
+// A signature move only counts for a buddy that has one (pass the buddy).
+function movesLearned(level, pet) { return MOVES.filter(function (m) { return m.minLevel <= level && (!m.sig || signatureOf(pet)); }); }
 // Moves a buddy picks up between two levels (shown on a level-up and in the evolution window).
-function movesBetween(fromLevel, toLevel) {
-  return MOVES.filter(function (m) { return m.kind !== 'ult' && m.minLevel > fromLevel && m.minLevel <= toLevel; });
+function movesBetween(fromLevel, toLevel, pet) {
+  return MOVES.filter(function (m) { return m.kind !== 'ult' && m.minLevel > fromLevel && m.minLevel <= toLevel && (!m.sig || signatureOf(pet)); });
 }
 
 // The moves a buddy takes into battle: its chosen set (only moves it has learned), else the first ones it learned. The ultimate is always there.
 function equippedMoves(pet) {
-  const known = movesLearned(pet.level).filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
+  const known = movesLearned(pet.level, pet).filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
   const saved = state.moveSet[pet.id];
   const ids = (saved ? saved.filter(function (id) { return known.indexOf(id) !== -1; }) : known.filter(function (id) { return !MOVES.find(function (m) { return m.id === id; }).optional; })).slice(0, ECON.moves.slots);
   return MOVES.filter(function (m) { return m.kind === 'ult' || ids.indexOf(m.id) !== -1; });
@@ -89,6 +171,7 @@ function renderMoves() {
     ? 'Tap a move to take it into battle or leave it out. ' + ECON.moves.slots + ' at a time, plus your ultimate.'
     : 'Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!';
   MOVES.forEach(function (m) {
+    if (m.sig && !signatureOf(pet)) return;
     const known = m.minLevel <= pet.level, on = equipped.indexOf(m) !== -1;
     if (!movesEditing && !on && known) return;                       // in battle only the equipped moves show
     if (!movesEditing && !known && m.kind !== 'ult' && !isNextToLearn(pet, m)) return;
@@ -108,8 +191,17 @@ function renderMoves() {
 }
 // In battle one locked move is teased (the next one to learn), so there is something to look forward to.
 function isNextToLearn(pet, m) {
-  const next = MOVES.filter(function (x) { return x.minLevel > pet.level; }).sort(function (a, b) { return a.minLevel - b.minLevel; })[0];
+  const next = MOVES.filter(function (x) { return x.minLevel > pet.level && (!x.sig || signatureOf(pet)); }).sort(function (a, b) { return a.minLevel - b.minLevel; })[0];
   return next === m;
+}
+
+// The extra effect of a signature move, after its damage was dealt.
+function applySigEffect(pet) {
+  const e = signatureOf(pet).effect;
+  if (e === 'drain') setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
+  else if (e === 'surge') addEnergy(1);
+  else if (e === 'ward') guardUp = true;
+  else if (e === 'purify') clearBuddyStatus();
 }
 
 function useMove(id) {
@@ -143,6 +235,7 @@ function useMove(id) {
     inputLocked = true;
     triggerMonsterDamage(moveDamage(m, pet.level));
     if (m.drain) setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
+    if (m.sig) applySigEffect(pet);
     setTimeout(function () { inputLocked = false; }, 600);
   }
   updateBattleUI();
@@ -220,5 +313,6 @@ function consumeArmedMove() {
   soundSuperMove();
   showPopup(m.icon + ' ' + moveName(m, pet).toUpperCase() + '!');
   if (m.drain) setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
+  if (m.sig) applySigEffect(pet);
   return moveDamage(m, pet.level);
 }

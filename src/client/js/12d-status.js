@@ -25,7 +25,7 @@ function maybeInflictStatus(foe) {
   const chance = foe.wild ? ECON.status.wildChance : ECON.status.bossChance;
   const kind = ELEMENT_STATUS[foe.element];
   if (!kind || buddyStatus.left > 0 || Math.random() >= chance) return;
-  buddyStatus = { kind: kind, left: ECON.status.problems };
+  buddyStatus = { kind: kind, left: Math.max(1, ECON.status.problems - (activeQuirk('calm') ? ECON.quirk.calmLess : 0)) };
   const s = STATUSES[kind];
   showPopup(s.icon + ' ' + s.name.toUpperCase() + '!');
   toast(s.icon + ' ' + getActivePetDisplay().baseName + ' is ' + s.name.toLowerCase() + ': ' + s.text.toLowerCase() + '. Recover cures it!');

@@ -485,4 +485,39 @@ test('the type chart is fair: no two types beat each other, every type beats exa
   assert.match(r.chart, /Magic[\s\S]*weak to 💧 Water, ⚡ Electric/);
 });
 
+test('encounter choice: after your first badge a wild win offers three buddies to meet; picking one starts that fight and closing keeps the first', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    state.wild.id = 'fox'; state.wild.trainer = ''; state.wild.shiny = false; state.wild.legend = false; state.gym = null; state.badges = [];
+    startWild(getSpecies('fox'));
+    out.noBadge = encounterOffered();
+    state.badges = ['ember'];
+    out.offered = encounterOffered();
+    state.wild.shiny = true; out.shiny = encounterOffered(); state.wild.shiny = false;
+    state.wild.trainer = 'Scout Mia'; out.trainer = encounterOffered(); state.wild.trainer = '';
+    openEncounterChoice();
+    const btns = [...document.querySelectorAll('#encounter-options .move-btn')];
+    out.shown = [document.getElementById('encounter-modal').style.display, btns.length, new Set(encounterOptions.map((p) => p.id)).size, encounterOptions[0].id];
+    out.label = btns[0].innerText;
+    // picking another buddy starts that fight
+    const other = encounterOptions[1].id;
+    btns[1].click();
+    out.picked = [state.wild.id === other, document.getElementById('encounter-modal').style.display, monsterCurrentHp > 0, getBossInfo().id || state.wild.id];
+    // closing keeps the current foe
+    openEncounterChoice(); const keep = state.wild.id; closeEncounter();
+    out.kept = state.wild.id === keep;
+    return out;
+  });
+  assert.equal(r.noBadge, false, 'no choice before the first badge');
+  assert.equal(r.offered, true);
+  assert.equal(r.shiny, false, 'the golden rare is never swapped away');
+  assert.equal(r.trainer, false, 'trainers pick their own buddies');
+  assert.deepEqual(r.shown, ['flex', 3, 3, 'fox']);
+  assert.match(r.label, /catch/);
+  assert.equal(r.picked[0], true);
+  assert.equal(r.picked[1], 'none');
+  assert.ok(r.picked[2]);
+  assert.ok(r.kept);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

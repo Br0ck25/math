@@ -175,8 +175,11 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         awardEgg(boss.element, boss.form >= 2 ? 'mythic' : boss.form === 1 ? 'rare' : 'common');
       }
       buddyReact('win');
+      const plainWild = wild && !boss.trainer && !boss.shiny && !boss.legend;
+      const easy = plainWild ? easyShare(boss.level) : 1;                 // a foe weaker than your buddy pays less
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      if (plainWild) gemBonus = Math.max(1, Math.round(gemBonus * easy * wildWinShare()));
       if (boss.trainer) gemBonus += ECON.map.trainerGems;
       if (boss.shiny) gemBonus += ECON.daily.gems;
       if (boss.legend) gemBonus += ECON.legend.gems;
@@ -187,7 +190,9 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBattleXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
+      const fullXp = Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio);
+      awardBattleXp(Math.round(fullXp * easy * (plainWild ? restedShare(state.activePet) : 1)));
+      if (plainWild) shareTeamXp(fullXp);
 
       const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {
@@ -210,6 +215,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         const lead = nb.trainer ? '🏟️ ' : nb.wild ? '' : state.gym ? '🏟️ GYM LEADER! ' : '⚠️ BOSS TIME! ';
         toast(lead + (nb.trainer ? `${nb.name} (Lv ${nb.level}) wants to battle!` : `A wild Lv ${nb.level} ${nb.name} appeared!`) + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
         if (gymWin) enqueueModal(function () { showBadgeStory(gymWin); });
+        if (encounterOffered()) enqueueModal(openEncounterChoice);
         if (shouldTriggerVault) enqueueModal(startGoldenVault);
         if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }
       }, 650);
@@ -396,6 +402,7 @@ function checkAnswer() {
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
     if (activeRole('Speedster')) speedLimit *= 1.25;
+    if (activeQuirk('quick')) speedLimit *= ECON.quirk.speed;
     const isFast = !hintUsed && solveTime <= speedLimit;
     answerBonuses(isFast);
     let speedBonusGems = 0;

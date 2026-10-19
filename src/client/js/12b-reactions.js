@@ -167,6 +167,7 @@ function swapBuddy(id) {
   const mu = teamMatchup(id, getBossInfo());
   if (mu.cls === 'good') { soundCorrect(1); showPopup('⚡ GREAT PICK! x1.5 DAMAGE'); }
   else if (mu.cls === 'bad') showPopup('Hmm, a better match might help! ' + mu.icon);
+  if (restedLeft(id) > 0) toast('😊 ' + getPetById(id).baseName + ' is rested: +' + Math.round(ECON.farm.restedXp * 100) + '% XP for ' + restedLeft(id) + ' more wins today!');
   saveState();
   updateStatsUI();
   buddyReact('cheer');

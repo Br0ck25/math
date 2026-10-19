@@ -62,7 +62,7 @@ function getTypeRelation(att, def) {
 // Only once your buddy is strong enough to meet Alpha bosses.
 function wantedBossCopies(candidates) {
   const B = ECON.bossBuddy;
-  if (getBuddyLevel(state.activePet) < B.minLevel) return [];
+  if (Math.min(getBuddyLevel(state.activePet), journeyLevel()) < B.minLevel) return [];
   const extra = [];
   candidates.forEach(function (i) {
     const m = monstersList[i], e = state.bossBook[i];

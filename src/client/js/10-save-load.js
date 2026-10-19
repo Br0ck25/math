@@ -115,6 +115,37 @@ const NORMALIZERS = [
     });
     s.held = held;
   },
+  function ranch(s) {
+    const r = s.ranch || {}, owned = s.unlockedPets.concat(s.unlockedSecrets), workers = {}, stock = {};
+    Object.keys(r.workers || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && ranchStation(r.workers[b])) workers[b] = r.workers[b]; });
+    RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
+    s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
+  },
+  function rested(s) {
+    const r = s.rested || {}, owned = s.unlockedPets.concat(s.unlockedSecrets), fights = {};
+    Object.keys(r.fights || {}).forEach(function (id) { if (owned.indexOf(id) !== -1) fights[id] = asInt(r.fights[id], 0, 100000, 0); });
+    s.rested = { day: typeof r.day === 'string' ? r.day.slice(0, 12) : '', fights: fights };
+  },
+  function wildWins(s) {
+    const w = s.wildWins || {};
+    s.wildWins = { day: typeof w.day === 'string' ? w.day.slice(0, 12) : '', n: asInt(w.n, 0, 100000, 0) };
+  },
+  function trails(s) {
+    const t = {};
+    REGIONS.forEach(function (r) {
+      const e = s.trails && s.trails[r.id];
+      if (!e || typeof e !== 'object' || typeof e.day !== 'string' || !Array.isArray(e.done)) return;
+      t[r.id] = { day: e.day.slice(0, 12), done: e.done.filter(function (n, i, a) { return Number.isInteger(n) && n >= 0 && n < TRAIL_SPOTS.length && a.indexOf(n) === i; }) };
+    });
+    s.trails = t;
+    const g = s.trailGems || {};
+    s.trailGems = { day: typeof g.day === 'string' ? g.day.slice(0, 12) : '', n: asInt(g.n, 0, 99, 0) };
+  },
+  function evoPath(s) {
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
+    Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && EVO_PATHS[s.evoPath[b]]) paths[b] = s.evoPath[b]; });
+    s.evoPath = paths;
+  },
   function dex(s) {
     const seen = {};
     Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });

@@ -13,8 +13,17 @@ const REGIONS = [
   { id: 'mystic', name: 'Mystic Peak', icon: '🔮', element: 'magic' }
 ];
 const RIVAL = 'Rival Riley';
-const GYM_TRAINERS = ['Scout Mia', RIVAL, 'Ranger Ava'];       // in battle order; the list repeats if a gym has more trainers
-const KNOWN_TRAINERS = GYM_TRAINERS.concat(['']);
+// The trainers of each land, in battle order: one before Riley, Riley, one after. The list repeats if a gym has more trainers.
+const GYM_TRAINERS = {
+  ember: ['Scout Mia', RIVAL, 'Ranger Ava'],
+  tide:  ['Angler Finn', RIVAL, 'Diver Coral'],
+  grove: ['Gardener Fern', RIVAL, 'Ranger Oak'],
+  volt:  ['Techie Watt', RIVAL, 'Sparky Zed'],
+  gloom: ['Lantern Luna', RIVAL, 'Spooky Sage'],
+  mystic: ['Stargazer Iris', RIVAL, 'Mage Orion']
+};
+const KNOWN_TRAINERS = Object.keys(GYM_TRAINERS).reduce(function (all, k) { return all.concat(GYM_TRAINERS[k]); }, ['']);
+function gymTrainer(regionId, step) { const list = GYM_TRAINERS[regionId]; return list[step % list.length]; }
 const GYM_STORY = {
   ember: { intro: ['The Ember Hills glow orange. A gym stands at the top, hot as a campfire!', 'Riley waves: "Race you to the badge, math champ!"', 'Beat the trainers, then the gym leader!'], outro: 'The flames cool down and the Ember Badge is yours! Riley grins: "Next time I will win!"' },
   tide: { intro: ['Waves splash at Tide Bay. The gym floats on the water!', 'Riley is already there: "My buddy loves the sea!"', 'Stay sharp, the tide is rising!'], outro: 'The waves calm down. The Tide Badge shines in your hand! Riley laughs: "You are getting fast!"' },
@@ -40,7 +49,7 @@ function rematchPays(id) {
 function regionById(id) { return REGIONS.find(function (r) { return r.id === id; }) || REGIONS[0]; }
 function currentRegion() { return regionById(state.region); }
 function regionLevel(r) { return ECON.map.levels[r.id] || 1; }
-function regionUnlocked(r) { return getBestLevel() >= regionLevel(r); }
+function regionUnlocked(r) { return journeyLevel() >= regionLevel(r); }
 function hasBadge(id) { return state.badges.indexOf(id) !== -1; }
 function gymRegions() { return REGIONS.filter(function (r) { return r.element; }); }
 
@@ -61,7 +70,7 @@ function pickGymFoe() {
   if (g.step < ECON.map.trainers) {
     const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
     state.wild.id = sp.id;
-    state.wild.trainer = GYM_TRAINERS[g.step % GYM_TRAINERS.length];
+    state.wild.trainer = gymTrainer(g.region, g.step);
     state.wild.shiny = false;
     state.wild.legend = false;
     markDexSeen(sp.id);
@@ -180,17 +189,18 @@ function leaveGym() {
 }
 function renderMap() {
   document.getElementById('map-title').innerText = '🗺️ ' + triviaWords('Number Kingdom') + ' Map';
-  const best = getBestLevel(), total = gymRegions().length;
+  const best = journeyLevel(), total = gymRegions().length;
   const myPet = getActivePetDisplay();
-  document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '');
+  document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '') + ' · ' + weatherToday().icon + ' ' + weatherToday().name;
   let h = '<div class="map-board">' + championRowHtml() + legendRowHtml();
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
     const need = regionLevel(r), badge = hasBadge(r.id);
     let actions = '';
-    if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your best: Lv ' + best + ')</div>';
+    if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your team: Lv ' + best + (getBestLevel() > best ? '). Level up your other buddies too!' : ')') + '</div>';
     else {
-      actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>';
+      actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>' +
+        '<button class="claim-btn" aria-label="Explore ' + r.name + '" onclick="openTrail(&quot;' + r.id + '&quot;)">' + (trailFinished(r.id) ? '🧭 ✅' : '🧭 Explore') + '</button>';
       if (r.element) {
         if (badge && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else if (badge) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');
@@ -203,9 +213,9 @@ function renderMap() {
     if (open && r.element) {
       const nodes = [
         { icon: '🌿', lbl: 'Tall Grass' },
-        { icon: '🧒', lbl: 'Scout Mia' },
+        { icon: '🧒', lbl: gymTrainer(r.id, 0) },
         { icon: '🧢', lbl: 'Rival Riley' },
-        { icon: '🧭', lbl: 'Ranger Ava' },
+        { icon: '🧭', lbl: gymTrainer(r.id, 2) },
         { icon: '🏰', lbl: 'Gym Leader' }
       ];
       const activeIdx = g ? Math.min(nodes.length - 1, state.gym.step + 1) : (here ? 0 : -1);
@@ -235,7 +245,7 @@ function renderMap() {
       { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all six badges to open the Champion\'s Hall!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
   }
 }
-// A new region opens when your best buddy reaches its level.
+// A new region opens when your journey level (your best buddy, held back if the rest of your team is far behind) reaches its level.
 function checkRegionUnlocks() {
   REGIONS.forEach(function (r) {
     if (!r.element || !regionUnlocked(r) || state.storySeen['open_' + r.id]) return;

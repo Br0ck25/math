@@ -49,6 +49,32 @@ const ECON = {
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
+  // The Ranch (25d-ranch.js): off-team buddies work at stations. `perHour` goods an hour (x `matchMult` for a matching element), for at most `capHours` hours away at a time,
+  // plus `answerSec` seconds of work for every correct answer. The barn holds `stockCap` of each good; a work spot opens for every `badgesPerSlot` badges (and one from the start).
+  ranch: { perHour: 6, matchMult: 2, capHours: 4, answerSec: 60, stockCap: 30, badgesPerSlot: 2,
+    // Berries can pay for the Biscuit (`treatBerries`) and the Favorite snack (`favBerries`) instead of gems; `orePerNet` ore make one Catch Net (a shop net costs `items.net` gems).
+    treatBerries: 2, favBerries: 4, orePerNet: 6,
+    // The Nursery: `eggBerries` berries and two or more workers make an egg (of `eggRarity`) with the element of one of the workers.
+    eggBerries: 10, eggRarity: 'rare',
+    // Honey feeds the hub's buddy `honeyXp` XP for `honeyPerFeed` honey; `partsPerPotion` parts brew a Super Potion.
+    honeyPerFeed: 3, honeyXp: 12, partsPerPotion: 5 },
+  // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the Trail pays `gems` gems for the first `trailsPerDay` trails of a day once `finishAt` of its spots are open (two gates, so one can wait for another day).
+  explore: { berries: 3, ore: 2, gems: 8, trailsPerDay: 3, finishAt: 5 },
+  // Against farming one over-levelled buddy (13b-wild.js, 12-battle.js): wild foes follow your buddy's level but never go above `lead` x the average of your `top` strongest buddies;
+  // a plain wild win pays gems and XP times foe level / buddy level (never below `minShare`); teammates below the fighter get `shareXp` of the full XP;
+  // and after `dailyWins` plain wild wins in a day, wild gems drop to `tiredShare` (never below 1) until tomorrow.
+  // Rested bonus: each buddy's first `restedWins` plain wild wins of a day earn `restedXp` more XP, so rotating buddies is the fastest way to level.
+  // Lands and Alpha hunts open by the journey level (13b-wild.js): your best level, but never above `lead` x the average of your `top` strongest buddies.
+  farm: { lead: 1.5, top: 3, minShare: 0.25, shareXp: 0.3, dailyWins: 60, tiredShare: 0.25, restedWins: 10, restedXp: 0.5 },
+  // Weather (24e-trail.js): today's weather favours some types. `share` is the part of wild fights (after the land's own `map.regionShare`) that use it.
+  weather: { share: 0.15 },
+  // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
+  encounter: { minBadges: 1, choices: 3 },
+  // Evolution paths (08-buddies.js): when a buddy first evolves, bond hearts (+1 if it ate its favorite snack today) of at least `bondMin` make it Radiant (`radiantHp` more HP and `radiantAtk` more attack for good).
+  // Otherwise the player picks Guardian (`guardianHp` more HP) or Striker (`strikerAtk` more attack); Guardian is the default.
+  evo: { bondMin: 3, radiantHp: 1, radiantAtk: 1, guardianHp: 1, strikerAtk: 1 },
+  // Quirks (25b-held.js): every species has one; these are the sizes of the bonuses (xp: share of extra XP, speed: Speed Strike time, catch: catch chance, calmLess: problems a status lasts less).
+  quirk: { xp: 0.1, speed: 1.1, catch: 1.1, calmLess: 1 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
   status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
   // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.

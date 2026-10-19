@@ -28,6 +28,7 @@ function wildCatchChance(sp, opts) {
   let chance = (sp.legend ? ECON.legend.catchChance + ECON.legend.pity * legendState().misses : base) * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
+  if (activeQuirk('lucky')) chance *= ECON.quirk.catch;
   if (activeHolds('bait')) chance *= (typeof hasTech === 'function' && hasTech('second_heart') ? 1.5 : 1.25);
   const nets = opts && opts.nets ? Math.min(opts.nets, ECON.wild.net.mult.length - 1) : 0;
   if (nets) {
@@ -43,19 +44,77 @@ function spareValueOf(id) {
   return (typeof hasTech === 'function' && hasTech('appraiser')) ? Math.round(base * 1.5) : base;
 }
 
-function pickNextWild() {
+// One random wild species, favouring the land you are in; never one in `skip` (the species that fought last by default).
+function rollWildSpecies(skip) {
   const pool = wildPool();
-  let store = pool.filter(isStoreBuddy), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
-  const region = currentRegion();
-  if (region.element && Math.random() < ECON.map.regionShare) {          // the land you are in: more of its type
-    const ofType = function (list) { const l = list.filter(function (p) { return p.element === region.element; }); return l.length ? l : list; };
+  const today = weatherToday();
+  let store = pool.filter(function (p) { return isStoreBuddy(p) && (!weatherOfBuddy(p.id) || weatherOfBuddy(p.id) === today.id); }), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
+  const region = currentRegion(), roll = Math.random();
+  const favour = function (elements) {
+    const ofType = function (list) { const l = list.filter(function (p) { return elements.indexOf(p.element) !== -1; }); return l.length ? l : list; };
     store = ofType(store); secret = ofType(secret);
-  }
+  };
+  const weatherPick = function (w) {                           // its types, and its own buddies when any are left
+    favour(w.favours);
+    const own = store.filter(function (p) { return w.buddies.indexOf(p.id) !== -1; });
+    if (own.length) store = own;
+  };
+  if (region.element && roll < ECON.map.regionShare) favour([region.element]);                                   // the land you are in: more of its type
+  else if (roll >= ECON.map.regionShare && roll < ECON.map.regionShare + ECON.weather.share) weatherPick(today);   // today's weather
   let sp;
   for (let tries = 0; tries < 5; tries++) {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);
-    if (sp.id !== state.wild.id) break;
+    if (skip.indexOf(sp.id) === -1) break;
   }
+  return sp;
+}
+// How strong your buddies are together: the average level of your ECON.farm.top strongest.
+function teamPower() {
+  const levels = getOwnedIds().map(getBuddyLevel).sort(function (a, b) { return b - a; }).slice(0, ECON.farm.top);
+  return levels.length ? Math.round(levels.reduce(function (a, b) { return a + b; }, 0) / levels.length) : 1;
+}
+// The level wild foes are built around: your buddy's, but one buddy far ahead of the rest cannot pull it up.
+function foeBaseLevel() {
+  return Math.min(getBuddyLevel(state.activePet), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
+}
+// The level that opens lands and Alpha hunts: your best buddy's, but one buddy far ahead of the rest cannot carry the journey alone.
+function journeyLevel() {
+  return Math.min(getBestLevel(), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
+}
+// Plain wild wins this buddy has left today with the rested bonus.
+function restedLeft(id) {
+  const r = state.rested;
+  return r.day === dayKey() ? Math.max(0, ECON.farm.restedWins - (r.fights[id] || 0)) : ECON.farm.restedWins;
+}
+// Counts a plain wild win by this buddy and returns its XP multiplier: its first restedWins wins of the day earn extra.
+function restedShare(id) {
+  const r = state.rested;
+  if (r.day !== dayKey()) { r.day = dayKey(); r.fights = {}; }
+  const left = restedLeft(id);
+  r.fights[id] = (r.fights[id] || 0) + 1;
+  return left > 0 ? 1 + ECON.farm.restedXp : 1;
+}
+// A plain wild win pays less when the foe is weaker than your buddy (never below ECON.farm.minShare).
+function easyShare(foeLevel) {
+  return clamp(foeLevel / Math.max(1, getBuddyLevel(state.activePet)), ECON.farm.minShare, 1);
+}
+// Counts a plain wild win today; after ECON.farm.dailyWins of them wild gems are smaller until tomorrow. Returns the share of gems to pay.
+function wildWinShare() {
+  const w = state.wildWins;
+  if (w.day !== dayKey()) { w.day = dayKey(); w.n = 0; }
+  w.n += 1;
+  if (w.n === ECON.farm.dailyWins + 1) toast('😴 Your buddies are getting sleepy, so wild gems are smaller for today. Full rewards tomorrow!');
+  return w.n > ECON.farm.dailyWins ? ECON.farm.tiredShare : 1;
+}
+// Teammates who are behind the fighter learn from the fight too.
+function shareTeamXp(xp) {
+  const lead = getBuddyLevel(state.activePet);
+  getTeam().forEach(function (id) {
+    if (id !== state.activePet && getBuddyLevel(id) < lead) awardBuddyXp(Math.round(xp * ECON.farm.shareXp), id);
+  });
+}
+function pickNextWild() {
+  let sp = rollWildSpecies([state.wild.id]);
   const d = state.daily, today = dayKey();
   if (d.day !== today) { d.day = today; d.fights = 0; d.spawned = false; }
   const dailyAfter = (typeof hasTech === 'function' && hasTech('golden_scent')) ? Math.max(1, ECON.daily.after - 1) : ECON.daily.after;
@@ -65,12 +124,16 @@ function pickNextWild() {
     state.wild.shiny = true;
     toast('✨ A rare golden buddy appeared! It only comes once a day.');
   } else state.wild.shiny = false;
+  startWild(sp);
+}
+// Makes `sp` the foe: a fresh wild fight at a level near your buddy's.
+function startWild(sp) {
   state.wild.legend = false;
   state.wild.id = sp.id;
   state.wild.trainer = '';
   markDexSeen(sp.id);
   if (typeof soundBuddyCry === 'function') soundBuddyCry(sp.id, sp.element);
-  bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
+  bossLevel = clamp(foeBaseLevel() + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
   state.bossSwapped = false;
   state.swapUsed = false;
@@ -239,4 +302,50 @@ function sellAllSpares() {
   updateStatsUI();
   toast('💰 Sold ' + n + ' spare' + (n === 1 ? '' : 's') + ' for ' + total + ' 💎');
   renderHub();
+}
+
+// ----- choosing a wild encounter -----
+// After a wild win (once you have a badge) the next plain wild fight is offered with ECON.encounter.choices species; the one already picked stays first and is kept if the window is closed.
+function encounterOffered() {
+  const nb = getBossInfo();
+  return !!nb.wild && !nb.trainer && !nb.shiny && !nb.legend && !state.gym && state.badges.length >= ECON.encounter.minBadges;
+}
+let encounterOptions = [];
+function openEncounterChoice() {
+  const first = getSpecies(state.wild.id);
+  encounterOptions = [first];
+  while (encounterOptions.length < ECON.encounter.choices) {
+    const sp = rollWildSpecies(encounterOptions.map(function (p) { return p.id; }));
+    if (encounterOptions.some(function (p) { return p.id === sp.id; })) break;
+    encounterOptions.push(sp);
+  }
+  const list = document.getElementById('encounter-options');
+  list.innerHTML = '';
+  encounterOptions.forEach(function (sp) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'move-btn';
+    const pct = Math.round(wildCatchChance(sp, {}) * 100), note = sp.element + ' type · about ' + pct + '% to catch';
+    b.innerHTML = '<span class="mv-icon">' + sp.icon + '</span><span class="mv-main"><b>' + escHtml(sp.name) + '</b><small>' + escHtml(note) + '</small></span>';
+    b.setAttribute('aria-label', 'Meet ' + sp.name + ', ' + note);
+    b.onclick = function () { chooseEncounter(sp.id); };
+    list.appendChild(b);
+  });
+  soundClick();
+  document.getElementById('encounter-modal').style.display = 'flex';
+}
+function closeEncounter() {
+  document.getElementById('encounter-modal').style.display = 'none';
+  modalDone();
+}
+function chooseEncounter(id) {
+  const sp = encounterOptions.find(function (p) { return p.id === id; });
+  if (sp && sp.id !== state.wild.id) {
+    startWild(sp);
+    setBossTaunt();
+    updateStatsUI();
+    saveState();
+    toast('A wild Lv ' + bossLevel + ' ' + sp.name + ' appeared!');
+  }
+  closeEncounter();
 }

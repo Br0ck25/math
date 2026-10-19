@@ -55,8 +55,7 @@ function buyItem(type) {
   if (type === 'candy' && getBuddyLevel(state.activePet) >= MAX_LEVEL) { toast('Your buddy is already max level!'); return; }
   if (type === 'net' && state.nets >= maxNets()) { toast('You can hold ' + maxNets() + ' Catch Nets'); return; }
   if (type === 'potion') {
-    const pet = state.activePet;
-    if (getPetHp(pet) >= getPetMaxHp(pet) && (!state.faintedPets || state.faintedPets.length === 0)) {
+    if (potionUseless()) {
       toast('Your buddies are already at full HP!');
       return;
     }
@@ -71,13 +70,24 @@ function buyItem(type) {
   const look = ITEM_LOOKS[type];
   askBuy({ icon: look[0], name: look[1], cost: cost, note: look[2] }, function () { payItem(type); });
 }
+// A Super Potion does nothing when your buddy is at full HP and nobody has fainted.
+function potionUseless() {
+  const pet = state.activePet;
+  return getPetHp(pet) >= getPetMaxHp(pet) && (!state.faintedPets || state.faintedPets.length === 0);
+}
+function applyPotion() {
+  const pet = state.activePet;
+  setPetHp(pet, getPetMaxHp(pet));
+  state.faintedPets = [];
+  partyHp = {};
+  showPopup('💖 SUPER POTION! FULL HP!');
+}
 // After "Buy": check again (the situation may have changed), then pay and apply the item.
 function payItem(type) {
   const cost = itemCost(type);
   if (state.gems < cost || (type === 'candy' && getBuddyLevel(state.activePet) >= MAX_LEVEL) || (type === 'net' && state.nets >= maxNets())) return;
   if (type === 'potion') {
-    const pet = state.activePet;
-    if (getPetHp(pet) >= getPetMaxHp(pet) && (!state.faintedPets || state.faintedPets.length === 0)) return;
+    if (potionUseless()) return;
   }
   if (type === 'candy') {
     const lvl = getBuddyLevel(state.activePet);
@@ -101,11 +111,7 @@ function payItem(type) {
       state.cloverLeft = (state.cloverLeft || 0) + 8;
       showPopup('LUCKY CLOVER (8 SOLVES)! 🍀');
     } else if (type === 'potion') {
-      const pet = state.activePet;
-      setPetHp(pet, getPetMaxHp(pet));
-      state.faintedPets = [];
-      partyHp = {};
-      showPopup('💖 SUPER POTION! FULL HP!');
+      applyPotion();
     } else if (type === 'whistle') {
       state.wild.since = state.wild.next;
       pickNextBoss();

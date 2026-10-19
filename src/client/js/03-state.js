@@ -14,6 +14,12 @@ function freshState() {
     cloverLeft: 0,
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
+    ranch: { at: 0, workers: {}, stock: { berry: 0, ore: 0, honey: 0, parts: 0 } },   // buddy id -> station id, the goods in the barn, and when work was last counted
+    rested: { day: '', fights: {} },                 // buddy id -> plain wild wins today (the first ECON.farm.restedWins of each earn bonus XP)
+    wildWins: { day: '', n: 0 },                     // plain wild wins today (after ECON.farm.dailyWins, wild gems are smaller)
+    trails: {},                                      // land id -> { day, done: [spot numbers] }: today's Trail progress
+    trailGems: { day: '', n: 0 },                    // how many Trails paid gems today
+    evoPath: {},                                     // buddy id -> 'radiant', 'guardian' or 'striker': the path it took when it first evolved
     nets: 0,                                         // Catch Nets in stock: you choose how many (up to 3) to throw after a wild win
     monstersDefeated: 0,
     currentMonsterIndex: -1,
