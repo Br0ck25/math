@@ -75,7 +75,8 @@ test('winning pays gems, does not move the boss counter, and a miss raises the n
     document.getElementById('raid-modal').style.display = 'none'; modalDone();
     Math.random = real;
     out.win = [state.gems >= ECON.legend.gems, state.wild.since === since, state.wild.legend, getOwnedIds().includes(sp.id)];
-    out.miss = [legendState().misses, wildCatchChance(sp, {}) > base, wildCatchChance(sp, {}) - base];
+    // every other factor (type matchup, role, quirk) multiplies the whole chance, so a miss adds pity x (base / catchChance)
+    out.miss = [legendState().misses, wildCatchChance(sp, {}) > base, wildCatchChance(sp, {}) - base, ECON.legend.pity * base / ECON.legend.catchChance];
     out.sameDay = legendBlocker();
     state.legend.day = '2000-01-01';                                // tomorrow
     out.tomorrow = legendBlocker();
@@ -88,7 +89,7 @@ test('winning pays gems, does not move the boss counter, and a miss raises the n
   });
   assert.deepEqual(r.win, [true, true, false, false], 'a win pays, the boss counter is untouched, the foe is gone');
   assert.deepEqual(r.miss.slice(0, 2), [1, true]);
-  assert.ok(Math.abs(r.miss[2] - 0.1) < 0.02, 'each miss adds about 10 points: ' + r.miss[2]);
+  assert.ok(Math.abs(r.miss[2] - r.miss[3]) < 1e-9, 'each miss adds the pity share of the chance: ' + r.miss[2] + ' vs ' + r.miss[3]);
   assert.match(r.sameDay, /hunted today/);
   assert.equal(r.tomorrow, '');
   assert.deepEqual(r.caught, [true, true, true]);
