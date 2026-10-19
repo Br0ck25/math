@@ -185,6 +185,39 @@ test('evolution paths: a close bond (or the favorite snack today) makes a Radian
   assert.deepEqual(r.baseForm, ['', 'Pup']);
 });
 
+test('every buddy has a signature move: hand-written for store buddies, made from the name and element for the rest, the same every time and opt-in for the default set', async () => {
+  const r = await page.evaluate(() => {
+    const groups = { store: storePets, secret: secretCompanions, mythic: mythicCompanions, ultra: ultraPets, boss: bossBuddies, legend: legendPets };
+    const all = Object.values(groups).flat(), out = {};
+    out.count = all.length;
+    out.all = all.every((p) => signatureOf(p) && SIG_EFFECT_TEXT[signatureOf(p).effect] && signatureOf(p).name.length <= 24);
+    const store = storePets.map((p) => signatureOf(p).name);
+    out.storeUnique = new Set(store).size === store.length;
+    out.storeByHand = storePets.every((p) => SIGNATURE_MOVES[p.id]);
+    const leo = getSpecies('secret_1');
+    out.made = [signatureOf(leo).name, signatureOf({ id: 'secret_1' }) === signatureOf(leo)];       // cached: the same object every time
+    const krabs = bossBuddies.concat(secretCompanions).find((p) => /s$/.test(p.name.split(' ').pop())); out.apos = krabs ? signatureOf(krabs).name.split(' ')[0] : "x'"; out.aposWord = krabs ? signatureOf(krabs).name.split(' ').slice(1).join(' ') : 'Blaze';
+    out.boss = signatureOf({ id: 'boss_1' }).name;                                                   // the last word of 'Magma Rex'
+    out.effects = [...new Set(all.map((p) => signatureOf(p).effect))].sort().join(',');
+    out.names = new Set(all.map((p) => signatureOf(p).name)).size;
+    out.spread = new Set(all.filter((p) => p.element === 'water').map((p) => signatureOf(p).name.split(' ').pop() + signatureOf(p).effect)).size;
+    state.moveSet = {}; out.default = all.slice(0, 80).some((p) => equippedMoves({ ...getPetById(p.id), level: 40 }).some((m) => m.sig));      // opt-in: no default move set changes
+    return out;
+  });
+  assert.equal(r.count, 353);
+  assert.ok(r.all, 'every buddy has a known effect and a name that fits the move pill');
+  assert.ok(r.storeUnique);
+  assert.ok(r.storeByHand);
+  assert.match(r.made[0], /^Leo's \w+$/);
+  assert.match(r.apos, /s'$/, 'a name ending in s takes just an apostrophe: ' + r.apos);
+  assert.ok(r.made[1]);
+  assert.match(r.boss, /^Rex's \w+$/);
+  assert.equal(r.effects, 'drain,purify,surge,ward');
+  assert.ok(r.names > 280, 'the moves are varied: ' + r.names);
+  assert.ok(r.spread >= 20, 'word and effect are not tied together: ' + r.spread);
+  assert.equal(r.default, false, 'a signature move is never in the default set');
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
 
 test('move slots: a buddy takes 4 moves plus its ultimate into battle, the player chooses them, and the choice is saved and repaired', async () => {
@@ -226,14 +259,14 @@ test('move slots: a buddy takes 4 moves plus its ultimate into battle, the playe
   assert.deepEqual(r.repaired, ['["drain","strike","power","heal"]', 'dog']);
 });
 
-test('signature moves: only species with one learn it (level 12), it carries its own name and effect, and others are unchanged', async () => {
+test('signature moves: a buddy with one learns it at level 12, it carries its own name and effect, and an unknown buddy has none', async () => {
   const r = await page.evaluate(async () => {
     const out = {};
     const fox = getPetById('fox'), bunny = getPetById('bunny');
-    out.has = [signatureOf({ id: 'fox' }) !== null, signatureOf({ id: secretCompanions[0].id }) === null];
-    out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: secretCompanions[0].id }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
+    out.has = [signatureOf({ id: 'fox' }) !== null, signatureOf({ id: 'no_such_buddy' }) === null];
+    out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: 'no_such_buddy' }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
     out.name = moveName(MOVES.find((m) => m.sig), { id: 'fox' });
-    out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: secretCompanions[0].id }).length];
+    out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: 'no_such_buddy' }).length];
     state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 10; state.bossSwapped = false; state.raid = null;
     state.moveSet = { fox: ['strike', 'sig'] };
     partyHp = {}; monsterCurrentHp = 50; inputLocked = false; ultimateCharge = 2;

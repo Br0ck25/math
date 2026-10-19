@@ -19,7 +19,8 @@ const MOVES = [
   { id: 'sig', cost: 2, minLevel: 12, kind: 'damage', icon: '🌟', sig: true, optional: true },
   { id: 'ult', cost: 3, minLevel: 1, kind: 'ult', icon: '⚡' }
 ];
-// Signature moves: every store buddy has a move of its own (a name and one extra effect). It is learned at level 12 and costs 2 energy.
+// Signature moves: every buddy has a move of its own (a name and one extra effect). It is learned at level 12 and costs 2 energy.
+// Store buddies have hand-written ones here; every other buddy gets one made from its name and element (see signatureOf).
 // effect: drain (heals 1 HP), surge (refunds 1 energy), ward (raises Guard), purify (clears a status effect).
 const SIGNATURE_MOVES = {
   dog:      { name: 'Loyal Bite',      effect: 'ward' },
@@ -68,7 +69,33 @@ const SIGNATURE_MOVES = {
   bandit:   { name: 'Shadow Snatch',   effect: 'surge' }
 };
 const SIG_EFFECT_TEXT = { drain: 'heals 1 HP', surge: 'gives 1 energy back', ward: 'raises Guard', purify: 'clears a status effect' };
-function signatureOf(pet) { return (pet && SIGNATURE_MOVES[pet.id]) || null; }
+// Every other buddy gets one made from its own name and element ("Leo's Flare"); the same buddy always gets the same move.
+const SIG_WORDS = {
+  fire: ['Flare', 'Scorch', 'Ember', 'Blaze', 'Singe', 'Sparks'], water: ['Splash', 'Tide', 'Bubbles', 'Wave', 'Drizzle', 'Surf'],
+  nature: ['Bloom', 'Roots', 'Vines', 'Thorns', 'Moss', 'Petals'], electric: ['Zap', 'Volt', 'Static', 'Spark', 'Arc', 'Jolt'],
+  dark: ['Shade', 'Gloom', 'Dusk', 'Fang', 'Mist', 'Moonbite'], magic: ['Glimmer', 'Charm', 'Wish', 'Rune', 'Sparkle', 'Starlight'],
+  shadow: ['Twist', 'Echo', 'Warp', 'Flicker', 'Phase', 'Swirl']
+};
+const SIG_EFFECTS = {
+  fire: ['surge', 'drain'], water: ['purify', 'ward'], nature: ['drain', 'ward'], electric: ['surge', 'purify'],
+  dark: ['ward', 'drain'], magic: ['purify', 'surge'], shadow: ['surge', 'ward']
+};
+const madeSignatures = {};
+// A well-mixed number from text (FNV-1a), so neighbouring ids do not get neighbouring moves.
+function mixHash(text) {
+  let h = 2166136261;
+  for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function signatureOf(pet) {
+  if (!pet) return null;
+  if (SIGNATURE_MOVES[pet.id]) return SIGNATURE_MOVES[pet.id];
+  if (madeSignatures[pet.id]) return madeSignatures[pet.id];
+  const sp = getSpecies(pet.id);
+  if (!sp) return null;
+  const h = mixHash(pet.id), words = sp.name.split(' '), el = SIG_WORDS[sp.element] ? sp.element : 'shadow', owner = words[words.length - 1];
+  return (madeSignatures[pet.id] = { name: owner + (/s$/i.test(owner) ? "' " : "'s ") + SIG_WORDS[el][h % SIG_WORDS[el].length], effect: SIG_EFFECTS[el][(h >>> 16) % 2] });
+}
 let guardUp = false;                       // Guard is up: the next hit on your buddy is blocked
 
 function moveCost(m) {
