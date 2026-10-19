@@ -199,7 +199,8 @@ function renderMap() {
     let actions = '';
     if (!open) actions = '<div class="d">🔒 Reach Lv ' + need + ' (your best: Lv ' + best + ')</div>';
     else {
-      actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>';
+      actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>' +
+        '<button class="claim-btn" aria-label="Explore ' + r.name + '" onclick="openTrail(&quot;' + r.id + '&quot;)">' + (trailFinished(r.id) ? '🧭 ✅' : '🧭 Explore') + '</button>';
       if (r.element) {
         if (badge && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else if (badge) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');

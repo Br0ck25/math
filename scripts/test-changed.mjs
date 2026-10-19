@@ -18,6 +18,7 @@ export const MAP = [
   [/js\/12[cd]-/, ['moves']],
   [/js\/(13b-wild|24-raids)/, ['wild', 'legend']],
   [/js\/24b-map/, ['map']],
+  [/js\/24e-trail/, ['trail', 'map']],
   [/js\/24c-legend/, ['legend']],
   [/js\/24d-champion/, ['champion']],
   [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],

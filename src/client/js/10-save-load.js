@@ -121,6 +121,17 @@ const NORMALIZERS = [
     RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
     s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
   },
+  function trails(s) {
+    const t = {};
+    REGIONS.forEach(function (r) {
+      const e = s.trails && s.trails[r.id];
+      if (!e || typeof e !== 'object' || typeof e.day !== 'string' || !Array.isArray(e.done)) return;
+      t[r.id] = { day: e.day.slice(0, 12), done: e.done.filter(function (n, i, a) { return Number.isInteger(n) && n >= 0 && n < TRAIL_SPOTS.length && a.indexOf(n) === i; }) };
+    });
+    s.trails = t;
+    const g = s.trailGems || {};
+    s.trailGems = { day: typeof g.day === 'string' ? g.day.slice(0, 12) : '', n: asInt(g.n, 0, 99, 0) };
+  },
   function evoPath(s) {
     const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
     Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && s.evoPath[b] === 'radiant') paths[b] = 'radiant'; });

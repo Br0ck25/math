@@ -40,6 +40,7 @@ function ranchCheer() {
   if (ranchWorkers().length) ranchAdd(ECON.ranch.answerSec);
 }
 function ranchHas(good) { return Math.floor(state.ranch.stock[good]); }
+function ranchGive(good, n) { state.ranch.stock[good] = Math.min(ECON.ranch.stockCap, state.ranch.stock[good] + n); }
 function ranchStarted() { return Object.keys(state.ranch.workers).length > 0 || ranchHas('berry') > 0 || ranchHas('ore') > 0; }
 // Pay a price in gems, or in berries when pay is 'berry' (the caller has checked canPay).
 function canPay(pay, gems, berries) { return pay === 'berry' ? ranchHas('berry') >= berries : state.gems >= gems; }

@@ -56,6 +56,8 @@ const ECON = {
     treatBerries: 2, favBerries: 4, orePerNet: 6,
     // The Nursery: `eggBerries` berries and two or more workers make an egg (of `eggRarity`) with the element of one of the workers.
     eggBerries: 10, eggRarity: 'rare' },
+  // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the whole Trail pays `gems` gems for the first `trailsPerDay` trails of a day.
+  explore: { berries: 3, ore: 2, gems: 8, trailsPerDay: 3 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
   encounter: { minBadges: 1, choices: 3 },
   // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.
