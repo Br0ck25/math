@@ -58,6 +58,8 @@ const ECON = {
     eggBerries: 10, eggRarity: 'rare' },
   // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the whole Trail pays `gems` gems for the first `trailsPerDay` trails of a day.
   explore: { berries: 3, ore: 2, gems: 8, trailsPerDay: 3 },
+  // Weather (24e-trail.js): today's weather favours some types. `share` is the part of wild fights (after the land's own `map.regionShare`) that use it.
+  weather: { share: 0.15 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
   encounter: { minBadges: 1, choices: 3 },
   // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.

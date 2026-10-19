@@ -130,6 +130,35 @@ test('the Stone gate wants one element on your team: without it the gate stays s
   assert.equal(r.skills, 6);
 });
 
+test('weather: the same all day, changes over the days, shows on the map and the Trail, and favours some types of wild buddies', async () => {
+  const r = await page.evaluate(() => {
+    const out = {}, real = dayKey, realRandom = Math.random;
+    const on = (day) => { dayKey = () => day; return weatherToday(); };
+    const days = Array.from({ length: 40 }, (_, i) => '2026-03-' + String(i % 28 + 1).padStart(2, '0') + (i > 27 ? 'b' : ''));
+    out.stable = on('2026-03-01') === on('2026-03-01');
+    const seen = {}; days.forEach((d) => { seen[on(d).id] = true; });
+    out.kinds = Object.keys(seen).sort().join(',');
+    // for each kind of weather: a wild pick inside the weather's share of the roll favours its types
+    out.picks = WEATHER.map((w) => {
+      const day = days.find((d) => on(d).id === w.id);
+      dayKey = () => day; state.region = 'meadow';
+      const seq = [ECON.map.regionShare + 0.01, 0.1]; let k = 0; Math.random = () => seq[Math.min(k++, 1)];
+      const sp = rollWildSpecies([]); Math.random = realRandom;
+      return [w.id, w.favours.includes(sp.element)];
+    });
+    dayKey = () => days[0]; state.storySeen.map = 1; openMap();
+    out.map = document.getElementById('map-progress').innerText.includes(weatherToday().name);
+    openTrail('meadow'); out.trail = document.getElementById('trail-body').innerText.includes('Today: ' + weatherToday().icon);
+    closeTrail(); closeMap(); dayKey = real;
+    return out;
+  });
+  assert.ok(r.stable);
+  assert.equal(r.kinds, 'rainy,stormy,sunny');
+  assert.deepEqual(r.picks.map((p) => p[1]), [true, true, true], JSON.stringify(r.picks));
+  assert.ok(r.map, 'the map header names the weather');
+  assert.ok(r.trail, 'the Trail says today\'s weather');
+});
+
 test('bad Trail data in a save is repaired', async () => {
   const r = await page.evaluate(() => {
     state.trails = { meadow: { day: 'x', done: [0, 0, 9, 'a', 2, -1] }, ghost: { day: 'y', done: [1] }, ember: 'broken' };

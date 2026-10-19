@@ -48,11 +48,13 @@ function spareValueOf(id) {
 function rollWildSpecies(skip) {
   const pool = wildPool();
   let store = pool.filter(isStoreBuddy), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
-  const region = currentRegion();
-  if (region.element && Math.random() < ECON.map.regionShare) {          // the land you are in: more of its type
-    const ofType = function (list) { const l = list.filter(function (p) { return p.element === region.element; }); return l.length ? l : list; };
+  const region = currentRegion(), roll = Math.random();
+  const favour = function (elements) {
+    const ofType = function (list) { const l = list.filter(function (p) { return elements.indexOf(p.element) !== -1; }); return l.length ? l : list; };
     store = ofType(store); secret = ofType(secret);
-  }
+  };
+  if (region.element && roll < ECON.map.regionShare) favour([region.element]);                                   // the land you are in: more of its type
+  else if (roll >= ECON.map.regionShare && roll < ECON.map.regionShare + ECON.weather.share) favour(weatherToday().favours);   // today's weather
   let sp;
   for (let tries = 0; tries < 5; tries++) {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);

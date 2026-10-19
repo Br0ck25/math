@@ -35,6 +35,13 @@ function dayHash(text) {
   for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 100003;
   return h;
 }
+// Today's weather: the same for everyone all day. It only favours some types of wild buddies; it never makes anything harder.
+const WEATHER = [
+  { id: 'sunny',  icon: '☀️', name: 'Sunny',  favours: ['fire', 'nature'], text: 'more fire and nature buddies' },
+  { id: 'rainy',  icon: '🌧️', name: 'Rainy',  favours: ['water'],          text: 'more water buddies' },
+  { id: 'stormy', icon: '⛈️', name: 'Stormy', favours: ['electric'],       text: 'more electric buddies' }
+];
+function weatherToday() { return WEATHER[dayHash(dayKey() + 'weather') % WEATHER.length]; }
 function trailProgress(landId) {
   let t = state.trails[landId];
   if (!t || t.day !== dayKey()) t = state.trails[landId] = { day: dayKey(), done: [] };
@@ -68,7 +75,7 @@ function renderTrail() {
   document.getElementById('trail-title').innerText = '🧭 ' + r.name + ' Trail';
   if (trailQuestion) { renderTrailQuestion(box); return; }
   const done = trailProgress(trailLand).done.length;
-  let h = '<div class="d" style="margin-bottom:6px;">' + escHtml(TRAIL_LORE[r.id] || '') + ' A new trail every day!</div>' +
+  let h = '<div class="d" style="margin-bottom:6px;">' + escHtml(TRAIL_LORE[r.id] || '') + ' A new trail every day! Today: ' + weatherToday().icon + ' ' + weatherToday().name + ', ' + weatherToday().text + '.</div>' +
     '<div class="d" style="margin-bottom:6px;">Spots found: ' + done + '/' + TRAIL_SPOTS.length + '</div><div class="moves-list">';
   TRAIL_SPOTS.forEach(function (s, i) {
     const open = trailDone(trailLand, i), gate = s.kind === 'gate' ? trailGate(trailLand) : null;
