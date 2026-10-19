@@ -110,7 +110,7 @@ function awardBuddyXp(amount) {
     partyHp[id] = Math.min(newMax, curHp + (newMax - oldMax));
     soundLevelUp();
     launchConfetti('level');
-    const learned = movesBetween(before.level, after.level);
+    const learned = movesBetween(before.level, after.level, after);
     toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!' + (learned.length ? ' ✨ Learned ' + learned.map(function (m) { return moveName(m, after); }).join(', ') + '!' : ''));
     checkRegionUnlocks();
     if (after.stage > before.stage) {
@@ -128,7 +128,7 @@ function openEvoModal(before, after) {
   document.getElementById('evo-from').innerHTML = avatarHtml(before, 72);
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
   document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)';
-  const learned = movesBetween(before.level, after.level);
+  const learned = movesBetween(before.level, after.level, after);
   document.getElementById('evo-stats').innerText =
     'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
     '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove +

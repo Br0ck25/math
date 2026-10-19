@@ -28,7 +28,7 @@ test('a buddy learns moves by level, with names from its element', async () => {
   assert.equal(r.l8, 'strike,guard,ult');
   assert.equal(r.l18, 'strike,guard,power,ult');
   assert.equal(r.l30, 'strike,guard,power,cleanse,heal,ult');
-  assert.deepEqual(r.names, ['Ember', 'Guard', 'Flame Wheel', 'Cleanse', 'Recover', 'Absorb', 'Flame Tail']);
+  assert.deepEqual(r.names, ['Ember', 'Guard', 'Flame Wheel', 'Cleanse', 'Recover', 'Absorb', 'Signature', 'Flame Tail']);
   assert.equal(r.water, 'Tidal Crash');
   assert.deepEqual(r.between, ['power']);
 });
@@ -171,7 +171,7 @@ test('move slots: a buddy takes 4 moves plus its ultimate into battle, the playe
   });
   assert.equal(r.default, 'strike,guard,power,heal,ult');
   assert.equal(r.battleButtons, 5, 'in battle: 4 moves and the ultimate');
-  assert.equal(r.editButtons, 7, 'when choosing: every move');
+  assert.equal(r.editButtons, 8, 'when choosing: every move, plus the dog\'s signature move');
   assert.deepEqual(r.full, ['strike,guard,power,heal,ult', 0], 'a full set refuses a fifth move and saves nothing');
   assert.equal(r.swapped, 'strike,power,heal,drain,ult');
   assert.equal(r.battleAfter, 5);
@@ -179,4 +179,37 @@ test('move slots: a buddy takes 4 moves plus its ultimate into battle, the playe
   assert.deepEqual(r.cleansed, [0, 0]);
   assert.equal(r.drained[1], 0); assert.ok(r.drained[0] >= 3, 'Absorb heals 1 HP: ' + r.drained);
   assert.deepEqual(r.repaired, ['["drain","strike","power","heal"]', 'dog']);
+});
+
+test('signature moves: only species with one learn it (level 12), it carries its own name and effect, and others are unchanged', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    const fox = getPetById('fox'), bunny = getPetById('bunny');
+    out.has = [sigOf({ id: 'fox' }) !== null, sigOf({ id: 'koala' }) === null];
+    out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: 'koala' }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
+    out.name = moveName(MOVES.find((m) => m.sig), { id: 'fox' });
+    out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: 'koala' }).length];
+    state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 10; state.bossSwapped = false; state.raid = null;
+    state.moveSet = { fox: ['strike', 'sig'] };
+    partyHp = {}; monsterCurrentHp = 50; inputLocked = false; ultimateCharge = 2;
+    const hp0 = monsterCurrentHp;
+    useMove('sig');
+    await new Promise((res) => setTimeout(res, 3000));
+    out.cast = [hp0 - monsterCurrentHp > 0, ultimateCharge];           // fox: surge refunds 1 energy
+    state.activePet = 'bunny'; state.buddyXp.bunny = xpForLevel(20); state.moveSet = { bunny: ['sig'] };
+    buddyStatus = { kind: 'burn', left: 3 }; inputLocked = false; ultimateCharge = 2; monsterCurrentHp = 50;
+    useMove('sig');
+    await new Promise((res) => setTimeout(res, 3000));
+    out.purify = buddyStatus.left;
+    state.activePet = 'koala'; state.buddyXp.koala = xpForLevel(30); state.moveSet = {};
+    out.koalaMoves = equippedMoves(getPetById('koala')).some((m) => m.sig);
+    return out;
+  });
+  assert.deepEqual(r.has, [true, true]);
+  assert.deepEqual(r.learn, [false, true, false, false]);
+  assert.equal(r.name, 'Cinder Dash');
+  assert.deepEqual(r.between, ['sig', 0]);
+  assert.deepEqual(r.cast, [true, 1]);
+  assert.equal(r.purify, 0, 'Moon Hop clears the status');
+  assert.equal(r.koalaMoves, false);
 });
