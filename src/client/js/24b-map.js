@@ -13,8 +13,17 @@ const REGIONS = [
   { id: 'mystic', name: 'Mystic Peak', icon: '🔮', element: 'magic' }
 ];
 const RIVAL = 'Rival Riley';
-const GYM_TRAINERS = ['Scout Mia', RIVAL, 'Ranger Ava'];       // in battle order; the list repeats if a gym has more trainers
-const KNOWN_TRAINERS = GYM_TRAINERS.concat(['']);
+// The trainers of each land, in battle order: one before Riley, Riley, one after. The list repeats if a gym has more trainers.
+const GYM_TRAINERS = {
+  ember: ['Scout Mia', RIVAL, 'Ranger Ava'],
+  tide:  ['Angler Finn', RIVAL, 'Diver Coral'],
+  grove: ['Gardener Fern', RIVAL, 'Ranger Oak'],
+  volt:  ['Techie Watt', RIVAL, 'Sparky Zed'],
+  gloom: ['Lantern Luna', RIVAL, 'Spooky Sage'],
+  mystic: ['Stargazer Iris', RIVAL, 'Mage Orion']
+};
+const KNOWN_TRAINERS = Object.keys(GYM_TRAINERS).reduce(function (all, k) { return all.concat(GYM_TRAINERS[k]); }, ['']);
+function gymTrainer(regionId, step) { const list = GYM_TRAINERS[regionId]; return list[step % list.length]; }
 const GYM_STORY = {
   ember: { intro: ['The Ember Hills glow orange. A gym stands at the top, hot as a campfire!', 'Riley waves: "Race you to the badge, math champ!"', 'Beat the trainers, then the gym leader!'], outro: 'The flames cool down and the Ember Badge is yours! Riley grins: "Next time I will win!"' },
   tide: { intro: ['Waves splash at Tide Bay. The gym floats on the water!', 'Riley is already there: "My buddy loves the sea!"', 'Stay sharp, the tide is rising!'], outro: 'The waves calm down. The Tide Badge shines in your hand! Riley laughs: "You are getting fast!"' },
@@ -61,7 +70,7 @@ function pickGymFoe() {
   if (g.step < ECON.map.trainers) {
     const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
     state.wild.id = sp.id;
-    state.wild.trainer = GYM_TRAINERS[g.step % GYM_TRAINERS.length];
+    state.wild.trainer = gymTrainer(g.region, g.step);
     state.wild.shiny = false;
     state.wild.legend = false;
     markDexSeen(sp.id);
@@ -203,9 +212,9 @@ function renderMap() {
     if (open && r.element) {
       const nodes = [
         { icon: '🌿', lbl: 'Tall Grass' },
-        { icon: '🧒', lbl: 'Scout Mia' },
+        { icon: '🧒', lbl: gymTrainer(r.id, 0) },
         { icon: '🧢', lbl: 'Rival Riley' },
-        { icon: '🧭', lbl: 'Ranger Ava' },
+        { icon: '🧭', lbl: gymTrainer(r.id, 2) },
         { icon: '🏰', lbl: 'Gym Leader' }
       ];
       const activeIdx = g ? Math.min(nodes.length - 1, state.gym.step + 1) : (here ? 0 : -1);

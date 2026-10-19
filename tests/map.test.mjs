@@ -320,3 +320,17 @@ test('adventure upgrades: trainer header, 4-tab nav, regional backdrops, inline 
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });
+
+test('every land has its own trainers (Riley stays second), and a saved trainer name survives a reload', async () => {
+  const r = await page.evaluate(() => {
+    const lands = gymRegions().map((x) => x.id);
+    const first = lands.map((id) => gymTrainer(id, 0)), last = lands.map((id) => gymTrainer(id, 2));
+    state.wild.id = 'fox'; state.wild.trainer = gymTrainer('tide', 2);
+    normalizeState();
+    return { lands: lands.length, unique: new Set(first.concat(last)).size, riley: lands.every((id) => gymTrainer(id, 1) === 'Rival Riley'), kept: state.wild.trainer, repeats: gymTrainer('tide', 3) };
+  });
+  assert.equal(r.unique, r.lands * 2, 'two different trainers per land');
+  assert.ok(r.riley);
+  assert.equal(r.kept, 'Diver Coral');
+  assert.equal(r.repeats, 'Angler Finn');
+});
