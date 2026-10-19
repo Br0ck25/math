@@ -86,6 +86,7 @@ test('answer bonuses: Quick Lens and Support add energy, Healer heals every 4th 
   const r = await page.evaluate(() => {
     const out = {};
     state.unlockedPets = ['dog', 'fox', 'otter']; state.activePet = 'otter'; state.held = {};
+    heldUsed = { brave: true };                        // fox's quirk (Brave) is not what this test is about
     state.streak = 4; partyHp = {}; setPetHp('otter', 1); answerBonuses(false);
     out.healer = getPetHp('otter');
     state.activePet = 'fox'; state.held = { fox: 'lens' }; ultimateCharge = 0; answerBonuses(true); out.lens = ultimateCharge;
@@ -304,6 +305,49 @@ test('the Sanctuary: a buddy that is not on a full team asks which team buddy it
   assert.deepEqual(r.room, [true, true, 'none']);
   assert.equal(r.pickerResting, true);
   assert.deepEqual(r.kept, [false, 'none']);
+});
+
+test('quirks: every species has one (always the same), and brave, calm, lucky and curious change the battle', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const by = {};
+    storePets.forEach((p) => { (by[quirkOf(p.id).id] = by[quirkOf(p.id).id] || []).push(p.id); });
+    out.kinds = Object.keys(by).sort().join(',');
+    out.stable = quirkOf('fox') === quirkOf('fox');
+    hubPet = 'dog'; hubTab = 'hold'; renderHub();
+    out.shown = document.getElementById('hub-body').innerText.includes('Quirk: ' + quirkOf('dog').name);
+    // brave: the first correct answer of a battle charges 1 extra energy, once
+    state.activePet = by.brave[0]; resetBattleEffects(); ultimateCharge = 0; state.streak = 1;
+    answerBonuses(false); answerBonuses(false);
+    out.brave = ultimateCharge;
+    // calm: statuses last 1 problem less
+    const real = Math.random; Math.random = () => 0;
+    state.activePet = by.calm[0]; clearBuddyStatus(); buddyStatus = { kind: '', left: 0 };
+    maybeInflictStatus({ element: 'fire', wild: false });
+    out.calm = buddyStatus.left;
+    state.activePet = by.brave[0]; clearBuddyStatus(); maybeInflictStatus({ element: 'fire', wild: false });
+    out.plain = buddyStatus.left;
+    Math.random = real; clearBuddyStatus();
+    // lucky: easier to catch
+    const sp = getSpecies('fox');
+    const luckyPet = storePets.find((p) => quirkOf(p.id).id === 'lucky');
+    const same = storePets.find((p) => p.element === luckyPet.element && quirkOf(p.id).id !== 'lucky');     // same element: the type matchup is equal
+    state.activePet = luckyPet.id; const lucky = wildCatchChance(sp, {});
+    state.activePet = same.id; const base = wildCatchChance(sp, {});
+    out.lucky = lucky > base;
+    // curious: extra XP
+    const gain = (id) => { state.activePet = id; state.buddyXp[id] = 0; awardBuddyXp(1000); return state.buddyXp[id]; };
+    out.curious = [gain(by.curious[0]), gain(by.brave[0])];
+    return out;
+  });
+  assert.equal(r.kinds, 'brave,calm,curious,lucky,quick');
+  assert.ok(r.stable);
+  assert.ok(r.shown, 'the Hold tab names the quirk');
+  assert.equal(r.brave, 1, 'brave pays once per battle');
+  assert.equal(r.calm, 2);
+  assert.equal(r.plain, 3);
+  assert.ok(r.lucky);
+  assert.ok(r.curious[0] > r.curious[1], 'curious earns more XP');
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

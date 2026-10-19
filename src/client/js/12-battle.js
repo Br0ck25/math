@@ -396,6 +396,7 @@ function checkAnswer() {
     let speedLimit = (4 + state.grade * 2.5) * (HARD_OPS.indexOf(opId) !== -1 ? 1.6 : 1);
     if (pad.used) speedLimit *= 1.75;
     if (activeRole('Speedster')) speedLimit *= 1.25;
+    if (activeQuirk('quick')) speedLimit *= ECON.quirk.speed;
     const isFast = !hintUsed && solveTime <= speedLimit;
     answerBonuses(isFast);
     let speedBonusGems = 0;

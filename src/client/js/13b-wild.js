@@ -28,6 +28,7 @@ function wildCatchChance(sp, opts) {
   let chance = (sp.legend ? ECON.legend.catchChance + ECON.legend.pity * legendState().misses : base) * (opts && opts.shiny ? ECON.daily.catchMult : 1) * (rel === 1 ? ECON.wild.matchup.strong : rel === -1 ? ECON.wild.matchup.weak : 1);
   if (opts && opts.flawless) chance *= ECON.wild.flawless;
   if (activeRole('Trickster')) chance *= 1.25;
+  if (activeQuirk('lucky')) chance *= ECON.quirk.catch;
   if (activeHolds('bait')) chance *= (typeof hasTech === 'function' && hasTech('second_heart') ? 1.5 : 1.25);
   const nets = opts && opts.nets ? Math.min(opts.nets, ECON.wild.net.mult.length - 1) : 0;
   if (nets) {

@@ -185,7 +185,7 @@ test('signature moves: only species with one learn it (level 12), it carries its
   const r = await page.evaluate(async () => {
     const out = {};
     const fox = getPetById('fox'), bunny = getPetById('bunny');
-    out.has = [sigOf({ id: 'fox' }) !== null, sigOf({ id: 'koala' }) === null];
+    out.has = [signatureOf({ id: 'fox' }) !== null, signatureOf({ id: 'koala' }) === null];
     out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: 'koala' }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
     out.name = moveName(MOVES.find((m) => m.sig), { id: 'fox' });
     out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: 'koala' }).length];

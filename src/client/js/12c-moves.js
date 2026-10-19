@@ -39,7 +39,7 @@ const SIGNATURE_MOVES = {
   bat:      { name: 'Echo Screech',    effect: 'drain' }
 };
 const SIG_EFFECT_TEXT = { drain: 'heals 1 HP', surge: 'gives 1 energy back', ward: 'raises Guard', purify: 'clears a status effect' };
-function sigOf(pet) { return (pet && SIGNATURE_MOVES[pet.id]) || null; }
+function signatureOf(pet) { return (pet && SIGNATURE_MOVES[pet.id]) || null; }
 let guardUp = false;                       // Guard is up: the next hit on your buddy is blocked
 
 function moveCost(m) {
@@ -48,7 +48,7 @@ function moveCost(m) {
 
 function moveName(m, pet) {
   if (m.kind === 'ult') return pet.superMove;
-  if (m.sig) return sigOf(pet) ? sigOf(pet).name : 'Signature';
+  if (m.sig) return signatureOf(pet) ? signatureOf(pet).name : 'Signature';
   if (m.name) return m.name;
   const names = MOVE_NAMES[pet.element] || MOVE_NAMES.magic;
   return names[m.id === 'power' ? 1 : 0];
@@ -61,16 +61,16 @@ function moveDamage(m, level) {
 function moveDesc(m, pet) {
   if (m.kind === 'guard') return 'Blocks the next hit on your buddy';
   if (m.kind === 'cleanse') return 'Clears a status effect from your buddy';
-  if (m.sig) return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type, ' + SIG_EFFECT_TEXT[sigOf(pet).effect];
+  if (m.sig) return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type, ' + SIG_EFFECT_TEXT[signatureOf(pet).effect];
   if (m.drain) return '+' + moveDamage(m, pet.level) + ' damage and heals 1 HP, ' + pet.element + ' type';
   if (m.kind === 'heal') return 'Heals ' + Math.round(ECON.moves.healShare * 100) + '% of your buddy\'s HP';
   return '+' + moveDamage(m, pet.level) + ' damage, ' + pet.element + ' type';
 }
 // A signature move only counts for a buddy that has one (pass the buddy).
-function movesLearned(level, pet) { return MOVES.filter(function (m) { return m.minLevel <= level && (!m.sig || sigOf(pet)); }); }
+function movesLearned(level, pet) { return MOVES.filter(function (m) { return m.minLevel <= level && (!m.sig || signatureOf(pet)); }); }
 // Moves a buddy picks up between two levels (shown on a level-up and in the evolution window).
 function movesBetween(fromLevel, toLevel, pet) {
-  return MOVES.filter(function (m) { return m.kind !== 'ult' && m.minLevel > fromLevel && m.minLevel <= toLevel && (!m.sig || sigOf(pet)); });
+  return MOVES.filter(function (m) { return m.kind !== 'ult' && m.minLevel > fromLevel && m.minLevel <= toLevel && (!m.sig || signatureOf(pet)); });
 }
 
 // The moves a buddy takes into battle: its chosen set (only moves it has learned), else the first ones it learned. The ultimate is always there.
@@ -115,7 +115,7 @@ function renderMoves() {
     ? 'Tap a move to take it into battle or leave it out. ' + ECON.moves.slots + ' at a time, plus your ultimate.'
     : 'Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!';
   MOVES.forEach(function (m) {
-    if (m.sig && !sigOf(pet)) return;
+    if (m.sig && !signatureOf(pet)) return;
     const known = m.minLevel <= pet.level, on = equipped.indexOf(m) !== -1;
     if (!movesEditing && !on && known) return;                       // in battle only the equipped moves show
     if (!movesEditing && !known && m.kind !== 'ult' && !isNextToLearn(pet, m)) return;
@@ -135,13 +135,13 @@ function renderMoves() {
 }
 // In battle one locked move is teased (the next one to learn), so there is something to look forward to.
 function isNextToLearn(pet, m) {
-  const next = MOVES.filter(function (x) { return x.minLevel > pet.level && (!x.sig || sigOf(pet)); }).sort(function (a, b) { return a.minLevel - b.minLevel; })[0];
+  const next = MOVES.filter(function (x) { return x.minLevel > pet.level && (!x.sig || signatureOf(pet)); }).sort(function (a, b) { return a.minLevel - b.minLevel; })[0];
   return next === m;
 }
 
 // The extra effect of a signature move, after its damage was dealt.
 function applySigEffect(pet) {
-  const e = sigOf(pet).effect;
+  const e = signatureOf(pet).effect;
   if (e === 'drain') setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
   else if (e === 'surge') addEnergy(1);
   else if (e === 'ward') guardUp = true;
