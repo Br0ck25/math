@@ -47,14 +47,20 @@ function spareValueOf(id) {
 // One random wild species, favouring the land you are in; never one in `skip` (the species that fought last by default).
 function rollWildSpecies(skip) {
   const pool = wildPool();
-  let store = pool.filter(isStoreBuddy), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
+  const today = weatherToday();
+  let store = pool.filter(function (p) { return isStoreBuddy(p) && (!weatherOfBuddy(p.id) || weatherOfBuddy(p.id) === today.id); }), secret = pool.filter(function (p) { return !isStoreBuddy(p); });
   const region = currentRegion(), roll = Math.random();
   const favour = function (elements) {
     const ofType = function (list) { const l = list.filter(function (p) { return elements.indexOf(p.element) !== -1; }); return l.length ? l : list; };
     store = ofType(store); secret = ofType(secret);
   };
+  const weatherPick = function (w) {                           // its types, and its own buddies when any are left
+    favour(w.favours);
+    const own = store.filter(function (p) { return w.buddies.indexOf(p.id) !== -1; });
+    if (own.length) store = own;
+  };
   if (region.element && roll < ECON.map.regionShare) favour([region.element]);                                   // the land you are in: more of its type
-  else if (roll >= ECON.map.regionShare && roll < ECON.map.regionShare + ECON.weather.share) favour(weatherToday().favours);   // today's weather
+  else if (roll >= ECON.map.regionShare && roll < ECON.map.regionShare + ECON.weather.share) weatherPick(today);   // today's weather
   let sp;
   for (let tries = 0; tries < 5; tries++) {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);

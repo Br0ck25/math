@@ -159,6 +159,37 @@ test('weather: the same all day, changes over the days, shows on the map and the
   assert.ok(r.trail, 'the Trail says today\'s weather');
 });
 
+test('weather buddies: nine store buddies only show up in their weather, and the weather slice of wild fights picks them', async () => {
+  const r = await page.evaluate(() => {
+    const out = {}, real = dayKey, realRandom = Math.random;
+    const dayOf = (id) => ['2026-04-01', '2026-04-02', '2026-04-03', '2026-04-04', '2026-04-05', '2026-04-06', '2026-04-07', '2026-04-08'].concat(Array.from({ length: 40 }, (_, i) => '2026-05-' + String(i + 1))).find((d) => { dayKey = () => d; return weatherToday().id === id; });
+    out.bound = WEATHER.map((w) => w.buddies.length).join(',');
+    out.allStore = WEATHER.every((w) => w.buddies.every((id) => storePets.some((p) => p.id === id)));
+    out.weatherOf = [weatherOfBuddy('toon_peppa'), weatherOfBuddy('lion'), weatherOfBuddy('dog')];
+    state.region = 'meadow';
+    out.off = WEATHER.map((w) => {
+      dayKey = () => dayOf(w.id);
+      const others = WEATHER.filter((x) => x !== w).reduce((a, x) => a.concat(x.buddies), []);
+      let seen = 0;
+      for (let i = 0; i < 400; i++) { const sp = rollWildSpecies([]); if (others.indexOf(sp.id) !== -1) seen++; }
+      return seen;
+    });
+    out.slice = WEATHER.map((w) => {
+      dayKey = () => dayOf(w.id);
+      const seq = [ECON.map.regionShare + 0.01, 0.1]; let k = 0; Math.random = () => seq[Math.min(k++, 1)];
+      const sp = rollWildSpecies([]); Math.random = realRandom;
+      return w.buddies.includes(sp.id);
+    });
+    dayKey = real;
+    return out;
+  });
+  assert.equal(r.bound, '3,3,3');
+  assert.ok(r.allStore);
+  assert.deepEqual(r.weatherOf, ['rainy', 'sunny', '']);
+  assert.deepEqual(r.off, [0, 0, 0], 'a weather buddy never shows up in other weather');
+  assert.deepEqual(r.slice, [true, true, true]);
+});
+
 test('bad Trail data in a save is repaired', async () => {
   const r = await page.evaluate(() => {
     state.trails = { meadow: { day: 'x', done: [0, 0, 9, 'a', 2, -1] }, ghost: { day: 'y', done: [1] }, ember: 'broken' };

@@ -36,11 +36,17 @@ function dayHash(text) {
   return h;
 }
 // Today's weather: the same for everyone all day. It only favours some types of wild buddies; it never makes anything harder.
+// buddies: store buddies that only show up in this weather (and show up more often in it).
 const WEATHER = [
-  { id: 'sunny',  icon: '☀️', name: 'Sunny',  favours: ['fire', 'nature'], text: 'more fire and nature buddies' },
-  { id: 'rainy',  icon: '🌧️', name: 'Rainy',  favours: ['water'],          text: 'more water buddies' },
-  { id: 'stormy', icon: '⛈️', name: 'Stormy', favours: ['electric'],       text: 'more electric buddies' }
+  { id: 'sunny',  icon: '☀️', name: 'Sunny',  favours: ['fire', 'nature'], text: 'more fire and nature buddies', buddies: ['lion', 'phoenix', 'raptor'] },
+  { id: 'rainy',  icon: '🌧️', name: 'Rainy',  favours: ['water'],          text: 'more water buddies',           buddies: ['toon_peppa', 'octopus', 'turtle'] },
+  { id: 'stormy', icon: '⛈️', name: 'Stormy', favours: ['electric'],       text: 'more electric buddies',        buddies: ['griffin', 'zephyr', 'rhino'] }
 ];
+// The weather a buddy is bound to, or '' when it appears in any.
+function weatherOfBuddy(id) {
+  const w = WEATHER.find(function (x) { return x.buddies.indexOf(id) !== -1; });
+  return w ? w.id : '';
+}
 function weatherToday() { return WEATHER[dayHash(dayKey() + 'weather') % WEATHER.length]; }
 function trailProgress(landId) {
   let t = state.trails[landId];
@@ -75,7 +81,7 @@ function renderTrail() {
   document.getElementById('trail-title').innerText = '🧭 ' + r.name + ' Trail';
   if (trailQuestion) { renderTrailQuestion(box); return; }
   const done = trailProgress(trailLand).done.length;
-  let h = '<div class="d" style="margin-bottom:6px;">' + escHtml(TRAIL_LORE[r.id] || '') + ' A new trail every day! Today: ' + weatherToday().icon + ' ' + weatherToday().name + ', ' + weatherToday().text + '.</div>' +
+  let h = '<div class="d" style="margin-bottom:6px;">' + escHtml(TRAIL_LORE[r.id] || '') + ' A new trail every day! Today: ' + weatherToday().icon + ' ' + weatherToday().name + ', ' + weatherToday().text + '. Look out for ' + weatherToday().buddies.map(function (id) { return getSpecies(id).name; }).join(', ') + '!</div>' +
     '<div class="d" style="margin-bottom:6px;">Spots found: ' + done + '/' + TRAIL_SPOTS.length + '</div><div class="moves-list">';
   TRAIL_SPOTS.forEach(function (s, i) {
     const open = trailDone(trailLand, i), gate = s.kind === 'gate' ? trailGate(trailLand) : null;
