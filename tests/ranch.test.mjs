@@ -171,4 +171,55 @@ test('the Nursery: two workers and berries raise a rare egg of one of their type
   assert.match(r.text, /more right answers to hatch/);
 });
 
+test('more stations: the Apiary and Workshop earn too, a Wildcard buddy is fast anywhere, and old barns without the new goods still work', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    out.stations = RANCH_STATIONS.map((x) => x.id).join(',');
+    out.fresh = Object.keys(freshState().ranch.stock).join(',');
+    state.unlockedPets = ['dog', 'bunny', 'byte', 'bandit']; state.team = ['dog']; state.activePet = 'dog'; state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic'];
+    state.ranch = { at: 0, workers: {}, stock: { berry: 0, ore: 0 } };                      // a save from before the new goods
+    assignWorker('bunny', 'honey'); assignWorker('byte', 'parts'); assignWorker('bandit', 'ore');
+    out.rates = ['bunny', 'byte', 'bandit'].map((id) => ranchRate(id) / ECON.ranch.perHour);     // magic at the Apiary, electric at the Workshop, shadow anywhere: all matching
+    ranchCheer();
+    out.earned = [ranchHas('honey') >= 0, state.ranch.stock.honey > 0, state.ranch.stock.parts > 0, state.ranch.stock.ore > 0];
+    normalizeState(); out.keys = Object.keys(state.ranch.stock).join(',');
+    state.ranch.stock.honey = 0; out.started = ranchStarted();
+    return out;
+  });
+  assert.equal(r.stations, 'berry,ore,honey,parts');
+  assert.equal(r.fresh, 'berry,ore,honey,parts');
+  assert.deepEqual(r.rates, [2, 2, 2]);
+  assert.deepEqual(r.earned, [true, true, true, true]);
+  assert.equal(r.keys, 'berry,ore,honey,parts', 'the repaired barn has every good');
+  assert.equal(r.started, true);
+});
+
+test('honey feeds the hub buddy XP, and parts brew a Super Potion that heals and wakes the team (never when it would do nothing)', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const E = ECON.ranch;
+    state.unlockedPets = ['dog', 'otter']; state.team = ['dog']; state.activePet = 'dog'; state.faintedPets = []; partyHp = {};
+    state.ranch.stock = { berry: 0, ore: 0, honey: E.honeyPerFeed * 2 + 0.5, parts: E.partsPerPotion * 2 + 0.5 };
+    state.buddyXp.otter = xpForLevel(5); hubPet = 'otter'; hubTab = 'ranch'; renderHub();
+    out.tab = ['Honey treat', 'Super Potion'].every((t) => document.getElementById('hub-body').innerText.includes(t));
+    const xp0 = getBuddyXp('otter');
+    feedHoney(); feedHoney(); feedHoney();
+    out.honey = [getBuddyXp('otter') - xp0, state.ranch.stock.honey];                           // two feeds; the third lacks honey
+    state.ranch.stock.honey = E.honeyPerFeed; state.faintedPets = ['otter']; const x1 = getBuddyXp('otter'); feedHoney(); out.sleepy = [getBuddyXp('otter') === x1, state.ranch.stock.honey];
+    state.faintedPets = [];
+    craftPotion(); out.full = state.ranch.stock.parts;                                           // full HP and nobody fainted: nothing is spent
+    setPetHp('dog', 1); state.faintedPets = ['otter'];
+    craftPotion();
+    out.potion = [getPetHp('dog') === getPetMaxHp('dog'), state.faintedPets.length, state.ranch.stock.parts];
+    state.ranch.stock.parts = E.partsPerPotion - 1; setPetHp('dog', 1); craftPotion(); out.short = [getPetHp('dog'), state.ranch.stock.parts];
+    return out;
+  });
+  assert.ok(r.tab);
+  assert.deepEqual(r.honey, [24, 0.5]);
+  assert.deepEqual(r.sleepy, [true, 3], 'a resting buddy is not fed and the honey stays');
+  assert.equal(r.full, 10.5);
+  assert.deepEqual(r.potion, [true, 0, 5.5]);
+  assert.deepEqual(r.short, [1, 4], 'too few parts: nothing happens');
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

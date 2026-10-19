@@ -55,7 +55,9 @@ const ECON = {
     // Berries can pay for the Biscuit (`treatBerries`) and the Favorite snack (`favBerries`) instead of gems; `orePerNet` ore make one Catch Net (a shop net costs `items.net` gems).
     treatBerries: 2, favBerries: 4, orePerNet: 6,
     // The Nursery: `eggBerries` berries and two or more workers make an egg (of `eggRarity`) with the element of one of the workers.
-    eggBerries: 10, eggRarity: 'rare' },
+    eggBerries: 10, eggRarity: 'rare',
+    // Honey feeds the hub's buddy `honeyXp` XP for `honeyPerFeed` honey; `partsPerPotion` parts brew a Super Potion.
+    honeyPerFeed: 3, honeyXp: 12, partsPerPotion: 5 },
   // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the whole Trail pays `gems` gems for the first `trailsPerDay` trails of a day.
   explore: { berries: 3, ore: 2, gems: 8, trailsPerDay: 3 },
   // Weather (24e-trail.js): today's weather favours some types. `share` is the part of wild fights (after the land's own `map.regionShare`) that use it.

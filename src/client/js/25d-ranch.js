@@ -6,7 +6,9 @@
 // match: elements that work this station at ECON.ranch.matchMult times the speed.
 const RANCH_STATIONS = [
   { id: 'berry', icon: '🫐', name: 'Berry Patch', good: 'Berries', match: ['nature', 'water'] },
-  { id: 'ore',   icon: '⛏️', name: 'Mine',        good: 'Ore',     match: ['fire', 'electric', 'dark'] }
+  { id: 'ore',   icon: '⛏️', name: 'Mine',        good: 'Ore',     match: ['fire', 'electric', 'dark'] },
+  { id: 'honey', icon: '🍯', name: 'Apiary',      good: 'Honey',   match: ['magic', 'nature'] },
+  { id: 'parts', icon: '🔧', name: 'Workshop',    good: 'Parts',   match: ['electric', 'magic'] }
 ];
 function ranchStation(id) { return RANCH_STATIONS.find(function (s) { return s.id === id; }) || null; }
 function ranchSlots() { return 1 + Math.floor(state.badges.length / ECON.ranch.badgesPerSlot); }
@@ -20,13 +22,13 @@ function ranchWorkers() {
 }
 function ranchRate(id) {
   const st = ranchStation(state.ranch.workers[id]), sp = getSpecies(id);
-  return ECON.ranch.perHour * (st.match.indexOf(sp.element) !== -1 ? ECON.ranch.matchMult : 1);
+  return ECON.ranch.perHour * (st.match.indexOf(sp.element) !== -1 || sp.element === 'shadow' ? ECON.ranch.matchMult : 1);      // a Wildcard buddy is good at everything
 }
 function ranchAdd(seconds) {
   const r = state.ranch;
   ranchWorkers().forEach(function (id) {
     const good = state.ranch.workers[id];
-    r.stock[good] = Math.min(ECON.ranch.stockCap, Math.round((r.stock[good] + ranchRate(id) * seconds / 3600) * 1000) / 1000);
+    r.stock[good] = Math.min(ECON.ranch.stockCap, Math.round(((r.stock[good] || 0) + ranchRate(id) * seconds / 3600) * 1000) / 1000);
   });
 }
 // Work done since last time (never negative, never more than capHours).
@@ -39,9 +41,9 @@ function ranchAccrue() {
 function ranchCheer() {
   if (ranchWorkers().length) ranchAdd(ECON.ranch.answerSec);
 }
-function ranchHas(good) { return Math.floor(state.ranch.stock[good]); }
-function ranchGive(good, n) { state.ranch.stock[good] = Math.min(ECON.ranch.stockCap, state.ranch.stock[good] + n); }
-function ranchStarted() { return Object.keys(state.ranch.workers).length > 0 || ranchHas('berry') > 0 || ranchHas('ore') > 0; }
+function ranchHas(good) { return Math.floor(state.ranch.stock[good] || 0); }
+function ranchGive(good, n) { state.ranch.stock[good] = Math.min(ECON.ranch.stockCap, (state.ranch.stock[good] || 0) + n); }
+function ranchStarted() { return Object.keys(state.ranch.workers).length > 0 || RANCH_STATIONS.some(function (s) { return ranchHas(s.id) > 0; }); }
 // Pay a price in gems, or in berries when pay is 'berry' (the caller has checked canPay).
 function canPay(pay, gems, berries) { return pay === 'berry' ? ranchHas('berry') >= berries : state.gems >= gems; }
 function spend(pay, gems, berries) { if (pay === 'berry') state.ranch.stock.berry -= berries; else state.gems -= gems; }
@@ -77,6 +79,29 @@ function unassignWorker(id) {
   renderHub();
 }
 
+// Honey feeds the buddy shown in the hub: a little Buddy XP.
+function feedHoney() {
+  const id = hubPet;
+  if (isSleepy(id)) { soundWrong(); return; }
+  if (ranchHas('honey') < ECON.ranch.honeyPerFeed) { soundWrong(); return; }
+  state.ranch.stock.honey -= ECON.ranch.honeyPerFeed;
+  addXpTo(id, ECON.ranch.honeyXp);
+  soundCoinChirp();
+  hubBounce('🍯 ' + getPetById(id).baseName + ' loves the honey! +' + ECON.ranch.honeyXp + ' XP');
+  saveState();
+  renderHub();
+}
+// Parts brew a Super Potion: full HP for your buddy and everyone who fainted wakes up.
+function craftPotion() {
+  if (ranchHas('parts') < ECON.ranch.partsPerPotion) { soundWrong(); return; }
+  if (potionUseless()) { soundWrong(); toast('Your buddies are already at full HP!'); return; }
+  state.ranch.stock.parts -= ECON.ranch.partsPerPotion;
+  applyPotion();
+  saveState();
+  updateStatsUI();
+  renderHub();
+}
+
 // The Nursery: the workers raise an egg together. It is a normal egg (state.egg, hatched by correct answers), so only one can grow at a time.
 function breedWorkers() {
   const w = ranchWorkers();
@@ -105,6 +130,11 @@ function renderRanchTab() {
     ? 'A ' + egg.rarity + ' ' + egg.element + ' egg: ' + Math.max(0, egg.target - egg.steps) + ' more right answers to hatch!'
     : 'Your workers raise a ' + ECON.ranch.eggRarity + ' egg together: ' + ECON.ranch.eggBerries + ' 🫐 and two or more workers. Its type is one of theirs.') + '</div></div>' +
     '<button class="claim-btn" ' + (egg || working.length < 2 || ranchHas('berry') < ECON.ranch.eggBerries ? 'disabled' : '') + ' onclick="breedWorkers()">Raise</button></div>';
+  const sleepyPet = isSleepy(id);
+  h += '<div class="care-row"><div><div class="t">🍯 Honey treat for ' + escHtml(d.baseName) + '</div><div class="d">' + ECON.ranch.honeyPerFeed + ' 🍯 · +' + ECON.ranch.honeyXp + ' Buddy XP' + (sleepyPet ? ' · resting right now' : '') + '</div></div>' +
+    '<button class="claim-btn" ' + (sleepyPet || ranchHas('honey') < ECON.ranch.honeyPerFeed ? 'disabled' : '') + ' onclick="feedHoney()">Feed</button></div>' +
+    '<div class="care-row"><div><div class="t">💖 Brew a Super Potion</div><div class="d">' + ECON.ranch.partsPerPotion + ' 🔧 parts · full HP and wakes up everyone who fainted</div></div>' +
+    '<button class="claim-btn" ' + (potionUseless() || ranchHas('parts') < ECON.ranch.partsPerPotion ? 'disabled' : '') + ' onclick="craftPotion()">Brew</button></div>';
   working.forEach(function (w) {
     const st = ranchStation(r.workers[w]), b = getPetById(w);
     h += '<div class="care-row"><div><div class="t">' + st.icon + ' ' + escHtml(b.baseName) + ' · ' + st.name + '</div><div class="d">' + Math.round(ranchRate(w) * 10) / 10 + ' ' + st.good.toLowerCase() + ' an hour' + (ranchRate(w) > ECON.ranch.perHour ? ' (loves this work!)' : '') + '</div></div>' +
