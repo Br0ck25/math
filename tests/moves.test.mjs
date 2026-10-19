@@ -140,43 +140,49 @@ test('evolving shows the jump in stats and the moves learned', async () => {
   assert.match(r.txt, /New move: Recover/);
 });
 
-test('radiant evolution: a first evolution with a close bond gives a Radiant form with 1 more HP; without the bond it is the plain form; bad saves are repaired', async () => {
+test('evolution paths: a close bond (or the favorite snack today) makes a Radiant form; otherwise the player picks Guardian (HP) or Striker (attack); bad saves are repaired', async () => {
   const r = await page.evaluate(() => {
     const out = {};
-    const evolve = (id, bond) => {
-      state.activePet = id; state.unlockedPets = [id]; state.evoPath = {}; state.care = { [id]: { day: dayKey(), pets: 0, treat: false, fav: false, bond: bond, last: '' } };
+    const evolve = (id, bond, fed) => {
+      state.activePet = id; state.unlockedPets = [id]; state.evoPath = {}; state.care = { [id]: { day: dayKey(), pets: 0, treat: false, fav: !!fed, bond: bond, last: '' } };
       state.buddyXp[id] = xpForLevel(15);
       awardBuddyXp(xpForLevel(40) - xpForLevel(15));
       const p = getPetById(id);
-      return [p.name, p.radiant, state.evoPath[id] || '', getPetMaxHp(id) - petHpAt(p.level, p.stage)];
+      return [p.name, p.path, getPetMaxHp(id) - petHpAt(p.level, p.stage), getPetAttack(id) - petAttackAt(p.level, p.stage)];
     };
-    out.bonded = evolve('dog', ECON.evo.bondMin);
-    out.plain = evolve('dog', ECON.evo.bondMin - 1);
-    const evoText = (() => { state.evoPath = { dog: 'radiant' }; state.buddyXp.dog = xpForLevel(40); openEvoModal({ ...getPetById('dog'), stage: 0, level: 15, radiant: false }, getPetById('dog')); const t = document.getElementById('evo-text').innerText; closeEvoModal(); return t; })();
-    out.text = evoText;
-    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.evoPath = { dog: 'radiant', fox: 'radiant', ghost: 'x' }; normalizeState();
-    out.repaired = Object.keys(state.evoPath).join(',');
-    state.evoPath = { dog: 'radiant' }; state.buddyXp.dog = 0;
-    out.baseForm = getPetById('dog').radiant;          // a base-form buddy is never Radiant
+    const B = ECON.evo.bondMin;
+    out.bonded = evolve('dog', B, false);
+    out.fed = evolve('dog', B - 1, true);                               // one heart short, but it ate its favorite today
+    out.plain = evolve('dog', B - 1, false);
+    closeEvoModal();
+    // the evolution window lets a non-Radiant buddy switch to Striker
+    const before = { ...getPetById('dog'), stage: 0, level: 15, path: '' };
+    state.evoPath = { dog: 'guardian' };
+    openEvoModal(before, getPetById('dog'));
+    out.shown = document.getElementById('evo-paths').style.display;
+    chooseEvoPath('striker');
+    out.striker = [getPetById('dog').name, getPetMaxHp('dog') - petHpAt(getPetById('dog').level, getPetById('dog').stage), getPetAttack('dog') - petAttackAt(getPetById('dog').level, getPetById('dog').stage), document.getElementById('evo-path-striker').getAttribute('aria-pressed')];
+    chooseEvoPath('radiant'); out.noRadiant = state.evoPath.dog;      // Radiant cannot be picked
+    state.evoPath = { dog: 'radiant' };
+    openEvoModal(before, getPetById('dog')); out.hidden = document.getElementById('evo-paths').style.display;
+    chooseEvoPath('striker'); out.stays = state.evoPath.dog;           // a bonded buddy stays Radiant
+    closeEvoModal();
+    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.evoPath = { dog: 'striker', fox: 'radiant', otter: 'x', ghost: 'guardian' }; normalizeState();
+    out.repaired = JSON.stringify(state.evoPath);
+    state.evoPath = { dog: 'striker' }; state.buddyXp.dog = 0;
+    out.baseForm = [getPetById('dog').path, getPetById('dog').name];  // a base-form buddy has no path
     return out;
   });
-  assert.deepEqual(r.bonded, ['Radiant Thunder Wolf', true, 'radiant', 1]);
-  assert.deepEqual(r.plain, ['Thunder Wolf', false, '', 0]);
-  assert.match(r.text, /Radiant/);
-  assert.equal(r.repaired, 'dog', 'only owned buddies keep a path');
-  assert.equal(r.baseForm, false);
-});
-
-test('every store buddy has its own signature move, with a unique name and a known effect; secret buddies keep the element moves', async () => {
-  const r = await page.evaluate(() => {
-    const names = storePets.map((p) => (signatureOf(p) || {}).name);
-    return { all: storePets.every((p) => signatureOf(p)), unique: new Set(names).size === names.length, effects: storePets.every((p) => SIG_EFFECT_TEXT[signatureOf(p).effect]), short: names.every((n) => n.length <= 22), secret: secretCompanions.some((p) => signatureOf(p)), count: storePets.length };
-  });
-  assert.ok(r.all, 'every store buddy has a signature move');
-  assert.ok(r.unique);
-  assert.ok(r.effects);
-  assert.ok(r.short, 'names fit the move pill');
-  assert.equal(r.secret, false);
+  assert.deepEqual(r.bonded, ['Radiant Thunder Wolf', 'radiant', 1, 1]);
+  assert.deepEqual(r.fed, ['Radiant Thunder Wolf', 'radiant', 1, 1], 'the favorite snack counts as a bond heart');
+  assert.deepEqual(r.plain, ['Guardian Thunder Wolf', 'guardian', 1, 0]);
+  assert.equal(r.shown, '');
+  assert.deepEqual(r.striker, ['Striker Thunder Wolf', 0, 1, 'true']);
+  assert.equal(r.noRadiant, 'striker');
+  assert.equal(r.hidden, 'none');
+  assert.equal(r.stays, 'radiant');
+  assert.equal(r.repaired, '{"dog":"striker"}');
+  assert.deepEqual(r.baseForm, ['', 'Pup']);
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

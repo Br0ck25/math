@@ -138,7 +138,7 @@ const NORMALIZERS = [
   },
   function evoPath(s) {
     const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
-    Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && s.evoPath[b] === 'radiant') paths[b] = 'radiant'; });
+    Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && EVO_PATHS[s.evoPath[b]]) paths[b] = s.evoPath[b]; });
     s.evoPath = paths;
   },
   function dex(s) {

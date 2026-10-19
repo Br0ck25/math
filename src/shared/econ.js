@@ -68,8 +68,9 @@ const ECON = {
   weather: { share: 0.15 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
   encounter: { minBadges: 1, choices: 3 },
-  // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.
-  evo: { bondMin: 3, radiantHp: 1 },
+  // Evolution paths (08-buddies.js): when a buddy first evolves, bond hearts (+1 if it ate its favorite snack today) of at least `bondMin` make it Radiant (`radiantHp` more HP and `radiantAtk` more attack for good).
+  // Otherwise the player picks Guardian (`guardianHp` more HP) or Striker (`strikerAtk` more attack); Guardian is the default.
+  evo: { bondMin: 3, radiantHp: 1, radiantAtk: 1, guardianHp: 1, strikerAtk: 1 },
   // Quirks (25b-held.js): every species has one; these are the sizes of the bonuses (xp: share of extra XP, speed: Speed Strike time, catch: catch chance, calmLess: problems a status lasts less).
   quirk: { xp: 0.1, speed: 1.1, catch: 1.1, calmLess: 1 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.

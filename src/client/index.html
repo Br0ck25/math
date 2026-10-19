@@ -543,7 +543,14 @@
         <div class="evo-icon evo-new" id="evo-to">🐺</div>
       </div>
       <div style="font-size:1rem; font-weight:800; color:#fde047;" id="evo-text">Pup evolved!</div>
-      <div style="font-size:0.75rem; color:#c4b5fd; margin:8px 0 14px;" id="evo-stats"></div>
+      <div style="font-size:0.75rem; color:#c4b5fd; margin:8px 0 10px;" id="evo-stats"></div>
+      <div id="evo-paths" style="display:none; margin:0 0 12px;">
+        <div style="font-size:0.72rem; color:#c4b5fd; margin-bottom:6px;">How should it grow?</div>
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="key-btn action-btn" id="evo-path-guardian" style="flex:1; min-width:0; height:44px; font-size:0.85rem;" onclick="chooseEvoPath('guardian')">🛡️ Guardian</button>
+          <button type="button" class="key-btn action-btn" id="evo-path-striker" style="flex:1; min-width:0; height:44px; font-size:0.85rem;" onclick="chooseEvoPath('striker')">⚔️ Striker</button>
+        </div>
+      </div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; height: 44px; font-size:1rem;" onclick="closeEvoModal()">Awesome!</button>
     </div>
   </div>

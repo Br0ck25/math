@@ -54,11 +54,12 @@ function getPetById(id) {
   const stage = getFormIndex(sp, level);
   const form = sp.forms[stage];
   const suffix = stage === 1 ? ' EX' : (stage === 2 ? ' MAX' : '');
-  const radiant = stage > 0 && state.evoPath && state.evoPath[sp.id] === 'radiant';
+  const path = stage > 0 && state.evoPath && EVO_PATHS[state.evoPath[sp.id]] ? state.evoPath[sp.id] : '';
   return {
     id: sp.id,
-    name: (radiant ? 'Radiant ' : '') + form.name,
-    radiant: !!radiant,
+    name: (path ? EVO_PATHS[path].name + ' ' : '') + form.name,
+    path: path,
+    radiant: path === 'radiant',
     baseName: sp.name,
     icon: form.icon,
     emoji: form.emoji || form.icon,
@@ -79,8 +80,8 @@ function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
 function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
 function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
-function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + (p.radiant ? ECON.evo.radiantHp : 0) + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
-function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
+function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + evoBonus(p.path).hp + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
+function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage) + evoBonus(p.path).atk; }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }
 function setPetHp(id, v) { partyHp[id] = Math.max(0, v); }
@@ -98,6 +99,14 @@ function grantBuddy(id) {
   }
 }
 
+// The paths a buddy can take when it first evolves, and what each gives for good (see ECON.evo).
+const EVO_PATHS = {
+  radiant:  { name: 'Radiant',  hp: ECON.evo.radiantHp,  atk: ECON.evo.radiantAtk },
+  guardian: { name: 'Guardian', hp: ECON.evo.guardianHp, atk: 0 },
+  striker:  { name: 'Striker',  hp: 0, atk: ECON.evo.strikerAtk }
+};
+function evoBonus(path) { return EVO_PATHS[path] || { hp: 0, atk: 0 }; }
+
 // XP for a buddy (the fighter by default).
 function awardBuddyXp(amount, id) {
   id = id || state.activePet;
@@ -107,8 +116,8 @@ function awardBuddyXp(amount, id) {
   const curHp = getPetHp(id);
   state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amount);
   let after = getPetById(id);
-  if (before.stage === 0 && after.stage > 0 && getBond(id) >= ECON.evo.bondMin) {       // first evolution with a close bond
-    state.evoPath[id] = 'radiant';
+  if (before.stage === 0 && after.stage > 0) {                                           // the first evolution picks a path
+    state.evoPath[id] = getBond(id) + (getCare(id).fav ? 1 : 0) >= ECON.evo.bondMin ? 'radiant' : 'guardian';
     after = getPetById(id);
   }
   if (after.level > before.level) {
@@ -128,22 +137,45 @@ function awardBuddyXp(amount, id) {
   return after;
 }
 
+let evoShown = null;                       // the evolution on screen: { before, id }
 function openEvoModal(before, after) {
+  evoShown = { before: before, id: after.id };
   soundSecretFound();
   launchConfetti();
   document.getElementById('evo-title').innerText = 'What? ' + before.name + ' is evolving!';
   document.getElementById('evo-from').innerHTML = avatarHtml(before, 72);
+  renderEvoModal();
+  const m = document.getElementById('evo-modal');
+  const row = m.querySelector('.evo-row');
+  row.classList.remove('go'); void row.offsetWidth; row.classList.add('go');
+  m.style.display = 'flex';
+}
+function renderEvoModal() {
+  const before = evoShown.before, after = getPetById(evoShown.id), first = before.stage === 0 && !!after.path;
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
-  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + (after.radiant ? ' ✨ Your close bond made it Radiant: +' + ECON.evo.radiantHp + ' HP for good!' : '');
+  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + (first && after.radiant ? ' ✨ Your close bond made it Radiant: +' + ECON.evo.radiantHp + ' HP and +' + ECON.evo.radiantAtk + ' attack for good!' : '');
   const learned = movesBetween(before.level, after.level, after);
   document.getElementById('evo-stats').innerText =
     'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
     '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove +
     (learned.length ? '  •  ✨ New move: ' + learned.map(function (m) { return moveName(m, after); }).join(', ') : '');
-  const m = document.getElementById('evo-modal');
-  const row = m.querySelector('.evo-row');
-  row.classList.remove('go'); void row.offsetWidth; row.classList.add('go');
-  m.style.display = 'flex';
+  const box = document.getElementById('evo-paths');
+  box.style.display = first && !after.radiant ? '' : 'none';                 // a bonded buddy is Radiant; the others choose
+  ['guardian', 'striker'].forEach(function (k) {
+    const b = document.getElementById('evo-path-' + k), on = after.path === k;
+    b.innerText = (k === 'guardian' ? '🛡️ Guardian +' + ECON.evo.guardianHp + ' HP' : '⚔️ Striker +' + ECON.evo.strikerAtk + ' ATK') + (on ? ' ✅' : '');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+// The player picks Guardian or Striker for a buddy that has just evolved (not for a Radiant one).
+function chooseEvoPath(path) {
+  if (!evoShown || (path !== 'guardian' && path !== 'striker') || evoShown.before.stage !== 0) return;
+  const cur = getPetById(evoShown.id);
+  if (!cur.path || cur.radiant) return;
+  state.evoPath[evoShown.id] = path;
+  soundClick();
+  saveState();
+  renderEvoModal();
 }
 function closeEvoModal() {
   soundClick();
