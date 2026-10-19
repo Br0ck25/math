@@ -149,4 +149,26 @@ test('berries pay for the Biscuit and the Favorite snack instead of gems, and or
   assert.deepEqual(r.full, [9, 18], 'a full net stock refuses to craft and keeps the ore');
 });
 
+test('the Nursery: two workers and berries raise a rare egg of one of their types; one egg at a time', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    state.badges = ['ember', 'tide']; state.egg = null;
+    assignWorker('otter', 'berry'); breedWorkers(); out.one = [state.egg, state.ranch.stock.berry];        // one worker is not enough
+    assignWorker('fox', 'berry'); state.ranch.stock.berry = ECON.ranch.eggBerries - 1; breedWorkers(); out.poor = state.egg;
+    state.ranch.stock.berry = ECON.ranch.eggBerries + 2.5;
+    hubPet = 'otter'; hubTab = 'ranch'; renderHub(); out.btn = !document.querySelector('#hub-body button[onclick="breedWorkers()"]').disabled;
+    breedWorkers();
+    out.egg = [state.egg && state.egg.rarity, state.egg && ['water', 'fire'].includes(state.egg.element), state.ranch.stock.berry];
+    state.ranch.stock.berry = 30; breedWorkers(); out.second = state.ranch.stock.berry;                  // an egg is already growing: nothing is spent
+    renderHub(); out.text = document.getElementById('hub-body').innerText;
+    return out;
+  });
+  assert.deepEqual(r.one, [null, 0]);
+  assert.equal(r.poor, null);
+  assert.equal(r.btn, true);
+  assert.deepEqual(r.egg, ['rare', true, 2.5]);
+  assert.equal(r.second, 30);
+  assert.match(r.text, /more right answers to hatch/);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

@@ -53,7 +53,9 @@ const ECON = {
   // plus `answerSec` seconds of work for every correct answer. The barn holds `stockCap` of each good; a work spot opens for every `badgesPerSlot` badges (and one from the start).
   ranch: { perHour: 6, matchMult: 2, capHours: 4, answerSec: 60, stockCap: 30, badgesPerSlot: 2,
     // Berries can pay for the Biscuit (`treatBerries`) and the Favorite snack (`favBerries`) instead of gems; `orePerNet` ore make one Catch Net (a shop net costs `items.net` gems).
-    treatBerries: 2, favBerries: 4, orePerNet: 6 },
+    treatBerries: 2, favBerries: 4, orePerNet: 6,
+    // The Nursery: `eggBerries` berries and two or more workers make an egg (of `eggRarity`) with the element of one of the workers.
+    eggBerries: 10, eggRarity: 'rare' },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
   encounter: { minBadges: 1, choices: 3 },
   // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.

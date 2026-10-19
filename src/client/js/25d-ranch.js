@@ -76,6 +76,19 @@ function unassignWorker(id) {
   renderHub();
 }
 
+// The Nursery: the workers raise an egg together. It is a normal egg (state.egg, hatched by correct answers), so only one can grow at a time.
+function breedWorkers() {
+  const w = ranchWorkers();
+  if (w.length < 2) { soundWrong(); toast('Two or more buddies have to be working together.'); return; }
+  if (state.egg) { soundWrong(); toast('Your egg has to hatch first!'); return; }
+  if (ranchHas('berry') < ECON.ranch.eggBerries) { soundWrong(); toast('You need ' + (ECON.ranch.eggBerries - ranchHas('berry')) + ' more 🫐'); return; }
+  state.ranch.stock.berry -= ECON.ranch.eggBerries;
+  awardEgg(getSpecies(pick(w)).element, ECON.ranch.eggRarity);
+  soundSecretFound();
+  saveState();
+  renderHub();
+}
+
 function renderRanchTab() {
   ranchAccrue();
   const r = state.ranch, id = hubPet, d = getPetById(id), onTeam = getTeam().indexOf(id) !== -1;
@@ -86,6 +99,11 @@ function renderRanchTab() {
     '<div class="d">In the barn (up to ' + ECON.ranch.stockCap + ' of each).</div></div></div>';
   h += '<div class="care-row"><div><div class="t">🕸️ Craft a Catch Net</div><div class="d">' + ECON.ranch.orePerNet + ' ⛏️ ore · you have ' + state.nets + '/' + maxNets() + ' nets</div></div>' +
     '<button class="claim-btn" ' + (ranchHas('ore') < ECON.ranch.orePerNet || state.nets >= maxNets() ? 'disabled' : '') + ' onclick="craftNet()">Craft</button></div>';
+  const egg = state.egg;
+  h += '<div class="care-row"><div><div class="t">🥚 Nursery</div><div class="d">' + (egg
+    ? 'A ' + egg.rarity + ' ' + egg.element + ' egg: ' + Math.max(0, egg.target - egg.steps) + ' more right answers to hatch!'
+    : 'Your workers raise a ' + ECON.ranch.eggRarity + ' egg together: ' + ECON.ranch.eggBerries + ' 🫐 and two or more workers. Its type is one of theirs.') + '</div></div>' +
+    '<button class="claim-btn" ' + (egg || working.length < 2 || ranchHas('berry') < ECON.ranch.eggBerries ? 'disabled' : '') + ' onclick="breedWorkers()">Raise</button></div>';
   working.forEach(function (w) {
     const st = ranchStation(r.workers[w]), b = getPetById(w);
     h += '<div class="care-row"><div><div class="t">' + st.icon + ' ' + escHtml(b.baseName) + ' · ' + st.name + '</div><div class="d">' + Math.round(ranchRate(w) * 10) / 10 + ' ' + st.good.toLowerCase() + ' an hour' + (ranchRate(w) > ECON.ranch.perHour ? ' (loves this work!)' : '') + '</div></div>' +
