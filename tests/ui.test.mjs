@@ -97,3 +97,30 @@ test('settings sections fold away: the everyday ones start open, the rest closed
   assert.equal(await g.page.evaluate(() => [...document.querySelectorAll('#settings-modal .set-sec')].find((d) => d.textContent.includes('Fire')).open), true);
   await g.context.close();
 });
+
+test('the buddy hub points at the tab worth a look, with a line saying why', async () => {
+  const g = await openGame(browser, worker, env, {});
+  const r = await g.page.evaluate(() => {
+    const out = {};
+    const look = () => { renderHub(); return { suggested: Array.from(document.querySelectorAll('#hub-tabs .suggest')).map((b) => b.innerText), hint: document.getElementById('hub-hint').innerText }; };
+    hubPet = 'dog'; hubTab = 'care';
+    out.onCare = look();                                        // care is open: the line is not repeated
+    hubTab = 'room';
+    out.fromRoom = look();
+    getCare('dog').pets = maxPetsLimit();
+    out.allDone = look();
+    state.heldOwned = [HELD_ITEMS[0].id]; state.held = {};
+    out.hold = look();
+    state.held = { dog: HELD_ITEMS[0].id };
+    out.holding = look();
+    state.faintedPets = ['dog'];
+    out.sleepy = look();
+    return out;
+  });
+  assert.deepEqual(r.onCare, { suggested: [], hint: '' });
+  assert.equal(r.fromRoom.suggested.length, 1); assert.match(r.fromRoom.suggested[0], /Care/); assert.match(r.fromRoom.hint, /cuddle/);
+  assert.deepEqual(r.allDone, { suggested: [], hint: '' });
+  assert.equal(r.hold.suggested.length, 1); assert.match(r.hold.suggested[0], /Hold/); assert.match(r.hold.hint, /item to hold/);
+  assert.deepEqual(r.holding, { suggested: [], hint: '' });
+  assert.deepEqual(r.sleepy.suggested, []); assert.match(r.sleepy.hint, /Healing Spring/);
+});

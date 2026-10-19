@@ -1712,7 +1712,7 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 /* 8. Number Kingdom Map Winding Visual Node Path */
 .map-board-trail, .map-board { display: flex; flex-direction: column; gap: 6px; position: relative; }
 .map-row { flex-direction: column; align-items: stretch; gap: 6px; }
-.map-row.champion-row, .map-row.legend-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+.map-row.champion-row, .map-row.legend-row, .map-row.spring-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
 .map-row-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
 .map-trail-nodes {
   display: flex;
@@ -2040,3 +2040,9 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 #miss-modal.tight .modal-content { padding-top: 8px; padding-bottom: 8px; }
 #miss-modal.tight #miss-answer { font-size: 1.9rem !important; }
 #miss-modal.tight #miss-how { margin: 2px 0; }
+
+/* Buddy hub: the tab worth a look right now gets a gold dot, with one line saying why. */
+.hub-hint { font-size: 0.72rem; color: #fde68a; text-align: center; margin: 2px 0 4px; }
+.hub-hint:empty { display: none; }
+.hub-tabs .grade-btn.suggest { position: relative; border-color: #fbbf24; }
+.hub-tabs .grade-btn.suggest::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: #fbbf24; }

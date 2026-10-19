@@ -46,6 +46,28 @@ function rematchPays(id) {
   const rm = state.rematch;
   return (rm.day !== dayKey() || (rm.lands.indexOf(id) === -1 && rm.lands.length < ECON.map.rematch.perDay));
 }
+// ----- the Healing Spring: wakes every resting buddy. The first visit of each day is free. -----
+function springCost() { return state.spring.day === dayKey() ? ECON.spring.gems : 0; }
+function springRowHtml() {
+  const n = state.faintedPets.length, cost = springCost();
+  const desc = n ? n + (n === 1 ? ' resting buddy' : ' resting buddies') + ' · ' + (cost ? cost + ' 💎' : 'free today') : 'Everyone is feeling great!';
+  return '<div class="care-row map-row spring-row"><div><div class="t">⛲ Healing Spring</div><div class="d">' + desc + '</div></div>' +
+    '<div class="map-actions"><button class="claim-btn" ' + (n && state.gems >= cost ? '' : 'disabled') + ' onclick="useSpring()">' + (cost ? cost + ' 💎 Heal' : '💚 Heal') + '</button></div></div>';
+}
+function useSpring() {
+  const cost = springCost();
+  if (!state.faintedPets.length || state.gems < cost) return;
+  const waiting = needsSwitch();                                  // the fighter was resting: answering was on hold
+  if (cost) state.gems -= cost; else state.spring.day = dayKey();
+  state.faintedPets = [];
+  partyHp = {};
+  if (waiting) { inputLocked = false; document.getElementById('feedback-msg').innerText = 'Everyone feels great! Back to it!'; }
+  soundLevelUp();
+  toast('⛲ The spring woke everyone up!');
+  saveState();
+  updateStatsUI();
+  renderMap();
+}
 // Up to five store buddies that live in a land, shown before it opens so there is something to look forward to.
 function regionPeek(r) {
   return storePets.filter(function (p) { return !p.requiresAllStorePets && p.element === r.element; }).slice(0, 5).map(function (p) { return p.icon; }).join(' ');
@@ -196,7 +218,7 @@ function renderMap() {
   const best = journeyLevel(), total = gymRegions().length;
   const myPet = getActivePetDisplay();
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '') + ' · ' + weatherToday().icon + ' ' + weatherToday().name;
-  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml();
+  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml() + springRowHtml();
   const nextStop = REGIONS.find(function (r) { return !regionUnlocked(r); });
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;

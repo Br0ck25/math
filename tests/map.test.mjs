@@ -29,8 +29,8 @@ test('the map lists seven lands; the others open by level and travelling to a lo
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row)').length;
-    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row)').length;
+    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row):not(.spring-row)').length;
+    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row)').length;
     const text = document.getElementById('map-body').innerText;
     travelTo('tide'); const refused = state.region;
     travelTo('ember'); const ok = state.region;
@@ -339,7 +339,7 @@ test('locked lands show how close you are and who lives there, and only the next
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const locked = Array.from(document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row)'));
+    const locked = Array.from(document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row)'));
     return {
       next: locked.filter((el) => el.classList.contains('next')).length,
       nextText: (locked.find((el) => el.classList.contains('next')) || {}).innerText || '',
@@ -354,4 +354,35 @@ test('locked lands show how close you are and who lives there, and only the next
   assert.ok(r.peeks, 'every locked land lists some buddies');
   assert.ok(r.bars, 'every locked land shows a level bar');
   assert.equal(r.openHasPeek, 0);
+});
+
+test('the Healing Spring wakes resting buddies: free once a day, then for gems, and never when nobody rests or gems are short', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const row = () => { renderMap(); const el = document.querySelector('#map-body .spring-row'); return { text: el.querySelector('.d').innerText, off: el.querySelector('.claim-btn').disabled }; };
+    state.gems = 100; state.faintedPets = [];
+    out.none = row(); useSpring(); out.noneGems = state.gems;
+    state.faintedPets = ['dog', 'fox'];
+    out.free = row(); useSpring();
+    out.afterFree = { fainted: state.faintedPets.length, gems: state.gems, day: state.spring.day === dayKey() };
+    state.faintedPets = ['dog'];
+    out.paid = row(); useSpring();
+    out.afterPaid = { fainted: state.faintedPets.length, gems: state.gems };
+    state.faintedPets = ['dog']; state.gems = ECON.spring.gems - 1;
+    out.broke = row(); useSpring();
+    out.afterBroke = { fainted: state.faintedPets.length, gems: state.gems };
+    state.gems = 50; state.faintedPets = [state.activePet]; inputLocked = true; state.spring.day = '';
+    useSpring();
+    out.released = inputLocked;
+    const s = freshState(); s.spring = { day: 12345 }; NORMALIZERS.forEach((fn) => fn(s)); out.badDay = s.spring.day;
+    return out;
+  });
+  assert.match(r.none.text, /feeling great/); assert.ok(r.none.off); assert.equal(r.noneGems, 100);
+  assert.match(r.free.text, /2 resting buddies · free today/); assert.ok(!r.free.off);
+  assert.deepEqual(r.afterFree, { fainted: 0, gems: 100, day: true });
+  assert.match(r.paid.text, new RegExp('1 resting buddy · ' + 5 + ' 💎'));
+  assert.deepEqual(r.afterPaid, { fainted: 0, gems: 95 });
+  assert.ok(r.broke.off); assert.deepEqual(r.afterBroke, { fainted: 1, gems: 4 });
+  assert.equal(r.released, false, 'answering is no longer on hold');
+  assert.equal(r.badDay, '');
 });

@@ -109,7 +109,7 @@
             </div>
             <div class="fighter-info">
               <div class="fighter-name" id="monster-name">Fire Drake</div>
-              <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-pill">Lv <span id="monster-level">1</span></span></div>
+              <div class="fighter-tag"><span id="monster-elem-badge" class="element-pill elem-fire">Fire</span><span class="lv-pill">Lv <span id="monster-level">1</span></span><span class="status-pill" id="monster-status" style="display:none;"></span></div>
             </div>
           </div>
           <div class="hp-line" title="Boss HP">
@@ -576,6 +576,7 @@
         </div>
         <button class="nav" onclick="hubStep(1)" aria-label="Next buddy">›</button>
       </div>
+      <div class="hub-hint" id="hub-hint"></div>
       <div class="hub-tabs" id="hub-tabs"></div>
       <div id="hub-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeHub()">Back to Game</button>
