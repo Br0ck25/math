@@ -306,3 +306,34 @@ test('a new foe is announced over the stage with the buddy sent out, and the ban
   assert.ok(r.text.includes(r.foe) && r.text.includes('Go, ' + r.buddy + '!'), r.text);
   await page.waitForFunction(() => !document.getElementById('foe-intro').classList.contains('show'));
 });
+
+test('the "not quite" card sits over the stage and the keypad stays tappable; typing the next answer puts it away', async () => {
+  await solveWrong();
+  await page.waitForFunction(() => !inputLocked);
+  const r = await page.evaluate(() => {
+    const modal = document.getElementById('miss-modal');
+    const key = document.querySelector('.keypad button');
+    const b = key.getBoundingClientRect();
+    const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+    const card = document.querySelector('#miss-modal .modal-content').getBoundingClientRect();
+    const eq = document.getElementById('equation-mount').getBoundingClientRect();
+    return { shown: modal.style.display, keyReachable: key === hit || key.contains(hit), clear: card.bottom <= eq.top + 1 };
+  });
+  assert.equal(r.shown, 'flex');
+  assert.ok(r.keyReachable, 'the overlay does not swallow keypad taps');
+  assert.ok(r.clear, 'the card ends above the equation');
+  await page.evaluate(() => pressKey('5'));
+  assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
+});
+
+test('the shield pill appears once you own a shield; the Shop still sells them', async () => {
+  const r = await page.evaluate(() => {
+    state.shields = 0; updateStatsUI();
+    const none = getComputedStyle(document.getElementById('shield-pill')).display;
+    state.shields = 2; updateStatsUI();
+    return { none, some: getComputedStyle(document.getElementById('shield-pill')).display, shop: !!document.getElementById('item-shield') };
+  });
+  assert.equal(r.none, 'none');
+  assert.notEqual(r.some, 'none');
+  assert.ok(r.shop);
+});

@@ -334,3 +334,24 @@ test('every land has its own trainers (Riley stays second), and a saved trainer 
   assert.equal(r.kept, 'Diver Coral');
   assert.equal(r.repeats, 'Angler Finn');
 });
+
+test('locked lands show how close you are and who lives there, and only the next one to open is marked', async () => {
+  const r = await page.evaluate(() => {
+    state.buddyXp.dog = xpForLevel(10);
+    openMap();
+    const locked = Array.from(document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row)'));
+    return {
+      next: locked.filter((el) => el.classList.contains('next')).length,
+      nextText: (locked.find((el) => el.classList.contains('next')) || {}).innerText || '',
+      peeks: locked.every((el) => el.querySelector('.map-peek .buddy-img, .map-peek svg') || (el.querySelector('.map-peek') && el.querySelector('.map-peek').innerText.replace('👀', '').trim().length > 0)),
+      bars: locked.every((el) => el.querySelector('.map-need i')),
+      openHasPeek: document.querySelectorAll('#map-body .map-row:not(.locked) .map-peek').length
+    };
+  });
+  assert.equal(r.next, 1);
+  assert.match(r.nextText, /Tide Bay/);
+  assert.match(r.nextText, /Next stop/);
+  assert.ok(r.peeks, 'every locked land lists some buddies');
+  assert.ok(r.bars, 'every locked land shows a level bar');
+  assert.equal(r.openHasPeek, 0);
+});

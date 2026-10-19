@@ -152,6 +152,7 @@ function renderEquationUI() {
 
 function pressKey(key) {
   if (inputLocked) return;
+  closeMissCard();                                  // typing the next answer puts the "not quite" card away
   if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   if (key === 'backspace') {

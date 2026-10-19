@@ -171,7 +171,11 @@ function showMissCard(said) {
   void bar.offsetWidth;
   bar.style.animation = '';
   bar.style.animationDuration = MISS_CARD_MS / 1000 + 's';
-  document.getElementById('miss-modal').style.display = 'flex';
+  const modal = document.getElementById('miss-modal');
+  modal.style.display = 'flex';
+  const room = Math.floor(document.querySelector('.arena').getBoundingClientRect().top) - 12;      // the card sits over the stage, never over the equation or keypad
+  modal.style.setProperty('--miss-max', Math.max(120, room) + 'px');
+  modal.classList.toggle('tight', room < 300);
   clearTimeout(missCardTimer);
   missCardTimer = setTimeout(closeMissCard, MISS_CARD_MS);
 }

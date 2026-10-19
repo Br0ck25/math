@@ -2025,3 +2025,18 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .foe-intro.show { opacity: 1; }
 .foe-intro b { display: block; color: #fde68a; font-size: 0.9rem; line-height: 1.2; }
 .foe-intro span { display: block; color: #e2e8f0; font-size: 0.78rem; font-weight: 700; }
+
+/* Locked lands: how close you are, and who lives there. The next one to open stands out. */
+.map-need { height: 5px; margin-top: 4px; border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.map-need i { display: block; height: 100%; background: #38bdf8; }
+.map-peek { margin-top: 3px; font-size: 0.8rem; letter-spacing: 2px; }
+.map-row.locked.next { opacity: 1; border-color: #fbbf24; }
+.map-next { font-size: 0.62rem; font-weight: 800; color: #fde68a; margin-left: 4px; }
+
+/* The "not quite" card docks at the top over the stage: the equation and keypad stay in reach, and the next problem is already running. */
+#miss-modal { background: transparent; align-items: flex-start; pointer-events: none; }
+#miss-modal .modal-content { pointer-events: auto; max-height: var(--miss-max, 60vh); overflow-y: auto; }
+#miss-modal.tight .miss-visual, #miss-modal.tight #miss-said, #miss-modal.tight .submit-btn, #miss-modal.tight .modal-content > div:first-child { display: none; }
+#miss-modal.tight .modal-content { padding-top: 8px; padding-bottom: 8px; }
+#miss-modal.tight #miss-answer { font-size: 1.9rem !important; }
+#miss-modal.tight #miss-how { margin: 2px 0; }
