@@ -167,6 +167,18 @@ test('radiant evolution: a first evolution with a close bond gives a Radiant for
   assert.equal(r.baseForm, false);
 });
 
+test('every store buddy has its own signature move, with a unique name and a known effect; secret buddies keep the element moves', async () => {
+  const r = await page.evaluate(() => {
+    const names = storePets.map((p) => (signatureOf(p) || {}).name);
+    return { all: storePets.every((p) => signatureOf(p)), unique: new Set(names).size === names.length, effects: storePets.every((p) => SIG_EFFECT_TEXT[signatureOf(p).effect]), short: names.every((n) => n.length <= 22), secret: secretCompanions.some((p) => signatureOf(p)), count: storePets.length };
+  });
+  assert.ok(r.all, 'every store buddy has a signature move');
+  assert.ok(r.unique);
+  assert.ok(r.effects);
+  assert.ok(r.short, 'names fit the move pill');
+  assert.equal(r.secret, false);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
 
 test('move slots: a buddy takes 4 moves plus its ultimate into battle, the player chooses them, and the choice is saved and repaired', async () => {
@@ -212,10 +224,10 @@ test('signature moves: only species with one learn it (level 12), it carries its
   const r = await page.evaluate(async () => {
     const out = {};
     const fox = getPetById('fox'), bunny = getPetById('bunny');
-    out.has = [signatureOf({ id: 'fox' }) !== null, signatureOf({ id: 'koala' }) === null];
-    out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: 'koala' }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
+    out.has = [signatureOf({ id: 'fox' }) !== null, signatureOf({ id: secretCompanions[0].id }) === null];
+    out.learn = [movesLearned(11, { id: 'fox' }).some((m) => m.sig), movesLearned(12, { id: 'fox' }).some((m) => m.sig), movesLearned(40, { id: secretCompanions[0].id }).some((m) => m.sig), movesLearned(40).some((m) => m.sig)];
     out.name = moveName(MOVES.find((m) => m.sig), { id: 'fox' });
-    out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: 'koala' }).length];
+    out.between = [movesBetween(10, 13, { id: 'fox' }).map((m) => m.id).join(','), movesBetween(10, 13, { id: secretCompanions[0].id }).length];
     state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 10; state.bossSwapped = false; state.raid = null;
     state.moveSet = { fox: ['strike', 'sig'] };
     partyHp = {}; monsterCurrentHp = 50; inputLocked = false; ultimateCharge = 2;
@@ -228,8 +240,8 @@ test('signature moves: only species with one learn it (level 12), it carries its
     useMove('sig');
     await new Promise((res) => setTimeout(res, 3000));
     out.purify = buddyStatus.left;
-    state.activePet = 'koala'; state.buddyXp.koala = xpForLevel(30); state.moveSet = {};
-    out.koalaMoves = equippedMoves(getPetById('koala')).some((m) => m.sig);
+    state.activePet = secretCompanions[0].id; state.unlockedSecrets = [secretCompanions[0].id]; state.buddyXp[secretCompanions[0].id] = xpForLevel(30); state.moveSet = {};
+    out.koalaMoves = equippedMoves(getPetById(secretCompanions[0].id)).some((m) => m.sig);
     return out;
   });
   assert.deepEqual(r.has, [true, true]);

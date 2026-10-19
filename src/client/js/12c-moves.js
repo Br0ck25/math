@@ -19,7 +19,7 @@ const MOVES = [
   { id: 'sig', cost: 2, minLevel: 12, kind: 'damage', icon: '🌟', sig: true, optional: true },
   { id: 'ult', cost: 3, minLevel: 1, kind: 'ult', icon: '⚡' }
 ];
-// Signature moves: some species have a move of their own (a name and one extra effect). It is learned at level 12 and costs 2 energy.
+// Signature moves: every store buddy has a move of its own (a name and one extra effect). It is learned at level 12 and costs 2 energy.
 // effect: drain (heals 1 HP), surge (refunds 1 energy), ward (raises Guard), purify (clears a status effect).
 const SIGNATURE_MOVES = {
   dog:      { name: 'Loyal Bite',      effect: 'ward' },
@@ -36,7 +36,36 @@ const SIGNATURE_MOVES = {
   byte:     { name: 'Bit Burst',       effect: 'surge' },
   tiger:    { name: 'Stripe Rush',     effect: 'drain' },
   panther:  { name: 'Moonlit Pounce',  effect: 'purify' },
-  bat:      { name: 'Echo Screech',    effect: 'drain' }
+  bat:      { name: 'Echo Screech',    effect: 'drain' },
+  olaf:     { name: 'Snowman Hug',     effect: 'ward' },
+  pascal:   { name: 'Camo Flick',      effect: 'purify' },
+  crookshanks: { name: 'Sneaky Pounce', effect: 'surge' },
+  rhino:    { name: 'Horn Charge',     effect: 'ward' },
+  griffin:  { name: 'Sky Talons',      effect: 'surge' },
+  cosmo:    { name: 'Comet Tail',      effect: 'drain' },
+  lion:     { name: 'Mane Flare',      effect: 'ward' },
+  phoenix:  { name: 'Ember Rebirth',   effect: 'drain' },
+  frostfang: { name: 'Icicle Fang',    effect: 'purify' },
+  pegasus:  { name: 'Cloud Gallop',    effect: 'surge' },
+  panda:    { name: 'Bamboo Bonk',     effect: 'drain' },
+  koala:    { name: 'Sleepy Hug',      effect: 'purify' },
+  monkey:   { name: 'Banana Swing',    effect: 'surge' },
+  turtle:   { name: 'Shell Spin',      effect: 'ward' },
+  octopus:  { name: 'Ink Swirl',       effect: 'purify' },
+  wolf:     { name: 'Pack Howl',       effect: 'ward' },
+  zephyr:   { name: 'Gust Wyrm',       effect: 'surge' },
+  shark:    { name: 'Fin Dash',        effect: 'drain' },
+  raptor:   { name: 'Swoop Strike',    effect: 'surge' },
+  scorpion: { name: 'Tail Flick',      effect: 'drain' },
+  butterfly: { name: 'Wing Dust',      effect: 'purify' },
+  gorilla:  { name: 'Chest Thump',     effect: 'ward' },
+  toon_bluey:     { name: 'Keepy Uppy',    effect: 'surge' },
+  toon_spongebob: { name: 'Jellyfishing',  effect: 'purify' },
+  toon_chase:     { name: 'Case Closed',   effect: 'ward' },
+  toon_peppa:     { name: 'Muddy Puddles', effect: 'drain' },
+  toon_bugs:      { name: 'Doc Dodge',     effect: 'surge' },
+  toon_homer:     { name: 'Donut Break',   effect: 'drain' },
+  bandit:   { name: 'Shadow Snatch',   effect: 'surge' }
 };
 const SIG_EFFECT_TEXT = { drain: 'heals 1 HP', surge: 'gives 1 energy back', ward: 'raises Guard', purify: 'clears a status effect' };
 function signatureOf(pet) { return (pet && SIGNATURE_MOVES[pet.id]) || null; }
