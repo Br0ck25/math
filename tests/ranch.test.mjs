@@ -110,4 +110,43 @@ test('bad Ranch data in a save is repaired', async () => {
   assert.equal(r.c, 'at,stock,workers');
 });
 
+test('berries pay for the Biscuit and the Favorite snack instead of gems, and ore crafts Catch Nets up to the cap', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    state.gems = 100; state.nets = 0; state.care = {}; state.buddyXp.otter = xpForLevel(5);
+    const E = ECON.ranch;
+    hubPet = 'otter'; hubTab = 'care'; renderHub();
+    out.hidden = !document.getElementById('hub-body').innerText.includes('🫐');            // no berry buttons before you use the Ranch
+    state.ranch.stock = { berry: E.treatBerries + E.favBerries + 1.5, ore: E.orePerNet * 2 + 1 };
+    renderHub(); out.shown = document.getElementById('hub-body').innerText.includes('🫐');
+    const xp0 = getBuddyXp('otter');
+    careAct('treat', 'berry');
+    out.treat = [state.gems, ranchHas('berry'), getBuddyXp('otter') - xp0, getCare('otter').treat];
+    careAct('treat', 'berry'); out.again = state.ranch.stock.berry;                         // once a day: nothing is spent
+    careAct('fav', 'berry');
+    out.fav = [state.gems, getBond('otter'), getCare('otter').fav, state.ranch.stock.berry];
+    state.ranch.stock.berry = 0; getCare('otter').treat = false; careAct('treat', 'berry');
+    out.broke = [getCare('otter').treat, state.gems];                                       // not enough berries: nothing happens, gems are not touched
+    careAct('treat'); out.gems = [getCare('otter').treat, state.gems];                      // the gem price still works
+    craftNet(); craftNet(); craftNet();
+    out.nets = [state.nets, ranchHas('ore')];
+    state.ranch.stock.ore = E.orePerNet * 3; state.nets = maxNets(); craftNet();
+    out.full = [state.nets, ranchHas('ore')];
+    return out;
+  });
+  assert.equal(r.hidden, true);
+  assert.equal(r.shown, true);
+  assert.equal(r.treat[0], 100, 'no gems were spent');
+  assert.equal(r.treat[1], 5, '7.5 berries minus 2');
+  assert.ok(r.treat[2] > 0 && r.treat[3]);
+  assert.equal(r.again, 5.5, 'a second biscuit the same day costs nothing');
+  assert.deepEqual(r.fav.slice(1, 3), [1, true]);
+  assert.equal(r.fav[0], 100);
+  assert.equal(r.fav[3], 1.5, 'the Favorite cost 4 berries');
+  assert.deepEqual(r.broke, [false, 100]);
+  assert.deepEqual(r.gems, [true, 100 - 2]);
+  assert.deepEqual(r.nets, [2, 1], 'two nets from 13 ore at 6 each');
+  assert.deepEqual(r.full, [9, 18], 'a full net stock refuses to craft and keeps the ore');
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

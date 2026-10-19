@@ -486,8 +486,12 @@ function renderCare() {
     '<div style="font-size:0.68rem; color:var(--text-muted);">Bond ' + bond + '/' + maxB + (bond ? ' · +' + Math.round(bond * ECON.care.bondXpBonus * 100) + '% XP for this buddy' : ' · feed the favorite snack to grow it') + '</div>';
   if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Beat a boss to wake everyone up!</div>';
   h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + maxP + ' · +' + ECON.care.petXp + ' XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= maxP));
-  h += row('🍪 Biscuit', 'A tasty treat · +' + ECON.care.treatXp + ' XP · once a day', btn(c.treat ? 'Eaten' : ECON.care.treatCost + ' 💎', 'careAct(&quot;treat&quot;)', sleepy || c.treat));
-  h += row(fav.icon + ' Favorite: ' + fav.name, 'Their very favorite! +1 bond · +' + ECON.care.favXp + ' XP · once a day', btn(c.fav ? 'Eaten' : ECON.care.favCost + ' 💎', 'careAct(&quot;fav&quot;)', sleepy || c.fav));
+  const berries = function (kind, cost, eaten) {          // the Ranch's berries can pay instead of gems
+    return !eaten && ranchStarted() ? btn(cost + ' 🫐', 'careAct(&quot;' + kind + '&quot;, &quot;berry&quot;)', sleepy || ranchHas('berry') < cost) : '';
+  };
+  const pair = function (gemBtn, berryBtn) { return berryBtn ? '<div style="display:flex; flex-direction:column; gap:4px;">' + gemBtn + berryBtn + '</div>' : gemBtn; };
+  h += row('🍪 Biscuit', 'A tasty treat · +' + ECON.care.treatXp + ' XP · once a day', pair(btn(c.treat ? 'Eaten' : ECON.care.treatCost + ' 💎', 'careAct(&quot;treat&quot;)', sleepy || c.treat), berries('treat', ECON.ranch.treatBerries, c.treat)));
+  h += row(fav.icon + ' Favorite: ' + fav.name, 'Their very favorite! +1 bond · +' + ECON.care.favXp + ' XP · once a day', pair(btn(c.fav ? 'Eaten' : ECON.care.favCost + ' 💎', 'careAct(&quot;fav&quot;)', sleepy || c.fav), berries('fav', ECON.ranch.favBerries, c.fav)));
   const mine = spareCount(id), all = Object.keys(state.spares).reduce(function (a, k) { return a + state.spares[k]; }, 0);
   if (mine) h += row('🎒 Spare ' + name0(id) + ' x' + mine, 'Extra copies from wild battles. Your buddy stays safe!', btn('Sell +' + spareValueOf(id) + ' 💎', 'sellSpare(&quot;' + id + '&quot;)'));
   if (all > mine) h += row('🎒 All spares (' + all + ')', 'Sell every extra copy at once.', btn('Sell all', 'sellAllSpares()'));
@@ -501,7 +505,8 @@ function hubBounce(emoji) {
   ic.classList.add('bounce');
   if (emoji) toast(emoji);
 }
-function careAct(kind) {
+// pay: 'berry' pays with Ranch berries instead of gems.
+function careAct(kind, pay) {
   const id = hubPet;
   if (isSleepy(id)) return;
   const c = getCare(id);
@@ -515,15 +520,15 @@ function careAct(kind) {
     soundClick();
     hubBounce('💕 ' + name + ' loves it!');
   } else if (kind === 'treat') {
-    if (c.treat || state.gems < ECON.care.treatCost) { if (!c.treat) toast('Not enough 💎'); return; }
-    state.gems -= ECON.care.treatCost;
+    if (c.treat || !canPay(pay, ECON.care.treatCost, ECON.ranch.treatBerries)) { if (!c.treat) toast('Not enough ' + (pay === 'berry' ? '🫐' : '💎')); return; }
+    spend(pay, ECON.care.treatCost, ECON.ranch.treatBerries);
     c.treat = true;
     addXpTo(id, Math.round(ECON.care.treatXp * xpMult));
     soundCoinChirp();
     hubBounce('🍪 Yum! ' + name + ' is happy!');
   } else if (kind === 'fav') {
-    if (c.fav || state.gems < ECON.care.favCost) { if (!c.fav) toast('Not enough 💎'); return; }
-    state.gems -= ECON.care.favCost;
+    if (c.fav || !canPay(pay, ECON.care.favCost, ECON.ranch.favBerries)) { if (!c.fav) toast('Not enough ' + (pay === 'berry' ? '🫐' : '💎')); return; }
+    spend(pay, ECON.care.favCost, ECON.ranch.favBerries);
     c.fav = true;
     addXpTo(id, Math.round(ECON.care.favXp * xpMult));
     const before = c.bond;
