@@ -213,6 +213,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         if (wasRaid >= 0) enqueueModal(function () { showRaidStory('outro', wasRaid); });
         const nb = getBossInfo();
         const lead = nb.trainer ? '🏟️ ' : nb.wild ? '' : state.gym ? '🏟️ GYM LEADER! ' : '⚠️ BOSS TIME! ';
+        announceFoe();
         toast(lead + (nb.trainer ? `${nb.name} (Lv ${nb.level}) wants to battle!` : `A wild Lv ${nb.level} ${nb.name} appeared!`) + (nb.slays && nb.slays === state.activePet ? ' ☠️ Strong against ' + slayerTarget(nb) + '!' : ''));
         if (gymWin) enqueueModal(function () { showBadgeStory(gymWin); });
         if (encounterOffered()) enqueueModal(openEncounterChoice);
@@ -250,6 +251,7 @@ function triggerBuddyDamage() {
     if (guardUp) guardUp = false; else heldUsed.shell = true;
     state.streak = (typeof hasTech === 'function' && hasTech('streak_cushion') && state.streak > 1) ? state.streak - 1 : 0;
     soundShieldBreak();
+    foeMoveResult('blocked');
     showPopup('🛡️ BLOCKED! NO DAMAGE');
     document.getElementById('feedback-msg').innerText = 'Guard held! ' + missLine(parseFloat(userInput), currentProblem.answer);
     updateStatsUI();
@@ -257,6 +259,7 @@ function triggerBuddyDamage() {
     scheduleNextProblem(1300, 'Nice guard — try again!');
     return;
   }
+  foeMoveResult('hit');
   const monsterIcon = document.getElementById('monster-icon');
   const petIconWrapper = document.getElementById('fighter-icon-wrapper');
   const monsterFx = document.getElementById('monster-attack-fx');
@@ -423,6 +426,7 @@ function checkAnswer() {
 
     const slowFrozen = hasStatus('frozen') && solveTime > speedLimit * 1.5;
     if (slowFrozen) showPopup('❄️ SLOW HIT... ANSWER FASTER TO THAW!');
+    foeMoveResult('dodged');
     triggerMonsterDamage((isFast && activeRole('Attacker') ? 1 : 0) + armedBonus, opId === getWeakOp(), isFast, slowFrozen ? 0.5 : 1);
 
     const streakEvery = (typeof hasTech === 'function' && hasTech('mind_over_matter')) ? 2 : ECON.solve.streakEvery;

@@ -11,6 +11,7 @@ if (isPortal()) {
   setBossTaunt();
   updateStatsUI();
   generateProblem();
+  announceFoe();
   applyControls();
   renderChal();
   if (state.raid && !state.raid.introSeen) { const ch = state.raid.chapter; enqueueModal(function () { showRaidStory('intro', ch); }); }

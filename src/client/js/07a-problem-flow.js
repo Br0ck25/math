@@ -108,6 +108,7 @@ function generateProblem() {
   questionStartTime = Date.now();
   padReset();
   renderEquationUI();
+  chargeFoeMove();
   holdForSwitch();
   if (typeof speakCurrentProblem === 'function') speakCurrentProblem(false);
 }

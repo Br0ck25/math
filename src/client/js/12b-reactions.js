@@ -31,6 +31,40 @@ function bossReact(kind) {
   if (m.say[kind]) document.getElementById('boss-taunt-box').innerText = boss.name + ': "' + m.say[kind] + '"';
 }
 
+// ----- the foe's next move: named while the problem is open, then dodged (right answer), blocked (Guard) or hit (wrong answer). Damage is unchanged. -----
+let foeMoveName = '';
+function chargeFoeMove() {
+  if (!state.wild.id && !monstersList[currentMonsterIndex]) return;       // no foe loaded yet (a blank save)
+  const boss = getBossInfo();
+  const names = MOVE_NAMES[boss.element] || MOVE_NAMES.fire;
+  foeMoveName = names[monsterCurrentHp <= boss.maxHp / 4 ? 1 : 0];
+  showFoeMove('⚠️ Charging ' + foeMoveName, '');
+}
+function showFoeMove(text, cls) {
+  const el = document.getElementById('foe-move');
+  if (!el) return;
+  el.innerText = text;
+  el.className = 'foe-move' + (cls ? ' ' + cls : '');
+}
+const FOE_MOVE_RESULT = { dodged: ['💨 Dodged ', '!'], blocked: ['🛡️ Blocked ', '!'], hit: ['💥 ', ' hit!'] };
+function foeMoveResult(kind) {
+  if (!foeMoveName) return;
+  showFoeMove(FOE_MOVE_RESULT[kind][0] + foeMoveName + FOE_MOVE_RESULT[kind][1], kind === 'hit' ? 'hit' : 'dodged');
+}
+
+// ----- a new foe arrives: "A wild Daisy appeared! Go, Pup!" over the stage for a moment -----
+let foeIntroTimer = null;
+function announceFoe() {
+  const el = document.getElementById('foe-intro');
+  if (!el) return;
+  const foe = getBossInfo();
+  const line = foe.trainer ? foe.name + ' wants to battle!' : foe.wild ? 'A wild ' + foe.name + ' appeared!' : '⚠️ ' + foe.name + ' appears!';
+  el.innerHTML = '<b>' + escHtml(line) + '</b><span>Go, ' + escHtml(getActivePetDisplay().baseName) + '!</span>';
+  el.classList.add('show');
+  clearTimeout(foeIntroTimer);
+  foeIntroTimer = setTimeout(function () { el.classList.remove('show'); }, 1800);
+}
+
 // ----- the buddy naps when the player is idle, and wakes at the first tap or key -----
 const IDLE_NAP_MS = 25000;
 let napTimer = null;

@@ -272,3 +272,37 @@ test('the team bar shows each buddy\'s matchup against the boss and swapping cha
   assert.ok(r.restingStays, 'a resting buddy cannot be swapped in');
   assert.equal(r.hidden, 0, 'a one-buddy team shows no bar');
 });
+
+test('the foe names its next move for each problem, and the chip says dodged after a right answer and hit after a wrong one', async () => {
+  const before = await page.evaluate(() => ({ chip: document.getElementById('foe-move').innerText, name: foeMoveName, names: MOVE_NAMES[getBossInfo().element] }));
+  assert.ok(before.names.includes(before.name), before.name);
+  assert.equal(before.chip, '⚠️ Charging ' + before.name);
+  await solveCorrectly();
+  assert.equal(await page.evaluate(() => document.getElementById('foe-move').innerText), '💨 Dodged ' + before.name + '!');
+  await page.waitForFunction(() => document.getElementById('foe-move').innerText.startsWith('⚠️'));
+  const next = await page.evaluate(() => foeMoveName);
+  await solveWrong();
+  assert.equal(await page.evaluate(() => document.getElementById('foe-move').innerText), '💥 ' + next + ' hit!');
+});
+
+test('the foe uses its stronger move once it is under a quarter health', async () => {
+  const r = await page.evaluate(() => {
+    const boss = getBossInfo();
+    monsterCurrentHp = boss.maxHp;
+    chargeFoeMove();
+    const calm = foeMoveName;
+    monsterCurrentHp = Math.max(1, Math.floor(boss.maxHp / 4));
+    chargeFoeMove();
+    return { calm, angry: foeMoveName, names: MOVE_NAMES[boss.element] };
+  });
+  assert.equal(r.calm, r.names[0]);
+  assert.equal(r.angry, r.names[1]);
+});
+
+test('a new foe is announced over the stage with the buddy sent out, and the banner leaves by itself', async () => {
+  await page.evaluate(() => announceFoe());
+  const r = await page.evaluate(() => ({ text: document.getElementById('foe-intro').innerText, shown: document.getElementById('foe-intro').classList.contains('show'), foe: getBossInfo().name, buddy: getActivePetDisplay().baseName }));
+  assert.ok(r.shown);
+  assert.ok(r.text.includes(r.foe) && r.text.includes('Go, ' + r.buddy + '!'), r.text);
+  await page.waitForFunction(() => !document.getElementById('foe-intro').classList.contains('show'));
+});
