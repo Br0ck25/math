@@ -115,6 +115,12 @@ const NORMALIZERS = [
     });
     s.held = held;
   },
+  function ranch(s) {
+    const r = s.ranch || {}, owned = s.unlockedPets.concat(s.unlockedSecrets), workers = {}, stock = {};
+    Object.keys(r.workers || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && ranchStation(r.workers[b])) workers[b] = r.workers[b]; });
+    RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
+    s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
+  },
   function evoPath(s) {
     const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
     Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && s.evoPath[b] === 'radiant') paths[b] = 'radiant'; });

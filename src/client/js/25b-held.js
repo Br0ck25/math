@@ -91,6 +91,7 @@ function renderHoldTab() {
 function addEnergy(n) { ultimateCharge = Math.min(3, ultimateCharge + n); }
 // After a correct answer (state.streak already counts it): roles and items that pay out.
 function answerBonuses(isFast) {
+  ranchCheer();
   if (activeQuirk('brave') && !heldUsed.brave) { heldUsed.brave = true; addEnergy(1); }
   if (isFast && activeHolds('lens')) addEnergy(typeof hasTech === 'function' && hasTech('second_heart') ? 2 : 1);
   if (activeRole('Support') && state.streak % 3 === 0) addEnergy(1);

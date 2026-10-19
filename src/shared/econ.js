@@ -49,6 +49,9 @@ const ECON = {
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
+  // The Ranch (25d-ranch.js): off-team buddies work at stations. `perHour` goods an hour (x `matchMult` for a matching element), for at most `capHours` hours away at a time,
+  // plus `answerSec` seconds of work for every correct answer. The barn holds `stockCap` of each good; a work spot opens for every `badgesPerSlot` badges (and one from the start).
+  ranch: { perHour: 6, matchMult: 2, capHours: 4, answerSec: 60, stockCap: 30, badgesPerSlot: 2 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
   encounter: { minBadges: 1, choices: 3 },
   // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.

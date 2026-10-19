@@ -99,7 +99,7 @@ function renderHub() {
   ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
   document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
-  const tabs = [['care', '💖 Care'], ['room', '🏠 Room'], ['tree', '🌳 Tree'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold']];
+  const tabs = [['care', '💖 Care'], ['room', '🏠 Room'], ['tree', '🌳 Tree'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold'], ['ranch', '🏡 Ranch']];
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
@@ -117,6 +117,7 @@ function renderHub() {
   else if (hubTab === 'card') renderCardTab();
   else if (hubTab === 'duel') renderDuelTab();
   else if (hubTab === 'hold') renderHoldTab();
+  else if (hubTab === 'ranch') renderRanchTab();
   else renderTourTab();
 }
 
