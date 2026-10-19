@@ -115,6 +115,11 @@ const NORMALIZERS = [
     });
     s.held = held;
   },
+  function evoPath(s) {
+    const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
+    Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && s.evoPath[b] === 'radiant') paths[b] = 'radiant'; });
+    s.evoPath = paths;
+  },
   function dex(s) {
     const seen = {};
     Object.keys(s.dexSeen).forEach(function (id) { if (s.dexSeen[id] && getSpecies(id)) seen[id] = 1; });

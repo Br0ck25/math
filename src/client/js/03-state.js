@@ -14,6 +14,7 @@ function freshState() {
     cloverLeft: 0,
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
+    evoPath: {},                                     // buddy id -> 'radiant' when it first evolved with a close bond
     nets: 0,                                         // Catch Nets in stock: you choose how many (up to 3) to throw after a wild win
     monstersDefeated: 0,
     currentMonsterIndex: -1,

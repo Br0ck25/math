@@ -140,6 +140,33 @@ test('evolving shows the jump in stats and the moves learned', async () => {
   assert.match(r.txt, /New move: Recover/);
 });
 
+test('radiant evolution: a first evolution with a close bond gives a Radiant form with 1 more HP; without the bond it is the plain form; bad saves are repaired', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const evolve = (id, bond) => {
+      state.activePet = id; state.unlockedPets = [id]; state.evoPath = {}; state.care = { [id]: { day: dayKey(), pets: 0, treat: false, fav: false, bond: bond, last: '' } };
+      state.buddyXp[id] = xpForLevel(15);
+      awardBuddyXp(xpForLevel(40) - xpForLevel(15));
+      const p = getPetById(id);
+      return [p.name, p.radiant, state.evoPath[id] || '', getPetMaxHp(id) - petHpAt(p.level, p.stage)];
+    };
+    out.bonded = evolve('dog', ECON.evo.bondMin);
+    out.plain = evolve('dog', ECON.evo.bondMin - 1);
+    const evoText = (() => { state.evoPath = { dog: 'radiant' }; state.buddyXp.dog = xpForLevel(40); openEvoModal({ ...getPetById('dog'), stage: 0, level: 15, radiant: false }, getPetById('dog')); const t = document.getElementById('evo-text').innerText; closeEvoModal(); return t; })();
+    out.text = evoText;
+    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.evoPath = { dog: 'radiant', fox: 'radiant', ghost: 'x' }; normalizeState();
+    out.repaired = Object.keys(state.evoPath).join(',');
+    state.evoPath = { dog: 'radiant' }; state.buddyXp.dog = 0;
+    out.baseForm = getPetById('dog').radiant;          // a base-form buddy is never Radiant
+    return out;
+  });
+  assert.deepEqual(r.bonded, ['Radiant Thunder Wolf', true, 'radiant', 1]);
+  assert.deepEqual(r.plain, ['Thunder Wolf', false, '', 0]);
+  assert.match(r.text, /Radiant/);
+  assert.equal(r.repaired, 'dog', 'only owned buddies keep a path');
+  assert.equal(r.baseForm, false);
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });
 
 test('move slots: a buddy takes 4 moves plus its ultimate into battle, the player chooses them, and the choice is saved and repaired', async () => {

@@ -49,6 +49,8 @@ const ECON = {
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
+  // Radiant evolution (08-buddies.js): a buddy with at least `bondMin` bond hearts when it first evolves becomes Radiant and gets `radiantHp` more HP for good.
+  evo: { bondMin: 3, radiantHp: 1 },
   // Quirks (25b-held.js): every species has one; these are the sizes of the bonuses (xp: share of extra XP, speed: Speed Strike time, catch: catch chance, calmLess: problems a status lasts less).
   quirk: { xp: 0.1, speed: 1.1, catch: 1.1, calmLess: 1 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.

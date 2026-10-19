@@ -54,9 +54,11 @@ function getPetById(id) {
   const stage = getFormIndex(sp, level);
   const form = sp.forms[stage];
   const suffix = stage === 1 ? ' EX' : (stage === 2 ? ' MAX' : '');
+  const radiant = stage > 0 && state.evoPath && state.evoPath[sp.id] === 'radiant';
   return {
     id: sp.id,
-    name: form.name,
+    name: (radiant ? 'Radiant ' : '') + form.name,
+    radiant: !!radiant,
     baseName: sp.name,
     icon: form.icon,
     emoji: form.emoji || form.icon,
@@ -77,7 +79,7 @@ function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
 function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
 function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
-function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
+function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + (p.radiant ? ECON.evo.radiantHp : 0) + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
 function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }
@@ -103,7 +105,11 @@ function awardBuddyXp(amount) {
   const oldMax = getPetMaxHp(id);
   const curHp = getPetHp(id);
   state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amount);
-  const after = getPetById(id);
+  let after = getPetById(id);
+  if (before.stage === 0 && after.stage > 0 && getBond(id) >= ECON.evo.bondMin) {       // first evolution with a close bond
+    state.evoPath[id] = 'radiant';
+    after = getPetById(id);
+  }
   if (after.level > before.level) {
     state.gems += ECON.levelUpGemsPerLevel * (after.level - before.level);
     const newMax = getPetMaxHp(id);
@@ -127,7 +133,7 @@ function openEvoModal(before, after) {
   document.getElementById('evo-title').innerText = 'What? ' + before.name + ' is evolving!';
   document.getElementById('evo-from').innerHTML = avatarHtml(before, 72);
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
-  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)';
+  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + (after.radiant ? ' ✨ Your close bond made it Radiant: +' + ECON.evo.radiantHp + ' HP for good!' : '');
   const learned = movesBetween(before.level, after.level, after);
   document.getElementById('evo-stats').innerText =
     'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
