@@ -175,8 +175,11 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
         awardEgg(boss.element, boss.form >= 2 ? 'mythic' : boss.form === 1 ? 'rare' : 'common');
       }
       buddyReact('win');
+      const plainWild = wild && !boss.trainer && !boss.shiny && !boss.legend;
+      const easy = plainWild ? easyShare(boss.level) : 1;                 // a foe weaker than your buddy pays less
       let gemBonus = wild ? ECON.wild.gemBase + Math.floor(boss.level / ECON.wild.gemPerLevels)
         : ECON.boss.gemBase + Math.floor(boss.level / ECON.boss.gemPerLevels) + (boss.swapped ? ECON.boss.swap.bonusGems : 0);
+      if (plainWild) gemBonus = Math.max(1, Math.round(gemBonus * easy * wildWinShare()));
       if (boss.trainer) gemBonus += ECON.map.trainerGems;
       if (boss.shiny) gemBonus += ECON.daily.gems;
       if (boss.legend) gemBonus += ECON.legend.gems;
@@ -187,7 +190,9 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
 
       // Pokémon-style: more XP for beating higher-level bosses
       const ratio = clamp(boss.level / getBuddyLevel(state.activePet), 0.5, 2);
-      awardBattleXp(Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio));
+      const fullXp = Math.round(wild ? ECON.wild.xpBase + boss.level * ratio : 20 + boss.level * 2 * ratio);
+      awardBattleXp(Math.round(fullXp * easy));
+      if (plainWild) shareTeamXp(fullXp);
 
       const hadCasualties = !wild && state.faintedPets.length > 0;      // fainted buddies come back only after a boss
       if (hadCasualties) {

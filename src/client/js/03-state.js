@@ -15,6 +15,7 @@ function freshState() {
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
     ranch: { at: 0, workers: {}, stock: { berry: 0, ore: 0, honey: 0, parts: 0 } },   // buddy id -> station id, the goods in the barn, and when work was last counted
+    wildWins: { day: '', n: 0 },                     // plain wild wins today (after ECON.farm.dailyWins, wild gems are smaller)
     trails: {},                                      // land id -> { day, done: [spot numbers] }: today's Trail progress
     trailGems: { day: '', n: 0 },                    // how many Trails paid gems today
     evoPath: {},                                     // buddy id -> 'radiant' when it first evolved with a close bond

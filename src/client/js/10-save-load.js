@@ -121,6 +121,10 @@ const NORMALIZERS = [
     RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
     s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
   },
+  function wildWins(s) {
+    const w = s.wildWins || {};
+    s.wildWins = { day: typeof w.day === 'string' ? w.day.slice(0, 12) : '', n: asInt(w.n, 0, 100000, 0) };
+  },
   function trails(s) {
     const t = {};
     REGIONS.forEach(function (r) {

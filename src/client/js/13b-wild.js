@@ -62,6 +62,34 @@ function rollWildSpecies(skip) {
   }
   return sp;
 }
+// How strong your buddies are together: the average level of your ECON.farm.top strongest.
+function teamPower() {
+  const levels = getOwnedIds().map(getBuddyLevel).sort(function (a, b) { return b - a; }).slice(0, ECON.farm.top);
+  return levels.length ? Math.round(levels.reduce(function (a, b) { return a + b; }, 0) / levels.length) : 1;
+}
+// The level wild foes are built around: your buddy's, but one buddy far ahead of the rest cannot pull it up.
+function foeBaseLevel() {
+  return Math.min(getBuddyLevel(state.activePet), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
+}
+// A plain wild win pays less when the foe is weaker than your buddy (never below ECON.farm.minShare).
+function easyShare(foeLevel) {
+  return clamp(foeLevel / Math.max(1, getBuddyLevel(state.activePet)), ECON.farm.minShare, 1);
+}
+// Counts a plain wild win today; after ECON.farm.dailyWins of them wild gems are smaller until tomorrow. Returns the share of gems to pay.
+function wildWinShare() {
+  const w = state.wildWins;
+  if (w.day !== dayKey()) { w.day = dayKey(); w.n = 0; }
+  w.n += 1;
+  if (w.n === ECON.farm.dailyWins + 1) toast('😴 Your buddies are getting sleepy, so wild gems are smaller for today. Full rewards tomorrow!');
+  return w.n > ECON.farm.dailyWins ? ECON.farm.tiredShare : 1;
+}
+// Teammates who are behind the fighter learn from the fight too.
+function shareTeamXp(xp) {
+  const lead = getBuddyLevel(state.activePet);
+  getTeam().forEach(function (id) {
+    if (id !== state.activePet && getBuddyLevel(id) < lead) awardBuddyXp(Math.round(xp * ECON.farm.shareXp), id);
+  });
+}
 function pickNextWild() {
   let sp = rollWildSpecies([state.wild.id]);
   const d = state.daily, today = dayKey();
@@ -82,7 +110,7 @@ function startWild(sp) {
   state.wild.trainer = '';
   markDexSeen(sp.id);
   if (typeof soundBuddyCry === 'function') soundBuddyCry(sp.id, sp.element);
-  bossLevel = clamp(getBuddyLevel(state.activePet) + rnd(-3, 1), 1, MAX_LEVEL);
+  bossLevel = clamp(foeBaseLevel() + rnd(-3, 1), 1, MAX_LEVEL);
   state.bossLevel = bossLevel;
   state.bossSwapped = false;
   state.swapUsed = false;

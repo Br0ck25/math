@@ -98,9 +98,10 @@ function grantBuddy(id) {
   }
 }
 
-function awardBuddyXp(amount) {
-  const id = state.activePet;
-  amount = Math.round(amount * (1 + ECON.care.bondXpBonus * getBond(id) + (activeQuirk('curious') ? ECON.quirk.xp : 0)));
+// XP for a buddy (the fighter by default).
+function awardBuddyXp(amount, id) {
+  id = id || state.activePet;
+  amount = Math.round(amount * (1 + ECON.care.bondXpBonus * getBond(id) + (quirkOf(id).id === 'curious' ? ECON.quirk.xp : 0)));
   const before = getPetById(id);
   const oldMax = getPetMaxHp(id);
   const curHp = getPetHp(id);

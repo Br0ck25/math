@@ -60,6 +60,10 @@ const ECON = {
     honeyPerFeed: 3, honeyXp: 12, partsPerPotion: 5 },
   // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the whole Trail pays `gems` gems for the first `trailsPerDay` trails of a day.
   explore: { berries: 3, ore: 2, gems: 8, trailsPerDay: 3 },
+  // Against farming one over-levelled buddy (13b-wild.js, 12-battle.js): wild foes follow your buddy's level but never go above `lead` x the average of your `top` strongest buddies;
+  // a plain wild win pays gems and XP times foe level / buddy level (never below `minShare`); teammates below the fighter get `shareXp` of the full XP;
+  // and after `dailyWins` plain wild wins in a day, wild gems drop to `tiredShare` (never below 1) until tomorrow.
+  farm: { lead: 1.5, top: 3, minShare: 0.25, shareXp: 0.3, dailyWins: 60, tiredShare: 0.25 },
   // Weather (24e-trail.js): today's weather favours some types. `share` is the part of wild fights (after the land's own `map.regionShare`) that use it.
   weather: { share: 0.15 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
