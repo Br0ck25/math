@@ -100,6 +100,36 @@ test('finishing a whole Trail pays gems for the first three Trails of a day and 
   assert.ok(r.finished);
 });
 
+test('the Stone gate wants one element on your team: without it the gate stays shut, with it (or a Wildcard buddy) it opens and holds two kinds of goods', async () => {
+  const r = await page.evaluate(() => {
+    const out = {};
+    const gate = trailGate('ember').element;
+    const of = (pred) => storePets.find((p) => pred(p.element) && !p.requiresAllStorePets).id;
+    const wrong = of((e) => e !== gate && e !== 'shadow'), right = of((e) => e === gate);
+    const team = (id) => { state.unlockedPets = [id]; state.unlockedSecrets = []; state.team = [id]; state.activePet = id; };
+    trailLand = 'ember';
+    team(wrong); out.shut = trailGate('ember').ok;
+    renderTrail(); out.hint = document.getElementById('trail-body').innerText.includes('Bring a ' + gate + ' buddy');
+    openSpot(3); out.noQuestion = [trailQuestion, trailDone('ember', 3)];
+    team(right); out.ready = trailGate('ember').ok;
+    openSpot(3); out.question = trailQuestion !== null;
+    answerSpot(trailQuestion.q.ans);
+    out.opened = [trailDone('ember', 3), [state.nets, state.ranch.stock.berry, state.ranch.stock.ore].filter((n) => n > 0).length];
+    const wild = storePets.concat(secretCompanions).find((p) => p.element === 'shadow');
+    if (wild) { team(wild.id); out.wildcard = trailGate('ember').ok; } else out.wildcard = true;
+    out.skills = Object.keys(PARTNER_SKILLS).length;
+    return out;
+  });
+  assert.equal(r.shut, false);
+  assert.ok(r.hint, 'the list names the element the gate wants');
+  assert.deepEqual(r.noQuestion, [null, false]);
+  assert.equal(r.ready, true);
+  assert.equal(r.question, true);
+  assert.deepEqual(r.opened, [true, 2], 'a gate holds two kinds of goods');
+  assert.equal(r.wildcard, true);
+  assert.equal(r.skills, 6);
+});
+
 test('bad Trail data in a save is repaired', async () => {
   const r = await page.evaluate(() => {
     state.trails = { meadow: { day: 'x', done: [0, 0, 9, 'a', 2, -1] }, ghost: { day: 'y', done: [1] }, ember: 'broken' };
