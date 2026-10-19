@@ -43,7 +43,7 @@ test('the Explore button opens the land\'s Trail; a wrong answer keeps the spot 
     return out;
   });
   assert.equal(r.button, true);
-  assert.deepEqual(r.shown, ['flex', 5]);
+  assert.deepEqual(r.shown, ['flex', 6]);
   assert.equal(r.question, true);
   assert.deepEqual(r.wrong.slice(0, 2), [false, true]);
   assert.match(r.wrong[2], /try another/i);
@@ -85,39 +85,46 @@ test('goods respect the caps: a full net bag gives berries, and the barn never g
   assert.equal(r.cap, 30);
 });
 
-test('finishing a whole Trail pays gems for the first three Trails of a day and nothing more', async () => {
+test('a Trail pays gems when five of its six spots are open, for the first three Trails of a day and nothing more, and never twice', async () => {
   const r = await page.evaluate(() => {
-    const out = [];
-    const kinds = TRAIL_SPOTS.map((s) => s.kind);
+    const out = [], kinds = TRAIL_SPOTS.map((s) => s.kind);
     ['meadow', 'ember', 'tide', 'grove'].forEach((land) => {
       trailLand = land; const before = state.gems;
-      kinds.forEach((k, i) => { if (i === kinds.length - 1) out.push(state.gems - before); finishSpot(i, k); });
-      out[out.length - 1] = state.gems - before;
+      kinds.slice(0, 4).forEach((k, i) => finishSpot(i, k));
+      const four = state.gems - before;                                  // four spots: not done yet
+      finishSpot(4, kinds[4]); const five = state.gems - before;
+      finishSpot(5, kinds[5]); const six = state.gems - before;
+      out.push([four, five, six]);
     });
-    return { out, gems: ECON.explore.gems, finished: trailFinished('meadow') };
+    return { out, gems: ECON.explore.gems, finished: trailFinished('meadow'), spots: TRAIL_SPOTS.length, at: ECON.explore.finishAt };
   });
-  assert.deepEqual(r.out, [r.gems, r.gems, r.gems, 0]);
+  assert.equal(r.spots, 6);
+  assert.equal(r.at, 5);
+  assert.deepEqual(r.out.map((x) => x[0]), [0, 0, 0, 0]);
+  assert.deepEqual(r.out.map((x) => x[1]), [r.gems, r.gems, r.gems, 0], 'the first three Trails of the day pay');
+  assert.deepEqual(r.out.map((x) => x[2]), [r.gems, r.gems, r.gems, 0], 'the sixth spot pays nothing more');
   assert.ok(r.finished);
 });
 
 test('the Stone gate wants one element on your team: without it the gate stays shut, with it (or a Wildcard buddy) it opens and holds two kinds of goods', async () => {
   const r = await page.evaluate(() => {
     const out = {};
-    const gate = trailGate('ember').element;
+    const gate = trailGate('ember', 3).element;
     const of = (pred) => storePets.find((p) => pred(p.element) && !p.requiresAllStorePets).id;
     const wrong = of((e) => e !== gate && e !== 'shadow'), right = of((e) => e === gate);
     const team = (id) => { state.unlockedPets = [id]; state.unlockedSecrets = []; state.team = [id]; state.activePet = id; };
     trailLand = 'ember';
-    team(wrong); out.shut = trailGate('ember').ok;
+    team(wrong); out.shut = trailGate('ember', 3).ok;
     renderTrail(); out.hint = document.getElementById('trail-body').innerText.includes('Bring a ' + gate + ' buddy');
     openSpot(3); out.noQuestion = [trailQuestion, trailDone('ember', 3)];
-    team(right); out.ready = trailGate('ember').ok;
+    team(right); out.ready = trailGate('ember', 3).ok;
     openSpot(3); out.question = trailQuestion !== null;
     answerSpot(trailQuestion.q.ans);
     out.opened = [trailDone('ember', 3), [state.nets, state.ranch.stock.berry, state.ranch.stock.ore].filter((n) => n > 0).length];
     const wild = storePets.concat(secretCompanions).find((p) => p.element === 'shadow');
-    if (wild) { team(wild.id); out.wildcard = trailGate('ember').ok; } else out.wildcard = true;
+    if (wild) { team(wild.id); out.wildcard = trailGate('ember', 3).ok && trailGate('ember', 4).ok; } else out.wildcard = true;
     out.skills = Object.keys(PARTNER_SKILLS).length;
+    out.two = [trailGate('ember', 3).element !== trailGate('ember', 4).element, TRAIL_SPOTS.filter((x) => x.kind === 'gate').length];   // the cave wants a different element than the gate
     return out;
   });
   assert.equal(r.shut, false);
@@ -128,6 +135,7 @@ test('the Stone gate wants one element on your team: without it the gate stays s
   assert.deepEqual(r.opened, [true, 2], 'a gate holds two kinds of goods');
   assert.equal(r.wildcard, true);
   assert.equal(r.skills, 6);
+  assert.deepEqual(r.two, [true, 2], 'two gates, each wanting a different element');
 });
 
 test('weather: the same all day, changes over the days, shows on the map and the Trail, and favours some types of wild buddies', async () => {

@@ -8,6 +8,7 @@ const TRAIL_SPOTS = [
   { kind: 'person', icon: '🧑‍🌾', name: 'Friendly traveller' },
   { kind: 'chest',  icon: '🎁', name: 'Old chest' },
   { kind: 'gate',   icon: '🚪', name: 'Stone gate' },
+  { kind: 'gate',   icon: '🕳️', name: 'Hidden cave' },
   { kind: 'big',    icon: '🏆', name: 'Treasure chest' }
 ];
 const TRAIL_LORE = {
@@ -54,13 +55,14 @@ function trailProgress(landId) {
   return t;
 }
 function trailDone(landId, i) { return trailProgress(landId).done.indexOf(i) !== -1; }
-function trailFinished(landId) { return trailProgress(landId).done.length >= TRAIL_SPOTS.length; }
+function trailFinished(landId) { return trailProgress(landId).done.length >= ECON.explore.finishAt; }
 // Which goods a chest holds today: always the same for the same land, day and spot.
 function chestGoods(landId, i) { return ['net', 'berry', 'ore'][dayHash(landId + dayKey() + i) % 3]; }
 
-// The gate of a land today: the element it wants and whether your team has it.
-function trailGate(landId) {
-  const els = Object.keys(PARTNER_SKILLS), element = els[dayHash(landId + dayKey() + 'gate') % els.length];
+// The gate at spot i of a land today: the element it wants (each gate wants a different one) and whether your team has it.
+function trailGate(landId, i) {
+  const els = Object.keys(PARTNER_SKILLS), first = TRAIL_SPOTS.findIndex(function (s) { return s.kind === 'gate'; });
+  const element = els[(dayHash(landId + dayKey() + 'gate') + i - first) % els.length];
   const ok = getTeam().some(function (id) { const e = getSpecies(id).element; return e === element || e === 'shadow'; });
   return { element: element, skill: PARTNER_SKILLS[element], ok: ok };
 }
@@ -84,7 +86,7 @@ function renderTrail() {
   let h = '<div class="d" style="margin-bottom:6px;">' + escHtml(TRAIL_LORE[r.id] || '') + ' A new trail every day! Today: ' + weatherToday().icon + ' ' + weatherToday().name + ', ' + weatherToday().text + '. Look out for ' + weatherToday().buddies.map(function (id) { return getSpecies(id).name; }).join(', ') + '!</div>' +
     '<div class="d" style="margin-bottom:6px;">Spots found: ' + done + '/' + TRAIL_SPOTS.length + '</div><div class="moves-list">';
   TRAIL_SPOTS.forEach(function (s, i) {
-    const open = trailDone(trailLand, i), gate = s.kind === 'gate' ? trailGate(trailLand) : null;
+    const open = trailDone(trailLand, i), gate = s.kind === 'gate' ? trailGate(trailLand, i) : null;
     const hint = open ? 'Done ✅' : gate ? (gate.ok ? gate.skill.icon + ' ' + gate.skill.name + ' is ready! Solve a puzzle to open it' : 'Bring a ' + gate.element + ' buddy ' + gate.skill.icon + ' to the team: ' + gate.skill.name + ' ' + gate.skill.text) : s.kind === 'person' ? 'Say hello' : 'Solve a puzzle to open it';
     h += '<button type="button" class="move-btn' + (open ? ' off' : '') + '" ' + (open ? 'disabled' : '') + ' onclick="openSpot(' + i + ')" aria-label="' + s.name + (open ? ', done' : '') + '">' +
       '<span class="mv-icon">' + s.icon + '</span><span class="mv-main"><b>' + s.name + '</b><small>' + escHtml(hint) + '</small></span></button>';
@@ -104,8 +106,8 @@ function openSpot(i) {
   if (trailDone(trailLand, i)) return;
   soundClick();
   if (TRAIL_SPOTS[i].kind === 'person') { finishSpot(i, 'person'); return; }
-  if (TRAIL_SPOTS[i].kind === 'gate' && !trailGate(trailLand).ok) {
-    const g = trailGate(trailLand);
+  if (TRAIL_SPOTS[i].kind === 'gate' && !trailGate(trailLand, i).ok) {
+    const g = trailGate(trailLand, i);
     soundWrong();
     toast(g.skill.icon + ' Bring a ' + g.element + ' buddy on your team: ' + g.skill.name + ' ' + g.skill.text + '!');
     return;
@@ -132,11 +134,11 @@ function finishSpot(i, kind) {
   else {
     const all = ['net', 'berry', 'ore'], first = chestGoods(trailLand, i);
     const goods = kind === 'big' ? all : kind === 'gate' ? [first, all[(all.indexOf(first) + 1) % all.length]] : [first];     // a gate holds two kinds
-    const g = kind === 'gate' ? trailGate(trailLand) : null;
+    const g = kind === 'gate' ? trailGate(trailLand, i) : null;
     msg = (g ? g.skill.icon + ' ' + g.skill.name + ' ' + g.skill.text + '! ' : '') + '🎁 ' + goods.map(trailGive).join(' · ');
     soundCoinChirp();
   }
-  if (trailFinished(trailLand)) msg += payTrail();
+  if (trailProgress(trailLand).done.length === ECON.explore.finishAt) msg += payTrail();      // the trail counts as done at finishAt spots, so one gate can wait for another day
   saveState();
   updateStatsUI();
   toast(msg);
