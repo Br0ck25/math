@@ -1,8 +1,5 @@
 // Bump SCHEMA_VERSION and add a MIGRATIONS entry (10-save-load.js) whenever a saved field changes shape.
 const SCHEMA_VERSION = 2;
-function defaultProfile() {
-  return { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
-}
 function freshState() {
   return {
     v: SCHEMA_VERSION,
@@ -14,9 +11,7 @@ function freshState() {
     cloverLeft: 0,
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
-    ranch: { at: 0, workers: {}, stock: { berry: 0, ore: 0, honey: 0, parts: 0 } },   // buddy id -> station id, the goods in the barn, and when work was last counted
     spring: { day: '' },                             // the day the free Healing Spring visit was used (24b-map.js)
-    evoPath: {},                                     // buddy id -> 'radiant', 'guardian' or 'striker': the path it took when it first evolved
     nets: 0,                                         // Catch Nets in stock: you choose how many (up to 3) to throw after a wild win
     monstersDefeated: 0,
     bossLevel: 1,
@@ -30,18 +25,15 @@ function freshState() {
     activeArmor: 'none',
     quests: null,
     streakCal: { count: 0, last: '', total: 0, claimed: [] },
-    stats: { days: {} },
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
     seen: { hub: false, welcome: '' },
-    care: {},
     duelStat: { day: '', count: 0 },
     duelsOnline: true,
     duelFriends: [],
     duelSettled: [],
     duelRecord: { w: 0, l: 0, t: 0 },
     team: [],
-    tour: { day: '', runs: 0, trophies: 0, wins: 0 },
     raidsCleared: 0,
     region: 'meadow',                                // where you are on the map (wild buddies of its type are more common)
     regionsVisited: ['meadow'],                      // regions visited in the Number Kingdom
@@ -60,9 +52,6 @@ function freshState() {
     packClaims: [],                                  // pack ids whose completion reward was claimed
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
     egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null
-    profile: defaultProfile(),
-    stars: 0,                                        // Star Sparks (★): earned from solving problems, badges & goals, spent in the Tree of Knowledge
-    techUnlocked: [],                                // tech node ids unlocked in the Tree of Knowledge
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)

@@ -55,12 +55,9 @@ function getPetById(id) {
   const stage = getFormIndex(sp, level);
   const form = sp.forms[stage];
   const suffix = stage === 1 ? ' EX' : (stage === 2 ? ' MAX' : '');
-  const path = stage > 0 && state.evoPath && EVO_PATHS[state.evoPath[sp.id]] ? state.evoPath[sp.id] : '';
   return {
     id: sp.id,
-    name: (path ? EVO_PATHS[path].name + ' ' : '') + form.name,
-    path: path,
-    radiant: path === 'radiant',
+    name: form.name,
     baseName: sp.name,
     icon: form.icon,
     emoji: form.emoji || form.icon,
@@ -79,8 +76,8 @@ function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
 function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
 function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
-function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage) + evoBonus(p.path).hp + (typeof hasTech === 'function' && hasTech('iron_will') ? 1 : 0); }
-function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage) + evoBonus(p.path).atk; }
+function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage); }
+function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }
 function getOwnedIds() { return state.unlockedPets.concat(state.unlockedSecrets); }
@@ -96,27 +93,14 @@ function grantBuddy(id) {
   }
 }
 
-// The paths a buddy can take when it first evolves, and what each gives for good (see ECON.evo).
-const EVO_PATHS = {
-  radiant:  { name: 'Radiant',  hp: ECON.evo.radiantHp,  atk: ECON.evo.radiantAtk },
-  guardian: { name: 'Guardian', hp: ECON.evo.guardianHp, atk: 0 },
-  striker:  { name: 'Striker',  hp: 0, atk: ECON.evo.strikerAtk }
-};
-function evoBonus(path) { return EVO_PATHS[path] || { hp: 0, atk: 0 }; }
-
 // XP for a buddy (the fighter by default).
 function awardBuddyXp(amount, id) {
   id = id || state.activePet;
-  amount = Math.round(amount * (1 + ECON.care.bondXpBonus * getBond(id)));
   const before = getPetById(id);
   const oldMax = getPetMaxHp(id);
   const curHp = getPetHp(id);
   state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amount);
   let after = getPetById(id);
-  if (before.stage === 0 && after.stage > 0) {                                           // the first evolution picks a path
-    state.evoPath[id] = getBond(id) + (getCare(id).fav ? 1 : 0) >= ECON.evo.bondMin ? 'radiant' : 'guardian';
-    after = getPetById(id);
-  }
   if (after.level > before.level) {
     state.gems += ECON.levelUpGemsPerLevel * (after.level - before.level);
     const newMax = getPetMaxHp(id);
@@ -147,29 +131,12 @@ function openEvoModal(before, after) {
   m.style.display = 'flex';
 }
 function renderEvoModal() {
-  const before = evoShown.before, after = getPetById(evoShown.id), first = before.stage === 0 && !!after.path;
+  const before = evoShown.before, after = getPetById(evoShown.id);
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
-  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + (first && after.radiant ? ' ✨ Your close bond made it Radiant: +' + ECON.evo.radiantHp + ' HP and +' + ECON.evo.radiantAtk + ' attack for good!' : '');
+  document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + '';
   document.getElementById('evo-stats').innerText =
     'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
     '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove ;
-  const box = document.getElementById('evo-paths');
-  box.style.display = first && !after.radiant ? '' : 'none';                 // a bonded buddy is Radiant; the others choose
-  ['guardian', 'striker'].forEach(function (k) {
-    const b = document.getElementById('evo-path-' + k), on = after.path === k;
-    b.innerText = (k === 'guardian' ? '🛡️ Guardian +' + ECON.evo.guardianHp + ' HP' : '⚔️ Striker +' + ECON.evo.strikerAtk + ' ATK') + (on ? ' ✅' : '');
-    b.setAttribute('aria-pressed', on ? 'true' : 'false');
-  });
-}
-// The player picks Guardian or Striker for a buddy that has just evolved (not for a Radiant one).
-function chooseEvoPath(path) {
-  if (!evoShown || (path !== 'guardian' && path !== 'striker') || evoShown.before.stage !== 0) return;
-  const cur = getPetById(evoShown.id);
-  if (!cur.path || cur.radiant) return;
-  state.evoPath[evoShown.id] = path;
-  soundClick();
-  saveState();
-  renderEvoModal();
 }
 function closeEvoModal() {
   soundClick();
@@ -177,4 +144,74 @@ function closeEvoModal() {
   updateStatsUI();
   saveState();
   modalDone();
+}
+
+// ----- the team: who can fight, who leads, who a new buddy replaces -----
+// Up to ECON.team.max (6) buddies. Only team members can fight, so your current fighter is always on it. With no team picked, it is your strongest buddies.
+function getTeam() {
+  const owned = getOwnedIds();
+  let t = state.team.filter(function (id, i) { return owned.indexOf(id) !== -1 && state.team.indexOf(id) === i; }).slice(0, ECON.team.max);
+  if (!t.length) {
+    t = owned.slice().sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }).slice(0, ECON.team.max);
+  }
+  if (t.indexOf(state.activePet) === -1 && owned.indexOf(state.activePet) !== -1) t = [state.activePet].concat(t).slice(0, ECON.team.max);
+  return t;
+}
+// The lead is the buddy sent out first in a battle. Changing it is free; only a team member can lead, and one that has fainted cannot.
+function setLead(id) {
+  if (id === state.activePet) return false;
+  if (getTeam().indexOf(id) === -1) { soundWrong(); toast('Only your team can fight. Add it to your team first.'); return false; }
+  if (state.advHp[id] === 0) { soundWrong(); toast(getPetById(id).name + ' has fainted. Rest at a Buddy Center first.'); return false; }
+  state.activePet = id;
+  return true;
+}
+// A new buddy joins the team only if there is room (and then it may fight); otherwise it waits in your collection.
+function joinTeamIfRoom(id) {
+  const t = getTeam();
+  if (t.indexOf(id) !== -1) return true;
+  if (t.length >= ECON.team.max) return false;
+  state.team = t.concat(id);
+  return true;
+}
+// ----- adding a buddy to a full team: choose who it replaces -----
+let replaceFor = '';
+function openReplaceModal(newId) {
+  replaceFor = newId;
+  showModal('replace-modal', renderReplace);
+}
+function closeReplace() { replaceFor = ''; hideModal('replace-modal'); }
+function renderReplace() {
+  const sp = getPetById(replaceFor);
+  document.getElementById('replace-title').innerText = 'Which buddy should ' + sp.name + ' replace?';
+  const list = document.getElementById('replace-options');
+  list.innerHTML = '';
+  getTeam().forEach(function (id) {
+    const d = getPetById(id);
+    const resting = false;
+    const locked = false;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'move-btn' + (locked ? ' off' : '');
+    b.disabled = locked;
+    const note = 'Lv ' + d.level;
+    b.innerHTML = '<span class="mv-icon">' + d.icon + '</span><span class="mv-main"><b>' + escHtml(d.name) + '</b><small>' + escHtml(note) + '</small></span>';
+    b.setAttribute('aria-label', 'Replace ' + d.name + '. ' + note);
+    b.onclick = function () { replaceTeamMember(id); };
+    list.appendChild(b);
+  });
+}
+function replaceTeamMember(oldId) {
+  const newId = replaceFor;
+  const t = getTeam(), i = t.indexOf(oldId);
+  if (!newId || i === -1) { soundWrong(); return; }
+  t[i] = newId;
+  state.team = t;
+  const name = getPetById(newId).name;
+  closeReplace();
+  if (oldId === state.activePet) state.activePet = newId;          // the new buddy takes the lead
+  else toast(name + ' joined your team in place of ' + getPetById(oldId).name + '.');
+  soundClick();
+  saveState();
+  updateStatsUI();
+  if (typeof rerenderShop === 'function' && document.getElementById('shop-modal').style.display === 'flex') rerenderShop();
 }

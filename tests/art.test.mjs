@@ -68,30 +68,6 @@ test('a buddy with art shows the picture where its emoji was; the emoji stays fo
   assert.deepEqual(r.emojiOf, [true, '🦊']);
 });
 
-test('the trading card draws the picture, scaled to fit, and falls back to the emoji without it', async () => {
-  await withArt();
-  const r = await page.evaluate(() => {
-    const out = {};
-    const cv = document.createElement('canvas');
-    const real = CanvasRenderingContext2D.prototype.drawImage, realText = CanvasRenderingContext2D.prototype.fillText;
-    const calls = [], emoji = [];
-    CanvasRenderingContext2D.prototype.drawImage = function (img, x, y, w, h) { calls.push([x, y, w, h]); return real.apply(this, arguments); };
-    CanvasRenderingContext2D.prototype.fillText = function (t) { emoji.push(String(t)); return realText.apply(this, arguments); };
-    state.unlockedPets = ['dog', window.__free, 'fox'];
-    drawCard(cv, window.__free); out.art = [calls.length, calls[0] && Math.round(calls[0][2]) <= 380, calls[0] && Math.round(calls[0][2] / calls[0][3] * 100)];
-    out.noEmoji = !emoji.includes(window.__emoji);
-    calls.length = 0; emoji.length = 0;
-    drawCard(cv, 'fox'); out.plain = [calls.length, emoji.includes('🦊')];
-    CanvasRenderingContext2D.prototype.drawImage = real; CanvasRenderingContext2D.prototype.fillText = realText;
-    return out;
-  });
-  assert.equal(r.art[0], 1, 'one picture drawn');
-  assert.equal(r.art[1], true);
-  assert.equal(r.art[2], 133, 'the 64x48 picture keeps its proportions');
-  assert.equal(r.noEmoji, true);
-  assert.deepEqual(r.plain, [0, true]);
-});
-
 test('the build embeds art/buddies/<id>.png and refuses bad names, oversized files and svg scripts', async () => {
   const made = [];
   const put = (name, bytes) => { fs.mkdirSync(artDir, { recursive: true }); const f = path.join(artDir, name); fs.writeFileSync(f, bytes); made.push(f); };
@@ -109,7 +85,7 @@ test('the build embeds art/buddies/<id>.png and refuses bad names, oversized fil
   assert.ok(!fs.existsSync(path.join(artDir, 'zz_test_buddy.png')), 'the test cleaned up');
 });
 
-test('svg art: a viewBox-only svg gets its size from the viewBox so every browser can draw it; sized ones are untouched; and it works in the page and on the card', async () => {
+test('svg art: a viewBox-only svg gets its size from the viewBox so every browser can draw it; sized ones are untouched; and it works in the page', async () => {
   assert.match(sizeSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><rect/></svg>'), /^<svg width="200" height="100" xmlns=/);
   assert.match(sizeSvg('<svg viewBox="-10 -10 64.5 48">'), /^<svg width="64.5" height="48" /);
   const sized = '<svg width="10" height="20" viewBox="0 0 200 100">';
@@ -129,35 +105,11 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
     const F = allBuddies().filter((b) => !BUDDY_ART[b.id] && !b.emoji && b.id !== 'dog' && b.id !== 'fox' && typeof b.icon === 'string' && !b.icon.startsWith('<'))[0].id;
     applyBuddyArt({ [F]: uri }); artImage(F);
     await new Promise((res) => setTimeout(res, 300));
-    const im = ART_IMGS[F], calls = [], real = CanvasRenderingContext2D.prototype.drawImage;
-    CanvasRenderingContext2D.prototype.drawImage = function (i, x, y, w, h) { calls.push([w, h]); return real.apply(this, arguments); };
-    state.unlockedPets = ['dog', F]; drawCard(document.createElement('canvas'), F);
-    CanvasRenderingContext2D.prototype.drawImage = real;
-    return { size: [im.naturalWidth, im.naturalHeight], drawn: calls.length, ratio: calls[0] && Math.round(calls[0][0] / calls[0][1] * 100), avatar: avatarHtml(getPetById(F), 40).includes('<img') };
+    const im = ART_IMGS[F];
+    return { size: [im.naturalWidth, im.naturalHeight], avatar: avatarHtml(getPetById(F), 40).includes('<img') };
   }, uri);
   assert.deepEqual(r.size, [160, 80]);
-  assert.equal(r.drawn, 1);
-  assert.equal(r.ratio, 200);
   assert.equal(r.avatar, true);
-});
-
-test('pictures are cheap: no image is decoded at load (200 of them made every page slow), a card asks for its picture and is redrawn when it arrives', async () => {
-  const r = await page.evaluate(async () => {
-    const out = {};
-    out.atLoad = [window.__artCount > 100, Object.keys(ART_IMGS).length];
-    const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
-    CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
-    const id = Object.keys(BUDDY_ART).find((k) => k.startsWith('secret_') && getSpecies(k));
-    state.unlockedSecrets.push(id); state.buddyXp[id] = xpForLevel(10);
-    openHub(); hubPet = id; hubTab = 'card'; renderHub(); out.first = calls.length;                                 // the picture is not here yet: the emoji card is drawn
-    await new Promise((res) => setTimeout(res, 400));
-    out.after = [calls.length >= 1, Object.keys(ART_IMGS).join() === id];
-    CanvasRenderingContext2D.prototype.drawImage = real;
-    return out;
-  });
-  assert.deepEqual(r.atLoad, [true, 0]);
-  assert.equal(r.first, 0);
-  assert.deepEqual(r.after, [true, true], 'redrawn with the picture once it loaded, and only that one image was made');
 });
 
 test('every file in art/buddies belongs to a real buddy', async () => {

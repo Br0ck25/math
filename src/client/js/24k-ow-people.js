@@ -118,8 +118,7 @@ function owCollect(p) {
   let msg;
   if (p.give === 'gems') { grantGems(ECON.overworld.pickupGems, 'You found ' + ECON.overworld.pickupGems + ' gems!', false); return; }
   if (p.give === 'net' && state.nets < maxNets()) { state.nets += 1; msg = 'You found a Catch Net!'; }
-  else if (p.give === 'ore') { ranchGive('ore', ECON.explore.ore); msg = 'You found ' + ECON.explore.ore + ' ore!'; }
-  else { ranchGive('berry', ECON.explore.berries); msg = 'You found ' + ECON.explore.berries + ' berries!'; }      // berries, or instead of a net when the net bag is full
+  else { grantGems(ECON.overworld.pickupGems, 'You found ' + ECON.overworld.pickupGems + ' gems!', false); return; }      // a gem find, or instead of a net when the net bag is full
   soundCoinChirp();
   saveState();
   updateStatsUI();

@@ -148,7 +148,9 @@ body {
 .key-btn.submit-btn { font-size: 1.15rem; }
 
 
+
     
+
 }
 .modal-overlay {
       position: fixed;
@@ -379,17 +381,10 @@ sup, sub { font-size: 0.6em; line-height: 0; }
 .care-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #0f172a; border: 1px solid var(--card-border); border-radius: 10px; padding: 7px 9px; margin: 5px 0; text-align: left; }
 .care-row .t { font-weight: 800; font-size: 0.82rem; }
 .care-row .d { font-size: 0.66rem; color: var(--text-muted); }
-.card-canvas { width: 100%; max-width: 300px; border-radius: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); display: block; margin: 6px auto; }
 .team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 6px 0; }
 .team-chip { background: #0f172a; border: 2px solid var(--card-border); border-radius: 10px; padding: 4px 2px; cursor: pointer; font-size: 0.6rem; color: var(--text-muted); font-weight: 700; }
 .team-chip b { display: block; font-size: 1.5rem; }
 .team-chip.on { border-color: #fbbf24; background: #422006; color: #fde047; }
-.tour-side { flex: 1; background: #0f172a; border: 1px solid var(--card-border); border-radius: 12px; padding: 6px; font-size: 0.7rem; font-weight: 800; }
-.tour-side .ic { font-size: 2.2rem; line-height: 1.1; }
-.tour-side.hit { animation: shake 0.3s; border-color: #ef4444; }
-.tour-hp { height: 7px; background: #1e293b; border-radius: 999px; overflow: hidden; margin-top: 3px; }
-.tour-hp i { display: block; height: 100%; background: #10b981; transition: width 0.3s; }
-.tour-hp.foe i { background: #ef4444; }
 .tour-eq { font-size: 1.7rem; font-weight: 900; margin: 10px 0 6px; min-height: 40px; }
 .tour-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 #duel-modal { padding: 8px; }
@@ -493,7 +488,9 @@ input { -webkit-user-select: text; user-select: text; }
 .modal-content { min-width: 0; box-sizing: border-box; overflow-x: hidden; }
 @media (max-height: 600px) {
 .keypad { height: clamp(120px, 22vh, 140px); }
+
  
+
 }
 .modal-x-row + .hub-head { padding-top: 10px; }
 /* the ‹ › arrows sit below the ✕ */
@@ -688,15 +685,6 @@ body.trivia .math-only { display: none; }
 @container arena (max-height: 195px) { .hint-visual { display: none; } }
 /* 10. Sanctuary Showcase Room & Trainer Profile */
 .hub-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.sanctuary-stage {
-  position: relative;
-  height: 148px;
-  background: linear-gradient(180deg, #1e1b4b 0%, #064e3b 65%, #052e22 100%);
-  border: 2px solid #10b981;
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
 @keyframes sanctuaryWander1 {
   0%, 100% { transform: translate(0, 0); }
   25% { transform: translate(7px, -5px); }
@@ -732,119 +720,6 @@ body.trivia .math-only { display: none; }
   50% { transform: translate(-6px, -2px); }
   75% { transform: translate(3px, 5px); }
 }
-.sanctuary-buddy {
-  position: absolute;
-  background: rgba(15, 23, 42, 0.78);
-  border: 1.5px solid #38bdf8;
-  border-radius: 999px;
-  padding: 2px 6px;
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  animation-name: var(--wander-anim, sanctuaryWander1);
-  animation-duration: var(--wander-dur, 4.2s);
-  animation-delay: var(--wander-delay, 0s);
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-.sanctuary-bubble {
-  position: absolute;
-  bottom: calc(100% + 5px);
-  left: 50%;
-  transform: translateX(-50%) scale(0.6);
-  background: #1e1b4b;
-  border: 1.5px solid #818cf8;
-  color: #f8fafc;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease, visibility 0.18s;
-  z-index: 12;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
-.sanctuary-bubble::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 4px 4px 0 4px;
-  border-style: solid;
-  border-color: #818cf8 transparent transparent transparent;
-}
-.sanctuary-bubble.show {
-  transform: translateX(-50%) scale(1);
-  opacity: 1;
-  visibility: visible;
-}
-.sanctuary-buddy:nth-child(1) .sanctuary-bubble {
-  left: 0;
-  transform: translateX(0) scale(0.6);
-}
-.sanctuary-buddy:nth-child(1) .sanctuary-bubble::after {
-  left: 18px;
-}
-.sanctuary-buddy:nth-child(1) .sanctuary-bubble.show {
-  transform: translateX(0) scale(1);
-}
-.sanctuary-buddy:nth-child(3) .sanctuary-bubble,
-.sanctuary-buddy:nth-child(6) .sanctuary-bubble {
-  left: auto;
-  right: 0;
-  transform: translateX(0) scale(0.6);
-}
-.sanctuary-buddy:nth-child(3) .sanctuary-bubble::after,
-.sanctuary-buddy:nth-child(6) .sanctuary-bubble::after {
-  left: auto;
-  right: 18px;
-}
-.sanctuary-buddy:nth-child(3) .sanctuary-bubble.show,
-.sanctuary-buddy:nth-child(6) .sanctuary-bubble.show {
-  transform: translateX(0) scale(1);
-}
-.tree-branch-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 4px;
-  margin-bottom: 8px;
-}
-.tree-branch-grid .grade-btn {
-  padding: 6px 2px;
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-align: center;
-  white-space: nowrap;
-}
-.sanctuary-section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  background: #1e1b4b;
-  border: 1px solid #4338ca;
-  border-radius: 8px;
-  padding: 8px 12px;
-  margin: 8px 0 4px;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 800;
-  color: #e0e7ff;
-  cursor: pointer;
-  text-align: left;
-}
-.sanctuary-section-header:hover {
-  background: #312e81;
-  border-color: #6366f1;
-}
 /* Tall, wide-enough phones: stage-style cards. The sprite is big and sits above the name; the foe stands a little higher than your buddy. */
 /* The foe's next move, shown while the problem is open ("Charging Vine Whip"), then how it went. */
 /* "A wild Daisy appeared!  Go, Pup!" over the stage for a moment when a new foe arrives. Fades with a transition so reduced motion still shows it. */
@@ -853,8 +728,6 @@ body.trivia .math-only { display: none; }
 /* Buddy hub: the tab worth a look right now gets a gold dot, with one line saying why. */
 .hub-hint { font-size: 0.72rem; color: #fde68a; text-align: center; margin: 2px 0 4px; }
 .hub-hint:empty { display: none; }
-.hub-tabs .grade-btn.suggest { position: relative; border-color: #fbbf24; }
-.hub-tabs .grade-btn.suggest::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: #fbbf24; }
 /* Adventure world art (24f-ow-art.js): the hidden sprite sheet, a picture that fills its box, and the hero (body and hair stacked). */
 #world-art { position: absolute; width: 0; height: 0; overflow: hidden; }
 .w-sprite { display: block; width: 100%; height: 100%; }
@@ -893,7 +766,9 @@ body.trivia .math-only { display: none; }
 .ow-row-text { flex: 1; min-width: 0; text-align: left; }
 @media (max-height: 640px) {
 .ow-hint { display: none; }
+
  
+
 }
 /* Adventure: Team and Bag buttons beside the D-pad, the hero creator, the bag and the team (24i-ow-hero.js, 24j-ow-bag.js). */
 .ow-key.ow-side { grid-row: 1; gap: 0; align-content: center; font-size: 0.62rem; font-weight: 800; color: var(--text); line-height: 1; }
@@ -993,7 +868,12 @@ body.trivia .math-only { display: none; }
 .ab-fx { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle, #fff 0 25%, var(--fx, #94a3b8) 60%, transparent 72%); opacity: 0; pointer-events: none; }
 .ab-fx-up { left: 24%; top: 62%; animation: abFlyUp 0.55s ease-in forwards; }
 .ab-fx-down { left: 72%; top: 28%; animation: abFlyDown 0.55s ease-in forwards; }
-.ab-fx.t-fire { --fx: #f97316; } .ab-fx.t-water { --fx: #38bdf8; } .ab-fx.t-nature { --fx: #22c55e; } .ab-fx.t-electric { --fx: #facc15; } .ab-fx.t-dark { --fx: #7c3aed; } .ab-fx.t-magic { --fx: #f472b6; }
+.ab-fx.t-fire { --fx: #f97316; }
+.ab-fx.t-water { --fx: #38bdf8; }
+.ab-fx.t-nature { --fx: #22c55e; }
+.ab-fx.t-electric { --fx: #facc15; }
+.ab-fx.t-dark { --fx: #7c3aed; }
+.ab-fx.t-magic { --fx: #f472b6; }
 @keyframes abFlyUp { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(190%, -130%) scale(1.8); } }
 @keyframes abFlyDown { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(-190%, 130%) scale(1.8); } }
 .ab-foe-sprite.ab-lunge { animation: abLungeFoe 0.45s ease; }
@@ -1013,11 +893,17 @@ body.trivia .math-only { display: none; }
 .ow-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; }
 @media (pointer: coarse) {
 #overworld-modal .ow-pad { display: none; }
+
  
+
 }
 @media (pointer: fine) {
 #overworld-modal .ow-hint { display: block; }
+
  
+
 }
+
+
 
 

@@ -61,17 +61,7 @@ const ECON = {
   held: { cost: { berry: 40, leftovers: 60, claw: 50, lens: 50, charm: 60 }, berryHeal: 10 },
   // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
   team: { max: 6 },
-  // The Ranch (25d-ranch.js): off-team buddies work at stations. `perHour` goods an hour (x `matchMult` for a matching element), for at most `capHours` hours away at a time,
-  // plus `answerSec` seconds of work for every correct answer. The barn holds `stockCap` of each good; a work spot opens for every `badgesPerSlot` badges (and one from the start).
-  ranch: { perHour: 6, matchMult: 2, capHours: 4, stockCap: 30, badgesPerSlot: 2,
-    // Berries can pay for the Biscuit (`treatBerries`) and the Favorite snack (`favBerries`) instead of gems; `orePerNet` ore make one Catch Net (a shop net costs `items.net` gems).
-    treatBerries: 2, favBerries: 4, orePerNet: 6,
-    // The Nursery: `eggBerries` berries and two or more workers make an egg (of `eggRarity`) with the element of one of the workers.
-    eggBerries: 10, eggRarity: 'rare',
-    // Honey feeds the hub's buddy `honeyXp` XP for `honeyPerFeed` honey; `partsPerPotion` parts brew a Super Potion.
-    honeyPerFeed: 3, honeyXp: 12, partsPerPotion: 5 },
   // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the Trail pays `gems` gems for the first `trailsPerDay` trails of a day once `finishAt` of its spots are open (two gates, so one can wait for another day).
-  explore: { berries: 3, ore: 2, gems: 8, },
   // Against farming one over-levelled buddy (13b-wild.js, 12-battle.js): wild foes follow your buddy's level but never go above `lead` x the average of your `top` strongest buddies;
   // a plain wild win pays gems and XP times foe level / buddy level (never below `minShare`); teammates below the fighter get `shareXp` of the full XP;
   // and after `dailyWins` plain wild wins in a day, wild gems drop to `tiredShare` (never below 1) until tomorrow.
@@ -81,13 +71,6 @@ const ECON = {
   // Weather (24e-trail.js): today's weather favours some types. `share` is the part of wild fights (after the land's own `map.regionShare`) that use it.
   weather: { share: 0.15 },
   // Choosing an encounter (13b-wild.js): once you have `minBadges` badges, each plain wild fight offers `choices` species to meet.
-  // Evolution paths (08-buddies.js): when a buddy first evolves, bond hearts (+1 if it ate its favorite snack today) of at least `bondMin` make it Radiant (`radiantHp` more HP and `radiantAtk` more attack for good).
-  // Otherwise the player picks Guardian (`guardianHp` more HP) or Striker (`strikerAtk` more attack); Guardian is the default.
-  evo: { bondMin: 3, radiantHp: 1, radiantAtk: 1, guardianHp: 1, strikerAtk: 1 },
-  // Quirks (25b-held.js): every species has one; these are the sizes of the bonuses (xp: share of extra XP, speed: Speed Strike time, catch: catch chance, calmLess: problems a status lasts less).
-  // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
-  // Your damage moves can leave the foe burned, frozen or weakened for `problems` problems (same as a foe's status on you), with this chance (12d-status.js).
-  // Healing Spring (24b-map.js): wakes every resting buddy. The first visit each day is free, later ones cost `gems`.
   spring: { gems: 5 },
   // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
   // The Legend hunt (24c-legend.js): after becoming Champion, one legendary buddy a week (a different type each week) can be hunted once a day.
@@ -106,8 +89,6 @@ const ECON = {
     streak: { 5: 22, 8: 32 }, boss: { 2: 22, 3: 32 }, flawless: 30, fast: { 5: 22, 8: 32 }, ult: { 2: 20, 3: 28 }
   },
   calendar: { length: 14, chests: { 3: 40, 7: 90, 14: 200 } },
-  care: { treatCost: 2, favCost: 8, maxBond: 5, petsPerDay: 3, petXp: 3, treatXp: 10, favXp: 25, bondXpBonus: 0.04 },
-  tournament: { rounds: 3, gemsPerRound: 5, xpPerRound: 15, championGems: 30, rewardedRunsPerDay: 2 },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.
   adaptive: {
@@ -125,46 +106,6 @@ const ECON = {
   study: { minLevel: 6, maxLevel: 8, dayCap: 20, missMax: 40,
     },
   egg: { steps: { common: 5, rare: 8, mythic: 12 }, duplicateXp: 25 },
-  tech: {
-
-    badgeStars: 2,
-
-
-    nodes: [
-      // Branch: mind (Arithmancy)
-      { id: 'quick_sparks', branch: 'mind', tier: 1, name: 'Quick Sparks I', icon: '⚡', desc: 'Fast answers (<5s) grant +1 bonus Gem', stars: 1, gems: 20, pre: null },
-      { id: 'gentle_guide', branch: 'mind', tier: 1, name: 'Gentle Guide', icon: '💡', desc: 'First hint in every battle is completely free', stars: 1, gems: 25, pre: null },
-      { id: 'streak_cushion', branch: 'mind', tier: 2, name: 'Streak Cushion', icon: '🛡️', desc: 'A mistake drops your streak by 1 instead of 0', stars: 2, gems: 50, pre: 'quick_sparks' },
-      { id: 'lucky_number', branch: 'mind', tier: 2, name: 'Lucky Number', icon: '✨', desc: '15% chance on streak for +3 bonus Gems', stars: 2, gems: 60, pre: 'gentle_guide' },
-      { id: 'mind_over_matter', branch: 'mind', tier: 3, name: 'Mind Over Matter', icon: '🧠', desc: 'Streak bonus activates every 2 answers instead of 3', stars: 3, gems: 100, pre: 'streak_cushion' },
-      { id: 'master_scholar', branch: 'mind', tier: 4, name: 'Master Scholar', icon: '👑', desc: 'Daily session goal rewards are doubled', stars: 5, gems: 200, pre: 'mind_over_matter' },
-
-      // Branch: valor (Valor & Tactics)
-      { id: 'energize', branch: 'valor', tier: 1, name: 'Energize I', icon: '⚡', desc: 'Start battles with 1 Energy charged', stars: 1, gems: 25, pre: null },
-      { id: 'iron_will', branch: 'valor', tier: 1, name: 'Iron Will', icon: '❤️', desc: '+1 Max HP for your active buddy in battle', stars: 1, gems: 30, pre: null },
-      { id: 'swift_recovery', branch: 'valor', tier: 2, name: 'Swift Recovery', icon: '💚', desc: 'Recover move costs 1 Energy instead of 2', stars: 2, gems: 60, pre: 'energize' },
-      { id: 'elemental_strike', branch: 'valor', tier: 2, name: 'Elemental Strike', icon: '🔥', desc: '+1 damage on Super Effective attacks', stars: 2, gems: 75, pre: 'iron_will' },
-      { id: 'guardian_aegis', branch: 'valor', tier: 3, name: 'Guardian Aegis', icon: '🛡️', desc: 'Survive a fatal blow at 1 HP once per battle', stars: 3, gems: 120, pre: 'swift_recovery' },
-      { id: 'alpha_surge', branch: 'valor', tier: 4, name: 'Alpha Surge', icon: '💥', desc: 'Ultimate attacks deal +2 bonus damage', stars: 5, gems: 250, pre: 'guardian_aegis' },
-
-      // Branch: wild (Exploration & Discovery)
-      { id: 'net_crafter', branch: 'wild', tier: 1, name: 'Net Crafter', icon: '🕸️', desc: 'Max Catch Net stock increased from 9 to 15', stars: 1, gems: 20, pre: null },
-      { id: 'track_finder', branch: 'wild', tier: 1, name: 'Track Finder', icon: '🐾', desc: 'Wild encounters appear 1 battle sooner', stars: 1, gems: 30, pre: null },
-      { id: 'sticky_net', branch: 'wild', tier: 2, name: 'Sticky Net', icon: '🍯', desc: '+5% base catch chance per Catch Net thrown', stars: 2, gems: 75, pre: 'net_crafter' },
-      { id: 'golden_scent', branch: 'wild', tier: 2, name: 'Golden Scent', icon: '⭐', desc: 'Daily golden rare spawns 1 fight earlier', stars: 2, gems: 60, pre: 'track_finder' },
-      { id: 'legendary_tracker', branch: 'wild', tier: 3, name: 'Legendary Tracker', icon: '🏃', desc: 'Riley catches the Legend 1 day later in races', stars: 3, gems: 125, pre: 'golden_scent' },
-      { id: 'dex_collector', branch: 'wild', tier: 4, name: 'Dex Collector', icon: '📖', desc: 'Claiming packs grants +50% Gems & +2 Nets', stars: 5, gems: 220, pre: 'sticky_net' },
-
-      // Branch: care (Sanctuary & Bond)
-      { id: 'chefs_touch', branch: 'care', tier: 1, name: "Chef's Touch", icon: '🍰', desc: 'Snacks and treats give +25% Buddy XP', stars: 1, gems: 20, pre: null },
-      { id: 'warm_hearth', branch: 'care', tier: 1, name: 'Warm Hearth', icon: '✋', desc: 'Daily cuddles increased from 3 to 5 per buddy', stars: 1, gems: 25, pre: null },
-      { id: 'fast_incubator', branch: 'care', tier: 2, name: 'Fast Incubator', icon: '🥚', desc: 'Elemental eggs hatch 2 problems faster', stars: 2, gems: 50, pre: 'warm_hearth' },
-      { id: 'appraiser', branch: 'care', tier: 2, name: 'Appraiser', icon: '💰', desc: 'Selling spare duplicate buddies pays +50% Gems', stars: 2, gems: 60, pre: 'chefs_touch' },
-      { id: 'deep_harmony', branch: 'care', tier: 3, name: 'Deep Harmony', icon: '💖', desc: 'Maximum buddy bond raised to 7 hearts', stars: 3, gems: 100, pre: 'fast_incubator' },
-      { id: 'second_heart', branch: 'care', tier: 4, name: 'Second Heart', icon: '🌟', desc: 'Held item passive effects doubled', stars: 5, gems: 200, pre: 'deep_harmony' }
-    ]
-  },
-  profile: { maxShowcase: 6, roomXpPerBuddy: 0.01, titles: { knight: 20, defender: 45, explorer: 60, tamer: 90, dragon: 90, arithmancer: 150 }, frames: { gold: 35, neon: 50, cosmic: 80, crystal: 120 } },
   save: { softLimitBytes: 300000, hardLimitBytes: 400000 }
 };
 

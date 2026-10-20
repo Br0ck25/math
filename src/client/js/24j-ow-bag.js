@@ -1,5 +1,5 @@
 // =====================================================================
-//  THE ADVENTURE BAG and TEAM: both only show what the game already keeps (shields, nets, held items, ranch goods, the egg, badges, the team).
+//  THE ADVENTURE BAG and TEAM: both only show what the game already keeps (shields, nets, held items, the egg, badges, the team).
 //  Buying and caring stay in the Shop and the Hub; a button takes you there. Nothing here is a second copy of an inventory.
 // =====================================================================
 function bagRow(label, value) { return '<div class="bag-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
@@ -14,14 +14,13 @@ function renderBag() {
     const who = Object.keys(state.held).filter(function (b) { return state.held[b] === it.id; })[0];
     return bagRow(it.name, who ? 'held by ' + escHtml(getPetById(who).baseName) : 'not held');
   }).join('') || '<div class="d">None yet. Find them in the Hold tab of the Hub.</div>';
-  const supplies = bagRow('Gems', state.gems) + bagRow('Star Sparks', state.stars || 0) + bagRow('Streak Shields', state.shields) + bagRow('Catch Nets', state.nets + ' of ' + maxNets()) +
+  const supplies = bagRow('Gems', state.gems) + bagRow('Streak Shields', state.shields) + bagRow('Catch Nets', state.nets + ' of ' + maxNets()) +
     bagRow('Lucky Clover', state.cloverLeft > 0 ? state.cloverLeft + ' solves left' : 'none');
-  const goods = bagRow('Berries', ranchHas('berry')) + bagRow('Ore', ranchHas('ore')) + bagRow('Honey', ranchHas('honey')) + bagRow('Parts', ranchHas('parts'));
   const egg = state.egg ? bagRow('Egg', escHtml(state.egg.element) + ' · ' + state.egg.steps + ' of ' + state.egg.target) : '<div class="d">No egg right now. Bosses and quests give eggs.</div>';
   document.getElementById('bag-body').innerHTML =
     bagSection('Key items', keys || '<div class="d">Nothing yet.</div>') +
     bagSection('Badges (' + badges.length + ')', hasKeyItem('badge-case') ? '<div class="d">' + (badges.length ? badges.join(', ') : 'None yet. Win one at a gym!') + '</div>' : '<div class="d">You need the Badge Case.</div>') +
-    bagSection('Supplies', supplies) + bagSection('Held items', held) + bagSection('Goods', goods) + bagSection('Egg', egg) +
+    bagSection('Supplies', supplies) + bagSection('Held items', held) + bagSection('Egg', egg) +
     '<div class="bag-actions"><button type="button" class="claim-btn" onclick="bagGo(\'shop\')">Shop</button><button type="button" class="claim-btn" onclick="bagGo(\'hub\')">Buddy Hub</button><button type="button" class="claim-btn" onclick="openHeroCreator()">Change look</button></div>';
 }
 function openBag() { showModal('bag-modal', renderBag); }

@@ -214,7 +214,7 @@ test('math signs stop paying after signsPerDay signs a day, and the question fol
   assert.match(r.final, /No more sign gems today/);
 });
 
-test('pickups: walking onto a sparkle takes it once, it is saved, and a full net bag gives berries instead', async () => {
+test('pickups: walking onto a sparkle takes it once, it is saved, and a full net bag gives gems instead', async () => {
   await put('hollow-home', 6, 3, 'down');
   const r = await page.evaluate(() => {
     state.gems = 0; const gems0 = state.gems;
@@ -231,13 +231,13 @@ test('pickups: walking onto a sparkle takes it once, it is saved, and a full net
   await page.reload();
   assert.deepEqual(await page.evaluate(() => state.overworld.found), ['hollow-home-gem'], 'saved by id');
   const net = await page.evaluate(() => {
-    state.hero.made = true; state.overworld.found = []; state.nets = maxNets(); state.ranch.stock.berry = 0;
+    state.hero.made = true; state.overworld.found = []; state.gems = 0; state.nets = maxNets();
     state.overworld.map = 'meadow-house'; state.overworld.x = 2; state.overworld.y = 4; state.overworld.face = 'left'; openAdventure(); owMove('left');
-    return { nets: state.nets, berries: ranchHas('berry'), toast: document.getElementById('toast').innerText };
+    return { nets: state.nets, gems: state.gems, toast: document.getElementById('toast').innerText };
   });
   assert.equal(net.nets, await page.evaluate(() => maxNets()));
-  assert.equal(net.berries, await page.evaluate(() => ECON.explore.berries));
-  assert.match(net.toast, /berries/);
+  assert.equal(net.gems, await page.evaluate(() => ECON.overworld.pickupGems));
+  assert.match(net.toast, /gems/);
   const open = await page.evaluate(() => { state.overworld.found = []; state.nets = 0; state.overworld.x = 2; state.overworld.y = 4; state.overworld.face = 'left'; renderOverworld(); owMove('left'); return { nets: state.nets, found: state.overworld.found.slice() }; });
   assert.deepEqual(open, { nets: 1, found: ['meadow-house-net'] }, 'with room in the bag it is a Catch Net');
 });

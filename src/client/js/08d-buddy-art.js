@@ -37,12 +37,7 @@ function artImage(id) {
   const uri = ART_URIS[id];
   if (!uri) return null;
   let im = ART_IMGS[id];
-  if (!im) { im = ART_IMGS[id] = new Image(); im.onload = artLoaded; im.src = uri; }
+  if (!im) { im = ART_IMGS[id] = new Image(); im.src = uri; }
   return im.complete && im.naturalWidth ? im : null;
-}
-// A card picture finished loading: draw the card that is on screen again.
-function artLoaded() {
-  if (document.getElementById('bosscard-modal').style.display === 'flex') renderBossCard();
-  if (document.getElementById('hub-modal').style.display === 'flex' && hubTab === 'card') renderCardTab();
 }
 applyBuddyArt(BUDDY_ART);

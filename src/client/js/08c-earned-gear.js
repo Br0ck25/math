@@ -4,7 +4,6 @@
 // =====================================================================
 const EARN_COUNTERS = {
   raids: function () { return state.raidsCleared; },
-  cups: function () { return state.tour.wins; },
   calendarDay: function () { return state.streakCal.count; },
   bosses: function () { return state.monstersDefeated; },
   champion: function () { return state.champ.wins; },

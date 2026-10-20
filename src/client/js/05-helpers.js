@@ -21,8 +21,6 @@ function dayKey(d) {
 // The number of the current week (Monday to Sunday), the same for everyone. `weekDaysLeft()` counts the days until the next one.
 function dayNumber(d) { const k = dayKey(d).split('-'); return Math.round(Date.UTC(+k[0], +k[1] - 1, +k[2]) / 86400000); }
 function weekDaysLeft(d) { return 7 - ((dayNumber(d) + 3) % 7); }
-// Whole days from a saved day key (see dayKey) to today.
-function daysSince(key) { return Math.round((new Date(dayKey() + 'T12:00:00') - new Date(key + 'T12:00:00')) / 86400000); }
 function fmtAns(a) { return typeof a === 'string' ? a : (Number.isInteger(a) ? String(a) : String(+a.toFixed(2))); }       // study answers are words
 
 // Pays out gems with the usual celebration, then saves and refreshes the gem displays.

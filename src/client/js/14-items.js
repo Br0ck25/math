@@ -31,7 +31,7 @@ function renderItemButtons() {
 }
 
 function maxNets() {
-  return (typeof hasTech === 'function' && hasTech('net_crafter')) ? 15 : ECON.wild.net.stock;
+  return ECON.wild.net.stock;
 }
 
 function buyItem(type) {

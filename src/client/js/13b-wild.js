@@ -25,7 +25,7 @@ function isStoreBuddy(sp) { return storePets.indexOf(sp) !== -1; }
 function spareValueOf(id) {
   const sp = getSpecies(id);
   const base = sp ? spareValue(isStoreBuddy(sp), sp.cost, sp.legend) : 0;
-  return (typeof hasTech === 'function' && hasTech('appraiser')) ? Math.round(base * 1.5) : base;
+  return base;
 }
 
 // One random wild species, favouring the land you are in; never one in `skip` (the species that fought last by default).

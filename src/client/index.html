@@ -228,13 +228,6 @@
       </div>
       <div style="font-size:1rem; font-weight:800; color:#fde047;" id="evo-text">Pup evolved!</div>
       <div style="font-size:0.75rem; color:#c4b5fd; margin:8px 0 10px;" id="evo-stats"></div>
-      <div id="evo-paths" style="display:none; margin:0 0 12px;">
-        <div style="font-size:0.72rem; color:#c4b5fd; margin-bottom:6px;">How should it grow?</div>
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="key-btn action-btn" id="evo-path-guardian" style="flex:1; min-width:0; height:44px; font-size:0.85rem;" onclick="chooseEvoPath('guardian')">🛡️ Guardian</button>
-          <button type="button" class="key-btn action-btn" id="evo-path-striker" style="flex:1; min-width:0; height:44px; font-size:0.85rem;" onclick="chooseEvoPath('striker')">⚔️ Striker</button>
-        </div>
-      </div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; height: 44px; font-size:1rem;" onclick="closeEvoModal()">Awesome!</button>
     </div>
   </div>
@@ -262,22 +255,6 @@
     </div>
   </div>
 
-  <!-- Tree of Knowledge: Tech Tree modal -->
-  <div class="modal-overlay" id="tree-modal" data-close="closeTree">
-    <div class="modal-content" style="max-height: 85vh; display: flex; flex-direction: column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <h2 style="font-size:1.15rem; margin:0;">🌳 Tree of Knowledge</h2>
-        <div style="display:flex; align-items:center; gap:8px; font-weight:900; font-size:0.95rem;">
-          <span style="color:#facc15;" title="Star Sparks">★ <span id="tree-stars">0</span></span>
-          <span style="color:#38bdf8;" title="Math Gems">💎 <span id="tree-gems">0</span></span>
-        </div>
-      </div>
-      <div class="tree-branch-grid" id="tree-branch-tabs"></div>
-      <div id="tree-branch-container" style="flex:1; overflow-y:auto; padding-right:2px;"></div>
-      <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:8px; height:44px; font-size:1rem;" onclick="closeTree()">Back to Game</button>
-    </div>
-  </div>
-
   <!-- Same-room duel (split screen) -->
   <div class="modal-overlay" id="duel-modal" data-esc="duelQuit">
     <div class="duel-wrap">
@@ -292,38 +269,8 @@
   <div class="modal-overlay" id="rd-modal" data-esc="rdCloseModal">
     <div class="modal-content" style="border-color:#fbbf24;"><div id="rd-box"></div></div>
   </div>
-  <!-- Boss card -->
-  <div class="modal-overlay" id="bosscard-modal" data-close="closeBossCard">
-    <div class="modal-content">
-      <h2 style="font-size: 1.2rem;" id="boss-card-title">👾 Boss Card</h2>
-      <canvas class="card-canvas" id="boss-canvas"></canvas>
-      <div style="font-size:0.72rem; font-weight:800;" id="boss-card-rarity"></div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
-        <button class="grade-btn" onclick="cardSave('boss-canvas', 'boss')">💾 Save image</button>
-        <button class="grade-btn" onclick="cardShare('boss-canvas', 'boss', 'Boss card')">📤 Share</button>
-      </div>
-      <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 8px; height: 44px; font-size:1rem;" onclick="closeBossCard()">Back to Game</button>
-    </div>
-  </div>
   <div class="duel-chip" id="duel-chip" onclick="rdOpenFromChip()" style="display:none;"></div>
 
-  <!-- Tournament battle -->
-  <div class="modal-overlay" id="tour-modal" data-esc="tourQuit">
-    <div class="modal-content" style="border-color:#fbbf24;">
-      <div class="raid-chapter" style="color:#fde047;" id="tour-title"></div>
-      <div style="font-size:0.8rem; font-weight:800; margin:2px 0 6px;" id="tour-trainer"></div>
-      <div style="display:flex; gap:6px;">
-        <div class="tour-side" id="tour-me"></div>
-        <div class="tour-side" id="tour-foe"></div>
-      </div>
-      <div id="tour-play">
-        <div class="tour-eq" id="tour-eq"></div>
-        <div class="tour-opts" id="tour-opts"></div>
-      </div>
-      <p style="font-size:0.78rem; min-height:34px; margin:8px 0; font-weight:700;" id="tour-log"></p>
-      <button class="key-btn" style="width:100%; height:38px; font-size:0.85rem;" id="tour-close" onclick="tourQuit()">Give up</button>
-    </div>
-  </div>
 
 
 

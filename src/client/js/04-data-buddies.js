@@ -43,7 +43,7 @@ const storePets = [
   { id: 'toon_peppa', name: 'Peppa Pig', icon: '🐷', cost: 3140, element: 'water', superMove: 'Muddy Puddle Splash', evoLevel: 100, evoName: 'Puddle Queen Peppa', evoIcon: '🐷', show: 'Peppa Pig' },
   { id: 'toon_bugs', name: 'Bugs Bunny', icon: '🐰', cost: 3170, element: 'magic', superMove: 'Carrot Trick Shot', evoLevel: 100, evoName: 'Wascally Bugs', evoIcon: '🐰', show: 'Looney Tunes' },
   { id: 'toon_homer', name: 'Homer', icon: '👨‍🦲', cost: 3200, element: 'electric', superMove: 'Donut Overload', evoLevel: 100, evoName: 'Power Plant Homer', evoIcon: '👨‍🦲', show: 'The Simpsons' },
-  { id: 'bandit', name: 'Bandit', icon: '🐈‍⬛', cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: '🐈‍⬛', requiresAllStorePets: true }
+  { id: 'bandit', name: 'Bandit', icon: '🐈‍⬛', cost: 3250, element: 'shadow', superMove: 'Shadow Swipe', evoLevel: 100, evoName: 'Ninja Bandit', evoIcon: '🐈‍⬛' }
 ];
 
 // Wearable Gear & Accessories
@@ -142,7 +142,7 @@ const accessoriesList = [
   { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
   { id: 'champlaurel', name: "Champion's Laurel", icon: '🏵️', cost: 0,  slot: 'head', renderIcon: '🏵️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'champtrophy', name: "Champion's Trophy", icon: '🏆', cost: 0, slot: 'back', renderIcon: '🏆', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
-  { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'cups', n: 1, text: 'Win a tournament cup' } },
+  { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'champion', n: 3, text: "Win the Champion's Hall 3 times" } },
   { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } },
   // ---- cartoon cast gear: 11 to buy, 2 earned by collecting the cartoon buddies ----
   { id: 'krabbypatty', name: 'Krabby Patty',      icon: '🍔', cost: 120, slot: 'side', renderIcon: '🍔' },

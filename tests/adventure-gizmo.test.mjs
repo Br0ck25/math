@@ -78,18 +78,6 @@ test('the Gizmo shows the clock, quests, calls and tips, and a quest can be clai
   assert.deepEqual(errors, []);
 });
 
-test('the Net Maker turns ore into a net and says so when ore is short', async () => {
-  await page.evaluate(() => { state.nets = 0; state.ranch.stock.ore = 0; });
-  await meet('meadow-house', 2, 2);
-  assert.deepEqual(await choices(), ['Make a Catch Net']);
-  await page.evaluate(() => talkChoose(0));
-  assert.equal(await page.evaluate(() => state.nets), 0);
-  await meet('meadow-house', 2, 2);
-  await page.evaluate(() => { state.ranch.stock.ore = ECON.ranch.orePerNet; });
-  await page.evaluate(() => talkChoose(0));
-  assert.equal(await page.evaluate(() => [state.nets, ranchHas('ore')]).then((a) => a.join()), '1,0');
-});
-
 test('a Trader swaps one spare for a buddy you do not have, once', async () => {
   await page.evaluate(() => { state.spares = {}; state.unlockedPets = state.unlockedPets.filter((id) => id !== 'bunny'); });
   await meet('ember-house', 2, 2);
@@ -106,12 +94,7 @@ test('a Trader swaps one spare for a buddy you do not have, once', async () => {
   assert.deepEqual(await choices(), []);               // already traded
 });
 
-test('the Day Care keeper opens the Ranch and the Tutor teaches a move that was forgotten', async () => {
-  await meet('tide-house', 2, 2);
-  await page.evaluate(() => talkChoose(0));
-  assert.equal(await page.evaluate(() => hubTab), 'ranch');
-  assert.ok(await page.evaluate(() => document.getElementById('hub-modal').style.display === 'flex'));
-  await page.evaluate(() => closeHub());
+test('the Tutor teaches a move that was forgotten', async () => {
   await page.evaluate(() => { state.buddyXp[state.activePet] = xpForLevel(30); });
   await meet('grove-house', 2, 2);
   const labels = await choices();

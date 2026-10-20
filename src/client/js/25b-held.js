@@ -51,6 +51,11 @@ function renderHoldTab() {
       : '<button class="claim-btn" onclick="giveHeld(&quot;' + it.id + '&quot;)">' + (mine === it.id ? 'Take back' : 'Give') + '</button>';
     h += '<div class="care-row"><div><div class="t">' + it.icon + ' ' + it.name + (mine === it.id ? ' ✅' : '') + '</div><div class="d">' + d + '</div></div>' + btn + '</div>';
   });
+  const spareMine = spareCount(hubPet), all = Object.keys(state.spares).reduce(function (a, k) { return a + state.spares[k]; }, 0);
+  const row = function (title, desc, btn) { return '<div class="care-row"><div><div class="t">' + title + '</div><div class="d">' + desc + '</div></div>' + btn + '</div>'; };
+  const sell = function (label, fn) { return '<button class="claim-btn" onclick="' + fn + '">' + label + '</button>'; };
+  if (spareMine) h += row('🎒 Spare ' + name0(hubPet) + ' x' + spareMine, 'Extra copies from wild battles. Your buddy stays safe!', sell('Sell +' + spareValueOf(hubPet) + ' 💎', 'sellSpare(&quot;' + hubPet + '&quot;)'));
+  if (all > spareMine) h += row('🎒 All spares (' + all + ')', 'Sell every extra copy at once.', sell('Sell all', 'sellAllSpares()'));
   h += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">You have 💎 ' + state.gems + '</div>';
   document.getElementById('hub-body').innerHTML = h;
 }

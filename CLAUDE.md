@@ -48,7 +48,7 @@ Use the file map below and the area rules in `.claude/rules/` (they load when yo
 - Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`. Lands, gyms and badges `24b-map.js`, Hall rewards `24d-`.
 - Rules and numbers: `src/shared/econ.js` (`ECON`, also used by the Worker). Saved state: `03-state.js` (defaults), `10-save-load.js` (migrations, normalizers).
 - Math questions: generators `07-math-generators.js`, difficulty `07b-adaptive.js`, trivia mode `38-study.js` and the banks `37*-study-*.js`, `src/shared/study.js`. Quests `19-`.
-- Meta screens (opened from the Menu): hub `25-`, held items `25b-`, snacks `25c-`, ranch `25d-`, cards `26-`, tournament `27-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), Dex `30-`, account `31-`, shop `33-`, settings `17-`.
+- Meta screens (opened from the Menu): hub `25-` (held items and duels), held items `25b-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), Dex `30-`, account `31-`, shop `33-`, settings `17-`.
 - Server: accounts `10-`, router and security headers `30-router.js`. Page shell `src/client/index.html`, styles `styles.css`.
 - Tests: one area per file in `tests/`; `node scripts/test-changed.mjs --list` shows which cover your change. Add a row to `MAP` in `scripts/test-changed.mjs` for any new source file.
 
@@ -74,7 +74,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Dates: `dayKey(d?)`, `daysAgoKey(n)`, `lastDayKeys(count, skip)`. Do not hand-roll date strings.
 - Modals: `showModal(id, before)` / `hideModal(id, after)`; give the overlay `data-close="fn"` (tap + Escape) or `data-esc="fn"` (Escape only, for game screens). No per-modal `…OnOverlay` functions.
 - Rewards: `grantGems(n, message, big)` for any payout that celebrates. Costs/rewards/limits live ONLY in `ECON` (`src/shared/econ.js`).
-- Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (battles, signs, tournament, duels). Battles use `abQuestion()`.
+- Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (battles, signs, duels). Battles use `abQuestion()`.
 - Buddy gear: every accessory has a `slot` (head, face, neck, back, side, aura); positions come only from `GEAR_SLOTS` in `08b-buddy-gear.js` and are used by the battle screen, hub and trading card. Never add per-item pixel offsets in CSS. Armor is the corner badge. New gear needs no CSS.
 - Text safety: `escHtml()` for anything a user typed or the server sent, before it goes into `innerHTML`.
 - Saves: `saveState()` (never `localStorage` directly), `addXpTo(id, n)` for buddy XP.
@@ -92,7 +92,7 @@ Search the codebase first. Never write a second copy of something that exists. E
 
 ## Players and play
 - This is a Pokemon Gold style adventure that stays friendly to young players: no chat, no free text shown to other players, no personal data, no tracking or analytics. Player names only.
-- Stakes in duels and tournaments may only ever be gems, never levels, XP or buddies. Keep a free option. Gems never go below zero.
+- Stakes in duels may only ever be gems, never levels, XP or buddies. Keep a free option. Gems never go below zero.
 - There is no parent dashboard or Practice screen: the Adventure map is the whole game (see `.claude/rules/battles.md`).
 
 

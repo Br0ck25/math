@@ -80,7 +80,6 @@ test('every boss is complete: unique name and icon slot, valid type, 3-6 HP and 
       if (elems.indexOf(m.element) === -1) out.push(m.name + ' element');
       if (!(m.baseHp >= 3 && m.baseHp <= (m.name === 'Rocky' ? 9 : 6))) out.push(m.name + ' hp');
       if (!m.icon || !Array.isArray(m.taunts) || m.taunts.length < 2) out.push(m.name + ' incomplete');
-      if (!bossCard(i).name) out.push(m.name + ' card');
     });
     const per = {}; monstersList.forEach((m) => { per[m.element] = (per[m.element] || 0) + 1; });
     if (Object.values(per).some((n) => n < 6)) out.push('uneven types ' + JSON.stringify(per));
@@ -118,17 +117,17 @@ test('earned gear: locked until the achievement, then awarded once, never for sa
     state.raidsCleared = 1; out.early = checkEarnedGear();
     state.raidsCleared = 2; out.awarded = checkEarnedGear();
     out.again = checkEarnedGear();
-    state.tour.wins = 1; state.monstersDefeated = 100; state.streakCal.count = 14;
+    state.champ.wins = 3; state.monstersDefeated = 100; state.streakCal.count = 14;
     out.rest = checkEarnedGear();
     out.all = ['raidcrown', 'champmedal', 'sunshine'].every((id) => state.unlockedAccessories.indexOf(id) !== -1) && state.unlockedArmor.indexOf('centurion') !== -1;
     return out;
   });
-  assert.deepEqual(r, { notBought: true, lockText: '🏆 Clear 2 raid bosses', early: 0, awarded: 1, again: 0, rest: 3, all: true });
+  assert.deepEqual(r, { notBought: true, lockText: '🏆 Clear 2 raid bosses', early: 0, awarded: 1, again: 0, rest: 6, all: true });
 });
 
 test('cartoon cast gear is earned by collecting the cartoon buddies', async () => {
   const r = await inPage(() => {
-    state.raidsCleared = 0; state.tour.wins = 0; state.monstersDefeated = 0; state.streakCal.count = 0;      // only the cast counters matter here
+    state.raidsCleared = 0; state.champ.wins = 0; state.monstersDefeated = 0; state.streakCal.count = 0;      // only the cast counters matter here
     const reset = () => { state.unlockedAccessories = ['none']; state.unlockedArmor = ['none']; state.unlockedPets = ['dog']; state.unlockedSecrets = []; };
     const secrets = secretCompanions.filter((p) => p.show), headliners = storePets.filter((p) => p.id.indexOf('toon_') === 0);
     const all = headliners.concat(mythicCompanions.filter((p) => p.show), secrets);
@@ -155,17 +154,17 @@ test('earned gear shows as a secret in the shop and the book', async () => {
     openBook(); bookTab = 'gear'; renderBook();
     const book = document.getElementById('book-body').innerText;
     closeBook();
-    return { shop: shop.includes('Clear 2 raid bosses'), book: book.includes('Secret') && book.includes('Win a tournament cup') };
+    return { shop: shop.includes('Clear 2 raid bosses'), book: book.includes('Secret') && book.includes("Win the Champion's Hall 3 times") };
   });
   assert.deepEqual(r, { shop: true, book: true });
 });
 
-test('new store buddies sit in price order before the Bandit, who still needs all of them', async () => {
+test('new store buddies sit in price order before the Bandit', async () => {
   const r = await inPage(() => {
     const costs = storePets.map((p) => p.cost);
-    return { sorted: costs.every((c, i) => !i || c >= costs[i - 1]), last: storePets[storePets.length - 1].id, needsAll: !!storePets[storePets.length - 1].requiresAllStorePets };
+    return { sorted: costs.every((c, i) => !i || c >= costs[i - 1]), last: storePets[storePets.length - 1].id };
   });
-  assert.deepEqual(r, { sorted: true, last: 'bandit', needsAll: true });
+  assert.deepEqual(r, { sorted: true, last: 'bandit' });
 });
 
 test('loot can drop the new mythics and secrets, and old saves keep their buddies', async () => {
@@ -201,52 +200,6 @@ test('cartoon cast: kid-friendly shows only, every character complete, and the t
 
 test('no errors', () => { assert.deepEqual(errors, []); });
 
-test('Janie, Amber and Papaw: three ultra-rare buddies, equally rare and equally strong, each with a favorite food', async () => {
-  const r = await inPage(() => {
-    const out = {};
-    out.ids = ultraPets.map((p) => p.id + ':' + p.name + ':' + (p.emoji || p.icon));
-    out.food = ultraPets.map((p) => favSnack(p.id).icon + ' ' + favSnack(p.id).name);
-    // same stats at the same level, and the same damage against every boss element, whatever the element badge says
-    const dmg = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => tourDamage({ element: p.element, ultra: p.ultra, atk: 4 }, { element: e, ultra: false })));
-    out.sameDamage = dmg.every((d) => JSON.stringify(d) === JSON.stringify(dmg[0]));
-    out.shadow = ultraPets.map((p) => battleElement(p));
-    out.incoming = ultraPets.map((p) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].map((e) => getTypeRelation(e, battleElement(p))).join(''));
-    out.elements = ultraPets.map((p) => p.element);
-    out.rarity = ultraPets.map((p) => rarityOf(p.id).name);
-    out.pack = ultraPets.map((p) => packOf(p).id);
-    // one 0.5% slice of the drop roll each
-    out.drops = [0.001, 0.006, 0.011, 0.016].map((roll) => {
-      state.unlockedSecrets = []; state.streak = 5; state.faintedPets = [];
-      const real = Math.random; Math.random = () => roll;
-      checkForSecretLootDrop(false);
-      Math.random = real;
-      return state.unlockedSecrets.filter((id) => ultraPets.some((p) => p.id === id)).join(',');
-    });
-    state.unlockedSecrets = ['secret_janie']; state.streak = 5;
-    const real = Math.random; Math.random = () => 0.001; checkForSecretLootDrop(false); Math.random = real;
-    out.ownedStaysOwned = state.unlockedSecrets.filter((id) => ultraPets.some((p) => p.id === id)).join(',');
-    return out;
-  });
-  assert.deepEqual(r.ids, ['secret_janie:Janie:👽', 'secret_amber:Amber:🦥', 'secret_papaw:Papaw:🧘']);
-  assert.deepEqual(r.food, ['🍞 Hawaiian rolls', '🍟 air fried potatoes', '🍔 hamburgers']);
-  assert.equal(r.sameDamage, true);
-  assert.deepEqual(r.shadow, ['shadow', 'shadow', 'shadow']);
-  assert.deepEqual(r.incoming, ['000000', '000000', '000000'], 'no type weaknesses');
-  assert.deepEqual(r.elements.slice(1), ['nature', 'magic']);
-  assert.deepEqual(r.rarity, ['COSMIC', 'COSMIC', 'COSMIC']);
-  assert.equal(r.pack[1], 'safari');
-  assert.equal(r.pack[2], 'fantasy');
-  assert.deepEqual(r.drops, ['secret_janie', 'secret_amber', 'secret_papaw', ''], 'each ultra has its own 0.5% slice');
-  assert.equal(r.ownedStaysOwned, 'secret_janie', 'an owned ultra is never given twice');
-});
-
-test('the care window shows each ultra buddy\'s own favorite food', async () => {
-  const r = await inPage(() => ultraPets.map((p) => { hubPet = p.id; renderCare(); return document.getElementById('hub-body').innerText; }));
-  assert.match(r[0], /Hawaiian rolls/);
-  assert.match(r[1], /air fried potatoes/);
-  assert.match(r[2], /hamburgers/);
-});
-
 test('found ultra buddies appear in their own shop section and not among the ordinary secrets', async () => {
   const r = await inPage(() => {
     state.unlockedSecrets = ['secret_amber', 'secret_papaw']; state.buddyXp.secret_amber = 0; state.buddyXp.secret_papaw = 0;
@@ -268,12 +221,6 @@ test('four slayer bosses: a cow, a Harpy Eagle, Māra and Rocky, each strong aga
   r.slice(0, 3).forEach((b) => { assert.ok(b.hp >= 5 && b.hp <= 6, 'plays like a normal boss'); assert.equal(b.taunts, 2); });
   assert.equal(r[3].name, 'Rocky');
   assert.equal(r[3].taunts, 2);
-});
-
-test('boss cards and the book say which buddy a slayer is strong against', async () => {
-  const r = await inPage(() => ({ card: bossCard(52, {}).foot, cow: bossCard(50, {}).foot }));
-  assert.equal(r.card, '☠️ Strong against Papaw');
-  assert.equal(r.cow, '☠️ Strong against Janie');
 });
 
 test('boss buddies: ordinary strength, own shop section, boss card progress, and a safe saved book', async () => {
@@ -320,21 +267,3 @@ test('the shop no longer sells buddies, armor or gear: only owned or earnable pi
   assert.deepEqual(r, { cards: 1, gems: 9999, owned: false });
 });
 
-test('every buddy and boss has its own favorite food; Janie, Papaw and Amber keep theirs; the Bandit likes cat treats', async () => {
-  const r = await page.evaluate(() => {
-    const all = allBuddies().map((b) => ({ id: b.id, name: favSnack(b.id).name, icon: favSnack(b.id).icon }));
-    const byName = {};
-    all.forEach((a) => (byName[a.name.toLowerCase()] = byName[a.name.toLowerCase()] || []).push(a.id));
-    const by = (id) => all.find((a) => a.id === id).name;
-    return {
-      shared: Object.values(byName).filter((ids) => ids.length > 1),
-      noIcon: all.filter((a) => !a.icon).map((a) => a.id),
-      fixed: [by('secret_janie'), by('secret_papaw'), by('secret_amber')],
-      bandit: by('bandit')
-    };
-  });
-  assert.deepEqual(r.shared, [], 'two buddies share a favorite food');
-  assert.deepEqual(r.noIcon, []);
-  assert.deepEqual(r.fixed, ['Hawaiian rolls', 'hamburgers', 'air fried potatoes']);
-  assert.equal(r.bandit, 'cat treats');
-});

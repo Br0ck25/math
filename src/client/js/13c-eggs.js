@@ -7,7 +7,7 @@ function awardEgg(element, rarity) {
   const el = validElems.indexOf(element) !== -1 ? element : 'fire';
   const rar = ['common', 'rare', 'mythic'].indexOf(rarity) !== -1 ? rarity : 'common';
   const baseTarget = (ECON.egg && ECON.egg.steps && ECON.egg.steps[rar]) || 5;
-  const target = (typeof hasTech === 'function' && hasTech('fast_incubator')) ? Math.max(2, baseTarget - 2) : baseTarget;
+  const target = baseTarget;
   state.egg = { element: el, rarity: rar, steps: 0, target: target };
   toast('🥚 Found a ' + rar.toUpperCase() + ' ' + el.toUpperCase() + ' Egg! Walk and win battles to hatch it!');
   return true;

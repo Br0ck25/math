@@ -65,9 +65,6 @@ function advanceGym(leaderWon) {
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
   state.gems += ECON.map.badgeGems;
-  const badgeStars = (ECON.tech && ECON.tech.badgeStars) || 2;
-  state.stars = (state.stars || 0) + badgeStars;
-  toast('⭐ Earned ' + badgeStars + ' Star Sparks from Gym Badge! (★ ' + state.stars + ')');
   return { region: r, hall: state.badges.length >= gymRegions().length };       // the last badge opens the Champion's Hall
 }
 function markRegionVisited(id) {
@@ -144,10 +141,6 @@ function chooseStarter(id) {
     if (state.team.length > ECON.team.max) state.team.length = ECON.team.max;
   }
   state.storySeen.starter = 1;
-  if (state.profile && state.profile.showcase.indexOf(id) === -1) {
-    state.profile.showcase.unshift(id);
-    if (state.profile.showcase.length > ECON.profile.maxShowcase) state.profile.showcase.length = ECON.profile.maxShowcase;
-  }
   if (typeof soundBuddyCry === 'function') soundBuddyCry(id, sp.element);
   launchConfetti();
   saveState();

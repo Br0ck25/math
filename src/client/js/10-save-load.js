@@ -93,20 +93,9 @@ const NORMALIZERS = [
     });
     s.held = held;
   },
-  function ranch(s) {
-    const r = s.ranch || {}, owned = s.unlockedPets.concat(s.unlockedSecrets), workers = {}, stock = {};
-    Object.keys(r.workers || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && ranchStation(r.workers[b])) workers[b] = r.workers[b]; });
-    RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
-    s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
-  },
   function spring(s) {
     const sp = s.spring || {};
     s.spring = { day: typeof sp.day === 'string' ? sp.day.slice(0, 12) : '' };
-  },
-  function evoPath(s) {
-    const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
-    Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && EVO_PATHS[s.evoPath[b]]) paths[b] = s.evoPath[b]; });
-    s.evoPath = paths;
   },
   function dex(s) {
     const seen = {};
@@ -158,7 +147,6 @@ const NORMALIZERS = [
     s.duelSettled = s.duelSettled.filter(function (n) { return typeof n === 'string'; }).slice(-80);
     ['w', 'l', 't'].forEach(function (k) { s.duelRecord[k] = asInt(s.duelRecord[k], 0, 1e6, 0); });
     s.duelStat.count = asInt(s.duelStat.count, 0, 1e6, 0);
-    ['runs', 'trophies', 'wins'].forEach(function (k) { s.tour[k] = asInt(s.tour[k], 0, 1e6, 0); });
     s.raidsCleared = asInt(s.raidsCleared, 0, 1e6, 0);
   },
   function study(s) {
@@ -194,32 +182,6 @@ const NORMALIZERS = [
       const target = asInt(e.target, 1, 50, defTarget);
       s.egg = { element: e.element, rarity: rar, steps: asInt(e.steps, 0, target, 0), target: target };
     }
-  },
-  function profile(s) {
-    if (!isPlainObject(s.profile)) s.profile = defaultProfile();
-    const p = s.profile;
-    if (!Array.isArray(p.unlockedTitles) || p.unlockedTitles.indexOf('Rookie Calculator') === -1) {
-      p.unlockedTitles = ['Rookie Calculator'].concat(Array.isArray(p.unlockedTitles) ? p.unlockedTitles : []);
-    }
-    p.unlockedTitles = p.unlockedTitles.filter(function (t, i, a) { return typeof t === 'string' && t.length <= 40 && a.indexOf(t) === i; });
-    if (typeof p.title !== 'string' || p.unlockedTitles.indexOf(p.title) === -1) p.title = 'Rookie Calculator';
-    const validFrames = ['classic', 'gold', 'neon', 'cosmic', 'crystal'];
-    if (!Array.isArray(p.unlockedFrames) || p.unlockedFrames.indexOf('classic') === -1) {
-      p.unlockedFrames = ['classic'].concat(Array.isArray(p.unlockedFrames) ? p.unlockedFrames : []);
-    }
-    p.unlockedFrames = p.unlockedFrames.filter(function (f, i, a) { return validFrames.indexOf(f) !== -1 && a.indexOf(f) === i; });
-    if (validFrames.indexOf(p.frame) === -1 || p.unlockedFrames.indexOf(p.frame) === -1) p.frame = 'classic';
-    const owned = s.unlockedPets.concat(s.unlockedSecrets);
-    p.showcase = (Array.isArray(p.showcase) ? p.showcase : []).filter(function (id, i, a) {
-      return owned.indexOf(id) !== -1 && a.indexOf(id) === i;
-    }).slice(0, (ECON.profile && ECON.profile.maxShowcase) || 6);
-  },
-  function tech(s) {
-    s.stars = asInt(s.stars, 0, 1e6, 0);
-    const validIds = (ECON.tech && ECON.tech.nodes) ? ECON.tech.nodes.map(function (n) { return n.id; }) : [];
-    s.techUnlocked = (Array.isArray(s.techUnlocked) ? s.techUnlocked : []).filter(function (id, i, a) {
-      return validIds.indexOf(id) !== -1 && a.indexOf(id) === i;
-    });
   },
   function readAloud(s) {
     s.readAloud = s.readAloud === true;
@@ -303,8 +265,6 @@ function loadState() {
 
 // Keeps the save well under the server limit by dropping the oldest, least useful history.
 function pruneState() {
-  const days = Object.keys(state.stats.days).sort();
-  while (days.length > 14) delete state.stats.days[days.shift()];
   state.duelSettled = state.duelSettled.slice(-20);
 }
 function serializeState() {

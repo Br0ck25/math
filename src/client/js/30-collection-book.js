@@ -87,9 +87,7 @@ function claimBookReward(i) {
 // A pack is complete when you own every buddy in it. It pays once: gems per member and some Catch Nets.
 function packComplete(g) { return g.members.every(function (sp) { return getOwnedIds().indexOf(sp.id) !== -1; }); }
 function packReward(g) {
-  const mult = (typeof hasTech === 'function' && hasTech('dex_collector')) ? 1.5 : 1;
-  const extraNets = (typeof hasTech === 'function' && hasTech('dex_collector')) ? 2 : 0;
-  return { gems: Math.round(g.members.length * ECON.dex.packGemsPer * mult), nets: ECON.dex.packNets + extraNets };
+  return { gems: Math.round(g.members.length * ECON.dex.packGemsPer), nets: ECON.dex.packNets };
 }
 function claimPackReward(id) {
   const g = buddyPacks().find(function (x) { return x.pack.id === id; });
@@ -122,10 +120,7 @@ function bookBuddy(sp, lockedHint) {
   if (!owned && dexSeen(sp.id)) return bookCard({ locked: true, icon: sp.icon, name: no + ' ' + escHtml(sp.name), elem: sp.element, hint: '👀 Seen · not caught yet', hintColor: '#fbbf24', rarity: rar });
   if (!owned) return bookCard({ locked: true, icon: sp.icon, name: no + ' ???', hint: lockedHint, hintColor: '#94a3b8', rarity: rar });
   const d = getPetById(sp.id);
-  const bond = getBond(sp.id);
-  const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>' +
-    '<div style="font-size:0.6rem;">' + heartsHtml(bond) + '</div>' +
-    '<div style="font-size:0.6rem; color:#fcd34d;">Likes ' + favSnack(sp.id).icon + '</div>';
+  const extra = '<div class="forms-row" title="Evolution stage">' + sp.forms.map(function (f, i) { return '<span class="' + (i <= d.stage ? '' : 'silhouette') + '">⭐</span>'; }).join('') + '</div>';
   return bookCard({ icon: avatarHtml(d, 40), name: no + ' ' + (state.shinies[sp.id] ? '✨ ' : '') + escHtml(d.name), elem: d.element, extra: extra, rarity: rar, click: 'bookOpenBuddy(&quot;' + sp.id + '&quot;)', hint: (sp.show ? sp.show + ' · ' : '') + 'Lv ' + d.level + (d.stage >= 2 ? ' • Final form ⭐' : '') + (isSleepy(sp.id) ? ' 😴' : '') });
 }
 
@@ -214,3 +209,16 @@ function renderBook() {
 }
 function openBook() { showModal('book-modal', renderBook); }
 function closeBook() { hideModal('book-modal', updateStatsUI); }
+
+// Rarity label of a buddy, from how it can be won.
+function rarityOf(id) {
+  const sp = getSpecies(id) || {};
+  if (sp.legend) return { name: 'LEGEND', col: '#fde047' };
+  if (sp.bossBuddy) return { name: 'BOSS', col: '#f87171' };
+  if (sp.ultra) return { name: 'COSMIC', col: '#e879f9' };
+  if (sp.mythic) return { name: 'MYTHIC', col: '#f43f5e' };
+  if (sp.secret) return { name: 'LEGENDARY', col: '#fbbf24' };
+  if ((sp.cost || 0) >= 400) return { name: 'EPIC', col: '#a78bfa' };
+  if ((sp.cost || 0) >= 150) return { name: 'RARE', col: '#38bdf8' };
+  return { name: 'COMMON', col: '#94a3b8' };
+}
