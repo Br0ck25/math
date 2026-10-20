@@ -115,7 +115,7 @@ test('open ground never starts a fight, even with a certain chance', async () =>
   const r = await page.evaluate(() => {
     ECON.overworld.grassChance = 1; owSafe = 0;
     for (let i = 0; i < 4; i++) owMove(i % 2 ? 'down' : 'up');                                           // the path in Cozy Hollow
-    return state.overworld.fight;
+    return !!ab;
   });
   assert.equal(r, false);
 });
@@ -173,7 +173,7 @@ test('RUN leaves a walk fight with no penalty and the map comes back', async () 
   assert.deepEqual(r, { started: true, over: true, ow: 'flex', gems: true, level: true });
 });
 
-test('the map refuses to open during a gym or a raid, and a stale walk flag is cleared when the foe changes', async () => {
+test('the map refuses to open during a gym or a raid', async () => {
   const r = await page.evaluate(() => {
     state.gym = { region: 'ember', step: 0 };
     openAdventure();
@@ -182,12 +182,10 @@ test('the map refuses to open during a gym or a raid, and a stale walk flag is c
     openAdventure();
     const raidShut = document.getElementById('overworld-modal').style.display;
     state.raid = null;
-    state.overworld.fight = true; state.wild.id = '';                                                    // a boss replaced the foe
-    return { gymShut, raidShut, flag: adventureFight() };
+    return { gymShut, raidShut };
   });
   assert.notEqual(r.gymShut, 'flex');
   assert.notEqual(r.raidShut, 'flex');
-  assert.equal(r.flag, false);
 });
 
 test('the position is saved, restored on reload, and a bad or old save puts the hero back at the start', async () => {
@@ -195,16 +193,16 @@ test('the position is saved, restored on reload, and a bad or old save puts the 
   await walk(['up', 'up', 'up']);
   await page.evaluate(() => closeOverworld());
   await page.reload();
-  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: ['hollow'], traded: [] });
+  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: ['hollow'], traded: [] });
   const fixed = await page.evaluate(() => {
-    const bad = [{ map: 'nowhere', x: 3, y: 3, face: 'sideways', fight: 'yes' }, { map: 'hollow', x: 0, y: 0, face: 'left', fight: true }, { map: 'route1', x: 1.5, y: 'a' }, null, 'x'];
+    const bad = [{ map: 'nowhere', x: 3, y: 3, face: 'sideways' }, { map: 'hollow', x: 0, y: 0, face: 'left' }, { map: 'route1', x: 1.5, y: 'a' }, null, 'x'];
     return bad.map((b) => { state.overworld = b; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return { ...state.overworld }; });
   });
-  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', fight: true, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] }, 'a tree tile is not a place to stand');
-  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
+  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
+  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] }, 'a tree tile is not a place to stand');
+  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
+  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
+  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
 });
 
 test('arrow keys and WASD walk while the map is open, and do not steal keys otherwise', async () => {

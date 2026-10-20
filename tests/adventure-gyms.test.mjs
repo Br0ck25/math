@@ -157,12 +157,13 @@ test('stepping on the Meadow gym door offers the gym; Enter starts the gym run o
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Losing costs nothing/);
   assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Enter the gym']);
   await page.click('#talk-choices button');
-  const r = await page.evaluate(() => ({ gym: JSON.stringify(state.gym), ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-modal').style.display, foe: getBossInfo().trainer, fight: state.overworld.fight }));
-  assert.equal(r.gym, '{"region":"meadow","step":0}');
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+  const r = await page.evaluate(() => ({ gym: state.gym, rounds: ab.rounds.map((x) => x.kind), first: ab.name, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-modal').style.display }));
+  assert.equal(r.gym, null, 'the gym run lives on the battle screen, not in state.gym');
+  assert.deepEqual(r.rounds, ['trainer', 'trainer', 'trainer', 'leader']);
+  assert.equal(r.first, 'Picnicker Daisy');
   assert.notEqual(r.ow, 'flex');
   assert.notEqual(r.talk, 'flex');
-  assert.equal(r.foe, 'Picnicker Daisy');
-  assert.equal(r.fight, false, 'a gym run is not a walk fight: its win flow is the gym\'s own');
   assert.deepEqual(errors, []);
 });
 
@@ -190,7 +191,6 @@ test('a gym that is too hard says how close you are and starts nothing; a won ba
   const champ = await page.evaluate(() => { state.overworld.x = 11; state.overworld.y = 10; state.overworld.face = 'up'; renderOverworld(); state.storySeen.champion = 1; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText) }; document.querySelector('#talk-choices button').click(); out.gym = JSON.stringify(state.gym); return out; });
   assert.match(champ.t, /Welcome back, Champion/);
   assert.deepEqual(champ.choices, ['Rematch!']);
-  assert.equal(champ.gym, '{"region":"meadow","step":0,"rematch":true}');
 });
 
 test('old saves keep working: six badges and no Hall yet leave the Meadow and Skyreach to win, and the Map says so', async () => {
@@ -202,4 +202,41 @@ test('old saves keep working: six badges and no Hall yet leave the Meadow and Sk
   assert.equal(r.badges, 6);
   assert.match(r.t, /Badges 6\/8/);
   assert.equal(r.open, false);
+});
+
+const ready = () => page.waitForFunction(() => ab && !ab.busy && ab.phase === 'menu', null, { timeout: 30000 });
+// Wins every fight of the chain: each time the menu is up, every foe is at 1 HP and one right answer and attack finishes the current one.
+const winChain = async () => {
+  for (let k = 0; k < 40; k++) {
+    await page.waitForFunction(() => !ab || (!ab.busy && ab.phase === 'menu'), null, { timeout: 60000 });
+    if (!(await page.evaluate(() => !!ab))) return;
+    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = Math.min(f.hp, 1); }); abFight(); abAnswer(ab.q.ans); abUseMove(0); });
+    await page.waitForTimeout(500);
+  }
+};
+
+test('a gym is a chain: win every round with the same team and the badge, gems and charm come at the end', async () => {
+  await page.evaluate(() => { state.buddyXp[state.activePet] = xpForLevel(20); state.gems = 0; abStartGym('meadow'); });
+  await page.evaluate(() => { Math.random = () => 0.5; });
+  await winChain();
+  await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
+  const r = await page.evaluate(() => ({ badges: state.badges.slice(), gems: state.gems, name: document.getElementById('talk-name').innerText, ow: document.getElementById('overworld-modal').style.display }));
+  assert.deepEqual(r.badges, ['meadow']);
+  assert.ok(r.gems >= await page.evaluate(() => ECON.map.badgeGems));
+  assert.match(r.name, /Gym/);
+  assert.equal(r.ow, 'flex');
+});
+
+test('losing in a gym gives no badge and returns to the Center; the Hall is the Elite Four then Nova, and its win makes you Champion', async () => {
+  await page.evaluate(() => { state.buddyXp[state.activePet] = xpForLevel(5); state.overworld.center = { map: 'meadow', x: 4, y: 5 }; abStartGym('meadow'); Math.random = () => 0.5; });
+  await ready();
+  await page.evaluate(() => { ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); abFight(); abAnswer(ab.q.ans + 999); });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  assert.deepEqual(await page.evaluate(() => [state.badges.length, state.overworld.map]), [0, 'meadow']);
+  const hall = await page.evaluate(() => { const rs = abHallRounds(); return { n: rs.length, names: rs.map((x) => x.name), nova: rs[4].foes.length, kinds: rs.map((x) => x.kind) }; });
+  assert.deepEqual(hall.names.slice(0, 4), ['Elite Sol', 'Elite Marin', 'Elite Volta', 'Elite Noct']);
+  assert.deepEqual([hall.n, hall.nova, hall.kinds[4]], [5, 6, 'leader']);
+  await page.evaluate(() => { state.badges = gymRegions().map((g) => g.id); state.buddyXp[state.activePet] = xpForLevel(60); abStartHall(); Math.random = () => 0.5; });
+  await winChain();
+  assert.equal(await page.evaluate(() => state.storySeen.champion), 1);
 });

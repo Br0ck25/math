@@ -83,6 +83,10 @@ function championFell() {
   g.step = c.fallen.length;
   if (c.fallen.length < c.team.length) return null;
   state.gym = null;
+  return championReward();
+}
+// The Hall was won: the first win makes you Champion and pays the big reward, later wins pay a little once a day.
+function championReward() {
   state.faintedPets = [];                                  // a won battle sends everyone home rested
   const ch = state.champ, M = ECON.map.champion, first = ch.wins === 0, pays = ch.day !== dayKey();
   const res = { champion: true, first: first, gems: 0, nets: 0, held: [], extra: 0 };

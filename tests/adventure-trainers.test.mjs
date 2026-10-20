@@ -191,18 +191,12 @@ test('a team wipe in an ordinary Practice battle still just revives everyone and
   assert.equal(r.fainted, 0);
 });
 
-test('saved trainer progress is repaired: only real trainers count, once, and a foe only while a walk fight is on', async () => {
+test('saved trainer progress is repaired: only real trainers count, once', async () => {
   const r = await page.evaluate(() => {
-    const run = (v) => { state.overworld = Object.assign({ map: 'hollow', x: 7, y: 9, face: 'down' }, v); NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return { beat: state.overworld.beat.slice(), foe: state.overworld.foe }; };
-    return [
-      run({ beat: ['route1-pia', 'route1-pia', 'meadow-nurse', 'nope', 5, 'route1-leo'], fight: true, foe: 'route1-leo' }),
-      run({ beat: 'all', fight: false, foe: 'route1-leo' }),
-      run({ fight: true, foe: 'meadow-guide' })
-    ];
+    const run = (v) => { state.overworld = Object.assign({ map: 'hollow', x: 7, y: 9, face: 'down' }, v); NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return state.overworld.beat.slice(); };
+    return [run({ beat: ['route1-pia', 'route1-pia', 'meadow-nurse', 'nope', 5, 'route1-leo'] }), run({ beat: 'all' })];
   });
-  assert.deepEqual(r[0], { beat: ['route1-pia', 'route1-leo'], foe: 'route1-leo' });
-  assert.deepEqual(r[1], { beat: [], foe: '' });
-  assert.deepEqual(r[2], { beat: [], foe: '' }, 'a person who is not a trainer cannot be the foe');
+  assert.deepEqual(r, [['route1-pia', 'route1-leo'], []]);
 });
 
 for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {

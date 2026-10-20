@@ -1,6 +1,5 @@
 // =====================================================================
-//  THE ADVENTURE MAP: a hero walks tile maps (24h-ow-maps.js); tall grass can start a wild fight, which is the normal math battle.
-//  A fight that began on a walk (state.overworld.fight) returns to the map when it is won, and does not count toward the next boss.
+//  THE ADVENTURE MAP: a hero walks tile maps (24h-ow-maps.js); tall grass can start a wild fight on the Adventure battle screen (24x-ow-battle.js).
 //  Pictures are SVG (24f-ow-art.js), never emoji. The numbers are in ECON.overworld.
 // =====================================================================
 const OW_FACES = ['down', 'up', 'left', 'right'];
@@ -11,7 +10,6 @@ let owSafe = 0;              // safe grass steps left (no fight)
 let owTrail = null;          // where the hero stood a step ago: the buddy walks there
 let owFrame = 0;             // which walking picture
 let owUnsaved = 0;           // steps since the last save
-let owFromQueue = false;     // the map was opened by the modal queue (after a fight), so closing it must call modalDone()
 let owBusy = false;          // a trainer has spotted the hero: no walking until the challenge shows
 let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 
@@ -173,7 +171,6 @@ function closeOverworld() {
   hideModal('overworld-modal', function () {
     saveState();
     updateStatsUI();
-    if (owFromQueue) { owFromQueue = false; modalDone(); }
   });
 }
 // The row at the top of the Map window.
@@ -182,14 +179,7 @@ function adventureRowHtml() {
     '<div class="map-actions"><button class="claim-btn" onclick="openAdventure()">Explore</button></div></div>';
 }
 
-// ----- a fight that begins on a walk, and how it ends -----
-// True while the current wild fight began on the map. A flag left over from a foe that was replaced meanwhile (a gym, a legend hunt, a boss) is cleared.
-function adventureFight() {
-  const o = state.overworld;
-  if (o.fight && (state.gym || (!state.wild.id && !o.foe) || state.wild.legend || (state.wild.trainer && !o.foe))) o.fight = false;     // a trainer is fine when the walk began it
-  if (!o.fight) o.foe = '';
-  return o.fight;
-}
+// ----- a fight that begins on a walk: the Adventure battle screen (24x-ow-battle.js, 24y-ow-arenas.js) -----
 // `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
 function startAdventureFight(sp) {
   if (state.gym || state.raid || ab) return;
@@ -201,31 +191,10 @@ function startAdventureFight(sp) {
 function startTrainerFight(npc) {
   if (state.gym || state.raid || ab) return;
   owRelease();
-  if (npc.kind === 'boss') { startBossFight(npc); return; }
+  if (npc.kind === 'boss') { abStartBoss(npc); return; }
   const foes = [], n = clamp(1 + Math.floor(state.badges.length / 3), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0);
   for (let i = 0; i < n; i++) foes.push({ id: rollWildSpecies(foes.map(function (f) { return f.id; })).id, level: clamp(lvl + rnd(0, 1), 2, MAX_LEVEL) });     // a trainer's buddies are a little above the land's wild ones
   abStart({ kind: 'trainer', name: npc.name, npc: npc, foes: foes });
-}
-// A story boss: a boss from the boss list of the given element (never a slayer, one your buddy may meet), a little above your buddy.
-function startBossFight(npc) {
-  const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return monstersList[i].element === npc.boss && !monstersList[i].slays && bossAvailable(i); });
-  currentMonsterIndex = pick(cands);
-  state.currentMonsterIndex = currentMonsterIndex;
-  state.recentBossTypes = state.recentBossTypes.concat(npc.boss).slice(-2);          // a boss fight is only restored on reload when it has been recorded
-  state.wild.id = '';
-  state.wild.trainer = '';
-  state.wild.shiny = false;
-  state.wild.legend = false;
-  bossLevel = clamp(foeBaseLevel() + rnd(1, 3), 1, MAX_LEVEL);
-  markBossSeen(currentMonsterIndex);
-  gymFoeReset();
-  state.overworld.fight = true;
-  state.overworld.foe = npc.id;
-  hideModal('overworld-modal');
-  setBossTaunt();
-  updateStatsUI();
-  saveState();
-  announceFoe();
 }
 // Marks a story beat done; true the first time (the caller pays its prize).
 function owStoryDone(id) {
@@ -240,62 +209,9 @@ function owStoryReward(id) {
   const gems = ECON.overworld.storyGems[id];
   if (gems) grantGems(gems, 'Story reward: +' + gems + ' gems!', true);
 }
-// Won a fight that began on the map: the next Practice foe waits, and the map comes back after any catch window.
-function adventureWin() {
-  if (!adventureFight()) return false;
-  const o = state.overworld, npc = o.foe ? owNpcById(o.foe) : null;
-  if (npc && o.beat.indexOf(npc.id) === -1) o.beat.push(npc.id);        // a trainer is beaten for good
-  if (npc && npc.story) owStoryReward(npc.story);
-  o.fight = false;
-  o.foe = '';
-  pickNextWild();
-  setBossTaunt();
-  updateStatsUI();
-  saveState();
-  enqueueModal(function () { owFromQueue = true; showAdventureWindow(); if (npc) owTrainerTalk(npc); });
-  return true;
-}
-// The whole team fainted in a fight that began on the map: everyone is revived and the hero wakes outside the last Buddy Center. Nothing is lost.
-function adventureWipe() {
-  if (!adventureFight()) return false;
-  const o = state.overworld, c = o.center;
-  o.fight = false;
-  o.foe = '';
-  o.map = c.map; o.x = c.x; o.y = c.y; o.face = 'down';
-  state.faintedPets = [];
-  partyHp = {};
-  pickNextWild();
-  setBossTaunt();
-  generateProblem();                                                  // answering is open again for Practice
-  updateStatsUI();
-  saveState();
-  enqueueModal(function () {
-    owFromQueue = true;
-    showAdventureWindow();
-    openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, your buddies got very tired.', 'They rested at the Buddy Center and feel great again. No gems were lost. Ready to try again?'] });
-  });
-  return true;
-}
-// "Back to the map" in a fight that began there: no penalty, the foe walks away.
-function adventureBack() {
-  if (!adventureFight()) return;
-  const trainer = !!state.overworld.foe;
-  state.overworld.fight = false;
-  state.overworld.foe = '';
-  pickNextWild();
-  setBossTaunt();
-  updateStatsUI();
-  saveState();
-  showAdventureWindow();
-  if (trainer) owStepBack();                                          // the trainer is still waiting: one step back out of its sight
-}
 // One step back the way the hero came (it faces where it was walking), if that tile is free.
 function owStepBack() {
   const o = state.overworld, m = OW_MAPS[o.map], d = OW_STEP[OW_OPPOSITE[o.face]], bx = o.x + d[0], by = o.y + d[1];
   if (owWalkable(m, bx, by) && !owNpcAt(m, bx, by) && !owWarpAt(m, bx, by)) { o.x = bx; o.y = by; owTrail = null; saveState(); }
   renderOverworld();
-}
-function refreshAdventureButton() {
-  const b = document.getElementById('ow-back-btn');
-  if (b) b.style.display = adventureFight() ? '' : 'none';
 }

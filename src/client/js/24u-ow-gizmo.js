@@ -39,7 +39,7 @@ function gizmoMapHtml() {
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.
 function gizmoTravel(id) {
   const m = OW_MAPS[id], o = state.overworld;
-  if (!m || owTowns().indexOf(id) === -1 || o.seen.indexOf(id) === -1 || o.fight) return;
+  if (!m || owTowns().indexOf(id) === -1 || o.seen.indexOf(id) === -1 ) return;
   o.map = id; o.x = m.start.x; o.y = m.start.y; o.face = 'down';
   owTrail = null;
   owSetRegion(m);

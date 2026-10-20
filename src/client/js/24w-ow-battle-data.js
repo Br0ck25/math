@@ -30,11 +30,21 @@ function abBase(sp) {
   return sp.legend ? 100 : sp.ultra ? 95 : sp.mythic ? 88 : 72;
 }
 // A fighter: species id and level (and its HP, full when not given). Gold's stat formula without the hidden values.
-function abMon(id, level, hp) {
-  const sp = getSpecies(id), stage = getFormIndex(sp, level), form = sp.forms[stage];
-  const base = abBase(sp) + stage * 12, s = Math.floor(2 * base * level / 100), max = s + level + 10, type = battleElement(sp);
-  return { id: id, name: form.name, icon: form.icon, element: sp.element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: s + 5, def: s + 5, base: base, moves: abMoveList(sp.element, level, type) };
+function abBuild(id, name, icon, element, type, base, level, hp) {
+  const s = Math.floor(2 * base * level / 100), max = s + level + 10;
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: s + 5, def: s + 5, base: base, moves: abMoveList(element, level, type) };
 }
+function abMon(id, level, hp) {
+  const sp = getSpecies(id), stage = getFormIndex(sp, level);
+  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp);
+}
+// A boss from the boss list (a gym leader or a story boss): stronger than a wild buddy, with Elder and Alpha forms as in Practice.
+function abBossMon(index, level) {
+  const m = monstersList[index], form = getBossFormIndex(level);
+  return abBuild('', form === 2 ? 'Alpha ' + m.name : form === 1 ? 'Elder ' + m.name : m.name, m.icon, m.element, m.element, 82 + form * 12, level);
+}
+// A foe from its description: {id, level} is a buddy, {boss: index, level} a boss.
+function abFoeMon(f) { return f.boss !== undefined ? abBossMon(f.boss, f.level) : abMon(f.id, f.level); }
 // One of your buddies, with the HP it has left.
 function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id]); }
 // Gold's damage formula: level, power and Attack against Defense, then same-type bonus, type effectiveness, a critical hit and a little luck.

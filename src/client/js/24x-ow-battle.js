@@ -11,22 +11,34 @@ function abOpen() { return !!ab; }
 function abFoe() { return ab.foes[ab.i]; }
 function abMe() { return ab.party[ab.cur]; }
 
-// opts: kind ('wild' or 'trainer'), name (the trainer), foes ([{id, level}]), npc (the map person, for a trainer).
+// opts: kind ('wild', 'trainer' or 'leader'), name, foes ([{id, level}] or {boss, level}), npc (the map person) for one fight; or `rounds`, a list of those
+// ({kind, name, npc, foes}) fought one after another with the same team (a gym, the Hall). onWin runs on the map after the last round is won.
 function abStart(opts) {
   if (ab) return false;
   const party = getTeam().map(abPartyMon);
   const first = party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
-  ab = { kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes.map(function (f) { return abMon(f.id, f.level); }), i: 0, party: party, cur: first, part: [party[first].id], queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
-  abFoe().seen = true;
-  markDexSeen(abFoe().id);
+  const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
+  ab = { rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
     abRender();
-    abSteps(opts.kind === 'wild' ? [['A wild ' + abFoe().name + ' appeared!', null, 1100]] : [[ab.name + ' wants to battle!', null, 1100], [ab.name + ' sent out ' + abFoe().name + '!', null, 1000]]);
+    abSteps(abIntro());
     abSteps([['Go! ' + abMe().name + '!', null, 800], abMenuStep()]);
   });
   return true;
+}
+function abLoadRound() {
+  const r = ab.rounds[ab.r];
+  ab.kind = r.kind; ab.name = r.name; ab.npc = r.npc || null;
+  ab.foes = r.foes.map(abFoeMon);
+  ab.i = 0; ab.part = [abMe().id];
+  abSeen();
+}
+function abSeen() { const f = abFoe(); if (f.id) markDexSeen(f.id); }
+function abIntro() {
+  return ab.kind === 'wild' ? [['A wild ' + abFoe().name + ' appeared!', null, 1100]] : [[ab.name + ' wants to battle!', null, 1100], [ab.name + ' sent out ' + abFoe().name + '!', null, 1000]];
 }
 function abMenuStep() { return [null, function () { ab.phase = 'menu'; document.getElementById('ab-text').innerText = 'What will ' + abMe().name + ' do?'; }, 0]; }
 // Steps that must come right after the current one (a level-up message after the experience).
@@ -155,7 +167,7 @@ function abBackToMenu() { abSteps([abMenuStep()]); saveState(); }
 
 // ----- a faint -----
 function abFoeFainted() {
-  const foe = abFoe(), trainer = ab.kind === 'trainer', xp = abXpYield(foe, trainer), part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
+  const foe = abFoe(), trainer = ab.kind !== 'wild', xp = abXpYield(foe, trainer), part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
   abSteps([[foe.name + ' fainted!', null, 1000]]);
   const each = Math.max(1, Math.floor(xp / Math.max(1, part.length)));
   part.forEach(function (id) {
@@ -167,9 +179,10 @@ function abFoeFainted() {
   });
   abSteps([['', function () {
     if (ab.i + 1 < ab.foes.length) {
-      ab.i += 1; markDexSeen(abFoe().id); ab.part = [abMe().id];
+      ab.i += 1; abSeen(); ab.part = [abMe().id];
       abSteps([[ab.name + ' sent out ' + abFoe().name + '!', null, 1000], abMenuStep()]);
-    } else abWon();
+    } else if (ab.r + 1 < ab.rounds.length) abNextRound();
+    else abWon();
   }, 0]]);
 }
 // Experience for one of your buddies; a level-up raises its stats and keeps its HP gain, and may change its form.
@@ -228,15 +241,24 @@ function abKeepCaught(foe) {
   saveState();
 }
 function abRun() {
-  if (ab.kind === 'trainer') { ab.phase = 'busy'; abSteps([["No! There's no running from a trainer battle!", null, 1200], abMenuStep()]); return; }
+  if (ab.kind !== 'wild') { ab.phase = 'busy'; abSteps([["No! There's no running from a trainer battle!", null, 1200], abMenuStep()]); return; }
   ab.phase = 'busy';
   abSteps([['Got away safely!', null, 900], ['', function () { abFinish('run'); }, 0]]);
 }
 
 // ----- the end -----
-function abWon() {
+// A trainer beaten pays the trainer prize; a leader or boss pays through the badge or the story.
+function abRoundWon() {
   const trainer = ab.kind === 'trainer';
-  abSteps([[trainer ? 'You defeated ' + ab.name + '!' : '', function () { if (trainer) grantGems(ECON.map.trainerGems, '+' + ECON.map.trainerGems + ' gems!', false); }, trainer ? 1300 : 0], ['', function () { abFinish('win'); }, 0]]);
+  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (trainer) grantGems(ECON.map.trainerGems, '+' + ECON.map.trainerGems + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
+}
+function abNextRound() {
+  abSteps(abRoundWon());
+  abSteps([['', function () { ab.r += 1; abLoadRound(); abSteps(abIntro()); abSteps([abMenuStep()]); }, 0]]);
+}
+function abWon() {
+  abSteps(abRoundWon());
+  abSteps([['', function () { abFinish('win'); }, 0]]);
 }
 function abLost() {
   abSteps([['You have no buddies left that can fight...', null, 1500], ['', function () { abFinish('lose'); }, 0]]);
@@ -254,6 +276,7 @@ function abFinish(result) {
     }
     showAdventureWindow();
     if (result === 'lose') openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, your buddies got very tired.', 'They rested at the Buddy Center and feel great again. Ready to try again?'] });
+    else if (result === 'win' && a.onWin) a.onWin();
     else if (result === 'win' && a.npc) {
       if (o.beat.indexOf(a.npc.id) === -1) o.beat.push(a.npc.id);
       if (a.npc.story) owStoryReward(a.npc.story);

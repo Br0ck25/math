@@ -150,10 +150,9 @@ test('the Ember gym opens at its level and starts the fire gym run with the firs
   await page.evaluate(() => { state.buddyXp.dog = xpForLevel(20); owMove('up'); });
   await page.click('#talk-next');
   await page.click('#talk-choices button');
-  const r = await page.evaluate(() => ({ gym: JSON.stringify(state.gym), foe: getBossInfo().trainer, el: getSpecies(state.wild.id).element }));
-  assert.equal(r.gym, '{"region":"ember","step":0}');
-  assert.equal(r.foe, 'Scout Mia');
-  assert.equal(r.el, 'fire');
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+  const r = await page.evaluate(() => ({ first: ab.name, rounds: ab.rounds.length, el: ab.foes.every((f) => f.element === 'fire'), gym: state.gym }));
+  assert.deepEqual(r, { first: 'Scout Mia', rounds: 4, el: true, gym: null });
   assert.deepEqual(errors, []);
 });
 
@@ -163,8 +162,8 @@ test('a reload in the middle of a trainer battle leaves the trainer unbeaten and
   await page.waitForTimeout(300);
   await page.click('#talk-choices button');
   await page.reload();
-  const r = await page.evaluate(() => ({ battle: typeof ab !== 'undefined' && !!ab, beat: state.overworld.beat.length, fight: state.overworld.fight }));
-  assert.deepEqual(r, { battle: false, beat: 0, fight: false });
+  const r = await page.evaluate(() => ({ battle: typeof ab !== 'undefined' && !!ab, beat: state.overworld.beat.length }));
+  assert.deepEqual(r, { battle: false, beat: 0 });
 });
 
 for (const [w, h] of [[320, 568], [420, 800]]) {

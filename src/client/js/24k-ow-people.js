@@ -156,7 +156,7 @@ function owEnterGym(id) {
   if (!regionUnlocked(r)) { say(['The gym leader smiles: "Come back a little stronger!"', 'Your team is level ' + journeyLevel() + ' and this gym opens at level ' + regionLevel(r) + '. Train in the tall grass and visit again.']); return; }
   const have = hasBadge(id);
   if (have && !isChampion()) { say(['You already have the ' + r.name + ' Badge. Well done!', 'Champions can come back for rematches.']); return; }
-  const go = function () { talk.onClose = null; closeTalk(); closeOverworld(); startGym(id); };
+  const go = function () { talk.onClose = null; closeTalk(); abStartGym(id); };
   if (have) { say(['Welcome back, Champion! Want a rematch? The trainers and the leader are stronger now.'], [{ label: 'Rematch!', run: go }]); return; }
   say(['This is the ' + r.name + ' Gym. Beat ' + ECON.map.trainers + ' trainers, then the gym leader, to win a badge.', 'Losing costs nothing, and you can leave any time. Ready?'], [{ label: 'Enter the gym', run: go }]);
 }
@@ -201,7 +201,7 @@ function owEnterHall() {
   const art = worldSprite('t-gym-door'), say = function (lines, choices) { openTalk({ name: "Champion's Hall", art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
   if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
   if (!championOpen()) { say(['The great golden doors are shut.', 'They open for trainers with all ' + gymRegions().length + ' gym badges. You have ' + state.badges.length + '. Keep going!']); return; }
-  const go = function () { talk.onClose = null; closeTalk(); closeOverworld(); startChampion(); };
+  const go = function () { talk.onClose = null; closeTalk(); abStartHall(); };
   if (state.champ.wins > 0) say(['Welcome back, Champion! Nova is ready for another match.'], [{ label: 'Rematch!', run: go }]);
-  else say(['The great golden doors swing open. Champion Nova is waiting inside.', 'Six buddies, one of each type. Ready?'], [{ label: 'Enter the Hall', run: go }]);
+  else say(['The great golden doors swing open. Champion Nova is waiting inside.', 'The Elite Four first, then Nova and her six buddies. Ready?'], [{ label: 'Enter the Hall', run: go }]);
 }

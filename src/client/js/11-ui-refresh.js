@@ -155,7 +155,6 @@ function nextGoalText() {
 }
 
 function updateStatsUI() {
-  if (typeof refreshAdventureButton === 'function') refreshAdventureButton();
   document.getElementById('fighter-icon-wrapper').classList.toggle('coach-glow', !state.seen.hub);
   updateQuestBadge();
   updateCalBadge();

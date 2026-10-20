@@ -162,7 +162,7 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
       launchConfetti(wild ? 'streak' : 'boss');
       screenShake(!wild);
       const leaderFight = !wild && inGymLeaderFight();
-      if (wild) { if (!state.gym && !state.wild.legend && !adventureFight()) state.wild.since += 1; }       // gym battles and walks on the Adventure map do not count toward the next boss
+      if (wild) { if (!state.gym && !state.wild.legend) state.wild.since += 1; }       // gym battles do not count toward the next boss
       else {
         questEvent('boss');
         if (bossMistakes === 0) {
@@ -207,7 +207,6 @@ function triggerMonsterDamage(extraDamage, weakHit, fast, dmgMult) {
 
       const shouldTriggerVault = !wild && (state.monstersDefeated % 2 === 0);
       setTimeout(function () {
-        if (adventureWin()) return;                    // a fight that began on the Adventure map: the map comes back instead of the next foe
         pickNextFoe();
         setBossTaunt();
         updateStatsUI();
@@ -338,8 +337,6 @@ function triggerBuddyDamage() {
       saveState();
       return;
     }
-
-    if (adventureWipe()) return;                    // on the Adventure map the hero wakes at the last Buddy Center instead
 
     // the whole team has fainted: everyone is revived and the battle goes on
     state.faintedPets = [];

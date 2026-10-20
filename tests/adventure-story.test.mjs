@@ -154,40 +154,28 @@ test('the hideout in Gloom Marsh: a door in the rocks, two Scramblers, then Boss
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Boss Scramble');
   await page.click('#talk-next');
   await page.click('#talk-choices button');
-  const r = await page.evaluate(() => { const info = getBossInfo(); return { wild: !!state.wild.id, bossWild: !!info.wild, trainer: info.trainer, element: info.element, fight: state.overworld.fight, foe: state.overworld.foe, recorded: state.recentBossTypes.slice(-1)[0], slayer: !!monstersList[currentMonsterIndex].slays, hp: monsterCurrentHp > 0 }; });
-  assert.deepEqual(r, { wild: false, bossWild: false, trainer: undefined, element: 'dark', fight: true, foe: 'gloom-boss', recorded: 'dark', slayer: false, hp: true });
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+  const r = await page.evaluate(() => ({ kind: ab.kind, npc: ab.npc.id, foes: ab.foes.length, boss: ab.foes[0].element, name: ab.name === monstersList.find((m) => ab.name.endsWith(m.name)).name || /^(Elder|Alpha) /.test(ab.name), buddies: ab.foes.slice(1).every((f) => f.id && f.element === 'dark') }));
+  assert.deepEqual(r, { kind: 'leader', npc: 'gloom-boss', foes: 3, boss: 'dark', name: true, buddies: true });
 });
 
-test('winning against Boss Scramble counts as a boss, pays the story prize once, and the boss is gone; the fight survives a reload and a team wipe goes to the Center', async () => {
+test('winning against Boss Scramble pays the story prize once, and the boss is gone', async () => {
   await put('gloom-hideout', 4, 3, 'up');
-  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; });
+  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; state.gems = 0; });
   await page.evaluate(() => owMove('up'));                                                                // 4,3 -> 4,2: the boss at 4,1 is next to the hero: a bump talks
   await page.evaluate(() => owMove('up'));
   await page.click('#talk-next').catch(() => {});
   if (!(await shown('talk-modal'))) throw new Error('no talk window');
   await page.click('#talk-choices button');
-  const idx = await page.evaluate(() => currentMonsterIndex);
-  await page.reload();
-  const kept = await page.evaluate(() => ({ fight: state.overworld.fight, foe: state.overworld.foe, wild: state.wild.id, same: currentMonsterIndex === state.currentMonsterIndex, boss: !getBossInfo().wild, back: adventureFight() }));
-  assert.deepEqual(kept, { fight: true, foe: 'gloom-boss', wild: '', same: true, boss: true, back: true });
-  const r = await page.evaluate(async () => {
-    state.hero.made = true; state.gems = 0; const defeated = state.monstersDefeated;
-    state.overworld.map = 'gloom-hideout'; state.overworld.x = 4; state.overworld.y = 2; state.overworld.face = 'up';
-    rollCatch = function () {}; checkForSecretLootDrop = function () {};
-    monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
-    triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 3500));
-    return { defeated: state.monstersDefeated - defeated, beat: state.overworld.beat.includes('gloom-boss'), story: state.overworld.story.slice(), gems: state.gems, here: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1), ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-text').innerText, fight: state.overworld.fight };
-  });
-  assert.equal(r.defeated, 1, 'a boss win counts');
+  await win();
+  await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
+  const r = await page.evaluate(() => ({ beat: state.overworld.beat.includes('gloom-boss'), story: state.overworld.story.slice(), gems: state.gems, here: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1), ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-text').innerText }));
   assert.ok(r.beat);
   assert.deepEqual(r.story, ['gloom-scramblers']);
   assert.ok(r.gems >= await page.evaluate(() => ECON.overworld.storyGems['gloom-scramblers']), 'the prize is paid');
   assert.equal(r.here, false);
   assert.equal(r.ow, 'flex');
   assert.match(r.talk, /my numbers|Counting is more fun|all back in order/i);
-  assert.equal(r.fight, false);
-  void idx;
 });
 
 test('when the team faints against the boss, the hero wakes at the last Center with nothing lost and the boss still waiting', async () => {
@@ -195,17 +183,12 @@ test('when the team faints against the boss, the hero wakes at the last Center w
   await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; owMove('up'); owMove('up'); });
   await page.click('#talk-next').catch(() => {});
   await page.click('#talk-choices button');
-  const r = await page.evaluate(async () => {
-    state.overworld.center = { map: 'gloom', x: 4, y: 5 };
-    state.gems = 40; state.shields = 0; state.faintedPets = []; state.team = ['dog']; state.activePet = 'dog'; partyHp = {}; setPetHp('dog', 1); inputLocked = false;
-    const real = Math.random; Math.random = () => 0.99;
-    userInput = String(currentProblem.answer + 7); checkAnswer();
-    await new Promise((res) => setTimeout(res, 2500));
-    Math.random = real;
-    return { pos: [state.overworld.map, state.overworld.x, state.overworld.y], gems: state.gems, fight: state.overworld.fight, beat: state.overworld.beat.includes('gloom-boss'), boss: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1) };
-  });
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab && !ab.busy && ab.phase === 'menu', null, { timeout: 30000 });
+  await page.evaluate(() => { state.overworld.center = { map: 'gloom', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); abFight(); abAnswer(ab.q.ans + 999); });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  const r = await page.evaluate(() => ({ pos: [state.overworld.map, state.overworld.x, state.overworld.y], gems: state.gems, beat: state.overworld.beat.includes('gloom-boss'), boss: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1) }));
   assert.deepEqual(r.pos, ['gloom', 4, 5]);
-  assert.deepEqual([r.gems, r.fight, r.beat, r.boss], [40, false, false, true]);
+  assert.deepEqual([r.gems, r.beat, r.boss], [40, false, true]);
 });
 
 test('Riley tells the truth in Skyreach once you hold its badge: four lines, then she is gone; after the Champion a different Riley is there', async () => {
@@ -260,9 +243,10 @@ test('the Hall door: shut until every badge is won, then it offers the Hall run 
   const open = await page.evaluate(() => { state.badges = gymRegions().map((g) => g.id); renderOverworld(); state.overworld.y = 4; owMove('up'); const name = document.getElementById('talk-name').innerText; document.getElementById('talk-next').click(); return { name, choices: Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText) }; });
   assert.deepEqual(open, { name: "Champion's Hall", choices: ['Enter the Hall'] });
   await page.click('#talk-choices button');
-  const run = await page.evaluate(() => ({ region: state.gym && state.gym.region, champ: !!(state.gym && state.gym.champ), ow: document.getElementById('overworld-modal').style.display, foe: getBossInfo().trainer }));
-  assert.deepEqual(run, { region: 'champion', champ: true, ow: 'none', foe: 'Champion Nova' });
-  await page.evaluate(() => { state.gym = null; state.champ.wins = 1; state.storySeen.champion = 1; });
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+  const run = await page.evaluate(() => ({ rounds: ab.rounds.map((r) => r.name), ow: document.getElementById('overworld-modal').style.display }));
+  assert.deepEqual(run, { rounds: ['Elite Sol', 'Elite Marin', 'Elite Volta', 'Elite Noct', 'Champion Nova'], ow: 'none' });
+  await page.evaluate(() => { ab = null; document.getElementById('ab-modal').style.display = 'none'; state.champ.wins = 1; state.storySeen.champion = 1; });
   await put('champwalk', 6, 4, 'up');
   const again = await page.evaluate(() => { state.overworld.y = 4; owMove('up'); return Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText); });
   assert.deepEqual(again, ['Rematch!']);

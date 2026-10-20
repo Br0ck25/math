@@ -203,12 +203,6 @@ const OW_LANDS = [
 function owTowns() { return [OW_START.map].concat(OW_LANDS.map(function (l) { return l.town; })); }
 // The story beats that are saved once done (state.overworld.story): the Scramblers' three schemes and Riley's reveal.
 const OW_STORY = ['tide-ferry', 'volt-blackout', 'gloom-scramblers', 'riley-reveal'];
-// The names of the trainers on the map (a save may keep one as the current foe).
-function owTrainerNames() {
-  const names = [];
-  Object.keys(OW_MAPS).forEach(function (k) { (OW_MAPS[k].npcs || []).forEach(function (n) { if (n.kind === 'trainer') names.push(n.name); }); });
-  return names;
-}
 // Everything the save may name: npc ids, pickup ids and quiz sign ids across all maps.
 function owIds(kind) {
   const ids = [];

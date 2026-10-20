@@ -153,7 +153,7 @@ test('a door leads into a room and the mat leads out, to the tile south of the d
   let o = await state_();
   assert.deepEqual([o.map, o.x, o.y], ['hollow-home', 3, 5]);
   assert.equal(await page.evaluate(() => document.getElementById('ow-title').innerText), 'Home');
-  assert.equal(await page.evaluate(() => { ECON.overworld.grassChance = 1; owSafe = 0; owMove('up'); owMove('down'); owMove('down'); return state.overworld.fight; }), false);
+  assert.equal(await page.evaluate(() => { ECON.overworld.grassChance = 1; owSafe = 0; owMove('up'); owMove('down'); owMove('down'); return !!ab; }), false);
   o = await state_();
   assert.deepEqual([o.map, o.x, o.y], ['hollow', 4, 5]);
   await put('hollow', 11, 9, 'up');
