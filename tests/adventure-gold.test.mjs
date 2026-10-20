@@ -302,6 +302,41 @@ test('more items: an Elixir gives every move 10 PP back, X items raise a stage, 
   assert.deepEqual(t, { rep: 250, before: 0, after: 1, left: 0, atk: true, def: true, spd: true });
 });
 
+test('forced grass: on every route there is no way up the road without stepping on tall grass at least twice, and the way is still open', async () => {
+  const r = await ev(() => OW_LANDS.map((L) => {
+    const m = OW_MAPS[L.routeIn], from = [6, m.rows.length - 2], dist = {}, q = [[from[0], from[1], 0]];
+    const key = (x, y) => x + ',' + y; dist[key(...from)] = 0; let best = Infinity;
+    const heap = [[0, ...from]];
+    while (heap.length) {
+      heap.sort((a, b) => a[0] - b[0]); const [d, x, y] = heap.shift(); if (d > dist[key(x, y)]) continue;
+      if (y === 1 && (x === 6 || x === 7)) best = Math.min(best, d);
+      [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy; if (!owWalkable(m, nx, ny) || owWarpAt(m, nx, ny) || owNpcAt(m, nx, ny)) return; const nd = d + (owTileAt(m, nx, ny).grass ? 1 : 0); if (dist[key(nx, ny)] === undefined || nd < dist[key(nx, ny)]) { dist[key(nx, ny)] = nd; heap.push([nd, nx, ny]); } });
+    }
+    return best;
+  }));
+  assert.ok(r.every((n) => n >= 2 && n < 99), 'grass steps on the way: ' + r.join());
+});
+
+test('Ether restores 10 PP to one chosen move, a PP Up raises a move\'s PP by a fifth (three at most), and an Escape Rope takes you back to the last Buddy Center', async () => {
+  await ev(() => { state.unlockedPets = ['fox']; state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.advPp = {}; state.ppUp = {}; });
+  await begin();
+  const e = await ev(() => {
+    state.items = { ether: 1 }; const me = abMe(); me.moves[0].left = 2; me.moves[1].left = 2; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); Math.random = () => 0.9;
+    ab.phase = 'ether'; abUseEther(1); return [me.moves[0].left, me.moves[1].left, state.items.ether || 0];
+  });
+  assert.deepEqual(e, [2, Math.min(12, await ev(() => abMe().moves[1].pp)), 0]);
+  await ev(() => { ab = null; document.getElementById('ab-modal').style.display = 'none'; });
+  const u = await ev(() => {
+    const base = abPartyMon('fox').moves[0], id = base.id, out = {};
+    state.items = { ppup: 5 }; hubPet = 'fox'; for (let i = 0; i < 5; i++) usePpUp(id);
+    out.ups = state.ppUp.fox[id]; out.left = state.items.ppup; out.pp = abPartyMon('fox').moves.find((m) => m.id === id).pp === base.pp + 3 * Math.floor(base.pp / 5);
+    state.items = { escaperope: 1 }; state.overworld.center = { map: 'meadow', x: 7, y: 7 }; state.overworld.map = 'route2'; state.overworld.x = 6; state.overworld.y = 10; openAdventure(); useRope();
+    out.rope = [state.overworld.map, state.overworld.x, state.overworld.y, state.items.escaperope || 0];
+    return out;
+  });
+  assert.deepEqual(u, { ups: 3, left: 2, pp: true, rope: ['meadow', 7, 7, 0] });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

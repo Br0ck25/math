@@ -3,6 +3,19 @@
 //  Buying and caring stay in the Shop and the Hub; a button takes you there. Nothing here is a second copy of an inventory.
 // =====================================================================
 function bagRow(label, value) { return '<div class="bag-row"><span>' + label + '</span><b>' + value + '</b></div>'; }
+// The Escape Rope: back to the last Buddy Center, from anywhere on the map.
+function useRope() {
+  if (!state.items.escaperope || (typeof ab !== 'undefined' && ab)) return;
+  const c = state.overworld.center, o = state.overworld;
+  state.items.escaperope -= 1; if (!state.items.escaperope) delete state.items.escaperope;
+  o.map = c.map; o.x = c.x; o.y = c.y; owTrail = null;
+  saveState(); closeBag(); renderOverworld(); toast('You are back at the last Buddy Center.');
+}
+function bagExtras() {
+  const names = { elixir: 'Elixir', ether: 'Ether', ppup: 'PP Up', xattack: 'X Attack', xdefend: 'X Defend', xspeed: 'X Speed', stone: 'Evolution Stone' };
+  return Object.keys(names).map(function (k) { return state.items[k] ? bagRow(names[k], state.items[k]) : ''; }).join('') +
+    (state.items.escaperope ? '<div class="bag-row"><span>Escape Rope</span><b>' + state.items.escaperope + ' <button type="button" class="claim-btn" onclick="useRope()">Use</button></b></div>' : '');
+}
 function bagSection(title, body) { return '<div class="bag-sec"><h3>' + title + '</h3>' + body + '</div>'; }
 function renderBag() {
   document.getElementById('bag-title').innerText = heroName() + "'s Bag";
@@ -14,7 +27,7 @@ function renderBag() {
     const who = Object.keys(state.held).filter(function (b) { return state.held[b] === it.id; })[0];
     return bagRow(it.name, who ? 'held by ' + escHtml(getPetById(who).baseName) : 'not held');
   }).join('') || '<div class="d">None yet. Find them in the Hold tab of the Hub.</div>';
-  const supplies = bagRow('Gems', state.gems) + bagRow('Potion', state.potions) + bagRow('Super Potion', state.items.superpotion || 0) + bagRow('Full Heal', state.items.fullheal || 0) + bagRow('Revive', state.items.revive || 0) +
+  const supplies = bagRow('Gems', state.gems) + bagRow('Potion', state.potions) + bagRow('Super Potion', state.items.superpotion || 0) + bagRow('Full Heal', state.items.fullheal || 0) + bagRow('Revive', state.items.revive || 0) + bagExtras() +
     bagRow('Catch Nets', state.nets + ' of ' + maxNets()) + bagRow('Great Net', state.items.greatnet || 0) + bagRow('Ultra Net', state.items.ultranet || 0) + bagRow('Repel', state.repelSteps > 0 ? state.repelSteps + ' steps left' : 'none');
   const egg = state.egg ? bagRow('Egg', escHtml(state.egg.element) + ' · ' + state.egg.steps + ' of ' + state.egg.target) : '<div class="d">No egg right now. Leave two buddies of one type at the Day Care.</div>';
   document.getElementById('bag-body').innerHTML =

@@ -82,7 +82,10 @@ function abMoveList(element, level, type, pp, chosen, id) {
   }
   const list = chosen.map(function (id) { return known.find(function (m) { return m.id === id; }); }).filter(Boolean);
   known.slice().reverse().forEach(function (m) { if (list.length < 4 && list.indexOf(m) === -1) list.push(m); });
-  return list.slice(0, 4).map(function (m) { return Object.assign({}, m, { left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, m.pp) : m.pp }); });
+  return list.slice(0, 4).map(function (m) {
+    const max = m.pp + (id && state.ppUp && state.ppUp[id] && state.ppUp[id][m.id] || 0) * Math.floor(m.pp / 5);          // PP Ups: a fifth more each, up to three
+    return Object.assign({}, m, { pp: max, left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, max) : max });
+  });
 }
 // A buddy's base strength: dearer store buddies are stronger; the others have a fixed one.
 function abBase(sp) {

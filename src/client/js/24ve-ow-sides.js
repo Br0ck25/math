@@ -30,3 +30,11 @@ function owSideBuild(L, i) {
   route.warps.push({ x: edge, y: y, to: id, tx: mx(1), ty: 5 });
 }
 OW_LANDS.forEach(owSideBuild);
+
+// ----- forced grass (Gold): on some stretches the whole road is tall grass, so there is no way past without walking through it -----
+// Each route gets a band of two or three rows across its width; Repel is the way to cross it in peace.
+function owGrassBand(mapId, y0, y1) {
+  const m = OW_MAPS[mapId];
+  for (let y = y0; y <= y1; y++) for (let x = 1; x <= 12; x++) if (',.*'.indexOf(m.rows[y].charAt(x)) !== -1) owSetTile(mapId, x, y, '"');
+}
+OW_LANDS.forEach(function (L, i) { owGrassBand(L.routeIn, 7 + (i * 5) % 9, 8 + (i * 5) % 9 + (i % 2)); });

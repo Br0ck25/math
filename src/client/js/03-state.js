@@ -52,6 +52,7 @@ function freshState() {
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    ppUp: {},                                        // buddy id -> { move id: PP Ups used (0-3) }
     tms: {},                                         // TM ids held (single use), from the gym leaders
     tmKnown: {},                                     // buddy id -> TM move ids it was taught
     advMoves: {},                                    // Adventure battle moves chosen by buddy id: the move ids it takes into battle (absent = its newest four)

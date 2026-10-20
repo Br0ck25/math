@@ -126,10 +126,13 @@ function abPanel() {
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', function () { abThrowNet('net'); }, '', !wild || state.nets < 1));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
     const carry = [['superpotion', 'Super Potion', function () { return m.hp >= m.max && !m.status; }], ['fullheal', 'Full Heal', function () { return !m.status && !(m.conf > 0); }], ['revive', 'Revive', function () { return !ab.party.some(function (x) { return x.hp <= 0; }); }],
-      ['elixir', 'Elixir', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }], ['xattack', 'X Attack', function () { return abStage(m, 'atk') >= 6; }], ['xdefend', 'X Defend', function () { return abStage(m, 'def') >= 6; }], ['xspeed', 'X Speed', function () { return abStage(m, 'spd') >= 6; }]];
-    carry.forEach(function (c) { if (state.items[c[0]]) p.appendChild(abBtn(c[1] + ' <small>x' + state.items[c[0]] + '</small>', function () { abUseItem(c[0]); }, '', c[2]())); });
+      ['elixir', 'Elixir', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }], ['xattack', 'X Attack', function () { return abStage(m, 'atk') >= 6; }], ['xdefend', 'X Defend', function () { return abStage(m, 'def') >= 6; }], ['xspeed', 'X Speed', function () { return abStage(m, 'spd') >= 6; }], ['ether', 'Ether', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }]];
+    carry.forEach(function (c) { if (state.items[c[0]]) p.appendChild(abBtn(c[1] + ' <small>x' + state.items[c[0]] + '</small>', function () { if (c[0] === 'ether') { ab.phase = 'ether'; abRender(); } else abUseItem(c[0]); }, '', c[2]())); });
     ['greatnet', 'ultranet'].forEach(function (k) { if (state.items[k]) p.appendChild(abBtn(ITEM_LOOKS[k][1] + ' <small>x' + state.items[k] + '</small>', function () { abThrowNet(k); }, '', !wild)); });
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
+  } else if (ab.phase === 'ether') {
+    m.moves.forEach(function (mv, i) { p.appendChild(abBtn('<b>' + escHtml(mv.name) + '</b><small>PP ' + mv.left + '/' + mv.pp + '</small>', function () { abUseEther(i); }, 'ab-move t-' + mv.type, mv.left >= mv.pp)); });
+    p.appendChild(abBtn('Back', function () { ab.phase = 'pack'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'learn') {
     ab.learn.mon.moves.forEach(function (mv, i) { p.appendChild(abBtn('Forget <b>' + escHtml(mv.name) + '</b>', function () { abLearnChoose(i); }, 'ab-move t-' + mv.type)); });
     p.appendChild(abBtn('Keep my moves', function () { abLearnChoose(-1); }, 'ab-back'));
@@ -390,6 +393,15 @@ function abSwitch(i) {
 }
 
 // ----- the pack -----
+// An Ether: 10 PP back on the move you choose.
+function abUseEther(i) {
+  const me = abMe(), mv = me.moves[i];
+  if (!state.items.ether || ab.phase !== 'ether' || !mv || mv.left >= mv.pp) return;
+  state.items.ether -= 1; if (!state.items.ether) delete state.items.ether;
+  ab.phase = 'busy';
+  abSteps([['You used an Ether!', function () { mv.left = Math.min(mv.pp, mv.left + 10); state.advPp[me.id] = state.advPp[me.id] || {}; state.advPp[me.id][mv.id] = mv.left; soundLevelUp(); }, 900], [mv.name + ' got 10 PP back.', null, 900]]);
+  abFoeTurn();
+}
 // The other supplies of the pack: a Super Potion heals more, a Full Heal cures a status, a Revive wakes the first resting buddy with half its HP.
 function abUseItem(kind) {
   const me = abMe(), n = state.items[kind] || 0;

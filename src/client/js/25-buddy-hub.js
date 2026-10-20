@@ -54,7 +54,8 @@ function renderHub() {
 function renderStatsTab() {
   const m = abPartyMon(hubPet), sp = getSpecies(hubPet), lv = m.level, xp = getBuddyXp(hubPet);
   const stat = function (label, v) { return '<div class="care-row"><div class="t">' + label + '</div><div class="t">' + v + '</div></div>'; };
-  const moves = m.moves.map(function (mv) { return '<div class="care-row"><div><div class="t">' + escHtml(mv.name) + '</div><div class="d">' + escHtml(mv.type.toUpperCase()) + ' · power ' + mv.power + ' · ' + mv.acc + '% accuracy</div></div><div class="d">PP ' + mv.left + '/' + mv.pp + '</div></div>'; }).join('');
+  const ups = function (mv) { return state.ppUp[hubPet] && state.ppUp[hubPet][mv.id] || 0; };
+  const moves = m.moves.map(function (mv) { return '<div class="care-row"><div><div class="t">' + escHtml(mv.name) + '</div><div class="d">' + escHtml(mv.type.toUpperCase()) + (mv.fx ? ' · status' : ' · power ' + mv.power) + ' · ' + mv.acc + '% accuracy</div></div><div class="d">PP ' + mv.left + '/' + mv.pp + (state.items.ppup && ups(mv) < 3 ? ' <button class="claim-btn" onclick="usePpUp(\'' + mv.id + '\')">PP Up</button>' : '') + '</div></div>'; }).join('');
   const held = heldIdOf(hubPet), item = HELD_ITEMS.find(function (i) { return i.id === held; });
   document.getElementById('hub-body').innerHTML =
     stat('Type', escHtml(m.type.toUpperCase())) + stat('Level', lv + (lv < MAX_LEVEL ? ' (' + (xpForLevel(lv + 1) - xp) + ' XP to next)' : ' (max)')) +
@@ -78,4 +79,13 @@ function useStone() {
   saveState(); soundLevelUp(); launchConfetti('level');
   toast(before.name + ' evolved into ' + after.name + '!');
   renderHub();
+}
+
+// A PP Up raises one move's PP by a fifth of its base, up to three times.
+function usePpUp(moveId) {
+  if (!state.items.ppup || (state.ppUp[hubPet] && state.ppUp[hubPet][moveId] >= 3)) return;
+  state.items.ppup -= 1; if (!state.items.ppup) delete state.items.ppup;
+  state.ppUp[hubPet] = state.ppUp[hubPet] || {};
+  state.ppUp[hubPet][moveId] = (state.ppUp[hubPet][moveId] || 0) + 1;
+  saveState(); soundLevelUp(); renderHub();
 }
