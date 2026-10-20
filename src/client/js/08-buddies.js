@@ -149,7 +149,7 @@ function closeEvoModal() {
 // ----- the team: who can fight, who leads, who a new buddy replaces -----
 // Up to ECON.team.max (6) buddies. Only team members can fight, so your current fighter is always on it. With no team picked, it is your strongest buddies.
 function getTeam() {
-  const owned = getOwnedIds();
+  const owned = getOwnedIds().filter(function (id) { return !state.daycare.ids.length || state.daycare.ids.indexOf(id) === -1; });          // buddies at the Day Care do not fight
   let t = state.team.filter(function (id, i) { return owned.indexOf(id) !== -1 && state.team.indexOf(id) === i; }).slice(0, ECON.team.max);
   if (!t.length) {
     t = owned.slice().sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }).slice(0, ECON.team.max);

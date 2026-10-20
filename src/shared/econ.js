@@ -52,9 +52,9 @@ const ECON = {
     // A trainer on the map sees the hero along the way it faces, up to `trainerSight` tiles (a trainer may set its own `sight`).
     trainerSight: 3,
     // Fishing (tap water with the Fishing Rod): this chance of a bite each try; a bite is a normal wild fight with a water buddy.
-    fishBite: 0.6,
+    rods: [{ name: 'Old Rod', bite: 0.4, level: -2 }, { name: 'Good Rod', bite: 0.6, level: 0 }, { name: 'Super Rod', bite: 0.8, level: 3 }],
     // The story's one-time prizes (gems), by story beat: the Scramblers' schemes put right (24t-ow-story.js).
-    storyGems: { 'tide-ferry': 20, 'volt-blackout': 25, 'gloom-scramblers': 40 },
+    storyGems: { 'tide-ferry': 20, 'volt-blackout': 25, 'gloom-scramblers': 40, 'coral-lighthouse': 40, 'spark-clock': 50, 'dusk-jumble': 80 },
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
     netBonus: 1.5, potionHeal: 40, eggEvery: 25, eggPerDay: 8, blackoutShare: 0.5,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
@@ -83,6 +83,8 @@ const ECON = {
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
+  // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
+  daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 20, perLevel: 10 },
   items: { potion: 20, net: 30, repel: 25 },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.

@@ -9,8 +9,7 @@ owAddNpc('hollow-house', { id: 'hollow-pi', kind: 'gift', gift: 'gizmo', name: '
 owAddNpc('meadow-house', { id: 'meadow-netmaker', kind: 'talk', name: 'Weaver Wren', x: 2, y: 2, face: 'down', look: { skin: 2, hair: 3, outfit: 2, style: 3 },
   lines: ['I weave Catch Nets. Buy them at the Mart and keep a few for the tall grass!'] });
 owAddNpc('ember-house', { id: 'ember-trader', kind: 'trade', trade: { give: 'fox', get: 'bunny' }, name: 'Trader Rue', x: 2, y: 2, face: 'down', look: { skin: 3, hair: 2, outfit: 1, style: 2 }, lines: ['Hello, traveller! I love swapping buddies.'] });
-owAddNpc('tide-house', { id: 'tide-daycare', kind: 'talk', name: 'Keeper Marlo', x: 2, y: 2, face: 'down', look: { skin: 0, hair: 4, outfit: 5, style: 1 },
-  lines: ['I look after buddies that are resting. A Buddy Center wakes them up in no time.', 'Eggs hatch as you walk, so keep an egg in your bag and keep exploring.'] });
+owAddNpc('tide-house', { id: 'tide-daycare', kind: 'daycare', name: 'Keeper Marlo', x: 2, y: 2, face: 'down', look: { skin: 0, hair: 4, outfit: 5, style: 1 }, lines: ['Welcome to the Day Care!'] });
 owAddNpc('grove-house', { id: 'grove-tutor', kind: 'tutor', name: 'Tutor Selene', x: 2, y: 2, face: 'down', look: { skin: 4, hair: 7, outfit: 4, style: 1 }, lines: ['Hello! I teach buddies new moves.'] });
 owAddNpc('volt-house', { id: 'volt-trader', kind: 'trade', trade: { give: 'otter', get: 'hedgehog' }, name: 'Trader Kip', x: 2, y: 2, face: 'down', look: { skin: 1, hair: 6, outfit: 0, style: 2 }, lines: ['Hi there! Got a spare buddy to swap?'] });
 

@@ -205,6 +205,10 @@ const NORMALIZERS = [
       s.advPp[id] = {};
       Object.keys(pp[id]).slice(0, 8).forEach(function (m) { if (Number.isFinite(pp[id][m])) s.advPp[id][m.slice(0, 16)] = clamp(Math.floor(pp[id][m]), 0, 99); });
     });
+    const dc = isPlainObject(s.daycare) ? s.daycare : {}, dcOwned = s.unlockedPets.concat(s.unlockedSecrets), from = {};
+    const ids = (Array.isArray(dc.ids) ? dc.ids : []).filter(function (id, i, a) { return dcOwned.indexOf(id) !== -1 && id !== s.activePet && a.indexOf(id) === i; }).slice(0, ECON.daycare.max);
+    ids.forEach(function (id) { from[id] = asInt(dc.from && dc.from[id], 1, 100, 1); });
+    s.daycare = { ids: ids, from: from, steps: asInt(dc.steps, 0, 1e9, 0), egg: asInt(dc.egg, 0, 1e6, 0), eggReady: dc.eggReady === true && ids.length === 2 };
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },

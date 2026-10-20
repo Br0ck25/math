@@ -55,6 +55,51 @@ test('Gold statuses: water freezes (a frozen buddy cannot move, a tenth thaw), m
   assert.deepEqual(conf, [true, 2], 'a low roll: it hurt itself and has one turn less');
 });
 
+test('the fishing rod grows with you: Old, Good with 3 badges, Super for the Champion, each biting more and pulling bigger buddies', async () => {
+  const r = await ev(() => {
+    grantKeyItem('fishing-rod'); state.badges = []; state.storySeen.champion = 0; const tiers = [owRodTier()];
+    state.badges = ['meadow', 'ember', 'tide']; tiers.push(owRodTier());
+    state.storySeen.champion = 1; tiers.push(owRodTier());
+    const seen = [];
+    const real = startAdventureFight; window.startAdventureFight = (sp, lv) => seen.push([sp.element, isStoreBuddy(sp) ? sp.cost : -1, lv]);
+    Math.random = () => 0.1; state.storySeen.champion = 0; state.badges = []; owFish();
+    window.startAdventureFight = real;
+    return { tiers, bites: ECON.overworld.rods.map((x) => x.bite), levels: ECON.overworld.rods.map((x) => x.level), old: seen[0] };
+  });
+  assert.deepEqual(r.tiers, [0, 1, 2]);
+  assert.deepEqual([r.bites, r.levels], [[0.4, 0.6, 0.8], [-2, 0, 3]]);
+  assert.equal(r.old[0], 'water'); assert.ok(r.old[1] < 150 && r.old[2] === -2, 'the Old Rod pulls an everyday water buddy a little weaker');
+});
+
+test('the Day Care: two buddies grow a level per 40 steps, a same-type pair leaves an egg, taking one back costs by levels gained, and they leave the team', async () => {
+  const r = await ev(() => {
+    const fire = storePets.filter((p) => p.element === 'fire' && p.id !== state.activePet).slice(0, 2).map((p) => p.id);
+    state.unlockedPets = [state.activePet].concat(fire); state.team = state.unlockedPets.slice(); state.gems = 1000; state.egg = null;
+    const npc = OW_MAPS['tide-house'].npcs.find((n) => n.kind === 'daycare'), out = {};
+    const talkTo = (i) => { talk.i = talk.lines.length - 1; renderTalk(); talkChoose(i); };
+    for (let k = 0; k < 2; k++) { OW_SERVICES.daycare(npc); talkTo(talk.choices.length - 1); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0); }
+    out.left = state.daycare.ids.length; out.team = getTeam().length;
+    const lv = getBuddyLevel(fire[0]);
+    for (let i = 0; i < 40; i++) owDaycareStep();
+    out.grew = getBuddyLevel(fire[0]) - lv;
+    for (let i = 0; i < 200; i++) owDaycareStep();
+    out.egg = state.daycare.eggReady;
+    OW_SERVICES.daycare(npc); const labels = talk.choices.map((c) => c.label); talkTo(labels.findIndex((l) => /egg/.test(l)));
+    out.hasEgg = !!state.egg;
+    const cost = daycareCost(fire[0]); out.cost = cost > ECON.daycare.base;
+    OW_SERVICES.daycare(npc); talkTo(0);
+    out.back = state.daycare.ids.length; out.gems = state.gems < 1000;
+    return out;
+  });
+  assert.deepEqual(r, { left: 2, team: 1, grew: 1, egg: true, hasEgg: true, cost: true, back: 1, gems: true });
+});
+
+test('the buddy summary shows type, level, the five stats and the moves with PP', async () => {
+  const t = await ev(() => { hubTab = 'stats'; openHub(); return document.getElementById('hub-body').innerText; });
+  for (const w of ['Type', 'Level', 'HP', 'Attack', 'Defense', 'Speed', 'Special', 'Held item', 'Moves', 'PP ']) assert.match(t, new RegExp(w));
+  assert.equal(await ev(() => document.querySelectorAll('#hub-tabs button').length), 3);
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 100; state.repelSteps = 0;

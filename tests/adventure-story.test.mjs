@@ -42,7 +42,7 @@ const win = () => page.evaluate(async () => {
 
 test('the story data is sound: known beats, prizes only for real beats, every needs a real badge, scenes and bosses have what they need', async () => {
   const r = await page.evaluate(() => {
-    const out = [], ids = gymRegions().map((g) => g.id).concat('champion');
+    const out = [], ids = allGymRegions().map((g) => g.id).concat('champion');
     Object.keys(OW_MAPS).forEach((k) => (OW_MAPS[k].npcs || []).forEach((n) => {
       if (n.needs && ids.indexOf(n.needs) === -1) out.push(n.id + ': needs ' + n.needs);
       if (n.story && OW_STORY.indexOf(n.story) === -1) out.push(n.id + ': unknown story ' + n.story);

@@ -176,11 +176,16 @@ function owGift(npc) {
   else openTalk({ name: npc.name, art: art, lines: npc.after });
 }
 
+// Gold's three rods: the Old Rod is the gift; the Good Rod comes with your third badge and the Super Rod with the Champion's title.
+function owRodTier() { return isChampion() ? 2 : state.badges.length >= 3 ? 1 : 0; }
 // ----- fishing: tap water with the rod. Sometimes nothing bites; a bite is a normal wild fight with a water buddy. -----
 function owFish() {
   if (!hasKeyItem('fishing-rod')) { openTalk({ name: 'Water', art: worldSprite('t-water'), lines: ['The water is calm and clear.', 'Maybe something is swimming down there. A Fishing Rod would help!'] }); return; }
-  if (Math.random() >= ECON.overworld.fishBite) { toast('No bite. Try again!'); return; }
-  startAdventureFight(pick(wildPool().filter(function (p) { return p.element === 'water'; })));
+  const rod = owRodTier(), R = ECON.overworld.rods[rod];
+  if (Math.random() >= R.bite) { toast('No bite. Try again!'); return; }
+  const water = wildPool().filter(function (p) { return p.element === 'water'; });
+  const fit = water.filter(function (p) { return rod === 0 ? isStoreBuddy(p) && p.cost < 150 : rod === 1 ? isStoreBuddy(p) : true; });          // Old Rod: the everyday ones; Good: every store buddy; Super: the rare ones too
+  startAdventureFight(pick(fit.length ? fit : water), R.level);
 }
 
 // ----- shake trees: once a day each, a rare buddy falls out (the same one all day, a different one tomorrow) -----

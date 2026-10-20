@@ -79,4 +79,15 @@ test('Silver Peak: the door needs the Summit Badge; Master Ori\'s six legends pa
   assert.deepEqual(await ev(() => [state.champ.master, state.gems]), [3, await ev(() => ECON.map.master.repeatGems)], 'a new day pays the repeat reward');
 });
 
+test('the Scramblers return: two puzzle signs guarded by a Scrambler each, a lair boss in Duskhollow, and Riley at the Crossroads and the Citadel; each route has its own layout', async () => {
+  const r = await ev(() => ({
+    story: ['coral-lighthouse', 'spark-clock', 'dusk-jumble', 'cross-riley'].every((id) => OW_STORY.indexOf(id) !== -1),
+    signs: ['coral', 'spark'].map((m) => { const s = OW_MAPS[m].signs['5,12']; return [s.story, s.after, owIds('trainer').includes(s.after)]; }),
+    boss: OW_MAPS['dusk-hideout'].npcs.find((n) => n.kind === 'boss').story, lair: OW_MAPS.dusk.warps.some((w) => w.to === 'dusk-hideout'),
+    riley: ['cross', 'summit'].map((m) => OW_MAPS[m].npcs.some((n) => n.name === RIVAL && n.kind === 'scene')),
+    layouts: new Set(['route8', 'route9', 'route10', 'route11'].map((k) => OW_MAPS[k].rows.join('|'))).size,
+  }));
+  assert.deepEqual(r, { story: true, signs: [['coral-lighthouse', 'coral-zub', true], ['spark-clock', 'spark-zop', true]], boss: 'dusk-jumble', lair: true, riley: [true, true], layouts: 4 });
+});
+
 test('no errors', () => { assert.deepEqual(errors, []); });

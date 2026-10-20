@@ -40,7 +40,7 @@ function padRow(id, action) {
 function padBtn(label, fn, id) { return '<button type="button" class="claim-btn" onclick="' + fn + '(\'' + escHtml(id) + '\')">' + label + '</button>'; }
 function renderPad() {
   document.getElementById('pad-title').innerText = heroName() + "'s team";
-  const team = getTeam(), box = getOwnedIds().filter(function (id) { return team.indexOf(id) === -1; }).sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
+  const team = getTeam(), box = getOwnedIds().filter(function (id) { return team.indexOf(id) === -1 && !daycareHas(id); }).sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
   document.getElementById('pad-body').innerHTML = '<div class="pad-note d">Team (' + team.length + '/' + ECON.team.max + '): the lead goes first in a battle.</div>' +
     team.map(function (id) { return padRow(id, id === state.activePet ? '<span class="pad-tag">Leading</span>' : (isSleepy(id) ? '' : padBtn('Lead', 'padLead', id)) + (team.length > 1 ? padBtn('Box', 'padDeposit', id) : '')); }).join('') +
     '<div class="pad-note d">PC box (' + box.length + ')</div>' +
@@ -60,6 +60,7 @@ function padDeposit(id) {
   soundClick(); padRefresh();
 }
 function padWithdraw(id) {
+  if (daycareHas(id)) return;
   if (joinTeamIfRoom(id)) { soundClick(); padRefresh(); return; }
   openReplaceModal(id);                                                           // the team is full: pick who goes to the box
 }

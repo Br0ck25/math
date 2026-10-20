@@ -139,7 +139,7 @@ function owMove(dir) {
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, nx, ny);
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
-  owWalkEgg();
+  owWalkEgg(); owDaycareStep();
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
   if (warp) return;
@@ -226,12 +226,12 @@ function showAdventureWindow() {
 
 // ----- a fight that begins on a walk: the Adventure battle screen (24x-ow-battle.js, 24y-ow-arenas.js) -----
 // `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
-function startAdventureFight(sp) {
+function startAdventureFight(sp, levelBonus) {
   if (ab) return;
   owRelease();
   if (!sp && legendRoute() === state.overworld.map && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: legendOfWeek().id, level: ECON.legend.level }] }); return; }
   sp = sp || rollWildSpecies([]);
-  abStart({ kind: 'wild', foes: [{ id: sp.id, level: abWildLevel(), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
+  abStart({ kind: 'wild', foes: [{ id: sp.id, level: clamp(abWildLevel() + (levelBonus || 0), 2, MAX_LEVEL), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
 }
 // A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
 function startTrainerFight(npc) {

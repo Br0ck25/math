@@ -9,6 +9,7 @@ function freshState() {
     streak: 0,
     shields: 0,
     cloverLeft: 0,
+    daycare: { ids: [], from: {}, steps: 0, egg: 0, eggReady: false },        // buddies left at the Day Care (24vd-ow-daycare.js)
     repelSteps: 0,                                   // grass steps left with no wild fights (Repel)
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
