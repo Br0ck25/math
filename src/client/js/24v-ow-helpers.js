@@ -40,7 +40,7 @@ const OW_SERVICES = {
     const lines = ['A buddy takes four moves into battle. I can teach ' + pet.name + ' any move it has learned before.'];
     if (!spare.length) { openTalk({ name: npc.name, art: art, lines: lines.concat([pet.name + ' has no other moves to learn yet. Keep levelling up!']) }); return; }
     openTalk({ name: npc.name, art: art, lines: lines.concat(['Which move should ' + pet.name + ' learn?']),
-      choices: spare.slice(0, 4).map(function (m) { return { label: m.name + ' (power ' + m.power + ')', run: function () { closeTalk(); owTutorForget(npc, pet, m); } }; }) });
+      choices: spare.slice(0, 4).map(function (m) { return { label: m.name + (m.fx ? ' (status)' : ' (power ' + m.power + ')'), run: function () { closeTalk(); owTutorForget(npc, pet, m); } }; }) });
   }
 };
 

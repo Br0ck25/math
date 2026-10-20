@@ -16,8 +16,22 @@ const AB_MOVE_NAMES = {
 const AB_NORMAL = [
   { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, acc: 100, pp: 35, level: 1 },
   { id: 'quick', name: 'Quick Dash', type: 'normal', power: 40, acc: 100, pp: 30, level: 8, pri: 1 },       // moves first
-  { id: 'slam', name: 'Body Slam', type: 'normal', power: 80, acc: 85, pp: 15, level: 20 }
+  { id: 'slam', name: 'Body Slam', type: 'normal', power: 80, acc: 85, pp: 15, level: 20 },
+  // Gold's stat moves: no damage, they move a stat up or down by stages (-6 to +6) for the rest of the fight. `fx`: which stat, how many stages, and who is changed.
+  { id: 'growl', name: 'Growl', type: 'normal', power: 0, acc: 100, pp: 40, level: 4, fx: { stat: 'atk', n: -1, on: 'foe' } },
+  { id: 'leer', name: 'Leer', type: 'normal', power: 0, acc: 100, pp: 30, level: 10, fx: { stat: 'def', n: -1, on: 'foe' } },
+  { id: 'harden', name: 'Harden', type: 'normal', power: 0, acc: 100, pp: 30, level: 12, fx: { stat: 'def', n: 1, on: 'self' } },
+  { id: 'smoke', name: 'Smokescreen', type: 'normal', power: 0, acc: 100, pp: 20, level: 16, fx: { stat: 'acc', n: -1, on: 'foe' } },
+  { id: 'swords', name: 'Swords Dance', type: 'normal', power: 0, acc: 100, pp: 30, level: 24, fx: { stat: 'atk', n: 2, on: 'self' } },
+  { id: 'agility', name: 'Agility', type: 'normal', power: 0, acc: 100, pp: 30, level: 30, fx: { stat: 'spd', n: 2, on: 'self' } }
 ];
+// Stat stages as in Gold: a stage multiplies a stat (and, for accuracy, the hit chance) by these percents.
+const AB_STAGE_PCT = [25, 28, 33, 40, 50, 66, 100, 150, 200, 250, 300, 350, 400];
+const AB_ACC_PCT = [33, 36, 43, 50, 60, 75, 100, 133, 166, 200, 250, 266, 300];
+const AB_STAT_NAME = { atk: 'Attack', def: 'Defense', spd: 'Speed', spc: 'Special', acc: 'accuracy' };
+function abStage(m, stat) { return m.stg && m.stg[stat] || 0; }
+// A stat with its stage applied.
+function abStat(m, stat) { return Math.max(1, Math.floor(m[stat] * AB_STAGE_PCT[abStage(m, stat) + 6] / 100)); }
 // With every PP spent a buddy can still Struggle (it hurts itself a little).
 const AB_STRUGGLE = { id: 'struggle', name: 'Struggle', type: 'normal', power: 50, acc: 100, pp: 1, left: 1, recoil: true };
 // The status a damaging move of each element can leave (from the second tier on, one chance in five): burn and poison hurt a little every round, paralysis slows and can stop a move, sleep skips turns.
@@ -34,7 +48,10 @@ function abKnownMoves(element, level, type) {
 // The four moves it takes into battle: the ones chosen (state.advMoves), topped up with its newest if fewer than four were chosen. `pp` is the PP left per move id.
 function abMoveList(element, level, type, pp, chosen) {
   const known = abKnownMoves(element, level, type);
-  if (!Array.isArray(chosen)) chosen = known.slice(-4).map(function (m) { return m.id; });
+  if (!Array.isArray(chosen)) {                                                   // by default: the newest damaging moves, and the newest stat move last
+    const hit = known.filter(function (m) { return !m.fx; }), stat = known.filter(function (m) { return m.fx; }).slice(-1);
+    chosen = hit.slice(stat.length ? -3 : -4).concat(stat).map(function (m) { return m.id; });
+  }
   const list = chosen.map(function (id) { return known.find(function (m) { return m.id === id; }); }).filter(Boolean);
   known.slice().reverse().forEach(function (m) { if (list.length < 4 && list.indexOf(m) === -1) list.push(m); });
   return list.slice(0, 4).map(function (m) { return Object.assign({}, m, { left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, m.pp) : m.pp }); });
@@ -98,7 +115,7 @@ function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id]
 const AB_CRIT = 17 / 256, AB_CRIT_LENS = 32 / 256;     // the critical hit chance, and with a Scope Lens (one stage up)
 function abDamage(att, def, move, crit) {
   const special = move.type !== 'normal';
-  let A = special ? att.spc : att.atk, D = special ? def.spc : def.def;
+  let A = abStat(att, special ? 'spc' : 'atk'), D = abStat(def, special ? 'spc' : 'def');
   if (!special && att.status === 'burn') A = Math.floor(A / 2);
   if (A > 255 || D > 255) { A = Math.floor(A / 4); D = Math.floor(D / 4); }
   A = Math.max(1, A); D = Math.max(1, D);

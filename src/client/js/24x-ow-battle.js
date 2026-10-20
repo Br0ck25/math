@@ -31,6 +31,7 @@ function abStart(opts) {
   return true;
 }
 function abLoadRound() {
+  ab.party.forEach(function (m) { m.stg = {}; });                       // stat stages last one fight round
   const r = ab.rounds[ab.r];
   ab.kind = r.kind; ab.name = r.name; ab.npc = r.npc || null;
   ab.foes = r.foes.map(abFoeMon);
@@ -190,7 +191,7 @@ function abBerry(m) {
   m.hp += heal;
   abNow([[m.name + ' ate its Berry and restored ' + heal + ' HP!', null, 1100]]);
 }
-function abSpeed(m) { return m.spd * (m.status === 'paralysis' ? 0.25 : 1); }
+function abSpeed(m) { return abStat(m, 'spd') * (m.status === 'paralysis' ? 0.25 : 1); }
 function abSavePp(m) { state.advPp[m.id] = {}; m.moves.forEach(function (mv) { state.advPp[m.id][mv.id] = mv.left; }); }
 // The sound of a hit: a plain thud for normal moves, the element's own sound for the others.
 function abHitSound(att, mv) { if (mv.type === 'normal') soundTackle(); else soundElementHit(att.element); }
@@ -234,9 +235,22 @@ function abFx(att, def, mv, hit) {
   setTimeout(function () { fx.remove(); }, 700);
   play(d, 'ab-shake');
 }
+// A stat move: it moves one stat of the user or the target by stages, with Gold's messages when it cannot go further.
+function abStatMove(att, def, mv, next) {
+  const who = mv.fx.on === 'self' ? att : def, stat = mv.fx.stat;
+  who.stg = who.stg || {};
+  const now = abStage(who, stat), to = clamp(now + mv.fx.n, -6, 6);
+  if (to === now) abSteps([[who.name + "'s " + AB_STAT_NAME[stat] + " won't go any " + (mv.fx.n > 0 ? 'higher' : 'lower') + '!', null, 1000]]);
+  else {
+    who.stg[stat] = to;
+    abSteps([[who.name + "'s " + AB_STAT_NAME[stat] + ' ' + (mv.fx.n > 0 ? (mv.fx.n > 1 ? 'rose sharply!' : 'rose!') : (mv.fx.n < -1 ? 'fell sharply!' : 'fell!')), function () { abFx(att, def, mv, false); if (mv.fx.n > 0) soundLevelUp(); else soundWrong(); }, 1000]]);
+  }
+  next();
+}
 // One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
 function abHit(att, def, mv, down, next) {
-  if (Math.random() * 100 >= mv.acc) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
+  if (mv.fx) { abStatMove(att, def, mv, next); return; }
+  if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     abFx(att, def, mv, true);
@@ -354,7 +368,7 @@ function abSwitch(i) {
   if (ab.phase !== 'team' || mon.hp <= 0 || i === ab.cur) return;
   const forced = ab.forced, old = abMe();
   ab.phase = 'busy'; ab.forced = false;
-  abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
+  abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; old.stg = {}; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
   if (forced) abBackToMenu(); else abFoeTurn();
 }
 

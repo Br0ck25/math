@@ -182,6 +182,24 @@ test('nets are the balls of Gold: the Catch Net is a Poke Ball, the Great and Ul
   assert.deepEqual(await ev(() => [state.items.greatnet || 0, getOwnedIds().includes('fox')]), [0, true]);
 });
 
+test('stat moves: Growl lowers the foe Attack by a stage (it shows in the damage), stages stop at +/-6, Swords Dance raises two, a switch resets them', async () => {
+  await ev(() => { state.buddyXp[state.activePet] = xpForLevel(30); });
+  await begin();
+  const r = await ev(() => {
+    const me = abMe(), foe = abFoe(), mv = (id) => me.moves.find((m) => m.id === id) || abKnownMoves(me.element, 60, me.type).find((m) => m.id === id);
+    const out = {}, dmg = (a, d) => { Math.random = () => 0.5; return abDamage(a, d, { power: 40, type: 'normal' }, false).dmg; };
+    foe.atk = 60; me.def = 60; foe.level = me.level = 30; const before = dmg(foe, me);
+    abStatMove(me, foe, mv('growl'), () => {}); out.stage = foe.stg.atk;
+    out.lower = dmg(foe, me) < before;
+    for (let i = 0; i < 8; i++) abStatMove(me, foe, mv('growl'), () => {});
+    out.floor = foe.stg.atk;
+    abStatMove(me, foe, mv('swords'), () => {}); abStatMove(me, foe, mv('swords'), () => {}); out.up = me.stg.atk;
+    out.spd = abStat({ spd: 100, stg: { spd: 2 } }, 'spd');
+    return out;
+  });
+  assert.deepEqual(r, { stage: -1, lower: true, floor: -6, up: 4, spd: 200 });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

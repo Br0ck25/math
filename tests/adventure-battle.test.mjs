@@ -31,7 +31,7 @@ test('stats grow with level and kind, and the moves follow the level', async () 
     return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 8).moves.map((m) => m.id), start: abMon('fox', 3).moves.map((m) => m.id), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
   });
   assert.ok(r.b[0] > r.a[0] * 3 && r.b[1] > r.a[1] * 3);
-  assert.deepEqual(r.names5, ['tackle', 'fire1', 'quick']);
+  assert.deepEqual(r.names5, ['tackle', 'fire1', 'quick', 'growl'], 'the newest damaging moves, and the newest stat move last');
   assert.deepEqual(r.start, ['tackle', 'fire1'], 'a new buddy knows two moves, as in Gold');
   assert.equal(r.names50.length, 4);
   assert.ok(r.dear > r.cheap);
@@ -176,7 +176,7 @@ test('the faster buddy attacks first, and a priority move beats speed', async ()
 test('statuses: a burned buddy hits softer and loses HP each round, paralysis slows, and a Potion cures', async () => {
   await begin('fox', 20);
   const r = await ev(() => {
-    const a = abMon('fox', 20), d = abMon('otter', 20), mv = a.moves[1];
+    const a = abMon('fox', 20), d = abMon('otter', 20), mv = abKnownMoves(a.element, 20, a.type).find((m) => m.id === 'slam');
     Math.random = () => 0.99;
     const clean = abDamage(a, d, mv, false).dmg; a.status = 'burn'; const burned = abDamage(a, d, mv, false).dmg;
     a.status = 'paralysis';
