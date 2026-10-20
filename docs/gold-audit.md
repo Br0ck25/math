@@ -3,6 +3,7 @@
 Last checked after the money, items and Wardrobe changes. "Gold" facts come from Bulbapedia and the pret/pokegold sources; where a number is ours it says so.
 
 ## Matches
+- **People and screens:** the first buddy starts at level 5; you from behind and the trainer are shown before a fight; every buddy is male or female (shown next to the level; legends and the ultra trio have none) and a Day Care egg needs a male and a female of one type; routes run left and right too, through side paths (alternating east and west).
 - **Party and lead:** six buddies, the lead goes first, a PC box for the rest (Team window), resting buddies cannot lead.
 - **Battle:** turn order by Speed and priority, Gen II damage order, critical hits 17/256, STAB, type chart, luck 217-255, PP, Struggle, accuracy, stat stages, statuses (burn, poison, paralysis, sleep, freeze, confusion), catch formula with shakes, Quick Claw, Scope Lens, held berry and Leftovers, experience formula, level growth (cubic), forget-a-move prompt, Move Tutor, run chance that grows with Speed and tries, blackout loses half the money.
 - **Money:** only trainers pay; Marts buy items back at half price; math signs are practice and pay nothing. Prize = class base x level of the last buddy (ordinary trainers 16, leaders, Elite Four, Champion and Master 100). Wild buddies, level-ups, badges and story beats pay nothing.
@@ -18,6 +19,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 
 ## Still missing (ordered by how much a Gold player would notice)
 1. **A wider move list and TMs:** each buddy has its Normal moves (Tackle, Quick Dash, Body Slam), six stat moves (Growl, Leer, Harden, Smokescreen, Swords Dance, Agility) and its own type's four tiers. Evasion-raising and special-stat moves are not there.
+2. **Move pace:** Gold teaches each kind its own moves about every 6 to 8 levels; ours uses one shared ladder (a new move every 2 to 4 levels early on) and no PP Up or Ether.
 3. **Per-route wild tables with fixed level ranges** and trainer teams written by hand; ours are drawn from the land's mix.
 4. **Evolution by stone or happiness**, breeding that passes moves, Pokérus-style extras.
 5. **More items:** Ether and Elixir, Escape Rope, X items, Max Repel.

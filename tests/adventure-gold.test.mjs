@@ -224,6 +224,22 @@ test('Gold shows the people first: you from behind and the trainer before its bu
   assert.deepEqual(await ev(() => [!!document.querySelector('#ab-foe-icon .ab-person'), !!document.querySelector('#ab-me-icon .ab-person'), document.querySelector('#ab-modal .ab-field').classList.contains('ab-intro')]), [false, false, false]);
 });
 
+test('routes run sideways too: every route has an east or west gap to a side path (alternating), with a trainer and two finds, and you can walk there and back', async () => {
+  const r = await ev(() => {
+    const out = { all: OW_LANDS.every((L) => OW_MAPS[L.routeIn].warps.some((w) => w.to === L.routeIn + '-side')), sides: new Set(), back: true };
+    OW_LANDS.forEach((L, i) => { const w = OW_MAPS[L.routeIn].warps.find((x) => x.to === L.routeIn + '-side'); out.sides.add(w.x === 13 ? 'east' : 'west'); const side = OW_MAPS[w.to]; const home = side.warps[0]; if (home.to !== L.routeIn || OW_MAPS[L.routeIn].rows[home.ty].charAt(home.tx) === 'T') out.back = false; });
+    out.sides = [...out.sides].sort().join();
+    state.hero.made = true; openAdventure();
+    const w = OW_MAPS.route1.warps.find((x) => /-side$/.test(x.to));
+    state.overworld.map = 'route1'; state.overworld.x = w.x - 1; state.overworld.y = w.y; state.overworld.face = 'right'; owMove('right');
+    out.there = state.overworld.map; owMove('left'); owMove('left');
+    out.home = state.overworld.map;
+    const m = OW_MAPS['route1-side']; out.contents = [m.npcs.length, m.objects.length];
+    return out;
+  });
+  assert.deepEqual(r, { all: true, sides: 'east,west', back: true, there: 'route1-side', home: 'route1', contents: [1, 2] });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;
