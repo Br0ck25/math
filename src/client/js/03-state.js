@@ -15,6 +15,7 @@ function freshState() {
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
     ranch: { at: 0, workers: {}, stock: { berry: 0, ore: 0, honey: 0, parts: 0 } },   // buddy id -> station id, the goods in the barn, and when work was last counted
+    spring: { day: '' },                             // the day the free Healing Spring visit was used (24b-map.js)
     rested: { day: '', fights: {} },                 // buddy id -> plain wild wins today (the first ECON.farm.restedWins of each earn bonus XP)
     wildWins: { day: '', n: 0 },                     // plain wild wins today (after ECON.farm.dailyWins, wild gems are smaller)
     trails: {},                                      // land id -> { day, done: [spot numbers] }: today's Trail progress

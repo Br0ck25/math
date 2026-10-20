@@ -106,8 +106,10 @@ function generateProblem() {
   updateWeakChip();
   document.getElementById('equation-mount').classList.toggle('challenge', p.challenge);
   questionStartTime = Date.now();
+  if (clockPausedAt !== null) clockPausedAt = questionStartTime;      // a window is open over this problem: its time starts when the window closes
   padReset();
   renderEquationUI();
+  chargeFoeMove();
   holdForSwitch();
   if (typeof speakCurrentProblem === 'function') speakCurrentProblem(false);
 }
@@ -151,6 +153,7 @@ function renderEquationUI() {
 
 function pressKey(key) {
   if (inputLocked) return;
+  closeMissCard();                                  // typing the next answer puts the "not quite" card away
   if (typeof stopSpeech === 'function') stopSpeech();
   soundClick();
   if (key === 'backspace') {

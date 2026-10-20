@@ -126,6 +126,10 @@ const NORMALIZERS = [
     Object.keys(r.fights || {}).forEach(function (id) { if (owned.indexOf(id) !== -1) fights[id] = asInt(r.fights[id], 0, 100000, 0); });
     s.rested = { day: typeof r.day === 'string' ? r.day.slice(0, 12) : '', fights: fights };
   },
+  function spring(s) {
+    const sp = s.spring || {};
+    s.spring = { day: typeof sp.day === 'string' ? sp.day.slice(0, 12) : '' };
+  },
   function wildWins(s) {
     const w = s.wildWins || {};
     s.wildWins = { day: typeof w.day === 'string' ? w.day.slice(0, 12) : '', n: asInt(w.n, 0, 100000, 0) };

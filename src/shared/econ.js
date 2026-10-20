@@ -76,7 +76,10 @@ const ECON = {
   // Quirks (25b-held.js): every species has one; these are the sizes of the bonuses (xp: share of extra XP, speed: Speed Strike time, catch: catch chance, calmLess: problems a status lasts less).
   quirk: { xp: 0.1, speed: 1.1, catch: 1.1, calmLess: 1 },
   // Status effects (12d-status.js): the chance a foe's hit leaves one, and for how many problems.
-  status: { wildChance: 0.25, bossChance: 0.4, problems: 3 },
+  status: { wildChance: 0.25, bossChance: 0.4, problems: 3, foeChance: 0.5 },
+  // Your damage moves can leave the foe burned, frozen or weakened for `problems` problems (same as a foe's status on you), with this chance (12d-status.js).
+  // Healing Spring (24b-map.js): wakes every resting buddy. The first visit each day is free, later ones cost `gems`.
+  spring: { gems: 5 },
   // Moves (12c-moves.js): Recover heals this share of max HP. A buddy takes `slots` moves (plus its ultimate) into battle; the player chooses which.
   moves: { healShare: 0.4, slots: 4 },
   // The Legend hunt (24c-legend.js): after becoming Champion, one legendary buddy a week (a different type each week) can be hunted once a day.

@@ -291,3 +291,47 @@ test('signature moves: a buddy with one learns it at level 12, it carries its ow
   assert.equal(r.purify, 0, 'Moon Hop clears the status');
   assert.equal(r.koalaMoves, false);
 });
+
+test('a damage move can leave the foe burned, frozen or weakened by your buddy\'s element, and it wears off', async () => {
+  const r = await page.evaluate(async () => {
+    const out = {};
+    Math.random = () => 0;
+    monsterCurrentHp = 99; inputLocked = false; ultimateCharge = 3;
+    useMove('strike');
+    await new Promise((res) => setTimeout(res, 2000));
+    out.fromMove = { kind: foeStatus.kind, left: foeStatus.left, chip: document.getElementById('monster-status').innerText, shown: getComputedStyle(document.getElementById('monster-status')).display };
+    tickStatus(); tickStatus(); tickStatus();
+    out.worn = { left: foeStatus.left, shown: getComputedStyle(document.getElementById('monster-status')).display };
+    out.kinds = ['fire', 'electric', 'water', 'magic', 'nature', 'dark', 'shadow'].map((element) => { clearFoeStatus(); monsterCurrentHp = 99; maybeInflictFoeStatus({ element }); return foeStatus.kind; });
+    foeStatus = { kind: 'burn', left: 2 }; resetBattleEffects(); out.reset = foeStatus.left;
+    Math.random = () => 0.999;
+    monsterCurrentHp = 99; clearFoeStatus(); maybeInflictFoeStatus({ element: 'fire' }); out.unlucky = foeStatus.left;
+    return out;
+  });
+  assert.equal(r.fromMove.kind, 'weak', 'the starter is a nature buddy');
+  assert.equal(r.fromMove.left, 3);
+  assert.match(r.fromMove.chip, /💢3/);
+  assert.notEqual(r.fromMove.shown, 'none');
+  assert.equal(r.worn.left, 0);
+  assert.equal(r.worn.shown, 'none');
+  assert.deepEqual(r.kinds, ['burn', 'burn', 'frozen', 'frozen', 'weak', 'weak', 'weak']);
+  assert.equal(r.reset, 0, 'a new fight starts clean');
+  assert.equal(r.unlucky, 0, 'it is a chance, not a promise');
+});
+
+test('a burned foe takes 1 extra damage; a frozen foe hits for half and a weakened one for 1 less', async () => {
+  const r = await page.evaluate(async () => {
+    state.buddyXp.dog = xpForLevel(40);
+    bossLevel = 40; state.bossLevel = 40;
+    const wait = () => new Promise((res) => setTimeout(res, 2000));
+    const dealt = async (kind) => { clearFoeStatus(); if (kind) foeStatus = { kind, left: 3 }; monsterCurrentHp = 999; inputLocked = false; triggerMonsterDamage(0); await wait(); return 999 - monsterCurrentHp; };
+    const taken = async (kind) => { clearFoeStatus(); if (kind) foeStatus = { kind, left: 3 }; partyHp = {}; state.faintedPets = []; inputLocked = false; const before = getPetHp('dog'); triggerBuddyDamage(); await wait(); return before - getPetHp('dog'); };
+    const plainHit = await dealt(''), burnHit = await dealt('burn');
+    const plain = await taken(''), frozen = await taken('frozen'), weak = await taken('weak');
+    return { plainHit, burnHit, plain, frozen, weak };
+  });
+  assert.equal(r.burnHit, r.plainHit + 1);
+  assert.ok(r.plain >= 3, 'a hit big enough to tell the effects apart: ' + r.plain);
+  assert.equal(r.frozen, Math.max(1, Math.floor(r.plain / 2)));
+  assert.equal(r.weak, r.plain - 1);
+});

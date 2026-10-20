@@ -169,7 +169,7 @@ function renderMoves() {
   edit.setAttribute('aria-pressed', movesEditing ? 'true' : 'false');
   document.getElementById('moves-note').innerText = movesEditing
     ? 'Tap a move to take it into battle or leave it out. ' + ECON.moves.slots + ' at a time, plus your ultimate.'
-    : 'Every correct answer charges 1 energy. Your buddy learns more moves as it levels up!';
+    : 'Every correct answer charges 1 energy. Damage moves can burn, freeze or weaken the foe. Your buddy learns more moves as it levels up!';
   MOVES.forEach(function (m) {
     if (m.sig && !signatureOf(pet)) return;
     const known = m.minLevel <= pet.level, on = equipped.indexOf(m) !== -1;
@@ -236,6 +236,7 @@ function useMove(id) {
     triggerMonsterDamage(moveDamage(m, pet.level));
     if (m.drain) setPetHp(pet.id, Math.min(getPetMaxHp(pet.id), getPetHp(pet.id) + 1));
     if (m.sig) applySigEffect(pet);
+    setTimeout(function () { maybeInflictFoeStatus(pet); }, 350);       // after the hit has landed (a foe that just fell is not burned)
     setTimeout(function () { inputLocked = false; }, 600);
   }
   updateBattleUI();

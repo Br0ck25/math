@@ -155,7 +155,7 @@ test('the streak shield costs what the economy says: refused below it, bought at
   assert.equal(r.label, 'Need ' + r.price + ' more 💎', 'out of gems, the button says how many more are needed');
 });
 
-test('a wrong answer opens a card with the right answer that closes by itself after 5 seconds or by the ✕', async () => {
+test('a wrong answer opens a card with the right answer that closes by itself after 30 seconds or by the ✕', async () => {
   await solveWrong();
   const r = await page.evaluate(() => ({
     shown: getComputedStyle(document.getElementById('miss-modal')).display,
@@ -166,7 +166,7 @@ test('a wrong answer opens a card with the right answer that closes by itself af
   }));
   assert.equal(r.shown, 'flex');
   assert.equal(r.answer, r.want);
-  assert.equal(r.ms, 5000);
+  assert.equal(r.ms, 30000);
   assert.ok(r.x, 'sticky exit button');
   await page.evaluate(() => document.querySelector('#miss-modal .modal-x').click());
   assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
@@ -271,4 +271,82 @@ test('the team bar shows each buddy\'s matchup against the boss and swapping cha
   assert.ok(r.now && r.second, 'tapping a chip swaps in that buddy');
   assert.ok(r.restingStays, 'a resting buddy cannot be swapped in');
   assert.equal(r.hidden, 0, 'a one-buddy team shows no bar');
+});
+
+test('the foe names its next move for each problem, and the chip says dodged after a right answer and hit after a wrong one', async () => {
+  const before = await page.evaluate(() => ({ chip: document.getElementById('foe-move').innerText, name: foeMoveName, names: MOVE_NAMES[getBossInfo().element] }));
+  assert.ok(before.names.includes(before.name), before.name);
+  assert.equal(before.chip, '⚠️ Charging ' + before.name);
+  await solveCorrectly();
+  assert.equal(await page.evaluate(() => document.getElementById('foe-move').innerText), '💨 Dodged ' + before.name + '!');
+  await page.waitForFunction(() => document.getElementById('foe-move').innerText.startsWith('⚠️'));
+  const next = await page.evaluate(() => foeMoveName);
+  await solveWrong();
+  assert.equal(await page.evaluate(() => document.getElementById('foe-move').innerText), '💥 ' + next + ' hit!');
+});
+
+test('the foe uses its stronger move once it is under a quarter health', async () => {
+  const r = await page.evaluate(() => {
+    const boss = getBossInfo();
+    monsterCurrentHp = boss.maxHp;
+    chargeFoeMove();
+    const calm = foeMoveName;
+    monsterCurrentHp = Math.max(1, Math.floor(boss.maxHp / 4));
+    chargeFoeMove();
+    return { calm, angry: foeMoveName, names: MOVE_NAMES[boss.element] };
+  });
+  assert.equal(r.calm, r.names[0]);
+  assert.equal(r.angry, r.names[1]);
+});
+
+test('a new foe is announced over the stage with the buddy sent out, and the banner leaves by itself', async () => {
+  await page.evaluate(() => announceFoe());
+  const r = await page.evaluate(() => ({ text: document.getElementById('foe-intro').innerText, shown: document.getElementById('foe-intro').classList.contains('show'), foe: getBossInfo().name, buddy: getActivePetDisplay().baseName }));
+  assert.ok(r.shown);
+  assert.ok(r.text.includes(r.foe) && r.text.includes('Go, ' + r.buddy + '!'), r.text);
+  await page.waitForFunction(() => !document.getElementById('foe-intro').classList.contains('show'));
+});
+
+test('the "not quite" card covers the math area and leaves the buddy stage in view; typing puts it away', async () => {
+  await solveWrong();
+  await page.waitForFunction(() => !inputLocked);
+  const r = await page.evaluate(() => {
+    const modal = document.getElementById('miss-modal');
+    const card = document.querySelector('#miss-modal .modal-content').getBoundingClientRect();
+    const stage = document.getElementById('battle-header-arena').getBoundingClientRect();
+    const eq = document.getElementById('equation-mount').getBoundingClientRect();
+    return { shown: modal.style.display, belowStage: card.top >= stage.bottom - 1, coversEq: card.top <= eq.top + 1 && card.bottom >= eq.bottom - 1, onScreen: card.bottom <= window.innerHeight };
+  });
+  assert.equal(r.shown, 'flex');
+  assert.ok(r.belowStage, 'the buddy stage is not covered');
+  assert.ok(r.coversEq, 'the card is over the math problem');
+  assert.ok(r.onScreen);
+  await page.evaluate(() => pressKey('5'));
+  assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
+});
+
+test('the shield pill appears once you own a shield; the Shop still sells them', async () => {
+  const r = await page.evaluate(() => {
+    state.shields = 0; updateStatsUI();
+    const none = getComputedStyle(document.getElementById('shield-pill')).display;
+    state.shields = 2; updateStatsUI();
+    return { none, some: getComputedStyle(document.getElementById('shield-pill')).display, shop: !!document.getElementById('item-shield') };
+  });
+  assert.equal(r.none, 'none');
+  assert.notEqual(r.some, 'none');
+  assert.ok(r.shop);
+});
+
+test('the problem clock stands still while the "not quite" card is open, and a tap anywhere on the card puts it away', async () => {
+  await solveWrong();
+  await page.waitForFunction(() => !inputLocked);                    // the next problem is running behind the card
+  const open = await page.evaluate(() => ({ paused: clockPausedAt !== null, shown: document.getElementById('miss-modal').style.display }));
+  assert.equal(open.shown, 'flex');
+  assert.ok(open.paused, 'the clock is paused while the card is open');
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.getElementById('miss-answer').click());     // a tap on the card body
+  const r = await page.evaluate(() => ({ shown: document.getElementById('miss-modal').style.display, paused: clockPausedAt !== null, elapsed: Date.now() - questionStartTime }));
+  assert.equal(r.shown, 'none');
+  assert.ok(!r.paused, 'the clock runs again');
+  assert.ok(r.elapsed < 250, 'the 400 ms with the card open did not count: ' + r.elapsed);
 });

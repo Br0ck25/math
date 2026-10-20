@@ -46,6 +46,32 @@ function rematchPays(id) {
   const rm = state.rematch;
   return (rm.day !== dayKey() || (rm.lands.indexOf(id) === -1 && rm.lands.length < ECON.map.rematch.perDay));
 }
+// ----- the Healing Spring: wakes every resting buddy. The first visit of each day is free. -----
+function springCost() { return state.spring.day === dayKey() ? ECON.spring.gems : 0; }
+function springRowHtml() {
+  const n = state.faintedPets.length, cost = springCost();
+  const desc = n ? n + (n === 1 ? ' resting buddy' : ' resting buddies') + ' · ' + (cost ? cost + ' 💎' : 'free today') : 'Everyone is feeling great!';
+  return '<div class="care-row map-row spring-row"><div><div class="t">⛲ Healing Spring</div><div class="d">' + desc + '</div></div>' +
+    '<div class="map-actions"><button class="claim-btn" ' + (n && state.gems >= cost ? '' : 'disabled') + ' onclick="useSpring()">' + (cost ? cost + ' 💎 Heal' : '💚 Heal') + '</button></div></div>';
+}
+function useSpring() {
+  const cost = springCost();
+  if (!state.faintedPets.length || state.gems < cost) return;
+  const waiting = needsSwitch();                                  // the fighter was resting: answering was on hold
+  if (cost) state.gems -= cost; else state.spring.day = dayKey();
+  state.faintedPets = [];
+  partyHp = {};
+  if (waiting) { inputLocked = false; document.getElementById('feedback-msg').innerText = 'Everyone feels great! Back to it!'; }
+  soundLevelUp();
+  toast('⛲ The spring woke everyone up!');
+  saveState();
+  updateStatsUI();
+  renderMap();
+}
+// Up to five store buddies that live in a land, shown before it opens so there is something to look forward to.
+function regionPeek(r) {
+  return storePets.filter(function (p) { return !p.requiresAllStorePets && p.element === r.element; }).slice(0, 5).map(function (p) { return p.icon; }).join(' ');
+}
 function regionById(id) { return REGIONS.find(function (r) { return r.id === id; }) || REGIONS[0]; }
 function currentRegion() { return regionById(state.region); }
 function regionLevel(r) { return ECON.map.levels[r.id] || 1; }
@@ -192,7 +218,8 @@ function renderMap() {
   const best = journeyLevel(), total = gymRegions().length;
   const myPet = getActivePetDisplay();
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '') + ' · ' + weatherToday().icon + ' ' + weatherToday().name;
-  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml();
+  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml() + springRowHtml();
+  const nextStop = REGIONS.find(function (r) { return !regionUnlocked(r); });
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
     const need = regionLevel(r), badge = hasBadge(r.id);
@@ -208,7 +235,9 @@ function renderMap() {
         else actions += '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🏟️ Gym</button>';
       }
     }
-    const desc = r.element ? 'More ' + r.element + ' buddies · gym leader: a ' + r.element + ' boss' : 'Buddies of every type';
+    let desc = r.element ? 'More ' + r.element + ' buddies · gym leader: a ' + r.element + ' boss' : 'Buddies of every type';
+    if (!open) desc += '<div class="map-need" title="Level ' + best + ' of ' + need + '"><i style="width:' + Math.min(100, Math.round(best / need * 100)) + '%"></i></div><div class="map-peek">👀 ' + regionPeek(r) + '</div>';
+    const isNext = nextStop === r;
     let trail = '';
     if (open && r.element) {
       const nodes = [
@@ -232,7 +261,7 @@ function renderMap() {
     } else if (open && !r.element && here) {
       trail = '<div class="map-trail-nodes"><div class="map-step-node active"><div class="map-node-dot"><span class="map-player-token">' + myPet.icon + '</span>🌼</div><span class="map-node-lbl">Meadow Trail</span></div></div>';
     }
-    h += '<div class="care-row map-row' + (here ? ' here' : '') + (open ? '' : ' locked') + '" style="flex-direction:column; align-items:stretch;"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div><div class="t">' + r.icon + ' ' + r.name + (r.element ? ' <span class="element-pill elem-' + r.element + '">' + r.element + '</span>' : '') + '</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>' + trail + '</div>';
+    h += '<div class="care-row map-row' + (here ? ' here' : '') + (open ? '' : ' locked') + (isNext ? ' next' : '') + '" style="flex-direction:column; align-items:stretch;"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div><div class="t">' + r.icon + ' ' + r.name + (r.element ? ' <span class="element-pill elem-' + r.element + '">' + r.element + '</span>' : '') + (isNext ? ' <span class="map-next">⭐ Next stop</span>' : '') + '</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>' + trail + '</div>';
   });
   h += '</div>';
   document.getElementById('map-body').innerHTML = h;

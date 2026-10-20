@@ -152,9 +152,9 @@ function explainMistake() {
   document.getElementById('hint-box').innerText = '📘 How to: ' + text;
   explainHold = 2600;
 }
-// The "not quite" card: the right answer for 5 seconds, or until the player taps the ✕ / outside / Escape.
-// It does not use showModal() on purpose: that pauses the problem clock, and the next problem is already running.
-const MISS_CARD_MS = 5000;
+// The "not quite" card: the right answer for 30 seconds, over the math area (equation and keypad) so the buddy stage stays in view, or until the player taps the card / ✕ / Escape or starts typing.
+// It does not use showModal() (the next problem is already running behind it), but it pauses the problem clock itself: reading the card must never cost a speed bonus.
+const MISS_CARD_MS = 30000;
 let missCardTimer = null;
 function showMissCard(said) {
   const p = currentProblem;
@@ -171,13 +171,21 @@ function showMissCard(said) {
   void bar.offsetWidth;
   bar.style.animation = '';
   bar.style.animationDuration = MISS_CARD_MS / 1000 + 's';
-  document.getElementById('miss-modal').style.display = 'flex';
+  const modal = document.getElementById('miss-modal');
+  modal.style.display = 'flex';
+  pauseClock();
+  const top = Math.floor(document.querySelector('.arena').getBoundingClientRect().top);          // the card starts where the math area starts, below the buddy stage
+  const room = window.innerHeight - top - 12;
+  modal.style.setProperty('--miss-top', top + 'px');
+  modal.style.setProperty('--miss-max', Math.max(120, room) + 'px');
+  modal.classList.toggle('tight', room < 300);
   clearTimeout(missCardTimer);
   missCardTimer = setTimeout(closeMissCard, MISS_CARD_MS);
 }
 function closeMissCard() {
   clearTimeout(missCardTimer);
   document.getElementById('miss-modal').style.display = 'none';
+  if (!openOverlays().length) resumeClock();
 }
 function useHint() {
   if (hintUsed || inputLocked) return;

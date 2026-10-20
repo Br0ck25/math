@@ -90,6 +90,16 @@ function setHubTab(t) {
   hubTab = t;
   renderHub();
 }
+// What this buddy could use next: one tab to try, with a line saying why (shown as a gold dot on the tab). First match wins.
+function hubHint(id) {
+  const name = name0(id);
+  if (isSleepy(id)) return { tab: '', text: '😴 ' + name + ' is resting. The ⛲ Healing Spring on the Map wakes everyone up, or beat a boss.' };
+  if (getCare(id).pets < maxPetsLimit()) return { tab: 'care', text: '💖 ' + name + ' would love a cuddle today.' };
+  const taken = Object.keys(state.held).map(function (b) { return state.held[b]; });
+  if (!heldIdOf(id) && state.heldOwned.some(function (i) { return taken.indexOf(i) === -1; })) return { tab: 'hold', text: '🎒 Give ' + name + ' an item to hold.' };
+  if (!ranchStarted() && getOwnedIds().length > getTeam().length) return { tab: 'ranch', text: '🏡 Buddies off your team can work at the Ranch for berries and ore.' };
+  return null;
+}
 function renderHub() {
   const d = getPetById(hubPet);
   const sleepy = isSleepy(hubPet);
@@ -100,11 +110,14 @@ function renderHub() {
   document.getElementById('hub-name').innerText = d.name;
   document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
   const tabs = [['care', '💖 Care'], ['room', '🏠 Room'], ['tree', '🌳 Tree'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold'], ['ranch', '🏡 Ranch']];
+  const hint = hubHint(hubPet);
+  const hintEl = document.getElementById('hub-hint');
+  hintEl.innerText = hint && hint.tab !== hubTab ? hint.text : '';
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
     const b = document.createElement('button');
-    b.className = 'grade-btn' + (hubTab === t[0] ? ' active' : '');
+    b.className = 'grade-btn' + (hubTab === t[0] ? ' active' : '') + (hint && hint.tab === t[0] && hubTab !== t[0] ? ' suggest' : '');
     b.innerText = t[1];
     b.onclick = function () {
       if (t[0] === 'tree') { closeHub(); openTree(); return; }

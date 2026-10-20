@@ -108,6 +108,7 @@ function updateBattleUI() {
 
   document.getElementById('comp-count-badge').innerText = getOwnedIds().length;
   document.getElementById('shield-display').innerText = state.shields;
+  document.getElementById('shield-pill').style.display = state.shields > 0 ? '' : 'none';
   document.getElementById('session-count-text').innerText = sessionStats.solved;
   document.getElementById('session-goal-text').innerText = sessionStats.goal;
   document.getElementById('goal-pill-text').innerText = sessionStats.solved + '/' + sessionStats.goal;

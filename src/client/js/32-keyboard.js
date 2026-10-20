@@ -23,6 +23,7 @@ window.addEventListener('keydown', function (e) {
   if ((e.key === 'Enter' || e.key === ' ') && a && a.getAttribute('role') === 'button' && a.tagName !== 'BUTTON') { e.preventDefault(); a.click(); return; }
   if (e.key === 'Escape' && closeTopOverlay()) return;
   if (studyOn) { if (e.key === 'Escape') studyEsc(); return; }   // the study pane is on screen: no math keys
+  if (openOverlays().length === 1 && openOverlays()[0].id === 'miss-modal') closeMissCard();      // the "not quite" card does not block typing
   if (isModalOpen()) return;
   if (e.key >= '0' && e.key <= '9') pressKey(e.key);
   else if (e.key === 'Backspace') pressKey('backspace');
