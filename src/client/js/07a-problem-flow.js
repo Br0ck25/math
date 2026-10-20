@@ -106,6 +106,7 @@ function generateProblem() {
   updateWeakChip();
   document.getElementById('equation-mount').classList.toggle('challenge', p.challenge);
   questionStartTime = Date.now();
+  if (clockPausedAt !== null) clockPausedAt = questionStartTime;      // a window is open over this problem: its time starts when the window closes
   padReset();
   renderEquationUI();
   chargeFoeMove();

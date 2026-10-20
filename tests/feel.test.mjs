@@ -336,3 +336,17 @@ test('the shield pill appears once you own a shield; the Shop still sells them',
   assert.notEqual(r.some, 'none');
   assert.ok(r.shop);
 });
+
+test('the problem clock stands still while the "not quite" card is open, and a tap anywhere on the card puts it away', async () => {
+  await solveWrong();
+  await page.waitForFunction(() => !inputLocked);                    // the next problem is running behind the card
+  const open = await page.evaluate(() => ({ paused: clockPausedAt !== null, shown: document.getElementById('miss-modal').style.display }));
+  assert.equal(open.shown, 'flex');
+  assert.ok(open.paused, 'the clock is paused while the card is open');
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.getElementById('miss-answer').click());     // a tap on the card body
+  const r = await page.evaluate(() => ({ shown: document.getElementById('miss-modal').style.display, paused: clockPausedAt !== null, elapsed: Date.now() - questionStartTime }));
+  assert.equal(r.shown, 'none');
+  assert.ok(!r.paused, 'the clock runs again');
+  assert.ok(r.elapsed < 250, 'the 400 ms with the card open did not count: ' + r.elapsed);
+});
