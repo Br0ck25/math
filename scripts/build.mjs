@@ -52,10 +52,32 @@ function artChunk() {
   return 'const BUDDY_ART = ' + JSON.stringify(map) + ';';
 }
 
+// The Adventure world: art/world/<id>.svg (terrain, the hero, objects; see scripts/world-art.mjs) becomes one hidden sprite sheet, `WORLD_ART`,
+// of <symbol id="w-<id>"> pictures that the map draws with <use>. Colours come from CSS variables, so a land can recolour the whole set.
+const WORLD_FILE_MAX = 6 * 1024, WORLD_TOTAL_MAX = 300 * 1024;
+export function worldArtFiles(dir = path.join(root, 'art/world')) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir).filter((f) => !f.startsWith('.')).sort().map((f) => {
+    const m = /^([a-z0-9-]+)\.svg$/.exec(f);
+    if (!m) throw new Error('art/world/' + f + ': name it <id>.svg with lowercase letters, digits and dashes, for example t-grass.svg');
+    const text = fs.readFileSync(path.join(dir, f), 'utf8');
+    if (text.length > WORLD_FILE_MAX) throw new Error('art/world/' + f + ' is ' + Math.round(text.length / 1024) + ' KB: keep each world picture below ' + WORLD_FILE_MAX / 1024 + ' KB');
+    if (/<script|\bon\w+\s*=|<image|<foreignObject|<style|\bhref\s*=/i.test(text)) throw new Error('art/world/' + f + ': world pictures may not contain scripts, event handlers, images, styles or links');
+    const vb = /<svg\b[^>]*\bviewBox\s*=\s*["']([^"']+)["']/i.exec(text), inner = /<svg\b[^>]*>([\s\S]*)<\/svg>/i.exec(text);
+    if (!vb || !inner) throw new Error('art/world/' + f + ': it needs an <svg> with a viewBox');
+    return { id: m[1], viewBox: vb[1], inner: inner[1].replace(/<!--[\s\S]*?-->/g, '').trim() };
+  });
+}
+function worldChunk() {
+  const symbols = worldArtFiles().map((a) => '<symbol id="w-' + a.id + '" viewBox="' + a.viewBox + '">' + a.inner + '</symbol>').join('');
+  if (symbols.length > WORLD_TOTAL_MAX) throw new Error('art/world is ' + Math.round(symbols.length / 1024) + ' KB in all: the Worker has a size limit, keep it below ' + WORLD_TOTAL_MAX / 1024 + ' KB');
+  return 'const WORLD_ART = ' + JSON.stringify('<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" focusable="false">' + symbols + '</svg>') + ';';
+}
+
 export function assemble() {
   const css = read('src/client/styles.css');
   const shared = [read('src/shared/econ.js'), read('src/shared/study.js')].join('\n');
-  const js = [shared, artChunk()].concat(readDir('src/client/js', '.js')).join('\n');
+  const js = [shared, artChunk(), worldChunk()].concat(readDir('src/client/js', '.js')).join('\n');
   new vm.Script(js, { filename: 'client script (src/shared + src/client/js)' });   // throws on a syntax error
   if (/<\/script/i.test(js)) throw new Error('src/client/js must not contain "</script"');
   const page = read('src/client/index.html').replace('{{CSS}}', () => css).replace('{{JS}}', () => js);

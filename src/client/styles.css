@@ -2046,3 +2046,9 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .hub-hint:empty { display: none; }
 .hub-tabs .grade-btn.suggest { position: relative; border-color: #fbbf24; }
 .hub-tabs .grade-btn.suggest::after { content: ''; position: absolute; top: -3px; right: -3px; width: 9px; height: 9px; border-radius: 50%; background: #fbbf24; }
+
+/* Adventure world art (24f-ow-art.js): the hidden sprite sheet, a picture that fills its box, and the hero (body and hair stacked). */
+#world-art { position: absolute; width: 0; height: 0; overflow: hidden; }
+.w-sprite { display: block; width: 100%; height: 100%; }
+.w-hero { position: relative; display: block; width: 100%; height: 100%; }
+.w-hero .w-sprite { position: absolute; inset: 0; }
