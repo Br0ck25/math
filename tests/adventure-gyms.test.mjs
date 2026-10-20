@@ -207,10 +207,11 @@ test('old saves keep working: six badges and no Hall yet leave the Meadow and Sk
 const ready = () => page.waitForFunction(() => ab && !ab.busy && ab.phase === 'menu', null, { timeout: 30000 });
 // Wins every fight of the chain: each time the menu is up, every foe is at 1 HP and one right answer and attack finishes the current one.
 const winChain = async () => {
-  for (let k = 0; k < 40; k++) {
+  await page.evaluate(() => { Math.random = () => 0.3; });
+  for (let k = 0; k < 150; k++) {
     await page.waitForFunction(() => !ab || (!ab.busy && ab.phase === 'menu'), null, { timeout: 60000 });
     if (!(await page.evaluate(() => !!ab))) return;
-    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = Math.min(f.hp, 1); }); abFight(); abAnswer(ab.q.ans); abUseMove(0); });
+    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = Math.min(f.hp, 1); f.atk = 1; }); abFight(); abAnswer(ab.q.ans); abUseMove(0); });
     await page.waitForTimeout(500);
   }
 };
@@ -230,7 +231,7 @@ test('a gym is a chain: win every round with the same team and the badge, gems a
 test('losing in a gym gives no badge and returns to the Center; the Hall is the Elite Four then Nova, and its win makes you Champion', async () => {
   await page.evaluate(() => { state.buddyXp[state.activePet] = xpForLevel(5); state.overworld.center = { map: 'meadow', x: 4, y: 5 }; abStartGym('meadow'); Math.random = () => 0.5; });
   await ready();
-  await page.evaluate(() => { ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); abFight(); abAnswer(ab.q.ans + 999); });
+  await page.evaluate(() => { ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); Math.random = () => 0.3; abFight(); abAnswer(ab.q.ans + 999); });
   await page.waitForFunction(() => !ab, null, { timeout: 30000 });
   assert.deepEqual(await page.evaluate(() => [state.badges.length, state.overworld.map]), [0, 'meadow']);
   const hall = await page.evaluate(() => { const rs = abHallRounds(); return { n: rs.length, names: rs.map((x) => x.name), nova: rs[4].foes.length, kinds: rs.map((x) => x.kind) }; });

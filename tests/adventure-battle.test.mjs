@@ -31,7 +31,7 @@ test('stats grow with level and kind, and the moves follow the level', async () 
     return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 5).moves.map((m) => m.id), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
   });
   assert.ok(r.b[0] > r.a[0] * 3 && r.b[1] > r.a[1] * 3);
-  assert.deepEqual(r.names5, ['tackle', 'fire1']);
+  assert.deepEqual(r.names5, ['tackle', 'fire1', 'quick']);
   assert.equal(r.names50.length, 4);
   assert.ok(r.dear > r.cheap);
 });
@@ -40,11 +40,11 @@ test('damage follows the type chart, the same-type bonus and a critical hit', as
   const r = await ev(() => {
     Math.random = () => 0.99;
     const me = abMon('fox', 20), foeNature = abMon('hedgehog', 20), foeWater = abMon('otter', 20);
-    const mv = me.moves.find((m) => m.type === 'fire'), tk = me.moves.find((m) => m.id === 'tackle');
+    const mv = me.moves.find((m) => m.type === 'fire'), tk = me.moves.find((m) => m.type === 'normal');
     return { strong: abDamage(me, foeNature, mv, false), weak: abDamage(me, foeWater, mv, false), plain: abDamage(me, foeWater, tk, false), crit: abDamage(me, foeNature, mv, true), mvp: mv.power, tkp: tk.power };
   });
   assert.equal(r.strong.eff, 2); assert.equal(r.weak.eff, 0.5);
-  assert.ok(r.strong.dmg > r.weak.dmg * 3);
+  assert.ok(r.strong.dmg > r.weak.dmg * 2.5);
   assert.ok(r.crit.dmg >= r.strong.dmg * 1.9);
 });
 
@@ -145,4 +145,71 @@ test('the battle screen fits a phone and has no emoji in its source', async () =
   await begin();
   const r = await ev(() => { const m = document.querySelector('#ab-modal .modal-content').getBoundingClientRect(); return [m.width, document.documentElement.scrollWidth]; });
   assert.ok(r[0] <= 320 && r[1] <= 320);
+});
+
+test('every kind has its own build, and an element leans: electric buddies are quick, nature buddies are sturdy', async () => {
+  const r = await ev(() => {
+    const shapes = ['dog', 'fox', 'otter', 'bunny', 'hedgehog', 'octopus'].map((id) => JSON.stringify([abMon(id, 30).max, abMon(id, 30).atk, abMon(id, 30).def, abMon(id, 30).spd]));
+    const avg = (el, k) => { const l = ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].includes(el) ? Array.from({ length: 40 }, (_, i) => abShape('seed' + i, el)[k]) : []; return l.reduce((a, b) => a + b, 0) / l.length; };
+    return { distinct: new Set(shapes).size, same: JSON.stringify(abMon('dog', 30)) === JSON.stringify(abMon('dog', 30)), spd: [avg('electric', 'spd'), avg('nature', 'spd')], hp: [avg('nature', 'hp'), avg('fire', 'hp')] };
+  });
+  assert.ok(r.distinct >= 5 && r.same);
+  assert.ok(r.spd[0] > r.spd[1] + 10 && r.hp[0] > r.hp[1]);
+});
+
+test('the faster buddy attacks first, and a priority move beats speed', async () => {
+  await begin('fox', 8);
+  const order = await ev(async () => {
+    const log = [];
+    const real = abStrike;
+    abStrike = function (att, def, mv) { log.push(att === abMe() ? 'me' : 'foe'); };
+    const me = abMe(), foe = abFoe();
+    const run = (mySpd, foeSpd, pri) => { log.length = 0; me.spd = mySpd; foe.spd = foeSpd; ab.phase = 'moves'; const mv = me.moves[0]; const old = mv.pri; mv.pri = pri; mv.left = 5; abUseMove(0); mv.pri = old; return log.join(''); };
+    const out = [run(100, 5, 0), run(5, 100, 0), run(5, 100, 1)];
+    abStrike = real;
+    return out;
+  });
+  assert.deepEqual(order, ['me', 'foe', 'me']);
+});
+
+test('statuses: a burned buddy hits softer and loses HP each round, paralysis slows, and a Potion cures', async () => {
+  await begin('fox', 20);
+  const r = await ev(() => {
+    const a = abMon('fox', 20), d = abMon('otter', 20), mv = a.moves[1];
+    Math.random = () => 0.99;
+    const clean = abDamage(a, d, mv, false).dmg; a.status = 'burn'; const burned = abDamage(a, d, mv, false).dmg;
+    a.status = 'paralysis';
+    return { clean, burned, slow: abSpeed(a) < a.spd / 3 };
+  });
+  assert.ok(r.burned < r.clean && r.slow);
+  const hp = await ev(() => { const me = abMe(); me.status = 'burn'; me.hp = me.max - 5; ab.phase = 'busy'; abEndRound(); return me.hp; });
+  await phase('menu');
+  assert.ok((await ev(() => abMe().hp)) < hp);
+  await ev(() => { state.potions = 1; abMe().status = 'poison'; abMe().hp = abMe().max; abPotion(); });
+  await phase('menu');
+  assert.equal(await ev(() => abMe().status), '');
+});
+
+test('PP carries between fights until the Buddy Center, and with none left a buddy can Struggle', async () => {
+  await begin('fox', 8);
+  await ev(() => { abFight(); abAnswer(ab.q.ans); abUseMove(1); });
+  await phase('menu');
+  const used = await ev(() => state.advPp[abMe().id]);
+  assert.ok(Object.keys(used).length >= 3);
+  assert.equal(await ev(() => abPartyMon(abMe().id).moves.find((m) => m.left < m.pp) !== undefined), true);
+  await ev(() => { abMe().moves.forEach((m) => { m.left = 0; }); abFight(); abAnswer(ab.q.ans); });
+  assert.match(await ev(() => document.getElementById('ab-panel').innerText), /Struggle/);
+  const hp = await ev(() => abMe().hp);
+  await ev(() => abUseMove(-1));
+  await phase('menu');
+  assert.ok((await ev(() => abFoe().hp)) < (await ev(() => abFoe().max)));
+  await ev(() => centerHeal());
+  assert.deepEqual(await ev(() => state.advPp), {});
+  assert.ok(hp > 0);
+});
+
+test('the team holds six, and a bad PP list in a save is repaired', async () => {
+  assert.equal(await ev(() => ECON.team.max), 6);
+  await ev(() => { state.advPp = { dog: { tackle: 99999, junk: 'x' }, nowhere: { tackle: 1 }, fox: 5 }; normalizeState(); });
+  assert.deepEqual(await ev(() => state.advPp), { dog: { tackle: 99 } });
 });

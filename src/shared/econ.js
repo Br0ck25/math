@@ -54,12 +54,15 @@ const ECON = {
     // The story's one-time prizes (gems), by story beat: the Scramblers' schemes put right (24t-ow-story.js).
     storyGems: { 'tide-ferry': 20, 'volt-blackout': 25, 'gloom-scramblers': 40 },
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
-    netBonus: 1.5, potionHeal: 40,     // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
+    netBonus: 1.5, potionHeal: 40, eggEvery: 25, eggPerDay: 8,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
+         // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
     mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'shield', badges: 1 }, { type: 'clover', badges: 2 }, { type: 'candy', badges: 3 }, { type: 'ult', badges: 4 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, shell: 60, charm: 60, lens: 50, bait: 50 }, berryHeal: 3 },
+  // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
+  team: { max: 6 },
   // The Ranch (25d-ranch.js): off-team buddies work at stations. `perHour` goods an hour (x `matchMult` for a matching element), for at most `capHours` hours away at a time,
   // plus `answerSec` seconds of work for every correct answer. The barn holds `stockCap` of each good; a work spot opens for every `badgesPerSlot` badges (and one from the start).
   ranch: { perHour: 6, matchMult: 2, capHours: 4, answerSec: 60, stockCap: 30, badgesPerSlot: 2,

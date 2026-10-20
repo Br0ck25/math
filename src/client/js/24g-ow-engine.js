@@ -93,9 +93,25 @@ function renderOverworld() {
   h += owActorHtml('ow-hero', half, half, n, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-n:' + n + ';' + Object.keys(map.palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + map.palette[k]; }).join(';');
   view.innerHTML = h;
+  view.className = 'ow-view ow-' + owTimeOfDay();
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;
   document.getElementById('ow-gizmo-btn').style.display = hasKeyItem('gizmo') ? '' : 'none';
+}
+
+// The hour of the day on this device: the map is tinted, and the Gizmo's clock says it.
+function owTimeOfDay() {
+  const h = new Date().getHours();
+  return h < 6 ? 'night' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+}
+// Walking warms an egg: every eggEvery steps count as one correct answer, at most eggPerDay a day.
+function owWalkEgg() {
+  const w = state.overworld.walk;
+  if (!state.egg) return;
+  if (w.day !== dayKey()) { w.day = dayKey(); w.n = 0; w.eggs = 0; }
+  if (++w.n % ECON.overworld.eggEvery !== 0 || w.eggs >= ECON.overworld.eggPerDay) return;
+  w.eggs += 1;
+  tickEgg();
 }
 
 // ----- walking -----
@@ -114,6 +130,7 @@ function owMove(dir) {
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, nx, ny);
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
+  owWalkEgg();
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
   if (warp) return;

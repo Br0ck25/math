@@ -319,6 +319,13 @@ const NORMALIZERS = [
     const owned = getOwnedIds(), hp = isPlainObject(s.advHp) ? s.advHp : {};
     s.advHp = {};
     Object.keys(hp).forEach(function (id) { if (owned.indexOf(id) !== -1 && Number.isFinite(hp[id])) s.advHp[id] = clamp(Math.floor(hp[id]), 0, 9999); });
+    const pp = isPlainObject(s.advPp) ? s.advPp : {};
+    s.advPp = {};
+    Object.keys(pp).forEach(function (id) {
+      if (owned.indexOf(id) === -1 || !isPlainObject(pp[id])) return;
+      s.advPp[id] = {};
+      Object.keys(pp[id]).slice(0, 8).forEach(function (m) { if (Number.isFinite(pp[id][m])) s.advPp[id][m.slice(0, 16)] = clamp(Math.floor(pp[id][m]), 0, 99); });
+    });
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },
   function overworld(s) {
@@ -329,7 +336,7 @@ const NORMALIZERS = [
     const sg = isPlainObject(o.signs) ? o.signs : {}, c = isPlainObject(o.center) ? o.center : {}, cm = OW_MAPS[c.map];
     const center = cm && owWalkable(cm, c.x, c.y) && !owNpcAt(cm, c.x, c.y) ? { map: c.map, x: c.x, y: c.y } : { map: OW_START.map, x: OW_MAPS[OW_START.map].start.x, y: OW_MAPS[OW_START.map].start.y };     // a Center that is not a place to stand: the start
     s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down',
-      found: known('pickup', o.found), signs: { day: typeof sg.day === 'string' ? sg.day.slice(0, 10) : '', ids: known('sign', sg.ids) }, center: center, beat: known('trainer', o.beat), story: known('story', o.story), seen: (Array.isArray(o.seen) ? o.seen : []).filter(function (id, i, a) { return owTowns().indexOf(id) !== -1 && a.indexOf(id) === i; }), traded: known('npc', o.traded), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) } };
+      found: known('pickup', o.found), signs: { day: typeof sg.day === 'string' ? sg.day.slice(0, 10) : '', ids: known('sign', sg.ids) }, center: center, beat: known('trainer', o.beat), story: known('story', o.story), walk: { day: isPlainObject(o.walk) && typeof o.walk.day === 'string' ? o.walk.day.slice(0, 10) : '', n: isPlainObject(o.walk) ? asInt(o.walk.n, 0, 1e9, 0) : 0, eggs: isPlainObject(o.walk) ? asInt(o.walk.eggs, 0, 99, 0) : 0 }, seen: (Array.isArray(o.seen) ? o.seen : []).filter(function (id, i, a) { return owTowns().indexOf(id) !== -1 && a.indexOf(id) === i; }), traded: known('npc', o.traded), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) } };
   }
 ];
 function normalizeState() {

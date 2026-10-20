@@ -15,14 +15,21 @@ const AB_MOVE_NAMES = {
 };
 const AB_NORMAL = [
   { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, acc: 100, pp: 35, level: 1 },
+  { id: 'quick', name: 'Quick Dash', type: 'normal', power: 40, acc: 100, pp: 30, level: 5, pri: 1 },       // moves first
   { id: 'slam', name: 'Body Slam', type: 'normal', power: 80, acc: 85, pp: 15, level: 20 }
 ];
+// With every PP spent a buddy can still Struggle (it hurts itself a little).
+const AB_STRUGGLE = { id: 'struggle', name: 'Struggle', type: 'normal', power: 50, acc: 100, pp: 1, left: 1, recoil: true };
+// The status a damaging move of each element can leave (from the second tier on, one chance in five): burn and poison hurt a little every round, paralysis slows and can stop a move, sleep skips turns.
+const AB_STATUS = { fire: 'burn', nature: 'poison', electric: 'paralysis', dark: 'sleep', magic: 'sleep' };
+const AB_STATUS_TAG = { burn: 'BRN', poison: 'PSN', paralysis: 'PAR', sleep: 'SLP' };
+const AB_STATUS_CHANCE = 0.2;
 // The moves a buddy of this element knows at this level (its four newest), as fresh copies with their PP.
-function abMoveList(element, level, type) {
+function abMoveList(element, level, type, pp) {
   const names = AB_MOVE_NAMES[element] || AB_MOVE_NAMES.dark;
-  const all = AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level }; }));
+  const all = AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level, status: i > 0 ? AB_STATUS[element] || '' : '' }; }));
   return all.filter(function (m) { return m.level <= level; }).sort(function (a, b) { return a.level - b.level; }).slice(-4)
-    .map(function (m) { return Object.assign({}, m, { left: m.pp }); });
+    .map(function (m) { return Object.assign({}, m, { left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, m.pp) : m.pp }); });
 }
 // A buddy's base strength: dearer store buddies are stronger; the others have a fixed one.
 function abBase(sp) {
@@ -30,13 +37,21 @@ function abBase(sp) {
   return sp.legend ? 100 : sp.ultra ? 95 : sp.mythic ? 88 : 72;
 }
 // A fighter: species id and level (and its HP, full when not given). Gold's stat formula without the hidden values.
-function abBuild(id, name, icon, element, type, base, level, hp) {
-  const s = Math.floor(2 * base * level / 100), max = s + level + 10;
-  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: s + 5, def: s + 5, base: base, moves: abMoveList(element, level, type) };
+// Every kind has its own build: up to 10 more or less base strength in HP, Attack, Defense and Speed, fixed by its name; an element leans a little too (electric is quick, nature is sturdy).
+const AB_SPEED_LEAN = { electric: 12, fire: 5, dark: 5, magic: 0, water: -4, nature: -10 };
+function abShape(seed, element) {
+  let h = 7;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 1000003;
+  const off = function (k) { return Math.floor(h / Math.pow(21, k)) % 21 - 10; };
+  return { hp: off(0) + (element === 'nature' ? 6 : 0), atk: off(1), def: off(2) + (element === 'nature' ? 4 : 0), spd: off(3) + (AB_SPEED_LEAN[element] || 0) };
 }
-function abMon(id, level, hp) {
+function abBuild(id, name, icon, element, type, base, level, hp, pp) {
+  const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp) };
+}
+function abMon(id, level, hp, pp) {
   const sp = getSpecies(id), stage = getFormIndex(sp, level);
-  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp);
+  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp, pp);
 }
 // A boss from the boss list (a gym leader or a story boss): stronger than a wild buddy, with Elder and Alpha forms as in Practice.
 function abBossMon(index, level) {
@@ -46,11 +61,11 @@ function abBossMon(index, level) {
 // A foe from its description: {id, level} is a buddy, {boss: index, level} a boss.
 function abFoeMon(f) { return f.boss !== undefined ? abBossMon(f.boss, f.level) : abMon(f.id, f.level); }
 // One of your buddies, with the HP it has left.
-function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id]); }
+function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id]); }
 // Gold's damage formula: level, power and Attack against Defense, then same-type bonus, type effectiveness, a critical hit and a little luck.
 function abDamage(att, def, move, crit) {
   const rel = getTypeRelation(move.type, def.type), eff = rel === 1 ? 2 : rel === -1 ? 0.5 : 1, stab = move.type === att.type ? 1.5 : 1;
-  const base = Math.floor(Math.floor((Math.floor(2 * att.level / 5) + 2) * move.power * att.atk / def.def) / 50) + 2;
+  const base = Math.floor(Math.floor((Math.floor(2 * att.level / 5) + 2) * move.power * att.atk * (att.status === 'burn' ? 0.5 : 1) / def.def) / 50) + 2;
   const luck = (217 + Math.floor(Math.random() * 39)) / 255;
   return { dmg: Math.max(1, Math.floor(base * stab * eff * (crit ? 2 : 1) * luck)), eff: eff };
 }
@@ -58,10 +73,10 @@ function abDamage(att, def, move, crit) {
 function abXpYield(foe, trainer) { return Math.max(1, Math.floor(foe.base * foe.level / 12 * (trainer ? 1.5 : 1))); }
 // The level a wild buddy has on this land: a little above where the land's gym opens.
 function abWildLevel() { return clamp((ECON.map.levels[state.region] || 1) + rnd(1, 3), 2, MAX_LEVEL); }
-// Catching: Gold's rule. A weaker foe is easier, and rarer buddies are harder. Returns 0 to 1.
+// Catching: Gold's rule. A weaker foe is easier (and one that is asleep, burned or the like even more), and rarer buddies are harder. Returns 0 to 1.
 function abCatchChance(foe) {
   const sp = getSpecies(foe.id);
   const rate = sp.legend ? 3 : !isStoreBuddy(sp) ? 30 : sp.cost < 150 ? 200 : sp.cost < 800 ? 120 : 45;
-  const a = Math.floor((3 * foe.max - 2 * foe.hp) * rate * ECON.overworld.netBonus / (3 * foe.max));
+  const a = Math.floor((3 * foe.max - 2 * foe.hp) * rate * ECON.overworld.netBonus * (foe.status ? 1.5 : 1) / (3 * foe.max));
   return Math.min(1, a / 255);
 }

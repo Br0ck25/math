@@ -20,6 +20,7 @@ function openCenter(npc) {
 }
 function centerHeal() {
   state.advHp = {};
+  state.advPp = {};
   state.faintedPets = [];
   partyHp = {};
   soundLevelUp();

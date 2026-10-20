@@ -16,7 +16,7 @@ beforeEach(async () => {
   await page.reload();
   errors.length = 0;
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; });
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.buddyXp[state.activePet] = xpForLevel(12); });
 });
 const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   state.overworld.map = m; state.overworld.x = px; state.overworld.y = py; state.overworld.face = f;
@@ -166,7 +166,7 @@ test('a grass fight is not a trainer fight: a win does not mark anyone beaten', 
 test('when the whole team faints in a trainer battle, the hero wakes at the last Buddy Center with everyone rested and no gems lost', async () => {
   await startPia();
   await menu();
-  await page.evaluate(() => { state.overworld.center = { map: 'meadow', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); abFoe().level = 40; abFight(); abAnswer(ab.q.ans + 999); });
+  await page.evaluate(() => { state.overworld.center = { map: 'meadow', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); abFoe().level = 40; Math.random = () => 0.3; abFight(); abAnswer(ab.q.ans + 999); });
   await over();
   await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
   const r = await page.evaluate(() => ({ pos: [state.overworld.map, state.overworld.x, state.overworld.y, state.overworld.face], beat: state.overworld.beat.length, hp: JSON.stringify(state.advHp), gems: state.gems, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-name').innerText, words: document.getElementById('talk-text').innerText }));

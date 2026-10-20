@@ -2070,6 +2070,9 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .ow-key.left svg { transform: rotate(-90deg); }
 .ow-key.down svg { transform: rotate(180deg); }
 .ow-key.right svg { transform: rotate(90deg); }
+.ow-view.ow-night { filter: brightness(0.62) saturate(0.8) hue-rotate(12deg); }
+.ow-view.ow-evening { filter: sepia(0.3) saturate(1.1) brightness(0.93); }
+.ow-view.ow-morning { filter: brightness(1.04) saturate(0.95); }
 .ow-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .ow-head h2 { margin: 0 0 6px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ow-head .ow-back-chip { padding: 4px 9px; }

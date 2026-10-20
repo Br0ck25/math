@@ -216,7 +216,7 @@ test('without the rod the pond only suggests one; with it a try may bite (a norm
 test('a fished buddy is beaten like any wild buddy: the map comes back and the next foe waits', async () => {
   await put('meadow', 12, 14, 'right');
   const r = await page.evaluate(async () => {
-    state.keyItems = ['fishing-rod'];
+    state.keyItems = ['fishing-rod']; state.buddyXp[state.activePet] = xpForLevel(12);
     const real = Math.random; Math.random = () => 0; owMove('right'); Math.random = real;
     const since = state.wild.since;
     while (!(ab.phase === 'menu' && !ab.busy)) await new Promise((res) => setTimeout(res, 100));

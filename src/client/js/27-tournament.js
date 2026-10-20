@@ -1,19 +1,19 @@
 // ----- tournament: team picker -----
-// Up to 3 buddies. Only team members can fight, so your current fighter is always on it. With no team picked, it is your 3 strongest buddies.
+// Up to ECON.team.max (6) buddies. Only team members can fight, so your current fighter is always on it. With no team picked, it is your strongest buddies.
 function getTeam() {
   const owned = getOwnedIds();
-  let t = state.team.filter(function (id, i) { return owned.indexOf(id) !== -1 && state.team.indexOf(id) === i; }).slice(0, 3);
+  let t = state.team.filter(function (id, i) { return owned.indexOf(id) !== -1 && state.team.indexOf(id) === i; }).slice(0, ECON.team.max);
   if (!t.length) {
-    t = owned.slice().sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }).slice(0, 3);
+    t = owned.slice().sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); }).slice(0, ECON.team.max);
   }
-  if (t.indexOf(state.activePet) === -1 && owned.indexOf(state.activePet) !== -1) t = [state.activePet].concat(t).slice(0, 3);
+  if (t.indexOf(state.activePet) === -1 && owned.indexOf(state.activePet) !== -1) t = [state.activePet].concat(t).slice(0, ECON.team.max);
   return t;
 }
 // A new buddy joins the team only if there is room (and then it may fight); otherwise it waits in your collection.
 function joinTeamIfRoom(id) {
   const t = getTeam();
   if (t.indexOf(id) !== -1) return true;
-  if (t.length >= 3) return false;
+  if (t.length >= ECON.team.max) return false;
   state.team = t.concat(id);
   return true;
 }
@@ -67,7 +67,7 @@ function toggleTeam(id) {
     if (id === state.activePet) { soundWrong(); toast('Your fighter has to stay on the team. Swap to another team buddy first.'); return; }
     if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast('A resting buddy stays on the team until you beat a boss.'); return; }
     if (t.length > 1) t.splice(i, 1);
-  } else if (t.length < 3) t.push(id);
+  } else if (t.length < ECON.team.max) t.push(id);
   else {
     const drop = t.findIndex(function (x) { return x !== state.activePet && state.faintedPets.indexOf(x) === -1; });      // the oldest buddy that is neither fighting nor resting
     if (drop === -1) { soundWrong(); toast('Everyone on your team is fighting or resting right now.'); return; }
@@ -84,7 +84,7 @@ function tourRunsLeft() {
 }
 function renderTourTab() {
   const team = getTeam();
-  let h = '<div style="font-size:0.78rem; font-weight:800; margin-bottom:2px;">Your team: pick up to 3 buddies. Only team buddies can fight (in battles and tournaments)</div>' +
+  let h = '<div style="font-size:0.78rem; font-weight:800; margin-bottom:2px;">Your team: pick up to ' + ECON.team.max + ' buddies. Only team buddies can fight (in battles and tournaments)</div>' +
     '<div class="team-grid">' + getOwnedIds().map(function (id) {
       const d = getPetById(id);
       return '<div class="team-chip' + (team.indexOf(id) !== -1 ? ' on' : '') + '" onclick="toggleTeam(&quot;' + id + '&quot;)"><b>' + d.icon + '</b>Lv ' + d.level + '</div>';

@@ -84,9 +84,10 @@ function freshState() {
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    advPp: {},                                       // Adventure battle PP left by buddy id and move id (missing = full); the Buddy Center restores it
     potions: 0,                                      // Potions for Adventure battles, bought at the Mart
     keyItems: [],                                    // key item ids earned on the Adventure (24i-ow-hero.js KEY_ITEMS)
-    overworld: { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] },   // the Adventure map (24g-ow-engine.js): where the hero stands, the pickup ids already taken, the math signs paid today, and the last Buddy Center you visited (a team wipe on a walk returns you there), the trainers beaten, the trees shaken today, and the story beats done, the towns visited (the Gizmo travels to them) and the trades made
+    overworld: { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } },   // the Adventure map (24g-ow-engine.js): where the hero stands, the pickup ids already taken, the math signs paid today, and the last Buddy Center you visited (a team wipe on a walk returns you there), the trainers beaten, the trees shaken today, and the story beats done, the towns visited (the Gizmo travels to them), the trades made and the steps that warmed an egg today
   };
 }
 

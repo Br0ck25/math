@@ -126,6 +126,7 @@ test('winning a walk fight brings the map back at the same tile, and it does not
     ECON.overworld.grassChance = 1; owSafe = 0;
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
     const since = state.wild.since;
+    state.buddyXp[state.activePet] = xpForLevel(12);
     owMove('up');
     const fought = !!ab;
     const at = { x: state.overworld.x, y: state.overworld.y, map: state.overworld.map };
@@ -193,16 +194,16 @@ test('the position is saved, restored on reload, and a bad or old save puts the 
   await walk(['up', 'up', 'up']);
   await page.evaluate(() => closeOverworld());
   await page.reload();
-  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: ['hollow'], traded: [] });
+  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: ['hollow'], traded: [], walk: { day: '', n: 0, eggs: 0 } });
   const fixed = await page.evaluate(() => {
     const bad = [{ map: 'nowhere', x: 3, y: 3, face: 'sideways' }, { map: 'hollow', x: 0, y: 0, face: 'left' }, { map: 'route1', x: 1.5, y: 'a' }, null, 'x'];
     return bad.map((b) => { state.overworld = b; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return { ...state.overworld }; });
   });
-  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] }, 'a tree tile is not a place to stand');
-  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
-  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] });
+  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } });
+  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } }, 'a tree tile is not a place to stand');
+  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } });
+  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } });
+  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } });
 });
 
 test('arrow keys and WASD walk while the map is open, and do not steal keys otherwise', async () => {

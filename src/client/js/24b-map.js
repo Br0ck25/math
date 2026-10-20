@@ -336,7 +336,7 @@ function chooseStarter(id) {
   state.activePet = id;
   if (Array.isArray(state.team) && state.team.indexOf(id) === -1) {
     state.team.unshift(id);
-    if (state.team.length > 3) state.team.length = 3;
+    if (state.team.length > ECON.team.max) state.team.length = ECON.team.max;
   }
   state.storySeen.starter = 1;
   if (state.profile && state.profile.showcase.indexOf(id) === -1) {

@@ -146,7 +146,7 @@ test('pressing and holding a team chip opens the team picker; a quick tap still 
   assert.deepEqual(r.hub, ['flex', 'tour', true, false], 'a long press opens the picker and does not swap');
   assert.deepEqual(r.tap, [true, 'none'], 'a quick tap swaps');
   assert.equal(r.tip2, '', 'the tip shows only once');
-  assert.match(r.heading, /Your team: pick up to 3 buddies/);
+  assert.match(r.heading, /Your team: pick up to 6 buddies/);
 });
 
 test('the Sanctuary, a new catch and the team chips share one swap per battle', async () => {
@@ -183,6 +183,7 @@ test('the Sanctuary, a new catch and the team chips share one swap per battle', 
 
 test('when your fighter faints and a teammate can still fight, you choose who comes next, and answering waits', async () => {
   const r = await page.evaluate(async () => {
+    ECON.team.max = 3;                                                                 // these rules are about a full team: make three a full one
     const wait = (ms) => new Promise((res) => setTimeout(res, ms));
     const out = {};
     const ids = storePets.slice(0, 4).map((x) => x.id);
@@ -234,6 +235,7 @@ test('when the whole team has fainted, everyone is revived (a buddy outside the 
 
 test('only team members can fight: the Sanctuary refuses an outsider, the picker keeps your fighter on the team, new buddies join only if there is room', async () => {
   const r = await page.evaluate(() => {
+    ECON.team.max = 3;                                                                 // these rules are about a full team: make three a full one
     const out = {};
     const ids = storePets.slice(0, 5).map((x) => x.id);
     state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; state.gems = 100000;
@@ -268,6 +270,7 @@ test('only team members can fight: the Sanctuary refuses an outsider, the picker
 
 test('the Sanctuary: a buddy that is not on a full team asks which team buddy it replaces', async () => {
   const r = await page.evaluate(() => {
+    ECON.team.max = 3;                                                                 // these rules are about a full team: make three a full one
     const out = {};
     const ids = storePets.slice(0, 5).map((x) => x.id);
     const reset = () => { state.unlockedPets = ids; state.team = ids.slice(0, 3); state.activePet = ids[0]; state.swapUsed = false; state.faintedPets = []; document.getElementById('replace-modal').style.display = 'none'; };

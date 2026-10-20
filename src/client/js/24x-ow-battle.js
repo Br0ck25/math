@@ -63,11 +63,11 @@ function abRender() {
   if (!ab) return;
   const f = abFoe(), m = abMe();
   document.getElementById('ab-foe-name').innerText = f.name;
-  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level;
+  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level + (f.status ? ' ' + AB_STATUS_TAG[f.status] : '');
   const fb = document.getElementById('ab-foe-hp');
   fb.style.width = Math.round(f.hp / f.max * 100) + '%'; fb.className = abHpClass(f);
   document.getElementById('ab-me-name').innerText = m.name;
-  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level;
+  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level + (m.status ? ' ' + AB_STATUS_TAG[m.status] : '');
   const mb = document.getElementById('ab-me-hp');
   mb.style.width = Math.round(m.hp / m.max * 100) + '%'; mb.className = abHpClass(m);
   document.getElementById('ab-me-num').innerText = m.hp + ' / ' + m.max;
@@ -103,13 +103,14 @@ function abPanel() {
     fillOptButtons(box, ab.q.opts, abAnswer);
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'moves') {
+    if (m.moves.every(function (mv) { return mv.left <= 0; })) p.appendChild(abBtn('<b>Struggle</b><small>NORMAL &middot; no PP left</small>', function () { abUseMove(-1); }, 'ab-move t-normal'));
     m.moves.forEach(function (mv, i) {
       p.appendChild(abBtn('<b>' + escHtml(mv.name) + '</b><small>' + escHtml(mv.type.toUpperCase()) + ' &middot; PP ' + mv.left + '/' + mv.pp + '</small>', function () { abUseMove(i); }, 'ab-move t-' + mv.type, mv.left <= 0));
     });
   } else if (ab.phase === 'pack') {
     const wild = ab.kind === 'wild';
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', abThrowNet, '', !wild || state.nets < 1));
-    p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || m.hp >= m.max));
+    p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'team') {
     ab.party.forEach(function (mon, i) {
@@ -136,31 +137,63 @@ function abAnswer(v) {
   document.getElementById('ab-text').innerText = 'Correct! Choose an attack.';
   abRender();
 }
+// FIGHT's attack, after a right answer. The faster buddy moves first (a priority move beats speed); the foe's move is picked now so the order is fair.
 function abUseMove(i) {
-  const me = abMe(), foe = abFoe(), mv = me.moves[i];
+  const me = abMe(), foe = abFoe(), mv = i < 0 ? AB_STRUGGLE : me.moves[i];
   if (ab.phase !== 'moves' || mv.left <= 0) return;
-  mv.left -= 1;
+  if (i >= 0) { mv.left -= 1; abSavePp(me); }
   ab.phase = 'busy';
-  abSteps([[me.name + ' used ' + mv.name + '!', null, 800]]);
-  abHit(me, foe, mv, function () { abFoeFainted(); }, abFoeTurn);
+  const fm = pick(foe.moves), mp = mv.pri || 0, fp = fm.pri || 0;
+  const first = mp !== fp ? mp > fp : abSpeed(me) !== abSpeed(foe) ? abSpeed(me) > abSpeed(foe) : Math.random() < 0.5;
+  const mine = function (next) { abStrike(me, foe, mv, abFoeFainted, next); }, theirs = function (next) { abStrike(foe, me, fm, abMeFainted, next); };
+  if (first) mine(function () { theirs(abEndRound); }); else theirs(function () { mine(abEndRound); });
 }
-// One attack: accuracy, then damage with its messages. `down` runs when the target faints, `next` when it does not. Used for both sides.
+function abSpeed(m) { return m.spd * (m.status === 'paralysis' ? 0.25 : 1); }
+function abSavePp(m) { state.advPp[m.id] = {}; m.moves.forEach(function (mv) { state.advPp[m.id][mv.id] = mv.left; }); }
+const AB_STATUS_TEXT = { burn: 'was burned!', poison: 'was poisoned!', paralysis: 'is paralyzed! It may not attack!', sleep: 'fell asleep!' };
+// One side attacks: asleep or paralyzed it may lose the turn, otherwise "X used Y!" and the hit. `down` runs if the target faints, `next` if not.
+function abStrike(att, def, mv, down, next) {
+  abSteps([['', function () {
+    if (att.status === 'sleep') {
+      if (att.sleep > 0) { att.sleep -= 1; abNow([[att.name + ' is fast asleep.', null, 900], ['', next, 0]]); return; }
+      att.status = ''; abNow([[att.name + ' woke up!', null, 800]]);
+    }
+    if (att.status === 'paralysis' && Math.random() < 0.25) { abNow([[att.name + " is paralyzed! It can't move!", null, 1000], ['', next, 0]]); return; }
+    abSteps([[att.name + ' used ' + mv.name + '!', null, 800]]);
+    abHit(att, def, mv, down, next);
+  }, 0]]);
+}
+// One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
 function abHit(att, def, mv, down, next) {
   if (Math.random() * 100 >= mv.acc) { abSteps([[att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < 1 / 16, r = abDamage(att, def, mv, crit);
-  abSteps([['', function () { def.hp = Math.max(0, def.hp - r.dmg); if (state.advHp && ab.party.indexOf(def) !== -1) state.advHp[def.id] = def.hp; soundClick(); }, 600]]);
+  abSteps([['', function () {
+    def.hp = Math.max(0, def.hp - r.dmg);
+    if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
+    [def, att].forEach(function (m) { if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; });
+    soundClick();
+  }, 600]]);
   if (crit) abSteps([['A critical hit!', null, 800]]);
   if (r.eff > 1) abSteps([["It's super effective!", null, 900]]);
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
-  abSteps([['', function () { if (def.hp <= 0) down(); else next(); }, 0]]);
+  abSteps([['', function () {
+    if (def.hp <= 0) { down(); return; }
+    if (mv.status && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(1, 3); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
+    next();
+  }, 0]]);
 }
 
-// ----- the foe's turn -----
-function abFoeTurn() {
+// ----- the foe's turn (when you did not attack: a wrong answer, an item, a swap) -----
+function abFoeTurn() { abStrike(abFoe(), abMe(), pick(abFoe().moves), abMeFainted, abEndRound); }
+// After both have acted: burn and poison hurt a little, then the menu (or a faint).
+function abEndRound() {
   abSteps([['', function () {
-    const foe = abFoe(), me = abMe(), mv = pick(foe.moves);
-    abSteps([[foe.name + ' used ' + mv.name + '!', null, 800]]);
-    abHit(foe, me, mv, abMeFainted, abBackToMenu);
+    const list = [];
+    [abFoe(), abMe()].forEach(function (m) {
+      if (m.hp > 0 && (m.status === 'burn' || m.status === 'poison')) list.push([m.name + ' is hurt by its ' + (m.status === 'burn' ? 'burn' : 'poison') + '!', function () { m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.max / 8))); if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; }, 900]);
+    });
+    list.push(['', function () { if (abFoe().hp <= 0) abFoeFainted(); else if (abMe().hp <= 0) abMeFainted(); else abBackToMenu(); }, 0]);
+    abNow(list);
   }, 0]]);
 }
 function abBackToMenu() { abSteps([abMenuStep()]); saveState(); }
@@ -194,7 +227,7 @@ function abGainXp(mon, amt) {
   if (!mon.leveled) return;
   const fresh = abMon(mon.id, now), oldName = mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
   fresh.moves = fresh.moves.map(function (m) { return mon.moves.find(function (o) { return o.id === m.id; }) || m; });
-  Object.assign(mon, fresh, { hp: hp, leveled: true, evolved: fresh.name !== oldName ? oldName : '' });
+  Object.assign(mon, fresh, { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '' });
   state.advHp[mon.id] = mon.hp;
 }
 function abMeFainted() {
@@ -217,10 +250,10 @@ function abSwitch(i) {
 // ----- the pack -----
 function abPotion() {
   const me = abMe();
-  if (state.potions < 1 || me.hp >= me.max) return;
+  if (state.potions < 1 || (me.hp >= me.max && !me.status)) return;
   state.potions -= 1; ab.phase = 'busy';
   const heal = Math.min(ECON.overworld.potionHeal, me.max - me.hp);
-  abSteps([['You used a Potion!', function () { me.hp += heal; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
+  abSteps([['You used a Potion!', function () { me.hp += heal; me.status = ''; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
   abFoeTurn();
 }
 function abThrowNet() {

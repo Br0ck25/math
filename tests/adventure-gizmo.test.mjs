@@ -126,3 +126,33 @@ test('a bad seen or traded list in a save is repaired', async () => {
   assert.deepEqual(await page.evaluate(() => state.overworld.seen), ['hollow']);
   assert.deepEqual(await page.evaluate(() => state.overworld.traded), ['ember-trader']);
 });
+
+test('the map is tinted by the hour, and the Gizmo clock says the same time of day', async () => {
+  await put('hollow', 7, 9);
+  const r = await page.evaluate(() => {
+    const real = Date.prototype.getHours, out = {};
+    [[3, 'night'], [9, 'morning'], [14, 'afternoon'], [19, 'evening'], [22, 'night']].forEach(([h, name]) => {
+      Date.prototype.getHours = () => h; renderOverworld();
+      out[h] = [owTimeOfDay() === name, document.getElementById('ow-view').classList.contains('ow-' + name)];
+    });
+    Date.prototype.getHours = () => 22; grantKeyItem('gizmo'); gizmoSetTab('clock'); showModal('gizmo-modal', renderGizmo);
+    out.clock = /night/.test(document.getElementById('gizmo-body').innerText);
+    Date.prototype.getHours = real;
+    return out;
+  });
+  assert.deepEqual(Object.values(r).flat(), [true, true, true, true, true, true, true, true, true, true, true]);
+});
+
+test('walking warms an egg: every few steps count as one answer, with a daily cap', async () => {
+  await put('hollow', 7, 9);
+  const r = await page.evaluate(() => {
+    ECON.overworld.eggEvery = 2; ECON.overworld.eggPerDay = 3;
+    state.egg = { element: 'fire', rarity: 'common', steps: 0, target: 50 };
+    const o = state.overworld; o.walk = { day: '', n: 0, eggs: 0 };
+    for (let i = 0; i < 40; i++) owWalkEgg();
+    const capped = state.egg.steps;
+    state.egg = null; const n = o.walk.n; owWalkEgg();
+    return { capped, same: o.walk.n === n };
+  });
+  assert.deepEqual(r, { capped: 3, same: true });
+});

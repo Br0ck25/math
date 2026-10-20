@@ -28,8 +28,9 @@ const wait = (ms) => page.waitForTimeout(ms);
 // Wins the fight in progress: a trainer on the new battle screen, a boss on the Practice screen.
 const win = () => page.evaluate(async () => {
   if (typeof ab !== 'undefined' && ab) {
+    Math.random = () => 0.3;                                                                          // every move lands, no status, no critical hit
     const ready = async () => { for (let i = 0; i < 300 && ab && !(ab.phase === 'menu' && !ab.busy); i++) await new Promise((res) => setTimeout(res, 100)); };
-    for (let k = 0; k < 4 && ab; k++) { await ready(); if (!ab) break; abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); await new Promise((res) => setTimeout(res, 300)); }
+    for (let k = 0; k < 12 && ab; k++) { await ready(); if (!ab) break; ab.foes.forEach((f) => { f.atk = 1; }); abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); await new Promise((res) => setTimeout(res, 300)); }
     for (let i = 0; i < 300 && ab; i++) await new Promise((res) => setTimeout(res, 100));
     return;
   }
@@ -184,7 +185,7 @@ test('when the team faints against the boss, the hero wakes at the last Center w
   await page.click('#talk-next').catch(() => {});
   await page.click('#talk-choices button');
   await page.waitForFunction(() => typeof ab !== 'undefined' && ab && !ab.busy && ab.phase === 'menu', null, { timeout: 30000 });
-  await page.evaluate(() => { state.overworld.center = { map: 'gloom', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); abFight(); abAnswer(ab.q.ans + 999); });
+  await page.evaluate(() => { state.overworld.center = { map: 'gloom', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 60; }); Math.random = () => 0.3; abFight(); abAnswer(ab.q.ans + 999); });
   await page.waitForFunction(() => !ab, null, { timeout: 30000 });
   const r = await page.evaluate(() => ({ pos: [state.overworld.map, state.overworld.x, state.overworld.y], gems: state.gems, beat: state.overworld.beat.includes('gloom-boss'), boss: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1) }));
   assert.deepEqual(r.pos, ['gloom', 4, 5]);
