@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   gloom: {
     id: 'gloom', name: 'Gloom Marsh', region: 'gloom', start: { x: 7, y: 13 }, palette: OW_GLOOM_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route6', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route6', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'gloom-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'gloom-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'gloom-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'gloom-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'gloom-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'gloom-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'route7', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'gloom-guide', name: 'Guide Mist', x: 6, y: 11, face: 'right', look: { skin: 0, hair: 6, outfit: 4, style: 1 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'gloom-nook-ore', type: 'pickup', x: 2, y: 14, give: 'ore' }
     ],
     trees: {},
+    roads: { '7,0': 'gloom' },
     gyms: { '11,9': 'gloom' },
     signs: { '12,12': { id: 'gloom-quiz', text: 'Foggy quiz! Answer one question.', quiz: true } }
   },
