@@ -308,7 +308,7 @@ function renderStarterModal() {
   body.innerHTML =
     '<div class="comic" style="margin-bottom:8px;">' +
       '<div class="comic-panel"><span class="comic-icon">🗺️</span><span class="comic-text">Welcome to the Number Kingdom! Every math problem powers up your buddy.</span></div>' +
-      '<div class="comic-panel"><span class="comic-icon">🧢</span><span class="comic-text">Rival Riley grins: "Pick your partner! I\'ll race you to all 6 Gym Badges!"</span></div>' +
+      '<div class="comic-panel"><span class="comic-icon">🧢</span><span class="comic-text">Rival Riley grins: "Pick your partner! I\'ll race you to all 8 Gym Badges!"</span></div>' +
       '<div class="comic-panel"><span class="comic-icon">⚡</span><span class="comic-text">Choose a Fire, Water, or Nature starter buddy to begin your quest:</span></div>' +
     '</div>' +
     '<div id="starter-choices-row" style="display:flex; gap:6px;"></div>';

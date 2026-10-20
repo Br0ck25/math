@@ -85,5 +85,6 @@ function finishHero() {
   if (first) {
     if (got) toast('You got the Badge Case and the Running Shoes!');
     showAdventureWindow();
+    if (!state.storySeen.starter && state.unlockedPets.length <= 1) openStarterModal();          // Prof. Pi offers the first buddy
   } else if (document.getElementById('bag-modal').style.display === 'flex') renderBag();
 }

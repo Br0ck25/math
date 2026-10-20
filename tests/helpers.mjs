@@ -47,6 +47,7 @@ export async function openGame(browser, worker, env, opts = {}) {
   if (!opts.wildStart) await page.addInitScript(() => {
     try { if (!localStorage.getItem('math_quest_save')) localStorage.setItem('math_quest_save', JSON.stringify({ v: 1, currentMonsterIndex: 0, bossLevel: 5, recentBossTypes: ['fire'] })); } catch (e) { /* no storage */ }
   });
+  if (!opts.adventureBoot) await page.addInitScript(() => { window.__noAdventureBoot = true; });      // the game starts on the Adventure map; most tests are about the main screen
   if (opts.init) await page.addInitScript(opts.init);          // runs before the game loads
   if (opts.fast) {
     await page.addInitScript(() => {

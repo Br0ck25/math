@@ -163,6 +163,12 @@ function openAdventure() {
   if (!state.hero.made) { openHeroCreator(); return; }               // the first walk starts with Who are you?
   showAdventureWindow();
 }
+// The game starts on the Adventure: Who are you? for a new player (then a starter buddy), the map for everyone else. True when it opened.
+function adventureBoot() {
+  if (window.__noAdventureBoot || state.gym || state.raid) return false;
+  if (!state.hero.made) openHeroCreator(); else showAdventureWindow();
+  return true;
+}
 function showAdventureWindow() {
   showModal('overworld-modal', function () { owSafe = ECON.overworld.graceSteps; owTrail = null; owSetRegion(OW_MAPS[state.overworld.map]); renderOverworld(); });
 }
