@@ -29,6 +29,7 @@ function owRoadOpen(badge) {
 }
 // Walking into a land makes its buddies the ones in the grass (the same as travelling there on the Map).
 function owSetRegion(map) {
+  if (owTowns().indexOf(map.id) !== -1 && state.overworld.seen.indexOf(map.id) === -1) state.overworld.seen.push(map.id);
   if (map.region && state.region !== map.region) { state.region = map.region; markRegionVisited(map.region); }
 }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
@@ -96,6 +97,7 @@ function renderOverworld() {
   view.innerHTML = h;
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;
+  document.getElementById('ow-gizmo-btn').style.display = hasKeyItem('gizmo') ? '' : 'none';
 }
 
 // ----- walking -----

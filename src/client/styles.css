@@ -2070,6 +2070,12 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .ow-key.left svg { transform: rotate(-90deg); }
 .ow-key.down svg { transform: rotate(180deg); }
 .ow-key.right svg { transform: rotate(90deg); }
+.ow-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ow-head h2 { margin: 0 0 6px; }
+.ow-head .ow-back-chip { display: inline-flex; align-items: center; gap: 4px; }
+.ow-head .w-sprite { width: 22px; height: 22px; }
+.gizmo-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--card-border); text-align: left; font-size: 0.88rem; }
+.gizmo-row .d { color: var(--text-muted); font-size: 0.78rem; }
 .ow-hint { margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); }
 .ow-back-chip { flex: none; white-space: nowrap; min-height: 44px; padding: 4px 12px; border-radius: 999px; border: 2px solid var(--success); background: var(--bg-dark); color: var(--text); font-weight: 800; font-size: 0.78rem; cursor: pointer; }
 .adventure-row { align-items: center; }

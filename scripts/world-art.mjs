@@ -122,6 +122,7 @@ const KEY_BODIES = {
     '<rect x="42" y="36" width="16" height="14" rx="3" fill="#FDE047" ' + outline + '/><path d="M36 26V18Q36 12 42 12H58Q64 12 64 18V26" fill="none" ' + outline + '/>',
   'k-shoes': '<path d="M8 66Q8 48 22 46L40 42L48 58H70Q92 58 92 74V80H8Z" fill="#EF4444" ' + outline + '/><rect x="8" y="76" width="84" height="10" rx="5" fill="#F8FAFC" ' + outline + '/>' +
     '<path d="M30 52L36 60M38 48L44 56" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round"/>',
+  'k-gizmo': '<rect x="22" y="8" width="56" height="84" rx="12" fill="#6366F1" ' + outline + '/><rect x="30" y="18" width="40" height="34" rx="6" fill="#E0F2FE" ' + outline + '/><path d="M36 44L44 34L52 40L62 26" fill="none" stroke="#0EA5E9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="40" cy="68" r="7" fill="#FDE047" stroke="' + INK + '" stroke-width="3"/><circle cx="60" cy="68" r="7" fill="#F87171" stroke="' + INK + '" stroke-width="3"/><rect x="36" y="80" width="28" height="5" rx="2.5" fill="#C7D2FE" stroke="' + INK + '" stroke-width="2"/>',
   'u-bag': '<path d="M36 28Q36 10 50 10Q64 10 64 28" fill="none" ' + outline + '/><rect x="18" y="26" width="64" height="64" rx="18" fill="#F97316" ' + outline + '/><rect x="31" y="56" width="38" height="26" rx="7" fill="#FDBA74" ' + outline + '/><path d="M50 56V66" fill="none" ' + outline + '/>'
 };
 

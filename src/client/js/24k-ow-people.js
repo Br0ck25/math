@@ -17,6 +17,7 @@ function owInteract(map, x, y) {
     renderOverworld();
     if (npc.kind === 'nurse') { openCenter(npc); return; }
     if (npc.kind === 'clerk') { openMart(npc); return; }
+    if (OW_SERVICES[npc.kind]) { OW_SERVICES[npc.kind](npc); return; }
     openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.lines });
     return;
   }

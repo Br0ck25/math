@@ -772,7 +772,8 @@
   <!-- The Adventure map: a hero walks tile maps (24g-ow-engine.js) -->
   <div class="modal-overlay" id="overworld-modal" data-esc="closeOverworld">
     <div class="modal-content ow-content">
-      <h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
+      <div class="ow-head"><h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
+        <button type="button" class="ow-back-chip" id="ow-gizmo-btn" style="display:none" onclick="openGizmo()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-k-gizmo"/></svg> Gizmo</button></div>
       <div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div>
       <div class="ow-pad">
         <button type="button" class="ow-key ow-side team" aria-label="Team" onclick="openPad()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-o-paw"/></svg><span>Team</span></button>
@@ -797,6 +798,15 @@
     <div class="modal-content">
       <h2 style="font-size:1.2rem; margin-bottom:6px;" id="pad-title">Team</h2>
       <div id="pad-body"></div>
+    </div>
+  </div>
+
+  <!-- The Gizmo: map, clock, quests, calls and tips (24u-ow-gizmo.js). After the overworld: it opens over it. -->
+  <div class="modal-overlay" id="gizmo-modal" data-close="closeGizmo">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:6px;">Gizmo</h2>
+      <div class="hero-row" id="gizmo-tabs" role="tablist"></div>
+      <div id="gizmo-body"></div>
     </div>
   </div>
 

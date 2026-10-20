@@ -199,6 +199,8 @@ const OW_START = { map: 'hollow' };
 const OW_LANDS = [
   { land: 'meadow', town: 'meadow', routeIn: 'route1', center: 'meadow-center', mart: 'meadow-mart', house: 'meadow-house', charm: 'trim', nook: [] }
 ];
+// The towns the Gizmo can travel to once the hero has stood in them: Cozy Hollow, then each land's town.
+function owTowns() { return [OW_START.map].concat(OW_LANDS.map(function (l) { return l.town; })); }
 // The story beats that are saved once done (state.overworld.story): the Scramblers' three schemes and Riley's reveal.
 const OW_STORY = ['tide-ferry', 'volt-blackout', 'gloom-scramblers', 'riley-reveal'];
 // The names of the trainers on the map (a save may keep one as the current foe).
