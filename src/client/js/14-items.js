@@ -13,7 +13,8 @@ function itemCost(type) { return type === 'candy' ? getCandyCost() : ECON.items[
 const ITEM_LOOKS = {
   candy: ['🍬', 'Rare Candy', 'Your buddy levels up right now'],
   potion: ['💖', 'Potion', 'Heals ' + ECON.overworld.potionHeal + ' HP in a battle and cures a status'],
-  net: ['🕸️', 'Catch Net', 'Throw it at a wild buddy to catch it']
+  net: ['🕸️', 'Catch Net', 'Throw it at a wild buddy to catch it'],
+  repel: ['🧴', 'Repel', 'No wild buddies in the grass for ' + ECON.overworld.repelSteps + ' steps']
 };
 
 // Labels the item buttons in the Shop: the price when affordable, otherwise how many more gems are needed (a tap still explains).
@@ -59,6 +60,9 @@ function payItem(type) {
   } else if (type === 'net') {
     state.nets += 1;
     showPopup('Catch Net! (' + state.nets + ')');
+  } else if (type === 'repel') {
+    state.repelSteps = Math.min(ECON.overworld.repelSteps * 3, state.repelSteps + ECON.overworld.repelSteps);
+    showPopup('Repel! (' + state.repelSteps + ' steps)');
   } else if (type === 'potion') {
     state.potions = Math.min(99, state.potions + 1);
     showPopup('Potion! (' + state.potions + ')');

@@ -9,6 +9,7 @@ function freshState() {
     streak: 0,
     shields: 0,
     cloverLeft: 0,
+    repelSteps: 0,                                   // grass steps left with no wild fights (Repel)
     heldOwned: [],                                   // held item ids you have bought
     held: {},                                        // buddy id -> held item id (one each, an item is held by one buddy)
     spring: { day: '' },                             // the day the free Healing Spring visit was used (24b-map.js)

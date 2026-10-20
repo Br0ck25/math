@@ -48,7 +48,7 @@ const ECON = {
     master: { levels: 3, minLevel: 90, firstGems: 1000, nets: 5, repeatGems: 100 }
   },
   // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
-  overworld: { grassChance: 0.18, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 2, signsPerDay: 5, pickupGems: 5,
+  overworld: { grassChance: 0.18, repelSteps: 100, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 2, signsPerDay: 5, pickupGems: 5,
     // A trainer on the map sees the hero along the way it faces, up to `trainerSight` tiles (a trainer may set its own `sight`).
     trainerSight: 3,
     // Fishing (tap water with the Fishing Rod): this chance of a bite each try; a bite is a normal wild fight with a water buddy.
@@ -58,7 +58,7 @@ const ECON = {
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
     netBonus: 1.5, potionHeal: 40, eggEvery: 25, eggPerDay: 8, blackoutShare: 0.5,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
-    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'candy', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
+    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'repel', badges: 1 }, { type: 'candy', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 40, leftovers: 60, claw: 50, lens: 50, charm: 60 }, berryHeal: 10 },
   // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
@@ -85,7 +85,7 @@ const ECON = {
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
-  items: { potion: 20, net: 30 },
+  items: { potion: 20, net: 30, repel: 25 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,
     streak: { 5: 22, 8: 32 }, boss: { 2: 22, 3: 32 }, flawless: 30, fast: { 5: 22, 8: 32 }, ult: { 2: 20, 3: 28 }

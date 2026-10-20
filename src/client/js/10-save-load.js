@@ -212,6 +212,7 @@ const NORMALIZERS = [
       s.advPp[id] = {};
       Object.keys(pp[id]).slice(0, 8).forEach(function (m) { if (Number.isFinite(pp[id][m])) s.advPp[id][m.slice(0, 16)] = clamp(Math.floor(pp[id][m]), 0, 99); });
     });
+    s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },
   function overworld(s) {

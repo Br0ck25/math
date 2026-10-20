@@ -43,6 +43,31 @@ test('every buddy can be caught: in the wild pool, a boss prize, or in the weekl
   assert.deepEqual(r, { lost: [], bad: [] });
 });
 
+test('Gold statuses: water freezes (a frozen buddy cannot move, a tenth thaw), magic confuses (it may hurt itself, then snaps out)', async () => {
+  assert.deepEqual(await ev(() => [AB_STATUS.water, AB_STATUS.magic]), ['freeze', 'confusion']);
+  await begin();
+  const frozen = await ev(() => { const me = abMe(), foe = abFoe(); me.status = 'freeze'; Math.random = () => 0.5; let moved = false; abStrike(me, foe, me.moves[0], () => {}, () => {}); return new Promise((res) => setTimeout(() => res([me.status, foe.hp === foe.max]), 1500)); });
+  assert.deepEqual(frozen, ['freeze', true], 'it stayed frozen and did not attack');
+  const thawed = await ev(() => { const me = abMe(); Math.random = () => 0.05; abStrike(me, abFoe(), me.moves[0], () => {}, () => {}); return new Promise((res) => setTimeout(() => res(me.status), 1800)); });
+  assert.equal(thawed, '', 'a low roll thaws it');
+  await menu();
+  const conf = await ev(() => { const me = abMe(), hp = me.hp; me.conf = 3; Math.random = () => 0.3; abStrike(me, abFoe(), me.moves[0], () => {}, () => {}); return new Promise((res) => setTimeout(() => res([me.hp < hp, me.conf]), 2500)); });
+  assert.deepEqual(conf, [true, 2], 'a low roll: it hurt itself and has one turn less');
+});
+
+test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
+  const r = await ev(() => {
+    ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 100; state.repelSteps = 0;
+    const open = ECON.overworld.mart.find((m) => m.type === 'repel').badges, cost = itemCost('repel');
+    payItem('repel'); const steps = state.repelSteps, left = state.gems;
+    let fights = 0; for (let i = 0; i < steps; i++) if (owGrassStep()) fights++;
+    const worn = state.repelSteps, next = owGrassStep();
+    state.repelSteps = 99999; NORMALIZERS.forEach((fn) => fn(state));
+    return { open, cost, steps, left, fights, worn, next, clamped: state.repelSteps };
+  });
+  assert.deepEqual(r, { open: 1, cost: 25, steps: 100, left: 75, fights: 0, worn: 0, next: true, clamped: 300 });
+});
+
 test('a Berry heals 10 HP when health drops to half or less, and is used up', async () => {
   await ev(() => { state.heldOwned = ['berry']; state.held = { [state.activePet]: 'berry' }; });
   await begin();

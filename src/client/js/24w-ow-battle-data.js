@@ -21,8 +21,8 @@ const AB_NORMAL = [
 // With every PP spent a buddy can still Struggle (it hurts itself a little).
 const AB_STRUGGLE = { id: 'struggle', name: 'Struggle', type: 'normal', power: 50, acc: 100, pp: 1, left: 1, recoil: true };
 // The status a damaging move of each element can leave (from the second tier on, one chance in five): burn and poison hurt a little every round, paralysis slows and can stop a move, sleep skips turns.
-const AB_STATUS = { fire: 'burn', nature: 'poison', electric: 'paralysis', dark: 'sleep', magic: 'sleep' };
-const AB_STATUS_TAG = { burn: 'BRN', poison: 'PSN', paralysis: 'PAR', sleep: 'SLP' };
+const AB_STATUS = { fire: 'burn', water: 'freeze', nature: 'poison', electric: 'paralysis', dark: 'sleep', magic: 'confusion' };
+const AB_STATUS_TAG = { burn: 'BRN', poison: 'PSN', paralysis: 'PAR', sleep: 'SLP', freeze: 'FRZ' };
 const AB_STATUS_CHANCE = 0.2;
 // The moves a buddy of this element knows at this level (its four newest), as fresh copies with their PP.
 // Every move a buddy of this element has learned by this level, oldest first.
@@ -105,7 +105,7 @@ function abWildLevel() { return clamp((ECON.map.levels[state.region] || 1) + rnd
 function abCatchA(foe) {
   const sp = getSpecies(foe.id);
   const rate = Math.min(255, Math.floor((sp.legend ? 3 : !isStoreBuddy(sp) ? 45 : sp.cost < 150 ? 255 : sp.cost < 800 ? 120 : 45) * ECON.overworld.netBonus));
-  const a = Math.max(1, Math.floor(rate * (3 * foe.max - 2 * foe.hp) / (3 * foe.max))) + (foe.status === 'sleep' ? 10 : 0);
+  const a = Math.max(1, Math.floor(rate * (3 * foe.max - 2 * foe.hp) / (3 * foe.max))) + (foe.status === 'sleep' || foe.status === 'freeze' ? 10 : 0);
   return Math.min(255, a);
 }
 function abCatchChance(foe) { return (abCatchA(foe) + 1) / 256; }

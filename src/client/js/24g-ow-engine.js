@@ -159,6 +159,7 @@ function owInteractFacing() {
 }
 // One step in tall grass: the first graceSteps after a fight are safe, then each step may start a wild fight.
 function owGrassStep() {
+  if (state.repelSteps > 0) { state.repelSteps -= 1; if (!state.repelSteps) toast('The Repel wore off.'); return false; }
   if (owSafe > 0) { owSafe -= 1; return false; }
   return Math.random() < ECON.overworld.grassChance;
 }

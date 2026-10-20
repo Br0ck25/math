@@ -63,11 +63,11 @@ function abRender() {
   if (!ab) return;
   const f = abFoe(), m = abMe();
   document.getElementById('ab-foe-name').innerText = f.name;
-  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level + (f.status ? ' ' + AB_STATUS_TAG[f.status] : '');
+  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level + (f.status ? ' ' + AB_STATUS_TAG[f.status] : '') + (f.conf > 0 ? ' CNF' : '');
   const fb = document.getElementById('ab-foe-hp');
   fb.style.width = Math.round(f.hp / f.max * 100) + '%'; fb.className = abHpClass(f);
   document.getElementById('ab-me-name').innerText = m.name;
-  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level + (m.status ? ' ' + AB_STATUS_TAG[m.status] : '');
+  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level + (m.status ? ' ' + AB_STATUS_TAG[m.status] : '') + (m.conf > 0 ? ' CNF' : '');
   const mb = document.getElementById('ab-me-hp');
   mb.style.width = Math.round(m.hp / m.max * 100) + '%'; mb.className = abHpClass(m);
   document.getElementById('ab-me-num').innerText = m.hp + ' / ' + m.max;
@@ -188,13 +188,26 @@ function abSpeed(m) { return m.spd * (m.status === 'paralysis' ? 0.25 : 1); }
 function abSavePp(m) { state.advPp[m.id] = {}; m.moves.forEach(function (mv) { state.advPp[m.id][mv.id] = mv.left; }); }
 // The sound of a hit: a plain thud for normal moves, the element's own sound for the others.
 function abHitSound(att, mv) { if (mv.type === 'normal') soundTackle(); else soundElementHit(att.element); }
-const AB_STATUS_TEXT = { burn: 'was burned!', poison: 'was poisoned!', paralysis: 'is paralyzed! It may not attack!', sleep: 'fell asleep!' };
+const AB_STATUS_TEXT = { burn: 'was burned!', poison: 'was poisoned!', paralysis: 'is paralyzed! It may not attack!', sleep: 'fell asleep!', freeze: 'was frozen solid!', confusion: 'became confused!' };
 // One side attacks: asleep or paralyzed it may lose the turn, otherwise "X used Y!" and the hit. `down` runs if the target faints, `next` if not.
 function abStrike(att, def, mv, down, next) {
   abSteps([['', function () {
     if (att.status === 'sleep') {
       if (att.sleep > 0) { att.sleep -= 1; abNow([[att.name + ' is fast asleep.', null, 900], ['', next, 0]]); return; }
       att.status = ''; abNow([[att.name + ' woke up!', null, 800]]);
+    }
+    if (att.status === 'freeze') {                                                                      // Gold: frozen solid, a tenth chance to thaw each turn
+      if (Math.random() >= 0.1) { abNow([[att.name + ' is frozen solid!', null, 900], ['', next, 0]]); return; }
+      att.status = ''; abNow([[att.name + ' thawed out!', null, 800]]);
+    }
+    if (att.conf > 0) {                                                                                 // Gold: confused for 2-5 turns, half the time it hurts itself instead
+      att.conf -= 1;
+      if (att.conf === 0) abNow([[att.name + ' snapped out of its confusion!', null, 800]]);
+      else if (Math.random() < 0.5) {
+        const hurt = abDamage(att, att, { power: 40, type: 'normal', name: 'confusion' }, false).dmg, mine = ab.party.indexOf(att) !== -1;
+        abNow([[att.name + ' is confused!', null, 800], ['It hurt itself in its confusion!', function () { att.hp = Math.max(0, att.hp - hurt); if (mine) state.advHp[att.id] = att.hp; }, 900], ['', function () { if (att.hp <= 0) (mine ? abMeFainted : abFoeFainted)(); else next(); }, 0]]);
+        return;
+      }
     }
     if (att.status === 'paralysis' && Math.random() < 0.25) { abNow([[att.name + " is paralyzed! It can't move!", null, 1000], ['', next, 0]]); return; }
     abSteps([[att.name + ' used ' + mv.name + '!', null, 800]]);
@@ -232,7 +245,8 @@ function abHit(att, def, mv, down, next) {
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
   abSteps([['', function () {
     if (def.hp <= 0) { down(); return; }
-    if (mv.status && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(2, 7); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
+    if (mv.status === 'confusion' && !(def.conf > 0) && Math.random() < AB_STATUS_CHANCE) { def.conf = rnd(2, 5) + 1; abNow([[def.name + ' ' + AB_STATUS_TEXT.confusion, null, 1000]]); }
+    else if (mv.status && mv.status !== 'confusion' && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(2, 7); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
     next();
   }, 0]]);
 }
@@ -334,7 +348,7 @@ function abSwitch(i) {
   if (ab.phase !== 'team' || mon.hp <= 0 || i === ab.cur) return;
   const forced = ab.forced, old = abMe();
   ab.phase = 'busy'; ab.forced = false;
-  abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
+  abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
   if (forced) abBackToMenu(); else abFoeTurn();
 }
 
@@ -344,7 +358,7 @@ function abPotion() {
   if (state.potions < 1 || (me.hp >= me.max && !me.status)) return;
   state.potions -= 1; ab.phase = 'busy';
   const heal = Math.min(ECON.overworld.potionHeal, me.max - me.hp);
-  abSteps([['You used a Potion!', function () { me.hp += heal; me.status = ''; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
+  abSteps([['You used a Potion!', function () { me.hp += heal; me.status = ''; me.conf = 0; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
   abFoeTurn();
 }
 function abThrowNet() {
