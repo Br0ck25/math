@@ -27,6 +27,11 @@ function owInteract(map, x, y) {
   }
   const tile = OW_TILES[(map.rows[y] || '').charAt(x)];
   if (!tile) return;
+  if (tile.road) {
+    const badge = map.roads && map.roads[x + ',' + y];
+    if (badge && !owRoadOpen(badge)) openTalk({ name: 'Road guard', art: worldSprite('t-gate-road'), lines: ['The road ahead is for explorers who hold the ' + regionById(badge).name + ' Badge.', 'Win it at the gym here first, then come back!'] });
+    return;
+  }
   if (tile.gate && !hasKeyItem(tile.gate)) { openTalk({ name: 'Blocked', art: worldSprite(OW_GATES[tile.gate].closed), lines: [OW_GATES[tile.gate].hint] }); return; }
   const tree = map.trees && map.trees[x + ',' + y];
   if (tree) owShake(tree);

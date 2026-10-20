@@ -19,7 +19,17 @@ let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 function owTileAt(map, x, y) {
   const row = map.rows[y], t = row && OW_TILES[row.charAt(x)];
   if (!t) return null;
+  if (t.road) { const b = map.roads && map.roads[x + ',' + y]; return b && owRoadOpen(b) ? { t: 't-path', open: true } : t; }
   return t.gate && hasKeyItem(t.gate) ? { t: OW_GATES[t.gate].open, open: true } : t;
+}
+// The road to the next land opens with the badge of the land before it, or any later badge (a save that already went on).
+function owRoadOpen(badge) {
+  const ids = gymRegions().map(function (r) { return r.id; });
+  return ids.slice(ids.indexOf(badge)).some(hasBadge);
+}
+// Walking into a land makes its buddies the ones in the grass (the same as travelling there on the Map).
+function owSetRegion(map) {
+  if (map.region && state.region !== map.region) { state.region = map.region; markRegionVisited(map.region); }
 }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
 function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y; }) || null; }
@@ -95,7 +105,7 @@ function owMove(dir) {
   o.x = nx; o.y = ny;
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, nx, ny);
-  if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; }
+  if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
   if (warp) return;
@@ -146,7 +156,7 @@ function openAdventure() {
   showAdventureWindow();
 }
 function showAdventureWindow() {
-  showModal('overworld-modal', function () { owSafe = ECON.overworld.graceSteps; owTrail = null; renderOverworld(); });
+  showModal('overworld-modal', function () { owSafe = ECON.overworld.graceSteps; owTrail = null; owSetRegion(OW_MAPS[state.overworld.map]); renderOverworld(); });
 }
 function closeOverworld() {
   owRelease();

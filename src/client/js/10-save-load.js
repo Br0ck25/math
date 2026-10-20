@@ -178,7 +178,7 @@ const NORMALIZERS = [
     w.id = ok ? w.id : '';
     w.legend = w.legend === true && !!w.id && !w.trainer && legendPets.some(function (p) { return p.id === w.id; });
     w.shiny = w.shiny === true && !!w.id && !w.trainer;
-    w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
+    w.trainer = (KNOWN_TRAINERS.indexOf(w.trainer) !== -1 || owTrainerNames().indexOf(w.trainer) !== -1) && w.id ? w.trainer : '';
     w.since = asInt(w.since, 0, 50, 0);
     w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
     delete w.miss;                                   // an old catch-streak counter

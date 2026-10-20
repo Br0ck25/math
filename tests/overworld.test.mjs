@@ -23,6 +23,7 @@ const open = () => page.evaluate(() => { openAdventure(); return state.overworld
 
 test('every map is valid: equal rows, known tiles, warps that land on walkable non-warp tiles, signs on sign tiles', async () => {
   const bad = await page.evaluate(() => {
+    state.badges = gymRegions().map((x) => x.id);                                                        // every badge: the roads and gates are open
     const problems = [];
     Object.keys(OW_MAPS).forEach((id) => {
       const m = OW_MAPS[id];
@@ -30,6 +31,8 @@ test('every map is valid: equal rows, known tiles, warps that land on walkable n
       if (new Set(m.rows.map((r) => r.length)).size !== 1) problems.push(id + ': rows differ in width');
       m.rows.forEach((r, y) => r.split('').forEach((c, x) => { if (!OW_TILES[c]) problems.push(id + ': unknown tile ' + c + ' at ' + x + ',' + y); }));
       if (!owWalkable(m, m.start.x, m.start.y)) problems.push(id + ': start is not walkable');
+      m.rows.forEach((row, y) => row.split('').forEach((c, x) => { if (c === 'x' && !gymRegions().some((g) => g.id === (m.roads || {})[x + ',' + y])) problems.push(id + ': road barrier ' + x + ',' + y + ' has no badge'); }));
+      Object.keys(m.roads || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); if (m.rows[y].charAt(x) !== 'x') problems.push(id + ': road badge on a tile that is not a barrier ' + p); });
       m.warps.forEach((w) => {
         if (!owWalkable(m, w.x, w.y)) problems.push(id + ': warp tile ' + w.x + ',' + w.y + ' is not walkable');
         const to = OW_MAPS[w.to];

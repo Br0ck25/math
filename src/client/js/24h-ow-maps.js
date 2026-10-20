@@ -2,6 +2,7 @@
 //  ADVENTURE MAPS (plain data; the engine is 24g-ow-engine.js, people are 24k-ow-people.js). One character per tile, every row of a map the same width (tests check it).
 //  A warp is a tile that sends the hero to (tx, ty) of another map: that spot must be walkable and not a warp itself. Doors are walkable tiles with a warp.
 //  `signs` maps "x,y" to the words of a sign tile: a string, or { id, text, quiz: true } for a math sign. `npcs` stand still and are solid.
+//  `roads` maps "x,y" of a road barrier tile ('x') to the gym badge that opens it (or any later one): the story key to the next land.
 //  `gyms` maps "x,y" of a gym door tile ('G') to a land id of REGIONS: stepping on it offers that land's gym.
 //  `trees` maps "x,y" of a 'Y' tile to a tree id: it can be shaken once a day for a rare buddy. Water tiles ('~') can be fished once you hold the Fishing Rod. Gate letters are in OW_GATE_CHARS.
 //  `objects` are pickups (sparkles) that can be taken once. Tile pictures are art/world/<t>.svg (scripts/world-art.mjs). `grass` tiles can start a wild fight.
@@ -38,6 +39,7 @@ const OW_TILES = {
   'G': { t: 't-gym-door' },
   'N': { t: 't-center-sign', solid: true },
   'K': { t: 't-mart-sign', solid: true },
+  'x': { t: 't-gate-road', solid: true, road: true },
   'f': { t: 't-floor' },
   'w': { t: 't-wall', solid: true },
   'C': { t: 't-counter', solid: true },
@@ -48,6 +50,8 @@ const OW_TILES = {
 // A small room: the mat in the bottom wall is the way out (see owRoom()).
 Object.keys(OW_GATE_CHARS).forEach(function (c) { OW_TILES[c] = { t: OW_GATES[OW_GATE_CHARS[c]].closed, solid: true, gate: OW_GATE_CHARS[c] }; });
 const OW_ROOM_ROWS = ['wwwwwwww', 'wSffffSw', 'wffffffw', 'wfrrrrfw', 'wffffffw', 'wffffffw', 'wwwmwwww'];
+const OW_CENTER_ROWS = ['wwwwwwww', 'wfffffSw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wfrrrrfw', 'wwwmwwww'];
+const OW_MART_ROWS = ['wwwwwwww', 'wSSSSSSw', 'wffffffw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wwwmwwww'];
 function owRoom(id, name, exit, npcs, objects, rows) {
   return { id: id, name: name, region: 'meadow', start: { x: 3, y: 5 }, rows: rows || OW_ROOM_ROWS, warps: [{ x: 3, y: 6, to: exit.to, tx: exit.tx, ty: exit.ty }], npcs: npcs || [], objects: objects || [], signs: {} };
 }
@@ -135,7 +139,7 @@ const OW_MAPS = {
   meadow: {
     id: 'meadow', name: 'Meadow Town', region: 'meadow', start: { x: 7, y: 13 },
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -154,11 +158,12 @@ const OW_MAPS = {
     ],
     warps: [
       { x: 7, y: 15, to: 'route1', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route1', tx: 7, ty: 1 },
+      { x: 7, y: 0, to: 'route2', tx: 6, ty: 22 },
       { x: 3, y: 9, to: 'meadow-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'meadow-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'meadow-mart', tx: 3, ty: 5 }
     ],
     npcs: [
       { id: 'meadow-guide', name: 'Guide Ivy', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 5, outfit: 2, style: 1 },
-        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!'] }
+        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!', 'The road north to Ember Hills opens when you win the Meadow Badge.'] }
       ,
       { id: 'meadow-fisher', kind: 'gift', gift: 'fishing-rod', name: 'Fisher Gil', x: 11, y: 13, face: 'right', look: { skin: 2, hair: 1, outfit: 5, style: 0 },
         lines: ['Ahoy! The pond here is full of water buddies.', 'I am too old to chase them. Take my old Fishing Rod!'],
@@ -172,20 +177,32 @@ const OW_MAPS = {
       '12,12': { id: 'meadow-quiz', text: 'Town quiz! Answer one question.', quiz: true }
     },
     gyms: { '11,9': 'meadow' },
+    roads: { '7,0': 'meadow' },
     palette: { roof: '#4F8FE0', roofD: '#2F6CC0' }
   },
   'meadow-center': owRoom('meadow-center', 'Buddy Center', { to: 'meadow', tx: 4, ty: 5 }, [
     { id: 'meadow-nurse', kind: 'nurse', name: 'Nurse Joy', x: 3, y: 1, face: 'down', look: { skin: 1, hair: 7, outfit: 6, style: 3 }, lines: ['Welcome to the Buddy Center!'] }
-  ], [], ['wwwwwwww', 'wfffffSw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wfrrrrfw', 'wwwmwwww']),
+  ], [], OW_CENTER_ROWS),
   'meadow-mart': owRoom('meadow-mart', 'Mart', { to: 'meadow', tx: 12, ty: 5 }, [
     { id: 'meadow-clerk', kind: 'clerk', name: 'Clerk Moss', x: 3, y: 2, face: 'down', look: { skin: 3, hair: 3, outfit: 3, style: 0 }, lines: ['Welcome to the Mart!'] }
-  ], [], ['wwwwwwww', 'wSSSSSSw', 'wffffffw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wwwmwwww']),
+  ], [], OW_MART_ROWS),
   'meadow-house': owRoom('meadow-house', 'Meadow House', { to: 'meadow', tx: 3, ty: 10 }, [
     { id: 'meadow-gran', name: 'Gran', x: 4, y: 2, face: 'down', look: { skin: 0, hair: 4, outfit: 5, style: 1 },
       lines: ['Come in, come in! I love visitors.', 'Buddies get stronger when you answer fast and answer right.', 'Wild buddies in the tall grass have a hard time hiding from you.'] }
   ], [{ id: 'meadow-house-net', type: 'pickup', x: 1, y: 4, give: 'net' }])
 };
 const OW_START = { map: 'hollow' };
+// The lands that have a town on the map, in story order (each land's file adds its own row): the gym land, its town map, the route that leads in,
+// its Buddy Center, Mart and house, the charm it gives, and the goods in its side nook. Generic tests walk this table.
+const OW_LANDS = [
+  { land: 'meadow', town: 'meadow', routeIn: 'route1', center: 'meadow-center', mart: 'meadow-mart', house: 'meadow-house', charm: 'trim', nook: [] }
+];
+// The names of the trainers on the map (a save may keep one as the current foe).
+function owTrainerNames() {
+  const names = [];
+  Object.keys(OW_MAPS).forEach(function (k) { (OW_MAPS[k].npcs || []).forEach(function (n) { if (n.kind === 'trainer') names.push(n.name); }); });
+  return names;
+}
 // Everything the save may name: npc ids, pickup ids and quiz sign ids across all maps.
 function owIds(kind) {
   const ids = [];

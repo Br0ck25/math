@@ -133,9 +133,9 @@ test('the Route 1 nook is behind thorny bushes: closed without the Trim Charm, o
   assert.deepEqual(r.found, ['route1-nook-net', 'route1-nook-gem']);
 });
 
-test('the main road never needs a charm: with no badges every map, gym door, person and trainer can be reached; only side goods wait', async () => {
+test('the main road never needs a charm: with every road open and no charm, every map, gym door, person and trainer can be reached; only side goods wait', async () => {
   const r = await page.evaluate(() => {
-    state.badges = [];
+    hasKeyItem = () => false; owRoadOpen = () => true;                                                    // no charm in the bag, the badge roads open
     const arrivals = {}, maps = Object.keys(OW_MAPS);
     maps.forEach((k) => { arrivals[k] = [OW_MAPS[k].start]; });
     const reached = new Set([OW_START.map]), tiles = {};
@@ -163,7 +163,7 @@ test('the main road never needs a charm: with no badges every map, gym door, per
     return out;
   });
   assert.deepEqual([r.maps, r.gyms, r.people], [[], [], []]);
-  assert.deepEqual(r.side, ['route1-nook-gem', 'route1-nook-net'], 'the goods behind the bushes are the only thing that waits for a charm');
+  assert.deepEqual(r.side.sort(), ['ember-nook-gem', 'ember-nook-ore', 'route1-nook-gem', 'route1-nook-net', 'route2-nook-gem', 'route2-nook-net'], 'the goods behind the gates are the only thing that waits for a charm');
 });
 
 test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', async () => {
