@@ -227,7 +227,7 @@ test('pickups: walking onto a sparkle takes it once, it is saved, and a full net
   assert.deepEqual(r.after.found, ['hollow-home-gem']);
   assert.equal(r.after.sparkles, 0, 'the sparkle is gone');
   assert.equal(r.again, r.after.gems, 'taken once');
-  await page.evaluate(() => closeOverworld());
+  await page.evaluate(() => hideModal('overworld-modal'));
   await page.reload();
   assert.deepEqual(await page.evaluate(() => state.overworld.found), ['hollow-home-gem'], 'saved by id');
   const net = await page.evaluate(() => {

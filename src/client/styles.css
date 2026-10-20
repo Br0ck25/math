@@ -2173,3 +2173,7 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .ab-move.t-fire { border-color: #f97316; } .ab-move.t-water { border-color: #38bdf8; } .ab-move.t-nature { border-color: #22c55e; }
 .ab-move.t-electric { border-color: #facc15; } .ab-move.t-dark { border-color: #a78bfa; } .ab-move.t-magic { border-color: #f472b6; } .ab-move.t-normal { border-color: #94a3b8; }
 @media (max-height: 640px) { .ab-field { height: 180px; } }
+
+body.adv .game-container { display: none; }   /* the game lives on the Adventure map: the old Practice screen is no longer shown */
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.menu-grid .ab-btn { min-height: 52px; }

@@ -53,7 +53,7 @@ test('the second walk goes straight to the map, and an empty or odd name becomes
   await page.click('#hero-go');
   assert.equal(await page.evaluate(() => state.hero.name), '');
   assert.equal(await page.evaluate(() => heroName()), 'Explorer');
-  await page.evaluate(() => closeOverworld());
+  await page.evaluate(() => hideModal('overworld-modal'));
   await page.evaluate(() => openAdventure());
   assert.equal(await shown('hero-modal'), false);
   assert.equal(await shown('overworld-modal'), true);
@@ -94,7 +94,7 @@ test('the Running Shoes make a held D-pad key walk faster', async () => {
     await new Promise((res) => setTimeout(res, 1200));
     owRelease();
     window.setInterval = real;
-    closeOverworld();
+    hideModal('overworld-modal');
     return delays[0];
   }, shoes);
   assert.equal(await step(false), 400);
@@ -152,11 +152,11 @@ test('Bag buttons: Shop leaves the walk for the shop; Change look edits without 
   assert.notEqual(r.creator, 'flex');
   await page.click('#bag-body .claim-btn >> text=Shop');
   assert.equal(await shown('shop-modal'), true);
-  assert.equal(await shown('overworld-modal'), false);
+  assert.equal(await shown('overworld-modal'), true, 'the map stays underneath');
   assert.equal(await shown('bag-modal'), false);
 });
 
-test('Escape closes the Bag first and then the map', async () => {
+test('Escape closes the Bag, and the map itself cannot be closed', async () => {
   await madeHero();
   await page.evaluate(() => { openAdventure(); openBag(); });
   await page.keyboard.press('Escape');
@@ -164,7 +164,7 @@ test('Escape closes the Bag first and then the map', async () => {
   assert.equal(await shown('overworld-modal'), true);
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Escape');
-  assert.equal(await shown('overworld-modal'), false);
+  assert.equal(await shown('overworld-modal'), true);
 });
 
 test('arrow keys do not walk the hero while the Bag or Team window is open on top of the map', async () => {
@@ -208,7 +208,6 @@ test('a resting buddy cannot be made the lead, and Change team opens the Hub on 
   assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row.resting').innerText), /Resting/);
   await page.click('#pad-body .bag-actions .claim-btn');
   assert.equal(await shown('hub-modal'), true);
-  assert.equal(await shown('overworld-modal'), false);
   assert.equal(await shown('pad-modal'), false);
   assert.equal(await page.evaluate(() => hubTab), 'tour');
 });
@@ -222,7 +221,7 @@ test('a team of one says there is room, and every window fits a 320x568 phone', 
     const side = Array.from(document.querySelectorAll('.ow-side')).map((b) => { const q = b.getBoundingClientRect(); return [q.width >= 44, q.height >= 44, q.bottom <= innerHeight]; });
     openPad(); const pad = fits('pad-modal'), note = document.getElementById('pad-body').innerText; closePad();
     openBag(); const bag = fits('bag-modal'); closeBag();
-    closeOverworld(); state.hero.made = false; openAdventure();
+    hideModal('overworld-modal'); state.hero.made = false; openAdventure();
     const hero = fits('hero-modal'), swatches = Array.from(document.querySelectorAll('#hero-modal .hero-swatch')).every((b) => b.getBoundingClientRect().width >= 44 && b.getBoundingClientRect().height >= 44);
     const go = document.getElementById('hero-go'); go.scrollIntoView(); const goBox = go.getBoundingClientRect();
     return { side, pad, bag, hero, swatches, note, goReachable: goBox.bottom <= innerHeight && goBox.top >= 0, input: parseFloat(getComputedStyle(document.getElementById('hero-name')).fontSize) };

@@ -96,7 +96,7 @@ test('the safe steps after opening the map, then a grass step can start a fight 
   await open();
   const r = await page.evaluate(() => {
     ECON.overworld.graceSteps = 2; ECON.overworld.grassChance = 1;
-    closeOverworld(); openAdventure();
+    hideModal('overworld-modal'); openAdventure();
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
     const log = [];
     owMove('up'); log.push(!!ab);                                                       // (3,4) tall grass, safe step 1
@@ -192,7 +192,7 @@ test('the map refuses to open during a gym or a raid', async () => {
 test('the position is saved, restored on reload, and a bad or old save puts the hero back at the start', async () => {
   await open();
   await walk(['up', 'up', 'up']);
-  await page.evaluate(() => closeOverworld());
+  await page.evaluate(() => saveState());
   await page.reload();
   assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: ['hollow'], traded: [], walk: { day: '', n: 0, eggs: 0 } });
   const fixed = await page.evaluate(() => {
@@ -231,12 +231,12 @@ test('the D-pad buttons walk (a press steps once, a keyboard click steps once) a
   assert.equal(await page.evaluate(() => state.overworld.y), 7);
 });
 
-test('Escape closes the map and saves; the Adventure keeps working after the battle screen returns', async () => {
+test('Escape does not close the map: it is the base of the game, and steps are saved as you walk', async () => {
   await open();
-  await walk(['up']);
+  await walk(['up', 'up', 'up', 'up', 'up']);
   await page.keyboard.press('Escape');
-  assert.equal(await page.evaluate(() => document.getElementById('overworld-modal').style.display), 'none');
-  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('math_quest_save')).overworld.y), 8);
+  assert.equal(await page.evaluate(() => document.getElementById('overworld-modal').style.display), 'flex');
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('math_quest_save')).overworld.y), 4);
   assert.deepEqual(errors, []);
 });
 

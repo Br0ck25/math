@@ -26,10 +26,9 @@ function renderBag() {
 }
 function openBag() { showModal('bag-modal', renderBag); }
 function closeBag() { hideModal('bag-modal'); }
-// Leaves the walk for the Shop or the Hub (they open over the battle screen); the Map window brings you back.
+// Opens the Shop or the Hub over the map; closing them brings the map back.
 function bagGo(where) {
   closeBag();
-  closeOverworld();
   if (where === 'shop') openShop(); else { hubTab = 'care'; openHub(); }
 }
 
@@ -55,7 +54,6 @@ function padLead(id) {
 }
 function padGo() {
   closePad();
-  closeOverworld();
   hubTab = 'tour';
   openHub();
 }

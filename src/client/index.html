@@ -188,6 +188,33 @@
     </div>
   </div>
 
+  <!-- The Adventure map: the base screen of the game (24g-ow-engine.js). First among the windows, so every other window opens above it; it is never closed. -->
+  <div class="modal-overlay" id="overworld-modal">
+    <div class="modal-content ow-content">
+      <div class="ow-head"><h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
+        <button type="button" class="ow-back-chip" onclick="openMenu()">Menu</button>
+        <button type="button" class="ow-back-chip" id="ow-gizmo-btn" style="display:none" onclick="openGizmo()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-k-gizmo"/></svg> Gizmo</button></div>
+      <div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div>
+      <div class="ow-pad">
+        <button type="button" class="ow-key ow-side team" aria-label="Team" onclick="openPad()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-o-paw"/></svg><span>Team</span></button>
+        <button type="button" class="ow-key ow-side bag" aria-label="Bag" onclick="openBag()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-u-bag"/></svg><span>Bag</span></button>
+        <button type="button" class="ow-key up" aria-label="Walk up" onpointerdown="owHold('up')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('up')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
+        <button type="button" class="ow-key left" aria-label="Walk left" onpointerdown="owHold('left')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('left')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
+        <button type="button" class="ow-key down" aria-label="Walk down" onpointerdown="owHold('down')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('down')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
+        <button type="button" class="ow-key right" aria-label="Walk right" onpointerdown="owHold('right')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('right')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
+      </div>
+      <p class="ow-hint">Walk in the tall grass to meet wild buddies. Arrow keys work too.</p>
+    </div>
+  </div>
+
+  <!-- The Menu (24z-ow-menu.js): where the other screens of the game are reached from the map. Before the others so they open above it. -->
+  <div class="modal-overlay" id="menu-modal" data-close="closeMenu">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:6px;">Menu</h2>
+      <div id="menu-body"></div>
+    </div>
+  </div>
+
   <!-- Sanctuary Modal with Expanded Gear & Elemental Badges -->
   <div class="modal-overlay" id="shop-modal" data-close="closeShop">
     <div class="modal-content">
@@ -765,25 +792,6 @@
       <div class="book-progress" id="map-progress"></div>
       <div id="map-body"></div>
       <button class="key-btn submit-btn" style="width:100%; padding:8px; margin-top:10px; height:44px; font-size:1rem;" onclick="closeMap()">Back to Game</button>
-    </div>
-  </div>
-
-  <!-- The Adventure map: a hero walks tile maps (24g-ow-engine.js) -->
-  <div class="modal-overlay" id="overworld-modal" data-esc="closeOverworld">
-    <div class="modal-content ow-content">
-      <div class="ow-head"><h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
-        <button type="button" class="ow-back-chip" onclick="closeOverworld()">Practice</button>
-        <button type="button" class="ow-back-chip" id="ow-gizmo-btn" style="display:none" onclick="openGizmo()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-k-gizmo"/></svg> Gizmo</button></div>
-      <div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div>
-      <div class="ow-pad">
-        <button type="button" class="ow-key ow-side team" aria-label="Team" onclick="openPad()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-o-paw"/></svg><span>Team</span></button>
-        <button type="button" class="ow-key ow-side bag" aria-label="Bag" onclick="openBag()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-u-bag"/></svg><span>Bag</span></button>
-        <button type="button" class="ow-key up" aria-label="Walk up" onpointerdown="owHold('up')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('up')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
-        <button type="button" class="ow-key left" aria-label="Walk left" onpointerdown="owHold('left')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('left')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
-        <button type="button" class="ow-key down" aria-label="Walk down" onpointerdown="owHold('down')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('down')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
-        <button type="button" class="ow-key right" aria-label="Walk right" onpointerdown="owHold('right')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('right')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
-      </div>
-      <p class="ow-hint">Walk in the tall grass to meet wild buddies. Arrow keys work too.</p>
     </div>
   </div>
 

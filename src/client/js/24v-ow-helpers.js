@@ -30,7 +30,7 @@ const OW_SERVICES = {
   },
   daycare: function (npc) {
     openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.lines,
-      choices: [{ label: 'Visit the Ranch', run: function () { closeTalk(); closeOverworld(); hubTab = 'ranch'; openHub(); } }] });
+      choices: [{ label: 'Visit the Ranch', run: function () { closeTalk(); hubTab = 'ranch'; openHub(); } }] });
   },
   tutor: function (npc) {
     const pet = getActivePetDisplay(), art = heroSprite(heroLookColors(npc.look), 'down', 0);

@@ -21,7 +21,7 @@ test('a new player lands on Who are you?, then picks a starter, then stands in C
   assert.deepEqual(errors, []);
 });
 
-test('a returning player opens straight on the map, with no welcome window in the way, and Practice is one tap away', async () => {
+test('a returning player opens straight on the map, with no welcome window in the way, and the old Practice screen is hidden', async () => {
   const { page, errors } = await openGame(browser, worker, { MATH_KV: fakeKV() }, { wildStart: true, adventureBoot: true, fast: true });
   await page.waitForFunction(() => document.getElementById('hero-modal').style.display === 'flex');
   await page.evaluate(() => finishHero());
@@ -30,7 +30,23 @@ test('a returning player opens straight on the map, with no welcome window in th
   await page.waitForFunction(() => document.getElementById('overworld-modal').style.display === 'flex');
   assert.equal(await shown(page, 'hero-modal'), false);
   assert.equal(await shown(page, 'welcome-modal'), false);
+  assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.game-container')).display), 'none');
+  assert.deepEqual(errors, []);
+});
+
+test('the Menu opens the other screens above the map, and closing them brings the map back', async () => {
+  const { page, errors } = await openGame(browser, worker, { MATH_KV: fakeKV() }, { wildStart: true, adventureBoot: true, fast: true });
+  await page.waitForFunction(() => document.getElementById('hero-modal').style.display === 'flex');
+  await page.evaluate(() => { finishHero(); state.storySeen.starter = 1; closeStarterModal(); });
   await page.click('.ow-head .ow-back-chip');
-  await page.waitForFunction(() => document.getElementById('overworld-modal').style.display === 'none');
+  assert.equal(await shown(page, 'menu-modal'), true);
+  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#menu-body button')].map((b) => b.innerText)), ['Buddies', 'Bag', 'Team', 'Dex', 'Quests', 'Shop', 'Settings']);
+  for (const [fn, id] of [['openHub', 'hub-modal'], ['openShop', 'shop-modal'], ['openBook', 'book-modal'], ['openQuests', 'quest-modal'], ['openSettings', 'settings-modal']]) {
+    await page.evaluate((f) => menuGo(f), fn);
+    const top = await page.evaluate(() => { const o = openOverlays(); return o[o.length - 1].id; });
+    assert.equal(top, id);
+    await page.evaluate((i) => { const el = document.getElementById(i); window[el.dataset.close](); }, id);
+  }
+  assert.equal(await shown(page, 'overworld-modal'), true);
   assert.deepEqual(errors, []);
 });
