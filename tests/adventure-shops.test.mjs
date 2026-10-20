@@ -40,48 +40,38 @@ test('the Buddy Center and the Mart are the doors at the top of Meadow Town, and
   assert.equal(await page.evaluate(() => document.getElementById('ow-title').innerText), 'Mart');
 });
 
-test('the Center: the first rest of a day is free and wakes every resting buddy', async () => {
+test('the Center: resting is free, any time, and restores every buddy\'s battle HP', async () => {
   await toNurse();
   const r = await page.evaluate(() => {
-    state.faintedPets = ['dog']; state.gems = 7; state.spring.day = '';
+    state.advHp = { dog: 1 }; state.gems = 7;
     owMove('up');
     return { name: document.getElementById('talk-name').innerText, line: document.getElementById('talk-text').innerText };
   });
   assert.equal(r.name, 'Nurse Joy');
-  assert.match(r.line, /1 buddy is resting/);
   await page.click('#talk-next');
-  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /first rest each day is free/);
-  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Rest (free)']);
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /free/);
+  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Rest']);
   assert.equal(await page.evaluate(() => document.getElementById('talk-next').innerText), 'Not now');
   await page.click('#talk-choices button');
-  const after = await page.evaluate(() => ({ fainted: state.faintedPets.slice(), gems: state.gems, day: state.spring.day === dayKey(), text: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length, next: document.getElementById('talk-next').innerText }));
-  assert.deepEqual(after, { fainted: [], gems: 7, day: true, text: 'All rested! Your buddies are ready to go.', choices: 0, next: 'Close' });
+  const after = await page.evaluate(() => ({ hp: JSON.stringify(state.advHp), gems: state.gems, text: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length, next: document.getElementById('talk-next').innerText }));
+  assert.deepEqual(after, { hp: '{}', gems: 7, text: 'All rested! Your buddies are ready to go.', choices: 0, next: 'Close' });
+  await page.evaluate(() => closeTalk());
+  await page.evaluate(() => { openCenter(owNpcById('meadow-nurse')); talkNext(); });
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /feeling great/);
   assert.deepEqual(errors, []);
 });
 
-test('the Center: a second rest the same day costs the Spring price, and without the gems it only explains', async () => {
-  await toNurse();
-  const price = await page.evaluate(() => ECON.spring.gems);
-  const paid = await page.evaluate(() => {
-    state.faintedPets = ['dog']; state.gems = 50; state.spring.day = dayKey();
-    owMove('up');
-    document.getElementById('talk-next').click();
-    const label = document.querySelector('#talk-choices button').innerText;
-    document.querySelector('#talk-choices button').click();
-    return { label, gems: state.gems, fainted: state.faintedPets.length };
+test('the Mart sells Potions for the Adventure battle: they go in the bag, not onto a buddy', async () => {
+  await toClerk();
+  const r = await page.evaluate(() => {
+    state.gems = 500; state.potions = 0; owMove('up');
+    buyItem('potion');
+    const asked = document.getElementById('confirm-modal').style.display === 'flex';
+    return { asked };
   });
-  assert.equal(paid.label, 'Rest (' + price + ' gems)');
-  assert.equal(paid.gems, 50 - price);
-  assert.equal(paid.fainted, 0);
-  await page.evaluate(() => closeTalk());
-  const poor = await page.evaluate(() => {
-    state.faintedPets = ['dog']; state.gems = 1; state.spring.day = dayKey();
-    owMove('up');
-    document.getElementById('talk-next').click();
-    return { text: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length, fainted: state.faintedPets.length, gems: state.gems };
-  });
-  assert.match(poor.text, /Come back when you have more/);
-  assert.deepEqual([poor.choices, poor.fainted, poor.gems], [0, 1, 1]);
+  assert.equal(r.asked, true);
+  await page.evaluate(() => payItem('potion'));
+  assert.equal(await page.evaluate(() => state.potions), 1);
 });
 
 test('the Center: with nobody resting it says everyone is fine, and never takes gems', async () => {
@@ -174,7 +164,7 @@ for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
     await page.evaluate(() => closeMart());
     await toNurse();
     const center = await page.evaluate(() => {
-      state.faintedPets = ['dog']; state.spring.day = ''; owMove('up'); document.getElementById('talk-next').click();
+      state.advHp = { dog: 1 }; owMove('up'); document.getElementById('talk-next').click();
       const c = document.querySelector('#talk-modal .modal-content').getBoundingClientRect();
       const b = Array.from(document.querySelectorAll('#talk-choices button, #talk-next')).map((x) => { const q = x.getBoundingClientRect(); return q.width >= 44 && q.height >= 44 && q.bottom <= innerHeight; });
       return { inside: c.left >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, b };

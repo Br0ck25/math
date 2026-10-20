@@ -192,37 +192,19 @@ function adventureFight() {
 }
 // `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
 function startAdventureFight(sp) {
-  if (state.gym || state.raid) return;
+  if (state.gym || state.raid || ab) return;
   owRelease();
-  state.overworld.fight = true;
-  state.overworld.foe = '';
-  if (sp) { state.wild.shiny = false; startWild(sp); } else pickNextWild();
-  hideModal('overworld-modal');
-  setBossTaunt();
-  updateStatsUI();
-  saveState();
-  announceFoe();
+  sp = sp || rollWildSpecies([]);
+  abStart({ kind: 'wild', foes: [{ id: sp.id, level: abWildLevel() }] });
 }
 // A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
 function startTrainerFight(npc) {
-  if (state.gym || state.raid) return;
+  if (state.gym || state.raid || ab) return;
   owRelease();
   if (npc.kind === 'boss') { startBossFight(npc); return; }
-  const sp = rollWildSpecies([]);
-  state.wild.id = sp.id;
-  state.wild.trainer = npc.name;
-  state.wild.shiny = false;
-  state.wild.legend = false;
-  markDexSeen(sp.id);
-  bossLevel = clamp(foeBaseLevel() + rnd(0, 1) + (npc.levelBonus || 0), 1, MAX_LEVEL);
-  gymFoeReset();
-  state.overworld.fight = true;
-  state.overworld.foe = npc.id;
-  hideModal('overworld-modal');
-  setBossTaunt();
-  updateStatsUI();
-  saveState();
-  announceFoe();
+  const foes = [], n = clamp(1 + Math.floor(state.badges.length / 3), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0);
+  for (let i = 0; i < n; i++) foes.push({ id: rollWildSpecies(foes.map(function (f) { return f.id; })).id, level: clamp(lvl + rnd(0, 1), 2, MAX_LEVEL) });     // a trainer's buddies are a little above the land's wild ones
+  abStart({ kind: 'trainer', name: npc.name, npc: npc, foes: foes });
 }
 // A story boss: a boss from the boss list of the given element (never a slayer, one your buddy may meet), a little above your buddy.
 function startBossFight(npc) {

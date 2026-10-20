@@ -55,7 +55,7 @@ function buyItem(type) {
   if (type === 'candy' && getBuddyLevel(state.activePet) >= MAX_LEVEL) { toast('Your buddy is already max level!'); return; }
   if (type === 'net' && state.nets >= maxNets()) { toast('You can hold ' + maxNets() + ' Catch Nets'); return; }
   if (type === 'potion') {
-    if (potionUseless()) {
+    if (potionUseless() && !martOpen()) {
       toast('Your buddies are already at full HP!');
       return;
     }
@@ -71,6 +71,7 @@ function buyItem(type) {
   askBuy({ icon: look[0], name: look[1], cost: cost, note: look[2] }, function () { payItem(type); });
 }
 // A Super Potion does nothing when your buddy is at full HP and nobody has fainted.
+function martOpen() { return document.getElementById('mart-modal').style.display === 'flex'; }
 function potionUseless() {
   const pet = state.activePet;
   return getPetHp(pet) >= getPetMaxHp(pet) && (!state.faintedPets || state.faintedPets.length === 0);
@@ -87,7 +88,7 @@ function payItem(type) {
   const cost = itemCost(type);
   if (state.gems < cost || (type === 'candy' && getBuddyLevel(state.activePet) >= MAX_LEVEL) || (type === 'net' && state.nets >= maxNets())) return;
   if (type === 'potion') {
-    if (potionUseless()) return;
+    if (potionUseless() && !martOpen()) return;
   }
   if (type === 'candy') {
     const lvl = getBuddyLevel(state.activePet);
@@ -111,7 +112,7 @@ function payItem(type) {
       state.cloverLeft = (state.cloverLeft || 0) + 8;
       showPopup('LUCKY CLOVER (8 SOLVES)! 🍀');
     } else if (type === 'potion') {
-      applyPotion();
+      if (martOpen()) { state.potions = Math.min(99, state.potions + 1); showPopup('POTION! (' + state.potions + ')'); } else applyPotion();       // the Adventure Mart sells Potions for battles
     } else if (type === 'whistle') {
       state.wild.since = state.wild.next;
       pickNextBoss();

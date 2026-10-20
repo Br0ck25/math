@@ -157,14 +157,14 @@ test('the Ember gym opens at its level and starts the fire gym run with the firs
   assert.deepEqual(errors, []);
 });
 
-test('a route trainer is remembered by name across a reload in the middle of the fight', async () => {
+test('a reload in the middle of a trainer battle leaves the trainer unbeaten and nothing stuck', async () => {
   await put('route2', 6, 17, 'up');
   await page.evaluate(() => owMove('up'));
   await page.waitForTimeout(300);
   await page.click('#talk-choices button');
   await page.reload();
-  const r = await page.evaluate(() => ({ trainer: state.wild.trainer, foe: state.overworld.foe, fight: state.overworld.fight }));
-  assert.deepEqual(r, { trainer: 'Hiker Brick', foe: 'route2-brick', fight: true });
+  const r = await page.evaluate(() => ({ battle: typeof ab !== 'undefined' && !!ab, beat: state.overworld.beat.length, fight: state.overworld.fight }));
+  assert.deepEqual(r, { battle: false, beat: 0, fight: false });
 });
 
 for (const [w, h] of [[320, 568], [420, 800]]) {

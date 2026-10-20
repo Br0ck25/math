@@ -99,16 +99,15 @@ test('the safe steps after opening the map, then a grass step can start a fight 
     closeOverworld(); openAdventure();
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
     const log = [];
-    owMove('up'); log.push(state.overworld.fight);                                                       // (3,4) tall grass, safe step 1
-    owMove('up'); log.push(state.overworld.fight);                                                       // (3,3) tall grass, safe step 2
-    owMove('down'); log.push(state.overworld.fight);                                                     // (3,4) tall grass: now the fight begins
-    return { log, fight: state.overworld.fight, foe: state.wild.id, shut: document.getElementById('overworld-modal').style.display, back: document.getElementById('ow-back-btn').style.display, hp: monsterCurrentHp > 0 };
+    owMove('up'); log.push(!!ab);                                                       // (3,4) tall grass, safe step 1
+    owMove('up'); log.push(!!ab);                                                       // (3,3) tall grass, safe step 2
+    owMove('down'); log.push(!!ab);                                                     // (3,4) tall grass: now the fight begins
+    return { log, foe: ab.foes[0].id, shut: document.getElementById('overworld-modal').style.display, screen: document.getElementById('ab-modal').style.display };
   });
   assert.deepEqual(r.log, [false, false, true]);
   assert.ok(r.foe, 'a wild buddy is the foe');
   assert.equal(r.shut, 'none');
-  assert.notEqual(r.back, 'none', 'the way back to the map is on screen');
-  assert.ok(r.hp);
+  assert.equal(r.screen, 'flex', 'the battle has its own screen');
 });
 
 test('open ground never starts a fight, even with a certain chance', async () => {
@@ -127,55 +126,51 @@ test('winning a walk fight brings the map back at the same tile, and it does not
     ECON.overworld.grassChance = 1; owSafe = 0;
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
     const since = state.wild.since;
-    owMove('up');                                                                                       // into the grass: a fight
-    const fought = state.overworld.fight;
+    owMove('up');
+    const fought = !!ab;
     const at = { x: state.overworld.x, y: state.overworld.y, map: state.overworld.map };
-    rollCatch = function () {};                                                                         // no catch window in this test
-    monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
-    triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 3000));
-    return { fought, at, since, after: state.wild.since, fightFlag: state.overworld.fight, ow: document.getElementById('overworld-modal').style.display, now: { x: state.overworld.x, y: state.overworld.y, map: state.overworld.map } };
+    await new Promise((res) => setTimeout(res, 1500));
+    abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0);
+    for (let i = 0; i < 150 && ab; i++) await new Promise((res) => setTimeout(res, 100));
+    return { fought, at, since, after: state.wild.since, over: !ab, ow: document.getElementById('overworld-modal').style.display, now: { x: state.overworld.x, y: state.overworld.y, map: state.overworld.map } };
   });
   assert.equal(r.fought, true);
-  assert.equal(r.fightFlag, false);
+  assert.equal(r.over, true);
   assert.equal(r.after, r.since, 'a walk fight is not counted toward the next boss');
   assert.equal(r.ow, 'flex', 'the map is back');
   assert.deepEqual(r.now, r.at);
 });
 
-test('a caught buddy is shown first, and the map comes back when that window closes', async () => {
+test('a caught buddy joins you and the map comes back', async () => {
   await open();
   const r = await page.evaluate(async () => {
     ECON.overworld.grassChance = 1; owSafe = 0;
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5;
     owMove('up');
-    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.nets = 0;
-    const real = Math.random; Math.random = () => 0;                                                  // the catch always works
-    monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
-    triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 3000));
-    Math.random = real;
-    const during = { loot: document.getElementById('loot-modal').style.display, ow: document.getElementById('overworld-modal').style.display };
-    closeLootModal(false);
+    const id = ab.foes[0].id;
+    state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.nets = 1;
     await new Promise((res) => setTimeout(res, 1500));
-    return { during, after: document.getElementById('overworld-modal').style.display };
+    Math.random = () => 0;
+    abThrowNet();
+    for (let i = 0; i < 150 && ab; i++) await new Promise((res) => setTimeout(res, 100));
+    return { id, owned: getOwnedIds().indexOf(id) !== -1, over: !ab, ow: document.getElementById('overworld-modal').style.display };
   });
-  assert.deepEqual(r.during, { loot: 'flex', ow: 'none' });
-  assert.equal(r.after, 'flex');
+  assert.deepEqual([r.owned, r.over, r.ow], [true, true, 'flex']);
 });
 
-test('Back to the map leaves a walk fight with no penalty and a fresh foe waiting for Practice', async () => {
+test('RUN leaves a walk fight with no penalty and the map comes back', async () => {
   await open();
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate(async () => {
     ECON.overworld.grassChance = 1; owSafe = 0;
     state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5;
     owMove('up');
-    const started = state.overworld.fight;
-    const gems = state.gems, level = getBuddyLevel(state.activePet);
-    document.getElementById('ow-back-btn').click();
-    return { started, fight: state.overworld.fight, ow: document.getElementById('overworld-modal').style.display, gems: state.gems === gems, level: getBuddyLevel(state.activePet) === level, back: document.getElementById('ow-back-btn').style.display, wild: !!state.wild.id };
+    const started = !!ab, gems = state.gems, level = getBuddyLevel(state.activePet);
+    await new Promise((res) => setTimeout(res, 1500));
+    abRun();
+    for (let i = 0; i < 150 && ab; i++) await new Promise((res) => setTimeout(res, 100));
+    return { started, over: !ab, ow: document.getElementById('overworld-modal').style.display, gems: state.gems === gems, level: getBuddyLevel(state.activePet) === level };
   });
-  assert.deepEqual(r, { started: true, fight: false, ow: 'flex', gems: true, level: true, back: 'none', wild: true });
+  assert.deepEqual(r, { started: true, over: true, ow: 'flex', gems: true, level: true });
 });
 
 test('the map refuses to open during a gym or a raid, and a stale walk flag is cleared when the foe changes', async () => {
@@ -264,13 +259,14 @@ for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
   });
 }
 
-test('the Back to the map chip fits the battle screen at 320x568 with the answer keypad still reachable', async () => {
+test('the battle screen fits 320x568 with every menu button reachable', async () => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.evaluate(() => { ECON.overworld.graceSteps = 0; ECON.overworld.grassChance = 1; openAdventure(); state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; owMove('up'); });
+  await page.waitForFunction(() => ab && ab.phase === 'menu', null, { timeout: 15000 });
   const r = await page.evaluate(() => {
-    const chip = document.getElementById('ow-back-btn').getBoundingClientRect(), pad = document.querySelector('.key-btn.submit-btn').getBoundingClientRect();
-    return { chipVisible: chip.width > 0 && chip.right <= innerWidth, scroll: document.documentElement.scrollWidth <= innerWidth, submit: pad.width > 0 };
+    const bs = [...document.querySelectorAll('#ab-panel button')].map((b) => b.getBoundingClientRect());
+    return { n: bs.length, inside: bs.every((b) => b.width >= 44 && b.height >= 44 && b.right <= innerWidth && b.bottom <= innerHeight), scroll: document.documentElement.scrollWidth <= innerWidth };
   });
-  assert.deepEqual(r, { chipVisible: true, scroll: true, submit: true });
+  assert.deepEqual(r, { n: 4, inside: true, scroll: true });
   await page.setViewportSize({ width: 1280, height: 720 });
 });

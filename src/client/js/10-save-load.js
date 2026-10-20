@@ -315,6 +315,12 @@ const NORMALIZERS = [
     const known = KEY_ITEMS.map(function (k) { return k.id; });
     s.keyItems = (Array.isArray(s.keyItems) ? s.keyItems : []).filter(function (id, i, a) { return known.indexOf(id) !== -1 && a.indexOf(id) === i; });
   },
+  function adventureBattle(s) {
+    const owned = getOwnedIds(), hp = isPlainObject(s.advHp) ? s.advHp : {};
+    s.advHp = {};
+    Object.keys(hp).forEach(function (id) { if (owned.indexOf(id) !== -1 && Number.isFinite(hp[id])) s.advHp[id] = clamp(Math.floor(hp[id]), 0, 9999); });
+    s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
+  },
   function overworld(s) {
     const o = isPlainObject(s.overworld) ? s.overworld : {};
     const map = OW_MAPS[o.map] || OW_MAPS[OW_START.map];

@@ -2133,3 +2133,39 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .mart-row .mart-info { flex: 1; min-width: 0; }
 .mart-row .claim-btn { min-height: 44px; min-width: 84px; animation: none; }
 .ow-alert { pointer-events: none; }
+
+/* Adventure battle (24x-ow-battle.js): a Gold style screen. Foe top, your buddy bottom, a text box and a menu. */
+.ab-content { padding: 10px; }
+#ab-modal .modal-x-row { display: none; }   /* nothing to close: a fight ends by winning, losing, running or catching */
+#ab-modal .modal-x-row + * { padding: 10px; }
+.ab-field { position: relative; height: 210px; border-radius: 12px; overflow: hidden; border: 2px solid var(--card-border); background: linear-gradient(#cfe8ff 0 52%, #9ed36a 52% 100%); }
+.ab-box { position: absolute; width: 56%; padding: 4px 8px; border-radius: 8px; border: 2px solid #1e293b; background: #f8fafc; color: #0f172a; font-size: 0.78rem; }
+.ab-foe { top: 8px; left: 6px; }
+.ab-me { bottom: 8px; right: 6px; }
+.ab-line { display: flex; justify-content: space-between; gap: 6px; font-weight: 800; }
+.ab-hpbar, .ab-xpbar { height: 8px; margin-top: 3px; border-radius: 4px; background: #cbd5e1; overflow: hidden; }
+.ab-hpbar i { display: block; height: 100%; width: 100%; background: #22c55e; transition: width 0.6s ease; }
+.ab-hpbar i.low { background: #f59e0b; }
+.ab-hpbar i.danger { background: #ef4444; }
+.ab-xpbar { height: 4px; background: #e2e8f0; }
+.ab-xpbar i { display: block; height: 100%; width: 0; background: #3b82f6; transition: width 0.6s ease; }
+.ab-hpnum { text-align: right; font-size: 0.72rem; margin-top: 2px; }
+.ab-sprite { position: absolute; width: 104px; height: 104px; display: grid; place-items: center; font-size: 3.4rem; transition: opacity 0.5s, transform 0.5s; }
+.ab-sprite .buddy-img { width: 100%; height: 100%; object-fit: contain; }
+.ab-foe-sprite { top: 24px; right: 10px; }
+.ab-me-sprite { bottom: 50px; left: 14px; transform: scaleX(-1); }
+.ab-sprite.ab-gone { opacity: 0; transform: translateY(24px); }
+.ab-me-sprite.ab-gone { transform: scaleX(-1) translateY(24px); }
+.ab-text { min-height: 52px; margin: 8px 0; padding: 8px 10px; border-radius: 8px; border: 2px solid var(--card-border); background: var(--bg-dark); color: var(--text); font-weight: 700; font-size: 0.92rem; text-align: left; }
+.ab-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ab-panel.busy { min-height: 56px; }
+.ab-btn { min-height: 48px; padding: 6px 8px; border-radius: 10px; border: 2px solid var(--card-border); background: var(--bg-dark); color: var(--text); font-weight: 800; font-size: 0.9rem; cursor: pointer; display: grid; place-content: center; gap: 2px; touch-action: manipulation; }
+.ab-btn small { font-weight: 600; font-size: 0.68rem; color: var(--text-muted); }
+.ab-btn:disabled { opacity: 0.45; cursor: default; }
+.ab-btn:not(:disabled):active { background: var(--primary); }
+.ab-q { grid-column: 1 / -1; padding: 6px; font-size: 1.3rem; font-weight: 800; text-align: center; }
+.ab-opts { grid-column: 1 / -1; }
+.ab-back { grid-column: 1 / -1; min-height: 44px; }
+.ab-move.t-fire { border-color: #f97316; } .ab-move.t-water { border-color: #38bdf8; } .ab-move.t-nature { border-color: #22c55e; }
+.ab-move.t-electric { border-color: #facc15; } .ab-move.t-dark { border-color: #a78bfa; } .ab-move.t-magic { border-color: #f472b6; } .ab-move.t-normal { border-color: #94a3b8; }
+@media (max-height: 640px) { .ab-field { height: 180px; } }

@@ -83,6 +83,8 @@ function freshState() {
     techSolves: 0,                                   // correct answers toward the next Star Spark
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
+    advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    potions: 0,                                      // Potions for Adventure battles, bought at the Mart
     keyItems: [],                                    // key item ids earned on the Adventure (24i-ow-hero.js KEY_ITEMS)
     overworld: { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center: { map: 'hollow', x: 7, y: 9 }, beat: [], foe: '', shaken: { day: '', ids: [] }, story: [], seen: [], traded: [] },   // the Adventure map (24g-ow-engine.js): where the hero stands, and whether the current wild fight began on a walk (a win then returns to the map), the pickup ids already taken, the math signs paid today, and the last Buddy Center you visited (a team wipe on a walk returns you there), the trainers beaten, the trainer of the current walk fight, the trees shaken today, and the story beats done, the towns visited (the Gizmo travels to them) and the trades made
   };

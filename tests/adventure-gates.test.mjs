@@ -194,35 +194,35 @@ test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', as
 
 test('without the rod the pond only suggests one; with it a try may bite (a normal wild fight with a water buddy) or not', async () => {
   await put('meadow', 12, 14, 'right');
-  const noRod = await page.evaluate(() => { owMove('right'); const t = document.getElementById('talk-text').innerText; closeTalk(); return { t, fight: state.overworld.fight }; });
+  const noRod = await page.evaluate(() => { owMove('right'); const t = document.getElementById('talk-text').innerText; closeTalk(); return { t, fight: !!ab }; });
   assert.match(noRod.t, /calm and clear/);
   assert.equal(noRod.fight, false);
   const nibble = await page.evaluate(() => {
     state.keyItems = ['fishing-rod'];
     const real = Math.random; Math.random = () => 0.99;
     owMove('right'); Math.random = real;
-    return { fight: state.overworld.fight, toast: document.getElementById('toast').innerText, ow: document.getElementById('overworld-modal').style.display };
+    return { fight: !!ab, toast: document.getElementById('toast').innerText, ow: document.getElementById('overworld-modal').style.display };
   });
   assert.deepEqual([nibble.fight, nibble.toast, nibble.ow], [false, 'No bite. Try again!', 'flex']);
   const bite = await page.evaluate(() => {
     const real = Math.random; Math.random = () => 0;
     owMove('right'); Math.random = real;
-    return { fight: state.overworld.fight, foe: state.overworld.foe, element: getSpecies(state.wild.id).element, trainer: state.wild.trainer, ow: document.getElementById('overworld-modal').style.display, back: document.getElementById('ow-back-btn').style.display, shiny: state.wild.shiny };
+    return { fight: !!ab, kind: ab.kind, element: ab.foes[0].element, ow: document.getElementById('overworld-modal').style.display, screen: document.getElementById('ab-modal').style.display };
   });
-  assert.deepEqual([bite.fight, bite.foe, bite.element, bite.trainer, bite.shiny], [true, '', 'water', '', false]);
+  assert.deepEqual([bite.fight, bite.kind, bite.element, bite.screen], [true, 'wild', 'water', 'flex']);
   assert.notEqual(bite.ow, 'flex');
-  assert.notEqual(bite.back, 'none');
 });
 
 test('a fished buddy is beaten like any wild buddy: the map comes back and the next foe waits', async () => {
   await put('meadow', 12, 14, 'right');
   const r = await page.evaluate(async () => {
-    state.keyItems = ['fishing-rod']; rollCatch = function () {};
+    state.keyItems = ['fishing-rod'];
     const real = Math.random; Math.random = () => 0; owMove('right'); Math.random = real;
     const since = state.wild.since;
-    monsterCurrentHp = 1; inputLocked = false; state.faintedPets = []; triggerMonsterDamage(99, false);
-    await new Promise((res) => setTimeout(res, 3000));
-    return { ow: document.getElementById('overworld-modal').style.display, fight: state.overworld.fight, since: [since, state.wild.since], pos: [state.overworld.map, state.overworld.x, state.overworld.y] };
+    while (!(ab.phase === 'menu' && !ab.busy)) await new Promise((res) => setTimeout(res, 100));
+    abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0);
+    for (let i = 0; i < 200 && ab; i++) await new Promise((res) => setTimeout(res, 100));
+    return { ow: document.getElementById('overworld-modal').style.display, fight: !!ab, since: [since, state.wild.since], pos: [state.overworld.map, state.overworld.x, state.overworld.y] };
   });
   assert.equal(r.ow, 'flex');
   assert.equal(r.fight, false);
@@ -241,16 +241,16 @@ test('a shake tree drops a rare buddy once a day: the same one all day, never a 
     dayKey = real; out.varies = picks.size > 3;
     const want = shakeSpecies('route1-tree').id;
     owMove('right');
-    out.first = { text: document.getElementById('talk-text').innerText, fight: state.overworld.fight, shaken: state.overworld.shaken.ids.slice() };
+    out.first = { text: document.getElementById('talk-text').innerText, fight: !!ab, shaken: state.overworld.shaken.ids.slice() };
     closeTalk();
-    out.fight = { on: state.overworld.fight, id: state.wild.id, want, foe: state.overworld.foe, ow: document.getElementById('overworld-modal').style.display };
+    out.fight = { on: !!ab, id: ab.foes[0].id, want, ow: document.getElementById('overworld-modal').style.display };
     return out;
   });
   assert.ok(r.same && r.notCheap && r.varies);
   assert.match(r.first.text, /Something fell out/);
   assert.deepEqual(r.first.shaken, ['route1-tree']);
   assert.equal(r.first.fight, false, 'the fight starts when the words are closed');
-  assert.deepEqual([r.fight.on, r.fight.id === r.fight.want, r.fight.foe], [true, true, '']);
+  assert.deepEqual([r.fight.on, r.fight.id === r.fight.want], [true, true]);
   assert.notEqual(r.fight.ow, 'flex');
 });
 
@@ -258,15 +258,15 @@ test('shaking again the same day gives nothing, tomorrow it works again, and ano
   await put('route1', 11, 5, 'right');
   const r = await page.evaluate(() => {
     const out = {};
-    owMove('right'); closeTalk(); state.overworld.fight = false; document.getElementById('overworld-modal').style.display = 'flex';
+    owMove('right'); closeTalk(); ab = null; document.getElementById('ab-modal').style.display = 'none'; document.getElementById('overworld-modal').style.display = 'flex';
     state.overworld.map = 'route1'; state.overworld.x = 11; state.overworld.y = 5; state.overworld.face = 'right'; renderOverworld();
     owMove('right');
-    out.again = { text: document.getElementById('talk-text').innerText, fight: state.overworld.fight };
+    out.again = { text: document.getElementById('talk-text').innerText, fight: !!ab };
     closeTalk();
     state.overworld.shaken.day = '1999-01-01';
     owMove('right');
     out.tomorrow = document.getElementById('talk-text').innerText; closeTalk();
-    state.overworld.fight = false; document.getElementById('overworld-modal').style.display = 'flex';
+    ab = null; document.getElementById('ab-modal').style.display = 'none'; document.getElementById('overworld-modal').style.display = 'flex';
     state.overworld.map = 'hollow'; state.overworld.x = 13; state.overworld.y = 6; state.overworld.face = 'right'; renderOverworld();
     owMove('right');
     out.other = document.getElementById('talk-text').innerText; out.ids = state.overworld.shaken.ids.slice();

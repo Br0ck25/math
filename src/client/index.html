@@ -787,6 +787,20 @@
     </div>
   </div>
 
+  <!-- The Adventure battle: a Pokemon Gold style fight (24x-ow-battle.js). After the overworld: it opens over it. -->
+  <div class="modal-overlay" id="ab-modal" data-esc="abEscape">
+    <div class="modal-content ab-content">
+      <div class="ab-field">
+        <div class="ab-box ab-foe"><div class="ab-line"><b id="ab-foe-name"></b><span id="ab-foe-lv"></span></div><div class="ab-hpbar"><i id="ab-foe-hp"></i></div></div>
+        <div class="ab-sprite ab-foe-sprite" id="ab-foe-icon"></div>
+        <div class="ab-sprite ab-me-sprite" id="ab-me-icon"></div>
+        <div class="ab-box ab-me"><div class="ab-line"><b id="ab-me-name"></b><span id="ab-me-lv"></span></div><div class="ab-hpbar"><i id="ab-me-hp"></i></div><div class="ab-hpnum" id="ab-me-num"></div><div class="ab-xpbar"><i id="ab-me-xp"></i></div></div>
+      </div>
+      <div class="ab-text" id="ab-text" aria-live="polite"></div>
+      <div class="ab-panel" id="ab-panel"></div>
+    </div>
+  </div>
+
   <!-- The Adventure bag and team: views over what the game already keeps (24j-ow-bag.js) -->
   <div class="modal-overlay" id="bag-modal" data-close="closeBag">
     <div class="modal-content">

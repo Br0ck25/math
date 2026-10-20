@@ -25,7 +25,14 @@ const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
 }, [map, x, y, face]);
 const shown = (id) => page.evaluate((i) => document.getElementById(i).style.display === 'flex', id);
 const wait = (ms) => page.waitForTimeout(ms);
+// Wins the fight in progress: a trainer on the new battle screen, a boss on the Practice screen.
 const win = () => page.evaluate(async () => {
+  if (typeof ab !== 'undefined' && ab) {
+    const ready = async () => { for (let i = 0; i < 300 && ab && !(ab.phase === 'menu' && !ab.busy); i++) await new Promise((res) => setTimeout(res, 100)); };
+    for (let k = 0; k < 4 && ab; k++) { await ready(); if (!ab) break; abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); await new Promise((res) => setTimeout(res, 300)); }
+    for (let i = 0; i < 300 && ab; i++) await new Promise((res) => setTimeout(res, 100));
+    return;
+  }
   rollCatch = function () {}; checkForSecretLootDrop = function () {};
   monsterCurrentHp = 1; inputLocked = false; state.faintedPets = [];
   triggerMonsterDamage(99, false);
@@ -58,7 +65,8 @@ test('Riley meets you on Route 1: a "!", her words, a battle through the trainer
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /I am Riley/);
   await page.click('#talk-next');
   await page.click('#talk-choices button');
-  assert.deepEqual(await page.evaluate(() => [state.wild.trainer, state.overworld.foe, state.overworld.fight]), ['Rival Riley', 'route1-riley', true]);
+  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+  assert.deepEqual(await page.evaluate(() => [ab.name, ab.npc.id]), ['Rival Riley', 'route1-riley']);
   await win();
   const r = await page.evaluate(() => ({ beat: state.overworld.beat.slice(), words: document.getElementById('talk-text').innerText, here: !!owNpcAt(OW_MAPS.route1, 10, 20), drawn: document.querySelectorAll('.ow-npc').length, ow: document.getElementById('overworld-modal').style.display }));
   assert.deepEqual(r.beat, ['route1-riley']);
@@ -84,12 +92,12 @@ test('Riley is only on Route 4 once you hold the Tide Badge, and on Route 6 afte
 
 test('Riley and the Ace trainers are a little stronger than a normal trainer (levelBonus)', async () => {
   const r = await page.evaluate(() => {
-    state.buddyXp.dog = xpForLevel(40);
-    const base = foeBaseLevel(), diffs = (npc) => { const d = []; for (let i = 0; i < 24; i++) { state.gym = null; startTrainerFight(npc); d.push(bossLevel - base); state.overworld.fight = false; } return d; };
-    const riley = diffs(owNpcById('walk-riley')), ace = diffs(owNpcById('walk-joule')), plain = diffs(owNpcById('route2-brick'));
-    return { rileyMin: Math.min(...riley), aceMin: Math.min(...ace), plainMax: Math.max(...plain) };
+    state.region = 'meadow';
+    const lv = (npc) => { const d = []; for (let i = 0; i < 24; i++) { ab = null; startTrainerFight(npc); d.push(Math.min(...ab.foes.map((f) => f.level))); ab = null; } return d; };
+    const riley = lv(owNpcById('walk-riley')), ace = lv(owNpcById('walk-joule')), plain = lv(owNpcById('route2-brick'));
+    return { rileyMin: Math.min(...riley), aceMin: Math.min(...ace), plainMax: Math.max(...plain), rb: owNpcById('walk-riley').levelBonus, ab: owNpcById('walk-joule').levelBonus };
   });
-  assert.ok(r.rileyMin >= 2 && r.aceMin >= 1 && r.plainMax <= 1, JSON.stringify(r));
+  assert.ok(r.rileyMin >= 2 + r.rb && r.aceMin >= 2 + r.ab && r.plainMax <= 5, JSON.stringify(r));
 });
 
 for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide-ferry', 20, 5, 12, [7, 13]], ['volt', 'volt-zag', 'volt-blackout', 25, 5, 12, [7, 13]]]) {
@@ -100,8 +108,9 @@ for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide
     assert.match(await page.evaluate(() => document.getElementById('talk-name').innerText), /Scrambler/);
     await page.click('#talk-next');
     await page.click('#talk-choices button');                                                              // fight starts
-    assert.deepEqual(await page.evaluate(() => [state.overworld.foe]), [zig]);
-    await page.evaluate(() => { state.overworld.fight = false; state.overworld.foe = ''; state.overworld.beat = []; });
+    await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
+    assert.deepEqual(await page.evaluate(() => [ab.npc.id]), [zig]);
+    await page.evaluate(() => { ab = null; document.getElementById('ab-modal').style.display = 'none'; state.overworld.beat = []; });
     await put(map, sx, sy + 1, 'up');
     const locked = await page.evaluate(() => { owMove('up'); const t = document.getElementById('talk-text').innerText; closeTalk(); return t; });
     assert.match(locked, /Scrambler named/);

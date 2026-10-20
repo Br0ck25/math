@@ -14,15 +14,16 @@ function rememberCenter() {
 }
 function openCenter(npc) {
   rememberCenter();
-  const n = state.faintedPets.length, cost = springCost(), art = heroSprite(heroLookColors(npc.look), 'down', 0);
-  if (!n) { openTalk({ name: npc.name, art: art, lines: ['Welcome to the Buddy Center!', 'Everyone is feeling great. Come back any time!'] }); return; }
-  const who = n + (n === 1 ? ' buddy is' : ' buddies are') + ' resting.';
-  if (state.gems < cost) { openTalk({ name: npc.name, art: art, lines: ['Welcome to the Buddy Center! ' + who, 'A rest costs ' + cost + ' gems now, and you have ' + state.gems + '. Come back when you have more!'] }); return; }
-  openTalk({ name: npc.name, art: art, lines: ['Welcome to the Buddy Center! ' + who, cost ? 'A rest costs ' + cost + ' gems now. Your first rest each day is free.' : 'Your first rest each day is free. Shall I look after them?'],
-    choices: [{ label: cost ? 'Rest (' + cost + ' gems)' : 'Rest (free)', run: centerHeal }] });
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), hurt = getTeam().some(function (id) { return abPartyMon(id).hp < abPartyMon(id).max; });
+  if (!hurt) { openTalk({ name: npc.name, art: art, lines: ['Welcome to the Buddy Center!', 'Everyone is feeling great. Come back any time!'] }); return; }
+  openTalk({ name: npc.name, art: art, lines: ['Welcome to the Buddy Center!', 'Your buddies look tired. Shall I look after them? It is free.'], choices: [{ label: 'Rest', run: centerHeal }] });
 }
 function centerHeal() {
-  useSpring();
+  state.advHp = {};
+  state.faintedPets = [];
+  partyHp = {};
+  soundLevelUp();
+  saveState();
   if (talk) { talk.lines = ['All rested! Your buddies are ready to go.']; talk.choices = null; talk.i = 0; renderTalk(); }
 }
 
