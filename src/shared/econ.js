@@ -80,16 +80,10 @@ const ECON = {
   // Catch it before then and you beat Riley: `raceGems` once. Losing the race costs nothing: you can still catch it.
   // The roaming legend (13b-wild.js): once you are Champion, one legendary buddy a week roams a different route each day. `encounter` is the chance that a grass step on that route meets it, at `level`.
   legend: { level: 60, encounter: 0.15 },
-  // The Buddy Dex: owning every buddy of a pack pays once, per member, plus Catch Nets.
-  dex: { packGemsPer: 8, packNets: 2 },
   levelUpGemsPerLevel: 3,
   evolveGems: 25,
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
   items: { potion: 20, net: 30, repel: 25 },
-  quest: {
-    chest: 35, solveBase: 10, opBase: 15, opPer: 2,
-    streak: { 5: 22, 8: 32 }, boss: { 2: 22, 3: 32 }, flawless: 30, fast: { 5: 22, 8: 32 }, ult: { 2: 20, 3: 28 }
-  },
   calendar: { length: 14, chests: { 3: 40, 7: 90, 14: 200 } },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.

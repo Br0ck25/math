@@ -4,7 +4,7 @@
 //  Nobody here costs a thing except the ore or the spare buddy that is named, and nobody can take anything else.
 // =====================================================================
 owAddNpc('hollow-house', { id: 'hollow-pi', kind: 'gift', gift: 'gizmo', name: 'Prof. Pi', x: 5, y: 2, face: 'down', look: { skin: 1, hair: 0, outfit: 7, style: 0 },
-  lines: ['Ah, there you are! I am Professor Pi. I study buddies and numbers, and they go together very well.', 'Take this Gizmo. It travels back to towns you know, keeps your quests, and tells you a math tip each day.'],
+  lines: ['Ah, there you are! I am Professor Pi. I study buddies and numbers, and they go together very well.', 'Take this Gizmo. It travels back to towns you know, and tells you a math tip each day.'],
   after: ['The Gizmo is in your Bag. Tap the Gizmo button on the map to use it.', 'Go and meet lots of buddies. I would love to hear about them!'] });
 owAddNpc('meadow-house', { id: 'meadow-netmaker', kind: 'talk', name: 'Weaver Wren', x: 2, y: 2, face: 'down', look: { skin: 2, hair: 3, outfit: 2, style: 3 },
   lines: ['I weave Catch Nets. Buy them at the Mart and keep a few for the tall grass!'] });

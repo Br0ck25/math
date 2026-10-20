@@ -137,13 +137,13 @@ function abQuestion() {
   q.kind = next.kind; q.t0 = Date.now();
   return q;
 }
-// A right or wrong answer teaches the adaptive levels (a quick right answer counts most) and ticks the daily quests.
+// A right or wrong answer teaches the adaptive levels (a quick right answer counts most).
 function abRecordAnswer(ok) {
   const q = ab.q, secs = (Date.now() - q.t0) / 1000;
   if (q.op === 'study') return;
   const fast = ok && secs <= (4 + state.grade * 2.5) * (HARD_OPS.indexOf(q.op) !== -1 ? 1.6 : 1);
   recordAdaptive(q.op, ok, fast);
-  if (ok) { questEvent('solve', q.op); return; }
+  if (ok) return;
   if (q.kind === 'challenge') state.adapt.calm[q.op] = true; else state.adapt.easy[q.op] = true;       // after a miss the next one is a gentler warm-up
 }
 function abFight() { ab.q = abQuestion(); ab.phase = 'question'; abRender(); speakCurrentProblem(); }
@@ -393,12 +393,11 @@ function abRoundWon() {
   if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
   return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (trainer) grantGems(ECON.map.trainerGems, '+' + ECON.map.trainerGems + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
 }
-// A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy, and the daily quests. Run once the battle screen is gone (their windows open above the map).
+// A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy. Run once the battle screen is gone (their windows open above the map).
 function abBossBeaten(idx, level) {
   const form = getBossFormIndex(level);
   markBossWin(idx, form);
   state.monstersDefeated += 1;
-  questEvent('boss');
   checkBossBuddy(idx, form);
   checkForSecretLootDrop();
   saveState();

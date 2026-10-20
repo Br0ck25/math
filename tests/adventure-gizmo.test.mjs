@@ -58,19 +58,14 @@ test('the Gizmo travels only to towns the hero has stood in', async () => {
   assert.deepEqual(errors, []);
 });
 
-test('the Gizmo shows the clock, quests, calls and tips, and a quest can be claimed from it', async () => {
+test('the Gizmo shows the clock, calls and tips', async () => {
   await page.evaluate(() => { grantKeyItem('gizmo'); });
   await put('hollow', 7, 9);
   await page.evaluate(() => openGizmo());
-  for (const t of ['clock', 'quests', 'calls', 'tips']) {
+  for (const t of ['clock', 'calls', 'tips']) {
     await page.evaluate((x) => gizmoSetTab(x), t);
     assert.ok((await page.evaluate(() => document.getElementById('gizmo-body').innerText)).length > 10, t);
   }
-  await page.evaluate(() => { const q = ensureQuests().list[0]; q.progress = q.target; q.done = true; gizmoSetTab('quests'); });
-  const gems = await page.evaluate(() => state.gems);
-  await page.evaluate(() => gizmoClaim(0));
-  assert.ok(await page.evaluate(() => state.gems) > gems);
-  assert.equal(await page.evaluate(() => ensureQuests().list[0].claimed), true);
   await page.evaluate(() => gizmoSetTab('calls'));
   const before = await page.evaluate(() => document.querySelectorAll('#gizmo-body .gizmo-row').length);
   await page.evaluate(() => { state.overworld.story.push('tide-ferry'); gizmoSetTab('calls'); });

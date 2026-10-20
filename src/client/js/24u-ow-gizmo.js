@@ -1,9 +1,9 @@
 // =====================================================================
 //  THE GIZMO, a key item from Prof. Pi (24h-ow-maps.js, hollow-house). One window, five tabs:
-//  Map (travel back to a town you have stood in), Clock (weather and time of day), Quests (the daily quests, claimable here),
+//  Map (travel back to a town you have stood in), Clock (weather and time of day),
 //  Calls (notes from people in the game, never real players) and Tips (a math tip a day, and more on tap).
 // =====================================================================
-const GIZMO_TABS = [['map', 'Map'], ['clock', 'Clock'], ['quests', 'Quests'], ['calls', 'Calls'], ['tips', 'Tips']];
+const GIZMO_TABS = [['map', 'Map'], ['clock', 'Clock'], ['calls', 'Calls'], ['tips', 'Tips']];
 let gizmoTab = 'map', gizmoTip = 0;
 
 // Notes that unlock as the story goes on. `when` is a function of the save, so nothing here is stored.
@@ -43,7 +43,7 @@ function renderGizmo() {
   document.getElementById('gizmo-tabs').innerHTML = GIZMO_TABS.map(function (t) {
     return '<button type="button" class="hero-chip' + (gizmoTab === t[0] ? ' active' : '') + '" role="tab" aria-selected="' + (gizmoTab === t[0]) + '" onclick="gizmoSetTab(\'' + t[0] + '\')">' + t[1] + '</button>';
   }).join('');
-  document.getElementById('gizmo-body').innerHTML = { map: gizmoMapHtml, clock: gizmoClockHtml, quests: gizmoQuestsHtml, calls: gizmoCallsHtml, tips: gizmoTipsHtml }[gizmoTab]();
+  document.getElementById('gizmo-body').innerHTML = { map: gizmoMapHtml, clock: gizmoClockHtml, calls: gizmoCallsHtml, tips: gizmoTipsHtml }[gizmoTab]();
 }
 
 function gizmoMapHtml() {
@@ -74,17 +74,6 @@ function gizmoClockHtml() {
     '<div class="gizmo-row"><div><b>Shake trees</b><div class="d">Each tree gives a rare buddy once a day. Come back tomorrow for a new one.</div></div></div>';
 }
 
-function gizmoQuestsHtml() {
-  const qs = ensureQuests();
-  const rows = qs.list.map(function (q, i) {
-    const tail = q.claimed ? '<span class="d">Claimed</span>' : q.done ? '<button type="button" class="claim-btn" onclick="gizmoClaim(' + i + ')">Claim ' + q.reward + ' gems</button>' : '<span class="d">' + q.progress + ' / ' + q.target + '</span>';
-    return '<div class="gizmo-row"><div>' + escHtml(q.text) + '</div>' + tail + '</div>';
-  }).join('');
-  const chest = qs.chestClaimed ? '<div class="gizmo-row"><span class="d">Daily chest opened. New quests tomorrow!</span></div>' :
-    '<div class="gizmo-row"><div>Daily chest: ' + ECON.quest.chest + ' gems</div><button type="button" class="claim-btn"' + (qs.list.every(function (q) { return q.claimed; }) ? '' : ' disabled') + ' onclick="gizmoClaim(-1)">Open</button></div>';
-  return rows + chest;
-}
-function gizmoClaim(i) { if (i < 0) claimQuestChest(); else claimQuest(i); renderGizmo(); }
 
 function gizmoCallsHtml() {
   return GIZMO_CALLS.filter(function (c) { return c.when(); }).map(function (c) {

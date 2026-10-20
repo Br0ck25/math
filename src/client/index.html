@@ -266,31 +266,10 @@
 
 
 
-  <!-- Daily Quests Modal -->
-  <div class="modal-overlay" id="quest-modal" data-close="closeQuests">
-    <div class="modal-content">
-      <h2 style="font-size: 1.3rem;">📜 Daily Quests</h2>
-      <div class="dex-quest-switch">
-        <button class="grade-btn" onclick="closeQuests(); openBook()">📖 Dex</button>
-        <button class="grade-btn active" onclick="renderQuests()">📜 Quests</button>
-        <button class="grade-btn" onclick="closeQuests(); openCal()">🔥 Streak</button>
-      </div>
-      <p style="font-size: 0.75rem; color: var(--text-muted);" id="quest-reset-note">New quests every day!</p>
-      <div id="quest-list"></div>
-      <div id="quest-chest"></div>
-      <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 8px; height: 44px; font-size:1rem;" onclick="closeQuests()">Back to Game</button>
-    </div>
-  </div>
-
   <!-- Buddy Dex Modal (was the Collection Book) -->
   <div class="modal-overlay" id="book-modal" data-close="closeBook">
     <div class="modal-content">
       <h2 style="font-size: 1.3rem;">📖 Buddy Dex</h2>
-      <div class="dex-quest-switch">
-        <button class="grade-btn active" onclick="renderBook()">📖 Dex</button>
-        <button class="grade-btn" onclick="closeBook(); openQuests()">📜 Quests</button>
-        <button class="grade-btn" onclick="closeBook(); openCal()">🔥 Streak</button>
-      </div>
       <div class="book-progress" id="book-progress">0 / 0 discovered</div>
       <div class="ms-row" id="book-milestones"></div>
       <div class="book-tabs" id="book-tabs"></div>

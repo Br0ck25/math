@@ -85,20 +85,6 @@ function claimBookReward(i) {
 }
 
 // A pack is complete when you own every buddy in it. It pays once: gems per member and some Catch Nets.
-function packComplete(g) { return g.members.every(function (sp) { return getOwnedIds().indexOf(sp.id) !== -1; }); }
-function packReward(g) {
-  return { gems: Math.round(g.members.length * ECON.dex.packGemsPer), nets: ECON.dex.packNets };
-}
-function claimPackReward(id) {
-  const g = buddyPacks().find(function (x) { return x.pack.id === id; });
-  if (!g || !packComplete(g) || state.packClaims.indexOf(id) !== -1) return;
-  const r = packReward(g);
-  state.packClaims.push(id);
-  const cap = typeof maxNets === 'function' ? maxNets() : ECON.wild.net.stock;
-  state.nets = Math.min(cap, state.nets + r.nets);
-  grantGems(r.gems, g.pack.icon + ' ' + g.pack.name + ' complete! +' + r.gems + ' 💎 and ' + r.nets + ' 🕸️', true);
-  renderBook();
-}
 
 function setBookTab(t) { soundClick(); bookTab = t; renderBook(); }
 
@@ -163,13 +149,10 @@ function renderBook() {
     };
     // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
     const tierHint = function (sp) {
-      return storePets.indexOf(sp) !== -1 ? (sp.cost ? '💎 ' + sp.cost : 'Free') + ' in the Sanctuary' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+      return storePets.indexOf(sp) !== -1 ? 'Found in the wild' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
     };
     buddyPacks().forEach(function (g) {
-      let reward = '';
-      if (state.packClaims.indexOf(g.pack.id) !== -1) reward = ' <span class="pack-done">✅ Pack complete</span>';
-      else if (packComplete(g)) reward = ' <button type="button" class="claim-btn pack-claim" onclick="claimPackReward(&quot;' + g.pack.id + '&quot;)">🎁 Claim +' + packReward(g).gems + ' 💎 +' + packReward(g).nets + ' 🕸️</button>';
-      h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint, reward);
+      h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint);
     });
   } else if (bookTab === 'boss') {
     h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles! 👑 Raids cleared: ' + state.raidsCleared + '</div><div class="pet-grid">';

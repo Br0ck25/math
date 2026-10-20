@@ -4,7 +4,7 @@
 // =====================================================================
 const MENU_ITEMS = [
   ['Buddies', 'openHub'], ['Bag', 'openBag'], ['Team', 'openPad'], ['Dex', 'openBook'],
-  ['Quests', 'openQuests'], ['Shop', 'openShop'], ['Gizmo', 'openGizmo'], ['Settings', 'openSettings']
+  ['Shop', 'openShop'], ['Gizmo', 'openGizmo'], ['Settings', 'openSettings']
 ];
 function openMenu() {
   showModal('menu-modal', function () {

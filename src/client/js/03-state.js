@@ -24,7 +24,6 @@ function freshState() {
     activeAccessory: 'none',
     unlockedArmor: ['none'],
     activeArmor: 'none',
-    quests: null,
     streakCal: { count: 0, last: '', total: 0, claimed: [] },
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
@@ -50,7 +49,6 @@ function freshState() {
     bossBook: {},
     bookClaims: [],
     shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
-    packClaims: [],                                  // pack ids whose completion reward was claimed
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
     egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null
     readAloud: false,                                // whether math and study problems are read aloud

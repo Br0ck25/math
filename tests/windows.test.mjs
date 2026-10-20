@@ -12,7 +12,7 @@ const inPage = (fn, arg) => page.evaluate(fn, arg);
 
 const OPEN = {
   'shop-modal': 'openShop', 'settings-modal': 'openSettings', 'book-modal': 'openBook',
-  'quest-modal': 'openQuests', 'hub-modal': 'openHub', 'reset-modal': 'openResetModal'
+  'hub-modal': 'openHub', 'reset-modal': 'openResetModal'
 };
 
 test('every window that has a close action has a ✕ button, 44px, named, and it really closes the window', async () => {

@@ -13,7 +13,7 @@ export const MAP = [
   [/js\/04b-packs/, ['packs', 'content']],
   [/js\/08[bcd]-/, ['content', 'art']],
   [/js\/(07-math|07b-adaptive)/, ['generators', 'adaptive']],
-  [/js\/(13-loot|13b-wild|13c-eggs|19-quests)/, ['adventure-trainers', 'adventure-battle', 'adventure-gold']],
+  [/js\/(13-loot|13b-wild|13c-eggs)/, ['adventure-trainers', 'adventure-battle', 'adventure-gold']],
   [/js\/(24b-map|24d-champion)/, ['adventure-gyms', 'adventure-story']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm', 'adventure-shops']],
   [/js\/33-shop/, ['confirm', 'adventure-shops']],

@@ -116,7 +116,6 @@ const NORMALIZERS = [
     s.legend = { week: l.week, caught: l.caught };
   },
   function packs(s) {
-    s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
   },
   function bossBook(s) {
     const book = {};
