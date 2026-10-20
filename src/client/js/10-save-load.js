@@ -208,7 +208,7 @@ const NORMALIZERS = [
     const tu = {}; Object.keys(isPlainObject(s.tradedUp) ? s.tradedUp : {}).forEach(function (id) { if (TRADE_EVOLVERS.indexOf(id) !== -1 && s.tradedUp[id]) tu[id] = 1; });
     s.tradedUp = tu;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
-    const it = {}; ['superpotion', 'fullheal', 'revive'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
+    const it = {}; ['superpotion', 'fullheal', 'revive', 'greatnet', 'ultranet'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
     s.items = it;
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },

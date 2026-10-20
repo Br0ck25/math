@@ -116,14 +116,14 @@ function abDamage(att, def, move, crit) {
 function abXpYield(foe, trainer, fighters) { return Math.max(1, Math.floor(Math.floor(foe.base / Math.max(1, fighters)) * foe.level / 7 * (trainer ? 1.5 : 1))); }
 // The level a wild buddy has on this land: a little above where the land's gym opens.
 function abWildLevel() { return clamp((ECON.map.levels[state.region] || 1) + rnd(1, 3), 2, MAX_LEVEL); }
-// Catching, Gold's rule: the species' catch rate (a Catch Net is worth a Great Ball) shrinks with the foe's HP, a sleeping foe adds 10, and the net holds if a 0-255 roll is at most that. Returns 0 to 1.
-function abCatchA(foe) {
+// Catching, Gold's rule: the species' catch rate (a Catch Net is a Poke Ball; the Great and Ultra Nets are x1.5 and x2) shrinks with the foe's HP, a sleeping foe adds 10, and the net holds if a 0-255 roll is at most that. Returns 0 to 1.
+function abCatchA(foe, ball) {
   const sp = getSpecies(foe.id);
-  const rate = Math.min(255, Math.floor((sp.legend ? 3 : !isStoreBuddy(sp) ? 45 : sp.cost < 150 ? 255 : sp.cost < 800 ? 120 : 45) * ECON.overworld.netBonus));
+  const rate = Math.min(255, Math.floor((sp.legend ? 3 : !isStoreBuddy(sp) ? 45 : sp.cost < 150 ? 255 : sp.cost < 800 ? 120 : 45) * (ball || 1)));
   const a = Math.max(1, Math.floor(rate * (3 * foe.max - 2 * foe.hp) / (3 * foe.max))) + (foe.status === 'sleep' || foe.status === 'freeze' ? 10 : 0);
   return Math.min(255, a);
 }
-function abCatchChance(foe) { return (abCatchA(foe) + 1) / 256; }
+function abCatchChance(foe, ball) { return (abCatchA(foe, ball) + 1) / 256; }
 // How many times the net shakes before it breaks free: each check passes more often when the catch value is high.
 function abShakes(a) {
   const pass = (63 + (a - 1) * 192 / 254) / 255;

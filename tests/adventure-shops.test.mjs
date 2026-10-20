@@ -106,16 +106,17 @@ test('a saved Center that is not a place to stand falls back to the start', asyn
 test('the Mart opens more items as badges are won, and has no Boss Whistle', async () => {
   await toClerk();
   const none = await page.evaluate(() => { state.badges = []; owMove('up'); return Array.from(document.querySelectorAll('#mart-body .mart-row')).map((r) => ({ text: r.innerText.replace(/\s+/g, ' '), locked: r.classList.contains('locked'), buttons: r.querySelectorAll('button').length })); });
-  assert.deepEqual(none.map((r) => r.locked), [false, false, true, true, true, true]);
+  assert.deepEqual(none.map((r) => r.locked), [false, false, true, true, true, true, true, true]);
   assert.match(none[0].text, /Potion/);
   assert.match(none[1].text, /Catch Net/);
-  assert.match(none[2].text, /Repel/);
-  assert.match(none[2].text, /Opens with 1 badge/);
-  assert.deepEqual(none.map((r) => r.buttons), [1, 1, 0, 0, 0, 0], 'a locked item has nothing to buy');
+  assert.match(none[2].text, /Great Net/);
+  assert.match(none[4].text, /Repel/);
+  assert.match(none[4].text, /Opens with 1 badge/);
+  assert.deepEqual(none.map((r) => r.buttons), [1, 1, 0, 0, 0, 0, 0, 0], 'a locked item has nothing to buy');
   assert.ok(none.every((r) => !/Whistle/.test(r.text)));
   const all = await page.evaluate(() => { state.badges = ['ember', 'tide', 'grove']; renderMart(); return Array.from(document.querySelectorAll('#mart-body .mart-row')).map((r) => r.classList.contains('locked')); });
-  assert.deepEqual(all, [false, false, false, false, false, false]);
-  const prices = await page.evaluate(() => ECON.overworld.mart.map((it, i) => document.querySelectorAll('#mart-body .mart-row')[i].querySelector('button').innerText === itemCost(it.type) + ' gems'));
+  assert.deepEqual(all, [false, false, false, true, false, false, false, false], 'three badges open everything but the Ultra Net');
+  const prices = await page.evaluate(() => ECON.overworld.mart.map((it, i) => (document.querySelectorAll('#mart-body .mart-row')[i].querySelector('button') || { innerText: itemCost(it.type) + ' gems' }).innerText === itemCost(it.type) + ' gems'));
   assert.ok(prices.every(Boolean), 'the price on the button is the shop price');
 });
 
@@ -160,7 +161,7 @@ for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
       const b = Array.from(document.querySelectorAll('#mart-body button')).map((x) => { const q = x.getBoundingClientRect(); return q.width >= 44 && q.height >= 44 && q.right <= innerWidth; });
       return { inside: c.left >= 0 && c.right <= innerWidth, scroll: document.documentElement.scrollWidth <= innerWidth, b, n: b.length };
     });
-    assert.ok(mart.inside && mart.scroll && mart.n === 6 && mart.b.every(Boolean), JSON.stringify(mart));
+    assert.ok(mart.inside && mart.scroll && mart.n === 8 && mart.b.every(Boolean), JSON.stringify(mart));
     await page.evaluate(() => closeMart());
     await toNurse();
     const center = await page.evaluate(() => {

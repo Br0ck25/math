@@ -111,7 +111,9 @@ function abPanel() {
     });
   } else if (ab.phase === 'pack') {
     const wild = ab.kind === 'wild';
-    p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', abThrowNet, '', !wild || state.nets < 1));
+    p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', function () { abThrowNet('net'); }, '', !wild || state.nets < 1));
+    p.appendChild(abBtn('Great Net <small>x' + (state.items.greatnet || 0) + '</small>', function () { abThrowNet('greatnet'); }, '', !wild || !state.items.greatnet));
+    p.appendChild(abBtn('Ultra Net <small>x' + (state.items.ultranet || 0) + '</small>', function () { abThrowNet('ultranet'); }, '', !wild || !state.items.ultranet));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
     p.appendChild(abBtn('Super Potion <small>x' + (state.items.superpotion || 0) + '</small>', function () { abUseItem('superpotion'); }, '', !state.items.superpotion || (m.hp >= m.max && !m.status)));
     p.appendChild(abBtn('Full Heal <small>x' + (state.items.fullheal || 0) + '</small>', function () { abUseItem('fullheal'); }, '', !state.items.fullheal || (!m.status && !(m.conf > 0))));
@@ -380,12 +382,16 @@ function abPotion() {
   abSteps([['You used a Potion!', function () { me.hp += heal; me.status = ''; me.conf = 0; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
   abFoeTurn();
 }
-function abThrowNet() {
-  if (ab.kind !== 'wild' || state.nets < 1) return;
-  const foe = abFoe(), chance = abCatchChance(foe), got = Math.random() < chance;
-  state.nets -= 1; ab.phase = 'busy';
-  abSteps([['You threw a Catch Net!', null, 1000]]);
-  const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe)));
+// `kind`: 'net' (a Poke Ball), 'greatnet' or 'ultranet'; the better ones multiply the catch value (ECON.overworld.ballMult).
+function abThrowNet(kind) {
+  kind = kind || 'net';
+  const have = kind === 'net' ? state.nets : (state.items[kind] || 0);
+  if (ab.kind !== 'wild' || have < 1) return;
+  const ball = ECON.overworld.ballMult[kind], foe = abFoe(), chance = abCatchChance(foe, ball), got = Math.random() < chance;
+  if (kind === 'net') state.nets -= 1; else { state.items[kind] -= 1; if (!state.items[kind]) delete state.items[kind]; }
+  ab.phase = 'busy';
+  abSteps([['You threw a ' + ITEM_LOOKS[kind][1] + '!', null, 1000]]);
+  const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe, ball)));
   for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); }, 700]]);
   if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', null, 1100]]); abFoeTurn(); return; }
   abSteps([['Gotcha! ' + foe.name + ' was caught!', function () { ab.caught = true; soundCatchSuccess(); abKeepCaught(foe); }, 1300], ['', function () { abFinish('caught'); }, 0]]);
@@ -395,7 +401,7 @@ function abKeepCaught(foe) {
   const sp = getSpecies(foe.id);
   if (foe.shiny) state.shinies[sp.id] = 1;
   if (sp.id === legendOfWeek().id) legendState().caught = true;
-  if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! Sell it in the buddy hub.'); }
+  if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! A Trader may want it.'); }
   else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
   saveState();
 }

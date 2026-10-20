@@ -6,6 +6,8 @@ function itemCost(type) { return ECON.items[type]; }
 const ITEM_LOOKS = {
   potion: ['💖', 'Potion', 'Heals ' + ECON.overworld.potionHeal + ' HP in a battle and cures a status'],
   net: ['🕸️', 'Catch Net', 'Throw it at a wild buddy to catch it'],
+  greatnet: ['🕸️', 'Great Net', 'A better net: catches x1.5 as well'],
+  ultranet: ['🕸️', 'Ultra Net', 'The best net: catches x2 as well'],
   superpotion: ['💗', 'Super Potion', 'Heals ' + ECON.overworld.superPotionHeal + ' HP in a battle and cures a status'],
   fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
   revive: ['✨', 'Revive', 'Wakes a resting buddy in a battle with half its HP'],

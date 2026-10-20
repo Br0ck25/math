@@ -168,6 +168,20 @@ test('the pack: Super Potion heals more, Full Heal cures a status, Revive wakes 
   assert.equal(run, true);
 });
 
+test('nets are the balls of Gold: the Catch Net is a Poke Ball, the Great and Ultra Nets catch x1.5 and x2, and the bag holds 99', async () => {
+  const r = await ev(() => {
+    const f = abMon('octopus', 10); f.hp = Math.floor(f.max / 2);
+    const a = [undefined, 1.5, 2].map((b) => abCatchChance(f, b));
+    state.items = { greatnet: 2, ultranet: 1 }; state.nets = 0; state.unlockedPets = ['dog'];
+    return { order: a[0] < a[1] && a[1] < a[2], stock: maxNets(), cost: [itemCost('net'), itemCost('greatnet'), itemCost('ultranet')] };
+  });
+  assert.deepEqual(r, { order: true, stock: 99, cost: [200, 600, 1200] });
+  await begin();
+  await ev(() => { state.items = { greatnet: 1 }; ab.foes[0].hp = 1; Math.random = () => 0; ab.phase = 'pack'; abThrowNet('greatnet'); });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  assert.deepEqual(await ev(() => [state.items.greatnet || 0, getOwnedIds().includes('fox')]), [0, true]);
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

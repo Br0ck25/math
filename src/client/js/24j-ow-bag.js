@@ -15,7 +15,7 @@ function renderBag() {
     return bagRow(it.name, who ? 'held by ' + escHtml(getPetById(who).baseName) : 'not held');
   }).join('') || '<div class="d">None yet. Find them in the Hold tab of the Hub.</div>';
   const supplies = bagRow('Gems', state.gems) + bagRow('Potion', state.potions) + bagRow('Super Potion', state.items.superpotion || 0) + bagRow('Full Heal', state.items.fullheal || 0) + bagRow('Revive', state.items.revive || 0) +
-    bagRow('Catch Nets', state.nets + ' of ' + maxNets()) + bagRow('Repel', state.repelSteps > 0 ? state.repelSteps + ' steps left' : 'none');
+    bagRow('Catch Nets', state.nets + ' of ' + maxNets()) + bagRow('Great Net', state.items.greatnet || 0) + bagRow('Ultra Net', state.items.ultranet || 0) + bagRow('Repel', state.repelSteps > 0 ? state.repelSteps + ' steps left' : 'none');
   const egg = state.egg ? bagRow('Egg', escHtml(state.egg.element) + ' · ' + state.egg.steps + ' of ' + state.egg.target) : '<div class="d">No egg right now. Leave two buddies of one type at the Day Care.</div>';
   document.getElementById('bag-body').innerHTML =
     bagSection('Key items', keys || '<div class="d">Nothing yet.</div>') +
