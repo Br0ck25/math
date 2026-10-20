@@ -135,7 +135,7 @@ test('the Route 1 nook is behind thorny bushes: closed without the Trim Charm, o
 
 test('the main road never needs a charm: with every road open and no charm, every map, gym door, person and trainer can be reached; only side goods wait', async () => {
   const r = await page.evaluate(() => {
-    hasKeyItem = () => false; owRoadOpen = () => true;                                                    // no charm in the bag, the badge roads open
+    hasKeyItem = () => false; owRoadOpen = () => true; owNpcActive = () => true;                                                    // no charm in the bag, the badge roads open
     const arrivals = {}, maps = Object.keys(OW_MAPS);
     maps.forEach((k) => { arrivals[k] = [OW_MAPS[k].start]; });
     const reached = new Set([OW_START.map]), tiles = {};

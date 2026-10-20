@@ -51,6 +51,8 @@ const ECON = {
     trainerSight: 3,
     // Fishing (tap water with the Fishing Rod): this chance of a bite each try; a bite is a normal wild fight with a water buddy.
     fishBite: 0.6,
+    // The story's one-time prizes (gems), by story beat: the Scramblers' schemes put right (24t-ow-story.js).
+    storyGems: { 'tide-ferry': 20, 'volt-blackout': 25, 'gloom-scramblers': 40 },
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
     mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'shield', badges: 1 }, { type: 'clover', badges: 2 }, { type: 'candy', badges: 3 }, { type: 'ult', badges: 4 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.

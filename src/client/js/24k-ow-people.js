@@ -10,8 +10,9 @@ function talkOpen() { const open = openOverlays(); return !!open.length && open[
 function owInteract(map, x, y) {
   const npc = owNpcAt(map, x, y);
   if (npc) {
-    if (npc.kind === 'trainer') { owTrainerTalk(npc); return; }
-    if (npc.kind === 'gift') { owGift(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)
+    if (npc.kind === 'trainer' || npc.kind === 'boss') { owTrainerTalk(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)
+    if (npc.kind === 'gift') { owGift(npc); return; }
+    if (npc.kind === 'scene') { owScene(npc); return; }
     npc.face = OW_OPPOSITE[state.overworld.face];                    // the person turns to the hero
     renderOverworld();
     if (npc.kind === 'nurse') { openCenter(npc); return; }
@@ -62,7 +63,7 @@ function renderTalk() {
     const qz = talk.quiz;
     document.getElementById('talk-q').innerHTML = qz.q.html;
     fillOptButtons(document.getElementById('talk-opts'), qz.q.opts, answerSignQuiz);
-    document.getElementById('talk-note').innerText = qz.paid ? 'This sign already paid today. Practice is free!' : signsLeft() > 0 ? 'A right answer pays ' + ECON.overworld.signGems + ' gems, once a day.' : 'No more sign gems today, but practice is free!';
+    document.getElementById('talk-note').innerText = qz.story ? 'Question ' + qz.round + ' of ' + qz.rounds + '. A wrong answer is free: try again!' : qz.paid ? 'This sign already paid today. Practice is free!' : signsLeft() > 0 ? 'A right answer pays ' + ECON.overworld.signGems + ' gems, once a day.' : 'No more sign gems today, but practice is free!';
   }
 }
 function talkChoose(i) { const c = talk && talk.choices && talk.choices[i]; if (c) c.run(); }
@@ -87,17 +88,23 @@ function signsToday() {
 }
 function signPaid(id) { return signsToday().indexOf(id) !== -1; }
 function signsLeft() { return Math.max(0, ECON.overworld.signsPerDay - signsToday().length); }
+// A story puzzle (a sign with `story`) is a few questions in a row, locked until its Scrambler (`after`) is beaten, and pays a one-time prize.
 function openSignQuiz(sign) {
-  talk = { name: 'Math sign', art: worldSprite('t-sign'), lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), paid: signPaid(sign.id), done: false } };
+  const art = worldSprite('t-sign');
+  if (sign.story && state.overworld.story.indexOf(sign.story) !== -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.done || 'Everything is in order again. Thank you!'] }); return; }
+  if (sign.after && state.overworld.beat.indexOf(sign.after) === -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.locked || 'A Scrambler is guarding this. Beat them first!'] }); return; }
+  talk = { name: 'Math sign', art: art, lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), paid: signPaid(sign.id), done: false, story: sign.story || '', round: 1, rounds: sign.rounds || 1 } };
   showModal('talk-modal', renderTalk);
 }
 function answerSignQuiz(value) {
   const qz = talk && talk.quiz, note = document.getElementById('talk-note');
   if (!qz || qz.done) return;
   if (value !== qz.q.ans) { soundWrong(); note.innerText = 'Not quite. Try another one!'; return; }
+  if (qz.round < qz.rounds) { qz.round += 1; qz.q = makeMcq({ count: 3 }); soundCorrect(1); renderTalk(); return; }          // the next question of the puzzle
   qz.done = true;
   soundCorrect(1);
   Array.prototype.forEach.call(document.querySelectorAll('#talk-opts button'), function (b) { b.disabled = true; });
+  if (qz.story) { owStoryReward(qz.story); note.innerText = 'All fixed! Thank you!'; return; }
   if (qz.paid || signsLeft() === 0) { note.innerText = qz.paid ? 'Correct! This sign already paid today.' : 'Correct! No more sign gems today.'; return; }
   signsToday().push(qz.id);
   grantGems(ECON.overworld.signGems, 'Correct! +' + ECON.overworld.signGems + ' gems', false);
@@ -141,6 +148,7 @@ function owTrainerTalk(npc) {
 
 // ----- gyms: stepping on a gym door offers that land's gym (the usual gym run on the battle screen: trainers, Riley, then the leader) -----
 function owEnterGym(id) {
+  if (id === 'champion') { owEnterHall(); return; }
   const r = regionById(id), art = worldSprite('t-gym-door'), name = r.name + ' Gym';
   const say = function (lines, choices) { openTalk({ name: name, art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
   if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
@@ -178,4 +186,21 @@ function owShake(id) {
   s.ids.push(id);
   saveState();
   openTalk({ name: 'Tree', art: art, lines: ['You shake the tree... Something fell out!'], onClose: function () { startAdventureFight(shakeSpecies(id)); } });
+}
+
+// ----- a story scene: a person who talks once, marks its story beat, and goes (Riley's reveal); with no `story` it just talks every time (after the Champion) -----
+function owScene(npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), done = npc.story && state.overworld.story.indexOf(npc.story) !== -1;
+  if (done) { openTalk({ name: npc.name, art: art, lines: npc.after || npc.lines }); return; }
+  openTalk({ name: npc.name, art: art, lines: npc.lines, onClose: function () { if (npc.story) { owStoryReward(npc.story); renderOverworld(); } } });
+}
+
+// ----- the Champion's Hall: the door at the end of the Champion's Walk starts the Hall run (the usual one: Nova's six buddies) -----
+function owEnterHall() {
+  const art = worldSprite('t-gym-door'), say = function (lines, choices) { openTalk({ name: "Champion's Hall", art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
+  if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
+  if (!championOpen()) { say(['The great golden doors are shut.', 'They open for trainers with all ' + gymRegions().length + ' gym badges. You have ' + state.badges.length + '. Keep going!']); return; }
+  const go = function () { talk.onClose = null; closeTalk(); closeOverworld(); startChampion(); };
+  if (state.champ.wins > 0) say(['Welcome back, Champion! Nova is ready for another match.'], [{ label: 'Rematch!', run: go }]);
+  else say(['The great golden doors swing open. Champion Nova is waiting inside.', 'Six buddies, one of each type. Ready?'], [{ label: 'Enter the Hall', run: go }]);
 }

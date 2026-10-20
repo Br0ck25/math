@@ -32,7 +32,14 @@ function owSetRegion(map) {
   if (map.region && state.region !== map.region) { state.region = map.region; markRegionVisited(map.region); }
 }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
-function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y; }) || null; }
+// A person is there when its `needs` is met (a badge, or 'champion') and it has not vanished (beaten, or its story scene done).
+function owNpcActive(n) {
+  const o = state.overworld;
+  if (n.needs && !(n.needs === 'champion' ? isChampion() : hasBadge(n.needs))) return false;
+  if (n.vanish && (o.beat.indexOf(n.id) !== -1 || (n.story && o.story.indexOf(n.story) !== -1))) return false;
+  return true;
+}
+function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y && owNpcActive(n); }) || null; }
 function owNpcById(id) {
   for (const k of Object.keys(OW_MAPS)) { const n = (OW_MAPS[k].npcs || []).find(function (p) { return p.id === id; }); if (n) return n; }
   return null;
@@ -40,7 +47,7 @@ function owNpcById(id) {
 // The trainer who sees the hero on this tile: not beaten yet, and the hero is on a free line of up to `sight` tiles in the way it faces.
 function owTrainerSeeing(map, x, y) {
   return (map.npcs || []).find(function (n) {
-    if (n.kind !== 'trainer' || state.overworld.beat.indexOf(n.id) !== -1) return false;
+    if ((n.kind !== 'trainer' && n.kind !== 'boss') || !owNpcActive(n) || state.overworld.beat.indexOf(n.id) !== -1) return false;
     const d = OW_STEP[n.face], sight = n.sight || ECON.overworld.trainerSight;
     for (let i = 1; i <= sight; i++) {
       const cx = n.x + d[0] * i, cy = n.y + d[1] * i;
@@ -79,6 +86,7 @@ function renderOverworld() {
     if (ob.type === 'pickup' && o.found.indexOf(ob.id) === -1 && Math.abs(ob.x - o.x) <= half && Math.abs(ob.y - o.y) <= half) h += owActorHtml('ow-pickup', ob.x - o.x + half, ob.y - o.y + half, n, worldSprite('o-sparkle'));
   });
   (map.npcs || []).forEach(function (np) {
+    if (!owNpcActive(np)) return;
     if (Math.abs(np.x - o.x) <= half && Math.abs(np.y - o.y) <= half) h += owActorHtml('ow-npc', np.x - o.x + half, np.y - o.y + half, n, heroSprite(heroLookColors(np.look), np.face, 0));
     if (np.alert && Math.abs(np.x - o.x) <= half && Math.abs(np.y - 1 - o.y) <= half) h += owActorHtml('ow-alert', np.x - o.x + half, np.y - 1 - o.y + half, n, worldSprite('fx-alert'));
   });
@@ -176,7 +184,7 @@ function adventureRowHtml() {
 // True while the current wild fight began on the map. A flag left over from a foe that was replaced meanwhile (a gym, a legend hunt, a boss) is cleared.
 function adventureFight() {
   const o = state.overworld;
-  if (o.fight && (state.gym || !state.wild.id || state.wild.legend || (state.wild.trainer && !o.foe))) o.fight = false;     // a trainer is fine when the walk began it
+  if (o.fight && (state.gym || (!state.wild.id && !o.foe) || state.wild.legend || (state.wild.trainer && !o.foe))) o.fight = false;     // a trainer is fine when the walk began it
   if (!o.fight) o.foe = '';
   return o.fight;
 }
@@ -197,13 +205,14 @@ function startAdventureFight(sp) {
 function startTrainerFight(npc) {
   if (state.gym || state.raid) return;
   owRelease();
+  if (npc.kind === 'boss') { startBossFight(npc); return; }
   const sp = rollWildSpecies([]);
   state.wild.id = sp.id;
   state.wild.trainer = npc.name;
   state.wild.shiny = false;
   state.wild.legend = false;
   markDexSeen(sp.id);
-  bossLevel = clamp(foeBaseLevel() + rnd(0, 1), 1, MAX_LEVEL);
+  bossLevel = clamp(foeBaseLevel() + rnd(0, 1) + (npc.levelBonus || 0), 1, MAX_LEVEL);
   gymFoeReset();
   state.overworld.fight = true;
   state.overworld.foe = npc.id;
@@ -213,11 +222,46 @@ function startTrainerFight(npc) {
   saveState();
   announceFoe();
 }
+// A story boss: a boss from the boss list of the given element (never a slayer, one your buddy may meet), a little above your buddy.
+function startBossFight(npc) {
+  const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return monstersList[i].element === npc.boss && !monstersList[i].slays && bossAvailable(i); });
+  currentMonsterIndex = pick(cands);
+  state.currentMonsterIndex = currentMonsterIndex;
+  state.recentBossTypes = state.recentBossTypes.concat(npc.boss).slice(-2);          // a boss fight is only restored on reload when it has been recorded
+  state.wild.id = '';
+  state.wild.trainer = '';
+  state.wild.shiny = false;
+  state.wild.legend = false;
+  bossLevel = clamp(foeBaseLevel() + rnd(1, 3), 1, MAX_LEVEL);
+  markBossSeen(currentMonsterIndex);
+  gymFoeReset();
+  state.overworld.fight = true;
+  state.overworld.foe = npc.id;
+  hideModal('overworld-modal');
+  setBossTaunt();
+  updateStatsUI();
+  saveState();
+  announceFoe();
+}
+// Marks a story beat done; true the first time (the caller pays its prize).
+function owStoryDone(id) {
+  const s = state.overworld.story;
+  if (!id || s.indexOf(id) !== -1) return false;
+  s.push(id);
+  saveState();
+  return true;
+}
+function owStoryReward(id) {
+  if (!owStoryDone(id)) return;
+  const gems = ECON.overworld.storyGems[id];
+  if (gems) grantGems(gems, 'Story reward: +' + gems + ' gems!', true);
+}
 // Won a fight that began on the map: the next Practice foe waits, and the map comes back after any catch window.
 function adventureWin() {
   if (!adventureFight()) return false;
   const o = state.overworld, npc = o.foe ? owNpcById(o.foe) : null;
   if (npc && o.beat.indexOf(npc.id) === -1) o.beat.push(npc.id);        // a trainer is beaten for good
+  if (npc && npc.story) owStoryReward(npc.story);
   o.fight = false;
   o.foe = '';
   pickNextWild();

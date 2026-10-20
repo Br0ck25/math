@@ -139,7 +139,7 @@ test('every gym door on a map is on a gym tile, and every gym tile has a land wi
     const out = [];
     Object.keys(OW_MAPS).forEach((k) => {
       const m = OW_MAPS[k], doors = Object.keys(m.gyms || {});
-      doors.forEach((p) => { const [x, y] = p.split(',').map(Number); if (m.rows[y].charAt(x) !== 'G') out.push(k + ': ' + p + ' is not a gym tile'); if (!regionById(m.gyms[p]).gym || regionById(m.gyms[p]).id !== m.gyms[p]) out.push(k + ': ' + m.gyms[p] + ' has no gym'); });
+      doors.forEach((p) => { const [x, y] = p.split(',').map(Number); if (m.rows[y].charAt(x) !== 'G') out.push(k + ': ' + p + ' is not a gym tile'); if (m.gyms[p] !== 'champion' && (!regionById(m.gyms[p]).gym || regionById(m.gyms[p]).id !== m.gyms[p])) out.push(k + ': ' + m.gyms[p] + ' has no gym'); });
       m.rows.forEach((row, y) => row.split('').forEach((c, x) => { if (c === 'G' && doors.indexOf(x + ',' + y) === -1) out.push(k + ': gym tile ' + x + ',' + y + ' leads nowhere'); }));
     });
     return out;

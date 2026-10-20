@@ -3,6 +3,8 @@
 //  A warp is a tile that sends the hero to (tx, ty) of another map: that spot must be walkable and not a warp itself. Doors are walkable tiles with a warp.
 //  `signs` maps "x,y" to the words of a sign tile: a string, or { id, text, quiz: true } for a math sign. `npcs` stand still and are solid.
 //  `roads` maps "x,y" of a road barrier tile ('x') to the gym badge that opens it (or any later one): the story key to the next land.
+//  An npc may also have: `needs` (a badge id, or 'champion': it is only there once you hold it), `vanish` (gone once beaten, or once its `story` scene is done),
+//  `levelBonus` (a harder trainer), `kind: 'scene'` (talks once and marks its `story`), `kind: 'boss'` (a boss-list fight) and `story` + `reward` (a one-time prize).
 //  `gyms` maps "x,y" of a gym door tile ('G') to a land id of REGIONS: stepping on it offers that land's gym.
 //  `trees` maps "x,y" of a 'Y' tile to a tree id: it can be shaken once a day for a rare buddy. Water tiles ('~') can be fished once you hold the Fishing Rod. Gate letters are in OW_GATE_CHARS.
 //  `objects` are pickups (sparkles) that can be taken once. Tile pictures are art/world/<t>.svg (scripts/world-art.mjs). `grass` tiles can start a wild fight.
@@ -197,6 +199,8 @@ const OW_START = { map: 'hollow' };
 const OW_LANDS = [
   { land: 'meadow', town: 'meadow', routeIn: 'route1', center: 'meadow-center', mart: 'meadow-mart', house: 'meadow-house', charm: 'trim', nook: [] }
 ];
+// The story beats that are saved once done (state.overworld.story): the Scramblers' three schemes and Riley's reveal.
+const OW_STORY = ['tide-ferry', 'volt-blackout', 'gloom-scramblers', 'riley-reveal'];
 // The names of the trainers on the map (a save may keep one as the current foe).
 function owTrainerNames() {
   const names = [];
@@ -211,7 +215,8 @@ function owIds(kind) {
     if (kind === 'pickup') (m.objects || []).forEach(function (o) { if (o.type === 'pickup') ids.push(o.id); });
     else if (kind === 'sign') Object.keys(m.signs || {}).forEach(function (p) { if (m.signs[p].quiz) ids.push(m.signs[p].id); });
     else if (kind === 'tree') Object.keys(m.trees || {}).forEach(function (p) { ids.push(m.trees[p]); });
-    else (m.npcs || []).forEach(function (n) { if (kind !== 'trainer' || n.kind === 'trainer') ids.push(n.id); });
+    else if (kind === 'story') return;
+    else (m.npcs || []).forEach(function (n) { if (kind !== 'trainer' || n.kind === 'trainer' || n.kind === 'boss') ids.push(n.id); });
   });
-  return ids;
+  return kind === 'story' ? OW_STORY.slice() : ids;
 }

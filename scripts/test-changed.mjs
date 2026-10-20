@@ -35,7 +35,7 @@ export const MAP = [
   [/js\/(01-|01b-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['speech', 'app', 'ui']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'art-world']],
+  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'art-world']],
   [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
 const FALLBACK = ['app', 'ui'];

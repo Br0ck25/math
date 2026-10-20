@@ -255,15 +255,16 @@ test('all eight gym lands have a town, in story order, chained by roads: each to
   assert.ok(r.journey.slice(0, -1).every((j) => j[2] === false), 'the next town is never reachable before its road opens');
 });
 
-test('Skyreach is the last town: its road leads in from Mystic Peak, it has no charm nook of its own, and its gym needs level 56', async () => {
+test('Skyreach is the last land: no charm nook of its own, its gym needs level 56, and its road leads on to the Champion\'s Walk', async () => {
   await put('skyreach', 11, 10, 'up');
   const r = await page.evaluate(() => {
     const L = OW_LANDS[OW_LANDS.length - 1];
     owMove('up');
-    return { land: L.land, charm: L.charm, nook: L.nook, name: document.getElementById('talk-name').innerText, text: talk.lines.join(' '), exit: OW_MAPS.skyreach.rows[0] };
+    const out = { land: L.land, charm: L.charm, nook: L.nook, name: document.getElementById('talk-name').innerText, text: talk.lines.join(' '), road: OW_MAPS.skyreach.roads['7,0'], to: OW_MAPS.skyreach.warps.find((w) => w.x === 7 && w.y === 0).to };
+    return out;
   });
   assert.deepEqual([r.land, r.charm, r.nook], ['skyreach', '', []]);
   assert.equal(r.name, 'Skyreach Gym');
   assert.match(r.text, /level 56/);
-  assert.equal(r.exit, 'TTTTTTTTTTTTTTTT', 'nothing leads on from the last town yet');
+  assert.deepEqual([r.road, r.to], ['skyreach', 'champwalk']);
 });

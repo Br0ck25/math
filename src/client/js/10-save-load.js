@@ -323,7 +323,7 @@ const NORMALIZERS = [
     const sg = isPlainObject(o.signs) ? o.signs : {}, c = isPlainObject(o.center) ? o.center : {}, cm = OW_MAPS[c.map];
     const center = cm && owWalkable(cm, c.x, c.y) && !owNpcAt(cm, c.x, c.y) ? { map: c.map, x: c.x, y: c.y } : { map: OW_START.map, x: OW_MAPS[OW_START.map].start.x, y: OW_MAPS[OW_START.map].start.y };     // a Center that is not a place to stand: the start
     s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down', fight: o.fight === true,
-      found: known('pickup', o.found), signs: { day: typeof sg.day === 'string' ? sg.day.slice(0, 10) : '', ids: known('sign', sg.ids) }, center: center, beat: known('trainer', o.beat), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) }, foe: o.fight === true && owIds('trainer').indexOf(o.foe) !== -1 ? o.foe : '' };
+      found: known('pickup', o.found), signs: { day: typeof sg.day === 'string' ? sg.day.slice(0, 10) : '', ids: known('sign', sg.ids) }, center: center, beat: known('trainer', o.beat), story: known('story', o.story), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) }, foe: o.fight === true && owIds('trainer').indexOf(o.foe) !== -1 ? o.foe : '' };
   }
 ];
 function normalizeState() {
