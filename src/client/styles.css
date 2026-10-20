@@ -2077,3 +2077,38 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .ow-row-text { flex: 1; min-width: 0; text-align: left; }
 @media (max-height: 640px) { .ow-hint { display: none; } }
 .map-row.adventure-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+
+/* Adventure: Team and Bag buttons beside the D-pad, the hero creator, the bag and the team (24i-ow-hero.js, 24j-ow-bag.js). */
+.ow-key.ow-side { grid-row: 1; gap: 0; align-content: center; font-size: 0.62rem; font-weight: 800; color: var(--text); line-height: 1; }
+.ow-key.ow-side.team { grid-column: 1; }
+.ow-key.ow-side.bag { grid-column: 3; }
+.ow-key.ow-side svg { width: 26px; height: 26px; fill: none; stroke: none; transform: none; }
+.hero-preview { width: 96px; height: 96px; margin: 0 auto 6px; border-radius: 14px; background: #86d06a; overflow: hidden; }
+.hero-label { margin: 8px 0 4px; font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-align: left; }
+.hero-input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--card-border); background: var(--bg-dark); color: var(--text); font-size: 16px; }
+.hero-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.hero-chip { min-height: 44px; padding: 4px 12px; border-radius: 999px; border: 2px solid var(--card-border); background: var(--bg-dark); color: var(--text); font-weight: 800; font-size: 0.8rem; cursor: pointer; }
+.hero-swatch { width: 44px; height: 44px; padding: 0; border-radius: 12px; border: 3px solid var(--card-border); cursor: pointer; overflow: hidden; }
+.hero-swatch.hero-style { background: #86d06a; }
+.hero-swatch.on { border-color: var(--text); box-shadow: 0 0 0 2px var(--primary); }
+.hero-go { margin-top: 14px; width: 100%; min-height: 48px; font-size: 1rem; animation: none; }
+.bag-sec { text-align: left; margin-bottom: 10px; }
+.bag-sec h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
+.bag-row { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; font-size: 0.85rem; border-bottom: 1px solid var(--card-border); }
+.bag-key { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+.bag-key-art { width: 40px; height: 40px; flex: none; }
+.bag-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+.bag-actions .claim-btn { min-height: 44px; animation: none; }
+.pad-row { display: flex; align-items: center; gap: 10px; text-align: left; }
+.pad-row.resting { opacity: 0.6; }
+.pad-icon { flex: none; width: 48px; height: 48px; display: grid; place-items: center; font-size: 2rem; }
+.pad-icon img { width: 100%; height: 100%; object-fit: contain; }
+.pad-main { flex: 1; min-width: 0; }
+.pad-hp { height: 8px; border-radius: 4px; background: var(--bg-dark); overflow: hidden; margin: 3px 0; }
+.pad-hp i { display: block; height: 100%; background: var(--success); }
+.pad-tag { font-size: 0.75rem; font-weight: 800; color: var(--success); }
+.pad-tag.rest { color: var(--text-muted); }
+.pad-note { margin-top: 8px; text-align: center; }
+.pad-row .claim-btn { min-height: 44px; min-width: 56px; animation: none; }
+.bag-sec .d, .pad-note { font-size: 0.8rem; color: var(--text-muted); }
+.bag-sec .bag-key .t { font-size: 0.9rem; font-weight: 800; }

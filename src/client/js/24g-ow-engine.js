@@ -40,7 +40,7 @@ function renderOverworld() {
     }
   }
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + half, owTrail.y - o.y + half, n, owFollowerHtml());
-  h += owActorHtml('ow-hero', half, half, n, heroSprite(null, o.face, owFrame));
+  h += owActorHtml('ow-hero', half, half, n, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.setProperty('--ow-n', n);
   view.innerHTML = h;
   view.setAttribute('aria-label', map.name + ' map');
@@ -78,7 +78,7 @@ function owHold(dir) {
   owPointerUsed = true;
   owRelease();
   owMove(dir);
-  owHoldTimer = setTimeout(function () { owHoldTimer = setInterval(function () { owMove(dir); }, 150); }, 260);
+  owHoldTimer = setTimeout(function () { owHoldTimer = setInterval(function () { owMove(dir); }, hasKeyItem('running-shoes') ? ECON.overworld.shoeMs : ECON.overworld.holdMs); }, 260);
 }
 function owRelease() { clearTimeout(owHoldTimer); clearInterval(owHoldTimer); owHoldTimer = null; }
 function owClick(dir) { if (owPointerUsed) { owPointerUsed = false; return; } owMove(dir); }
@@ -96,6 +96,7 @@ function openAdventure() {
   if (state.gym) { soundWrong(); toast('Finish or leave the gym first'); return; }
   if (state.raid) { soundWrong(); toast('Finish the raid boss first'); return; }
   if (document.getElementById('map-modal').style.display === 'flex') closeMap();
+  if (!state.hero.made) { openHeroCreator(); return; }               // the first walk starts with Who are you?
   showAdventureWindow();
 }
 function showAdventureWindow() {

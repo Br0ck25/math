@@ -83,5 +83,15 @@ const OBJECT_BODIES = {
   'o-paw': '<ellipse cx="50" cy="68" rx="22" ry="18" fill="#A16207" ' + outline + '/>' + [[22, 42], [38, 24], [62, 24], [78, 42]].map((p) => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="#A16207" ' + outline + '/>').join('')
 };
 
+// Key items and small interface pictures.
+const KEY_BODIES = {
+  'k-badge-case': '<rect x="10" y="26" width="80" height="58" rx="10" fill="#A16207" ' + outline + '/><rect x="10" y="26" width="80" height="20" rx="10" fill="#C98A1B" ' + outline + '/>' +
+    [24, 42, 60, 78].map((x) => '<circle cx="' + x + '" cy="64" r="7" fill="#FDE047" stroke="' + INK + '" stroke-width="2.5"/>').join('') +
+    '<rect x="42" y="36" width="16" height="14" rx="3" fill="#FDE047" ' + outline + '/><path d="M36 26V18Q36 12 42 12H58Q64 12 64 18V26" fill="none" ' + outline + '/>',
+  'k-shoes': '<path d="M8 66Q8 48 22 46L40 42L48 58H70Q92 58 92 74V80H8Z" fill="#EF4444" ' + outline + '/><rect x="8" y="76" width="84" height="10" rx="5" fill="#F8FAFC" ' + outline + '/>' +
+    '<path d="M30 52L36 60M38 48L44 56" fill="none" stroke="#F8FAFC" stroke-width="4" stroke-linecap="round"/>',
+  'u-bag': '<path d="M36 28Q36 10 50 10Q64 10 64 28" fill="none" ' + outline + '/><rect x="18" y="26" width="64" height="64" rx="18" fill="#F97316" ' + outline + '/><rect x="31" y="56" width="38" height="26" rx="7" fill="#FDBA74" ' + outline + '/><path d="M50 56V66" fill="none" ' + outline + '/>'
+};
+
 export const WORLD = {};
-for (const bodies of [TILE_BODIES, HERO_BODIES, OBJECT_BODIES]) for (const id of Object.keys(bodies)) WORLD[id] = wrap(bodies[id]);
+for (const bodies of [TILE_BODIES, HERO_BODIES, OBJECT_BODIES, KEY_BODIES]) for (const id of Object.keys(bodies)) WORLD[id] = wrap(bodies[id]);

@@ -15,7 +15,7 @@ beforeEach(async () => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   errors.length = 0;
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; });
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; });
 });
 
 const walk = (dirs) => page.evaluate((d) => { d.forEach(owMove); return { ...state.overworld }; }, dirs);
@@ -221,7 +221,7 @@ test('arrow keys and WASD walk while the map is open, and do not steal keys othe
 
 test('the D-pad buttons walk (a press steps once, a keyboard click steps once) and have labels', async () => {
   await open();
-  const labels = await page.evaluate(() => Array.from(document.querySelectorAll('.ow-key')).map((b) => b.getAttribute('aria-label')));
+  const labels = await page.evaluate(() => Array.from(document.querySelectorAll('.ow-key:not(.ow-side)')).map((b) => b.getAttribute('aria-label')));
   assert.deepEqual(labels, ['Walk up', 'Walk left', 'Walk down', 'Walk right']);
   const up = page.locator('.ow-key.up');
   await up.dispatchEvent('pointerdown');

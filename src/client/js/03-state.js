@@ -82,6 +82,8 @@ function freshState() {
     techUnlocked: [],                                // tech node ids unlocked in the Tree of Knowledge
     techSolves: 0,                                   // correct answers toward the next Star Spark
     readAloud: false,                                // whether math and study problems are read aloud
+    hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
+    keyItems: [],                                    // key item ids earned on the Adventure (24i-ow-hero.js KEY_ITEMS)
     overworld: { map: 'hollow', x: 7, y: 9, face: 'down', fight: false },   // the Adventure map (24g-ow-engine.js): where the hero stands, and whether the current wild fight began on a walk (a win then returns to the map)
   };
 }

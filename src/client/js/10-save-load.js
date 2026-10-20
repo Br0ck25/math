@@ -307,6 +307,14 @@ const NORMALIZERS = [
   function readAloud(s) {
     s.readAloud = s.readAloud === true;
   },
+  function hero(s) {
+    const h = isPlainObject(s.hero) ? s.hero : {}, l = isPlainObject(h.look) ? h.look : {};
+    s.hero = { name: cleanHeroName(h.name), look: { skin: asInt(l.skin, 0, HERO_SKINS.length - 1, 0), hair: asInt(l.hair, 0, HERO_HAIRS.length - 1, 0), outfit: asInt(l.outfit, 0, HERO_OUTFITS.length - 1, 0), style: asInt(l.style, 0, HERO_STYLES.length - 1, 0) }, made: h.made === true };
+  },
+  function keyItems(s) {
+    const known = KEY_ITEMS.map(function (k) { return k.id; });
+    s.keyItems = (Array.isArray(s.keyItems) ? s.keyItems : []).filter(function (id, i, a) { return known.indexOf(id) !== -1 && a.indexOf(id) === i; });
+  },
   function overworld(s) {
     const o = isPlainObject(s.overworld) ? s.overworld : {};
     const map = OW_MAPS[o.map] || OW_MAPS[OW_START.map];

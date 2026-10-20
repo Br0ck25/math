@@ -787,12 +787,41 @@
       <h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
       <div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div>
       <div class="ow-pad">
+        <button type="button" class="ow-key ow-side team" aria-label="Team" onclick="openPad()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-o-paw"/></svg><span>Team</span></button>
+        <button type="button" class="ow-key ow-side bag" aria-label="Bag" onclick="openBag()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-u-bag"/></svg><span>Bag</span></button>
         <button type="button" class="ow-key up" aria-label="Walk up" onpointerdown="owHold('up')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('up')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
         <button type="button" class="ow-key left" aria-label="Walk left" onpointerdown="owHold('left')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('left')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
         <button type="button" class="ow-key down" aria-label="Walk down" onpointerdown="owHold('down')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('down')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
         <button type="button" class="ow-key right" aria-label="Walk right" onpointerdown="owHold('right')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('right')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
       </div>
       <p class="ow-hint">Walk in the tall grass to meet wild buddies. Arrow keys work too.</p>
+    </div>
+  </div>
+
+  <!-- The Adventure bag and team: views over what the game already keeps (24j-ow-bag.js) -->
+  <div class="modal-overlay" id="bag-modal" data-close="closeBag">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:6px;" id="bag-title">Bag</h2>
+      <div id="bag-body"></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="pad-modal" data-close="closePad">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:6px;" id="pad-title">Team</h2>
+      <div id="pad-body"></div>
+    </div>
+  </div>
+
+  <!-- Who are you? The Adventure hero's name and look (24i-ow-hero.js). After the Bag and Team windows in the page: it opens on top of them (Change look). -->
+  <div class="modal-overlay" id="hero-modal" data-esc="closeHeroCreator">
+    <div class="modal-content">
+      <h2 style="font-size:1.2rem; margin-bottom:6px;" id="hero-title">Who are you?</h2>
+      <div class="hero-preview" id="hero-preview"></div>
+      <label class="hero-label" for="hero-name">Your name</label>
+      <input type="text" id="hero-name" class="hero-input" maxlength="10" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="Letters only" oninput="heroNameTyped()">
+      <div class="hero-row" id="hero-names"></div>
+      <div id="hero-picks"></div>
+      <button type="button" class="claim-btn hero-go" id="hero-go" onclick="finishHero()">Start the adventure</button>
     </div>
   </div>
 
