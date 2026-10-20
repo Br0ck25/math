@@ -193,21 +193,30 @@ test('the Team window lists the team with level and HP, and Lead changes who goe
   assert.equal(await page.evaluate(() => document.getElementById('pad-title').innerText), "Sam's team");
   await page.click('#pad-body .pad-row >> nth=1 >> button');
   assert.equal(await page.evaluate(() => state.activePet), other);
-  assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row:nth-child(2)').innerText), /Leading/);
+  assert.match(await page.evaluate(() => document.querySelectorAll('#pad-body .pad-row')[1].innerText), /Leading/);
   await page.click('#pad-body .pad-row >> nth=0 >> button');                                                          // the lead can change back any time
   assert.notEqual(await page.evaluate(() => state.activePet), other);
 });
 
-test('a resting buddy cannot be made the lead, and Change team opens the Hub on the team tab', async () => {
+test('a resting buddy cannot be made the lead; the PC box holds the rest: deposit, withdraw, a full team swaps, the lead stays', async () => {
   await madeHero();
   const other = await twoBuddies();
   await page.evaluate((o) => { state.advHp = { [o]: 0 }; openAdventure(); openPad(); }, other);
-  assert.equal(await page.evaluate(() => document.querySelectorAll('#pad-body .pad-row button').length), 0, 'no Lead button for a resting buddy');
-  assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row.resting').innerText), /Resting/);
-  await page.click('#pad-body .bag-actions .claim-btn');
-  assert.equal(await shown('hub-modal'), true);
-  assert.equal(await shown('pad-modal'), false);
-  assert.equal(await page.evaluate(() => hubTab), 'tour');
+  assert.doesNotMatch(await page.evaluate(() => document.querySelectorAll('#pad-body .pad-row')[1].innerText), /Lead\b(?!ing)/, 'no Lead button for a resting buddy');
+  assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row.resting').innerText), /resting/);
+  await page.evaluate((o) => padDeposit(o), other);
+  assert.deepEqual(await page.evaluate((o) => [getTeam().indexOf(o), document.querySelectorAll('#pad-body .pad-row').length], other), [-1, 2], 'one on the team, one in the box');
+  await page.evaluate(() => padDeposit(state.activePet));
+  assert.equal(await page.evaluate(() => getTeam().length), 1, 'the lead cannot go to the box');
+  await page.evaluate((o) => padWithdraw(o), other);
+  assert.equal(await page.evaluate((o) => getTeam().indexOf(o) !== -1, other), true);
+  const full = await page.evaluate((o) => {
+    padDeposit(o); const ids = getOwnedIds(); state.unlockedPets = state.unlockedPets.concat(['bunny', 'cat', 'frog', 'owl', 'bear', 'pig']).filter((x, i, a) => a.indexOf(x) === i);
+    state.team = getOwnedIds().slice(0, ECON.team.max); const out = getOwnedIds().find((x) => state.team.indexOf(x) === -1);
+    padWithdraw(out); return { replace: document.getElementById('replace-modal').style.display === 'flex', out };
+  }, other);
+  assert.equal(full.replace, true, 'a full team asks who goes to the box');
+  assert.equal(await shown('pad-modal'), true);
 });
 
 test('a team of one says there is room, and every window fits a 320x568 phone', async () => {
@@ -229,5 +238,5 @@ test('a team of one says there is room, and every window fits a 320x568 phone', 
   assert.ok(r.swatches, 'swatches are tappable');
   assert.ok(r.goReachable, 'the Start button can be reached');
   assert.ok(r.input >= 16, 'the name field is 16px or more so iPhones do not zoom');
-  assert.match(r.note, /Room for 5 more/);
+  assert.match(r.note, /PC box \(0\)/);
 });

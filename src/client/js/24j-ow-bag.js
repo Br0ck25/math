@@ -28,31 +28,38 @@ function closeBag() { hideModal('bag-modal'); }
 // Opens the Shop or the Hub over the map; closing them brings the map back.
 function bagGo(where) {
   closeBag();
-  if (where === 'shop') openShop(); else { hubTab = 'care'; openHub(); }
+  if (where === 'shop') openShop(); else { hubTab = 'hold'; openHub(); }
 }
 
-// ----- the team -----
+// ----- the team and the PC box: six buddies fight, the rest wait in the box (Gold's PC) -----
+function padRow(id, action) {
+  const p = getPetById(id), mon = abPartyMon(id), hp = mon.hp, max = mon.max, resting = isSleepy(id);
+  return '<div class="care-row pad-row' + (resting ? ' resting' : '') + '"><span class="pad-icon">' + p.icon + '</span><div class="pad-main"><div class="t">' + escHtml(p.baseName) + ' · Lv ' + p.level + (resting ? ' · resting' : '') + '</div>' +
+    '<div class="pad-hp" role="img" aria-label="HP ' + hp + ' of ' + max + '"><i style="width:' + Math.round(100 * hp / Math.max(1, max)) + '%"></i></div><div class="d">HP ' + hp + '/' + max + '</div></div>' + action + '</div>';
+}
+function padBtn(label, fn, id) { return '<button type="button" class="claim-btn" onclick="' + fn + '(\'' + escHtml(id) + '\')">' + label + '</button>'; }
 function renderPad() {
   document.getElementById('pad-title').innerText = heroName() + "'s team";
-  const ids = getTeam();
-  document.getElementById('pad-body').innerHTML = ids.map(function (id) {
-    const p = getPetById(id), mon = abPartyMon(id), hp = mon.hp, max = mon.max, resting = isSleepy(id), lead = id === state.activePet;
-    const status = lead ? '<span class="pad-tag">Leading</span>' : resting ? '<span class="pad-tag rest">Resting</span>' : '<button type="button" class="claim-btn" onclick="padLead(\'' + escHtml(id) + '\')">Lead</button>';
-    return '<div class="care-row pad-row' + (resting ? ' resting' : '') + '"><span class="pad-icon">' + p.icon + '</span><div class="pad-main"><div class="t">' + escHtml(p.baseName) + ' · Lv ' + p.level + '</div>' +
-      '<div class="pad-hp" role="img" aria-label="HP ' + hp + ' of ' + max + '"><i style="width:' + Math.round(100 * hp / Math.max(1, max)) + '%"></i></div><div class="d">HP ' + hp + '/' + max + '</div></div>' + status + '</div>';
-  }).join('') + (ids.length < ECON.team.max ? '<div class="d pad-note">Room for ' + (ECON.team.max - ids.length) + ' more. Add buddies in the Hub.</div>' : '') +
-    '<div class="bag-actions"><button type="button" class="claim-btn" onclick="padGo()">Change team</button></div>' +
-    '<div class="d pad-note">The lead goes first in a battle.</div>';
+  const team = getTeam(), box = getOwnedIds().filter(function (id) { return team.indexOf(id) === -1; }).sort(function (a, b) { return getBuddyLevel(b) - getBuddyLevel(a); });
+  document.getElementById('pad-body').innerHTML = '<div class="pad-note d">Team (' + team.length + '/' + ECON.team.max + '): the lead goes first in a battle.</div>' +
+    team.map(function (id) { return padRow(id, id === state.activePet ? '<span class="pad-tag">Leading</span>' : (isSleepy(id) ? '' : padBtn('Lead', 'padLead', id)) + (team.length > 1 ? padBtn('Box', 'padDeposit', id) : '')); }).join('') +
+    '<div class="pad-note d">PC box (' + box.length + ')</div>' +
+    (box.map(function (id) { return padRow(id, padBtn('Team', 'padWithdraw', id)); }).join('') || '<div class="d pad-note">Empty. Buddies you catch beyond six wait here.</div>');
 }
 function openPad() { showModal('pad-modal', renderPad); }
 function closePad() { hideModal('pad-modal'); }
-function padLead(id) {
-  if (setLead(id)) saveState();
-  renderPad();
+function padRefresh() {
+  saveState(); renderPad();
   if (document.getElementById('overworld-modal').style.display === 'flex') renderOverworld();
 }
-function padGo() {
-  closePad();
-  hubTab = 'tour';
-  openHub();
+function padLead(id) { if (setLead(id)) padRefresh(); }
+function padDeposit(id) {
+  const t = getTeam();
+  if (id === state.activePet || t.length < 2) { soundWrong(); toast('The lead has to stay on the team. Choose another lead first.'); return; }
+  state.team = t.filter(function (x) { return x !== id; });
+  soundClick(); padRefresh();
+}
+function padWithdraw(id) {
+  if (joinTeamIfRoom(id)) { soundClick(); padRefresh(); return; }
+  openReplaceModal(id);                                                           // the team is full: pick who goes to the box
 }

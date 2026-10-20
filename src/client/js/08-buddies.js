@@ -214,4 +214,5 @@ function replaceTeamMember(oldId) {
   saveState();
   updateStatsUI();
   if (typeof rerenderShop === 'function' && document.getElementById('shop-modal').style.display === 'flex') rerenderShop();
+  if (document.getElementById('pad-modal').style.display === 'flex') padRefresh();
 }
