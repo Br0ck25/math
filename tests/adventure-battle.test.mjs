@@ -28,10 +28,11 @@ const ev = (fn, arg) => page.evaluate(fn, arg);
 test('stats grow with level and kind, and the moves follow the level', async () => {
   const r = await ev(() => {
     const a = abMon('dog', 5), b = abMon('dog', 50), c = abMon('fox', 50);
-    return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 5).moves.map((m) => m.id), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
+    return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 8).moves.map((m) => m.id), start: abMon('fox', 3).moves.map((m) => m.id), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
   });
   assert.ok(r.b[0] > r.a[0] * 3 && r.b[1] > r.a[1] * 3);
   assert.deepEqual(r.names5, ['tackle', 'fire1', 'quick']);
+  assert.deepEqual(r.start, ['tackle', 'fire1'], 'a new buddy knows two moves, as in Gold');
   assert.equal(r.names50.length, 4);
   assert.ok(r.dear > r.cheap);
 });

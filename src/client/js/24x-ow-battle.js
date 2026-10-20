@@ -201,11 +201,26 @@ function abStrike(att, def, mv, down, next) {
     abHit(att, def, mv, down, next);
   }, 0]]);
 }
+// The attack picture: the attacker lunges, a burst in the move's colour flies at the target and it shakes. Skipped when the player asks for less motion.
+function abFx(att, def, mv, hit) {
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const mine = ab.party.indexOf(att) !== -1, fid = function (me) { return document.getElementById(me ? 'ab-me-icon' : 'ab-foe-icon'); };
+  const a = fid(mine), d = fid(!mine), field = a.parentNode;
+  const play = function (el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function () { el.classList.remove(cls); }, 700); };
+  play(a, 'ab-lunge');
+  if (!hit) return;
+  const fx = document.createElement('div');
+  fx.className = 'ab-fx t-' + mv.type + (mine ? ' ab-fx-up' : ' ab-fx-down');
+  field.appendChild(fx);
+  setTimeout(function () { fx.remove(); }, 700);
+  play(d, 'ab-shake');
+}
 // One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
 function abHit(att, def, mv, down, next) {
-  if (Math.random() * 100 >= mv.acc) { abSteps([[att.name + "'s attack missed!", null, 900]]); next(); return; }
+  if (Math.random() * 100 >= mv.acc) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
+    abFx(att, def, mv, true);
     def.hp = Math.max(0, def.hp - r.dmg);
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
     abBerry(def);

@@ -983,10 +983,27 @@ body.trivia .math-only { display: none; }
 .ab-move.t-dark { border-color: #a78bfa; }
 .ab-move.t-magic { border-color: #f472b6; }
 .ab-move.t-normal { border-color: #94a3b8; }
-@media (max-height: 640px) {
-.ab-field { height: 180px; }
- 
-}
+/* the fight fills the screen: the field takes the spare height, the text and menu sit at the bottom */
+#ab-modal { padding: 0; align-items: stretch; justify-content: stretch; background: var(--bg-dark); }
+#ab-modal .ab-content { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto; padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); }
+#ab-modal .ab-field { flex: 1 0 200px; height: auto; }
+#ab-modal .ab-sprite { width: 28%; height: auto; aspect-ratio: 1; max-width: 160px; }
+#ab-modal .ab-foe-sprite { top: 14%; }
+#ab-modal .ab-me-sprite { bottom: 24%; }
+.ab-fx { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle, #fff 0 25%, var(--fx, #94a3b8) 60%, transparent 72%); opacity: 0; pointer-events: none; }
+.ab-fx-up { left: 24%; top: 62%; animation: abFlyUp 0.55s ease-in forwards; }
+.ab-fx-down { left: 72%; top: 28%; animation: abFlyDown 0.55s ease-in forwards; }
+.ab-fx.t-fire { --fx: #f97316; } .ab-fx.t-water { --fx: #38bdf8; } .ab-fx.t-nature { --fx: #22c55e; } .ab-fx.t-electric { --fx: #facc15; } .ab-fx.t-dark { --fx: #7c3aed; } .ab-fx.t-magic { --fx: #f472b6; }
+@keyframes abFlyUp { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(190%, -130%) scale(1.8); } }
+@keyframes abFlyDown { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(-190%, 130%) scale(1.8); } }
+.ab-foe-sprite.ab-lunge { animation: abLungeFoe 0.45s ease; }
+.ab-me-sprite.ab-lunge { animation: abLungeMe 0.45s ease; }
+@keyframes abLungeFoe { 50% { transform: translate(-30px, 18px); } }
+@keyframes abLungeMe { 50% { transform: scaleX(-1) translate(-30px, -18px); } }
+.ab-foe-sprite.ab-shake { animation: abShakeFoe 0.5s 0.25s ease; }
+.ab-me-sprite.ab-shake { animation: abShakeMe 0.5s 0.25s ease; }
+@keyframes abShakeFoe { 20%, 60% { transform: translateX(-8px); filter: brightness(2); } 40%, 80% { transform: translateX(8px); } }
+@keyframes abShakeMe { 20%, 60% { transform: scaleX(-1) translateX(-8px); filter: brightness(2); } 40%, 80% { transform: scaleX(-1) translateX(8px); } }
 /* the game lives on the Adventure map: the old Practice screen is no longer shown */
 .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .menu-grid .ab-btn { min-height: 52px; }

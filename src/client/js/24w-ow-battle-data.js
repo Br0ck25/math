@@ -15,7 +15,7 @@ const AB_MOVE_NAMES = {
 };
 const AB_NORMAL = [
   { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, acc: 100, pp: 35, level: 1 },
-  { id: 'quick', name: 'Quick Dash', type: 'normal', power: 40, acc: 100, pp: 30, level: 5, pri: 1 },       // moves first
+  { id: 'quick', name: 'Quick Dash', type: 'normal', power: 40, acc: 100, pp: 30, level: 8, pri: 1 },       // moves first
   { id: 'slam', name: 'Body Slam', type: 'normal', power: 80, acc: 85, pp: 15, level: 20 }
 ];
 // With every PP spent a buddy can still Struggle (it hurts itself a little).

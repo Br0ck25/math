@@ -22,6 +22,17 @@ const ev = (fn, arg) => page.evaluate(fn, arg);
 const menu = () => page.waitForFunction(() => ab && !ab.busy && ab.phase === 'menu', null, { timeout: 20000 });
 const begin = async () => { await ev(() => { openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 12 }] }); }); await menu(); };
 
+test('the battle fills the whole screen and an attack plays a picture on the target', async () => {
+  await begin();
+  const r = await ev(() => {
+    const c = document.querySelector('#ab-modal .ab-content').getBoundingClientRect();
+    abFx(abMe(), abFoe(), { type: 'fire' }, true);
+    return { w: c.width, h: c.height, fx: !!document.querySelector('#ab-modal .ab-fx.t-fire'), shake: document.getElementById('ab-foe-icon').classList.contains('ab-shake') };
+  });
+  assert.deepEqual([r.w, r.h], [390, 780]);
+  assert.ok(r.fx && r.shake);
+});
+
 test('a Berry heals 10 HP when health drops to half or less, and is used up', async () => {
   await ev(() => { state.heldOwned = ['berry']; state.held = { [state.activePet]: 'berry' }; });
   await begin();
