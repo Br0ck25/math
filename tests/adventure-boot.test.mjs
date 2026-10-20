@@ -29,8 +29,7 @@ test('a returning player opens straight on the map, with no welcome window in th
   await page.reload();
   await page.waitForFunction(() => document.getElementById('overworld-modal').style.display === 'flex');
   assert.equal(await shown(page, 'hero-modal'), false);
-  assert.equal(await shown(page, 'welcome-modal'), false);
-  assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('.game-container')).display), 'none');
+  assert.equal(await page.evaluate(() => document.querySelector('.game-container')), null, 'the old Practice screen is gone');
   assert.deepEqual(errors, []);
 });
 

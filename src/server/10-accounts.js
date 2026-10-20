@@ -1,15 +1,13 @@
 // =====================================================================
 //  OPTIONAL ACCOUNTS  (needs a KV namespace bound as MATH_KV; without it the
 //  game works exactly as before and the Account section explains it is off)
-//  Players and parents are separate kinds of account: the same code runs for both, with
-//  different key prefixes (KID_NS / PARENT_NS), so a parent's token can never act as a player.
+//  Accounts keep a player's save in the cloud; sign-in codes and passwords are separate per account.
 // =====================================================================
 const PBKDF2_ITERS = 100000;          // Workers' maximum; stored per account so it can be changed later
 const SESSION_TTL = 60 * 60 * 24 * 30; // stay signed in for 30 days
 const MAX_SAVE_BYTES = ECON.save.hardLimitBytes;
 const NAME_RE = /^[a-z0-9_-]{3,20}$/;
 const KID_NS = { acct: 'acct:', sess: 'sess:', fail: 'fail:', noun: 'player name' };
-const PARENT_NS = { acct: 'pacct:', sess: 'psess:', fail: 'pfail:', noun: 'parent name' };
 
 function rand(n) { const a = new Uint8Array(n); crypto.getRandomValues(a); return a; }
 function toB64(buf) {
@@ -60,11 +58,6 @@ async function authenticate(request, kv, ns) {
   if (!m) return null;
   const rec = await kv.get((ns || KID_NS).sess + await sha256Hex(m[1]), 'json');
   if (!rec || !rec.name) return null;
-  if (ns === PARENT_NS) {
-    // a deleted parent's sign-ins on other devices must not carry over to a new account that reuses the name
-    const a = await kv.get(ns.acct + rec.name, 'json');
-    if (!a || a.created > rec.at) return null;
-  }
   return { name: rec.name, tokenHash: await sha256Hex(m[1]) };
 }
 async function checkPassword(kv, name, password, ns) {

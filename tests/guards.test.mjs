@@ -7,7 +7,7 @@ import { assemble } from '../scripts/build.mjs';
 const { js, serverJs } = assemble();
 
 test('functions an earlier regex refactor deleted still exist, and every page handler has a function', () => {
-  ['hubStep', 'setDuelsOnline'].forEach((fn) => assert.match(js, new RegExp('function\\s+' + fn + '\\b'), fn + ' is missing'));
+  ['hubStep'].forEach((fn) => assert.match(js, new RegExp('function\\s+' + fn + '\\b'), fn + ' is missing'));
   const html = fs.readFileSync('src/client/index.html', 'utf8');
   const called = [...html.matchAll(/\son(?:click|change|input|submit)="\s*([A-Za-z_]\w*)\(/g)].map((m) => m[1]);
   called.forEach((n) => assert.match(js, new RegExp('function\\s+' + n + '\\b'), 'index.html calls ' + n + '()'));

@@ -11,8 +11,8 @@ after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
 const OPEN = {
-  'shop-modal': 'openShop', 'settings-modal': 'openSettings', 'book-modal': 'openBook', 'parent-modal': 'openParent',
-  'quest-modal': 'openQuests', 'cal-modal': 'openCal', 'hub-modal': 'openHub', 'report-modal': 'openReportModal', 'reset-modal': 'openResetModal'
+  'shop-modal': 'openShop', 'settings-modal': 'openSettings', 'book-modal': 'openBook',
+  'quest-modal': 'openQuests', 'hub-modal': 'openHub', 'reset-modal': 'openResetModal'
 };
 
 test('every window that has a close action has a ✕ button, 44px, named, and it really closes the window', async () => {
@@ -32,26 +32,6 @@ test('every window that has a close action has a ✕ button, 44px, named, and it
       if (x.getAttribute('aria-label') !== 'Close') out.push(id + ': ✕ has no name');
       x.click();
       if (m.style.display !== 'none') out.push(id + ': ✕ did not close it');
-    });
-    return out;
-  }, OPEN);
-  assert.deepEqual(r, []);
-});
-
-test('the ✕ stays in the top-right corner when the window is scrolled to the very bottom', async () => {
-  const r = await inPage((open) => {
-    const out = [];
-    state.unlockedPets = ['dog', 'fox'];
-    ['shop-modal', 'settings-modal', 'book-modal', 'parent-modal', 'hub-modal'].forEach((id) => {
-      window[open[id]]();
-      const m = document.getElementById(id), box = m.querySelector('.modal-content'), x = m.querySelector('.modal-x');
-      box.scrollTop = box.scrollHeight;
-      const rb = box.getBoundingClientRect(), rx = x.getBoundingClientRect();
-      const tall = box.scrollHeight > box.clientHeight + 50;
-      if (rx.top < rb.top + 1 || rx.top - rb.top > 24) out.push(id + ': ✕ is ' + Math.round(rx.top - rb.top) + 'px from the top after scrolling (tall: ' + tall + ')');
-      if (rb.right - rx.right < 1 || rb.right - rx.right > 24) out.push(id + ': ✕ is not at the right edge');
-      if (rx.bottom > window.innerHeight || rx.top < 0) out.push(id + ': ✕ is off screen');
-      m.style.display = 'none';
     });
     return out;
   }, OPEN);
@@ -92,52 +72,5 @@ test('windows are never taller than the visible screen (iPhone toolbars included
   assert.deepEqual(r, []);
 });
 
-test('with wide iPhone letters, windows stay inside the screen (book tabs too) and the arena never clips the equation', async () => {
-  const r = [];
-  for (const [w, h] of [[375, 667], [375, 548], [320, 568]]) {
-    await page.setViewportSize({ width: w, height: h });
-    await page.addStyleTag({ content: '* { letter-spacing: 0.05em !important; }' });
-    const out = await inPage(({ open, w, h }) => {
-      const o = [];
-      state.unlockedPets = ['dog', 'fox'];
-      ['shop-modal', 'settings-modal', 'book-modal', 'parent-modal', 'hub-modal'].forEach((id) => {
-        window[open[id]]();
-        if (id === 'book-modal') ['boss', 'gear', 'buddy'].forEach((t) => { if (window.setBookTab) window.setBookTab(t); });
-        const m = document.getElementById(id), b = m.querySelector('.modal-content').getBoundingClientRect(), x = m.querySelector('.modal-x').getBoundingClientRect();
-        if (b.left < -0.5 || b.right > w + 0.5) o.push(w + 'x' + h + ' ' + id + ' box ' + Math.round(b.left) + '..' + Math.round(b.right));
-        if (x.right > w + 0.5 || x.left < 0) o.push(w + 'x' + h + ' ' + id + ' ✕ off screen');
-        m.querySelector('.modal-x').click();
-      });
-      state.enabledOps = ['add', 'sub'];
-      for (let i = 0; i < 40; i++) { generateProblem(); if (currentProblem.layout === 'vertical') break; }
-      document.getElementById('feedback-msg').innerText = 'Challenge problem: +50% XP if you get it! 💪';
-      document.getElementById('hint-box').innerText = '📘 How to: Start with the ones column: add 4 and 8.';
-      const a = document.querySelector('.arena'), ab = document.getElementById('answer-box');
-      if (a.scrollHeight > a.clientHeight + 1) o.push(w + 'x' + h + ' arena clips: ' + a.scrollHeight + ' > ' + a.clientHeight);
-      if (ab && ab.getBoundingClientRect().bottom > a.getBoundingClientRect().bottom + 1) o.push(w + 'x' + h + ' answer box hidden');
-      return o;
-    }, { open: OPEN, w, h });
-    r.push(...out);
-  }
-  await page.setViewportSize({ width: 375, height: 667 });
-  assert.deepEqual(r, []);
-});
-
 test('no errors', () => { assert.deepEqual(errors, []); });
 
-test('long multiple-choice answers (study vault) wrap inside the window instead of running off screen', async () => {
-  const r = await inPage(() => {
-    const m = document.getElementById('vault-modal'), box = document.getElementById('vault-options');
-    m.style.display = 'flex';
-    fillOptButtons(box, ['Spatial Geography', 'Human Geography', 'Geomorphology'], function () {});
-    const w = window.innerWidth, out = [];
-    box.querySelectorAll('button').forEach((b) => {
-      const r = b.getBoundingClientRect();
-      if (r.left < 0 || r.right > w) out.push(b.innerText + ' off screen');
-    });
-    if (box.scrollWidth > box.clientWidth) out.push('options scroll sideways');
-    m.style.display = 'none';
-    return out;
-  });
-  assert.deepEqual(r, []);
-});

@@ -287,10 +287,6 @@ MATH_OPS.forEach(function (o) { OP_BY_ID[o.id] = o; });
 function opGrade(op) { return Math.max(state.grade, op.minGrade); }
 
 function getActiveOps() {
-  if (opsLocked()) {                       // a parent chose exactly which types are asked, at any grade
-    const chosen = parentCtl.ops.filter(function (id) { return OP_BY_ID[id]; });
-    if (chosen.length) return chosen;
-  }
   const g = state.grade;
   const usable = function (id) { return OP_BY_ID[id] && OP_BY_ID[id].minGrade <= g; };
   let ops = (state.enabledOps || []).filter(usable);
@@ -335,12 +331,5 @@ function fillOptButtons(box, opts, onPick) {
   });
 }
 
-let currentProblem = { layout: 'inline', expr: '', answer: 0, modeTag: 'add' };
-let userInput = '';
 let questionStartTime = Date.now();
-let lastOpId = null;
 let inputLocked = false;
-
-let lastSig = '';
-function sigOf(p) { return (p.expr || (p.num1 + p.operator + p.num2)) + '|' + p.answer; }
-

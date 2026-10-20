@@ -23,7 +23,7 @@ function abGymRounds(id, rematch) {
   for (let s = 0; s < ECON.map.trainers; s++) rounds.push({ kind: 'trainer', name: gymTrainer(id, s), foes: abTeamOf(r.element, s === ECON.map.trainers - 1 ? 2 : 1, base + s) });
   const boss = abBossIndex(r.element), lvl = base + 2;
   markBossSeen(boss);
-  rounds.push({ kind: 'leader', name: monstersList[boss].name, foes: [{ boss: boss, level: lvl + 1 }].concat(abTeamOf(r.element, 2, lvl)) });
+  rounds.push({ kind: 'leader', bossIdx: boss, bossLevel: lvl + 1, name: monstersList[boss].name, foes: [{ boss: boss, level: lvl + 1 }].concat(abTeamOf(r.element, 2, lvl)) });
   return rounds;
 }
 // The gym door was opened (owEnterGym): a fresh chain, a badge at the end.
@@ -51,7 +51,7 @@ function abGymWon(id, rematch) {
 function abStartBoss(npc) {
   const lvl = abWildLevel() + 2, boss = abBossIndex(npc.boss);
   markBossSeen(boss);
-  abStart({ kind: 'leader', name: monstersList[boss].name, npc: npc, foes: [{ boss: boss, level: lvl + 1 }].concat(abTeamOf(npc.boss, 2, lvl)) });
+  abStart({ rounds: [{ kind: 'leader', bossIdx: boss, bossLevel: lvl + 1, name: monstersList[boss].name, npc: npc, foes: [{ boss: boss, level: lvl + 1 }].concat(abTeamOf(npc.boss, 2, lvl)) }] });
 }
 
 // ----- the Hall: the Elite Four, then Nova -----

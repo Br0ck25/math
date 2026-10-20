@@ -74,8 +74,6 @@ function getPetById(id) {
     ultra: !!sp.ultra
   };
 }
-function getActivePetDisplay() { return getPetById(state.activePet); }
-
 function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
 function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
@@ -84,8 +82,6 @@ function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.s
 function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage) + evoBonus(p.path).atk; }
 
 function getPetHp(id) { return partyHp[id] === undefined ? getPetMaxHp(id) : Math.min(partyHp[id], getPetMaxHp(id)); }
-function setPetHp(id, v) { partyHp[id] = Math.max(0, v); }
-
 function getOwnedIds() { return state.unlockedPets.concat(state.unlockedSecrets); }
 function getBestLevel() {
   let best = 1;
@@ -126,8 +122,7 @@ function awardBuddyXp(amount, id) {
     partyHp[id] = Math.min(newMax, curHp + (newMax - oldMax));
     soundLevelUp();
     launchConfetti('level');
-    const learned = movesBetween(before.level, after.level, after);
-    toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!' + (learned.length ? ' ✨ Learned ' + learned.map(function (m) { return moveName(m, after); }).join(', ') + '!' : ''));
+    toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!');
     checkRegionUnlocks();
     if (after.stage > before.stage) {
       state.gems += ECON.evolveGems;
@@ -154,11 +149,9 @@ function renderEvoModal() {
   const before = evoShown.before, after = getPetById(evoShown.id), first = before.stage === 0 && !!after.path;
   document.getElementById('evo-to').innerHTML = avatarHtml(after, 72);
   document.getElementById('evo-text').innerText = before.name + ' evolved into ' + after.name + '!  (+25 💎)' + (first && after.radiant ? ' ✨ Your close bond made it Radiant: +' + ECON.evo.radiantHp + ' HP and +' + ECON.evo.radiantAtk + ' attack for good!' : '');
-  const learned = movesBetween(before.level, after.level, after);
   document.getElementById('evo-stats').innerText =
     'Lv ' + before.level + ' ➜ ' + after.level + '  •  ❤️ HP ' + petHpAt(before.level, before.stage) + ' ➜ ' + getPetMaxHp(after.id) +
-    '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove +
-    (learned.length ? '  •  ✨ New move: ' + learned.map(function (m) { return moveName(m, after); }).join(', ') : '');
+    '  •  ⚔️ ATK ' + petAttackAt(before.level, before.stage) + ' ➜ ' + getPetAttack(after.id) + '  •  Ult: ' + after.superMove ;
   const box = document.getElementById('evo-paths');
   box.style.display = first && !after.radiant ? '' : 'none';                 // a bonded buddy is Radiant; the others choose
   ['guardian', 'striker'].forEach(function (k) {

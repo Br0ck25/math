@@ -10,10 +10,10 @@ function easyScore(p) {
   const plain = (p.expr || (p.num1 + ' ' + p.num2)).replace(/<[^>]+>/g, '');
   return plain.length + String(Math.abs(p.answer)).length * 2;
 }
-// A gentler problem: one grade down (never below the type's own grade, or the lowest level a parent allows) and the simplest of five tries.
+// A gentler problem: one grade down (never below the type's own grade) and the simplest of five tries.
 function genEasy(id) {
   const op = OP_BY_ID[id];
-  const g = Math.max(op.minGrade, state.grade - 1, ctlFloor());
+  const g = Math.max(op.minGrade, state.grade - 1);
   let best = null;
   for (let i = 0; i < 5; i++) {
     const c = op.gen(g);
@@ -25,14 +25,11 @@ function genChallenge(id) { return OP_BY_ID[id].gen(Math.max(OP_BY_ID[id].minGra
 
 function opTier(op) { return state.adapt.on ? (state.adapt.tier[op] || 0) : 0; }
 function canChallenge() { return state.grade < GRADES.length - 1; }
-const TIER_NAMES = { '-1': 'Easier', '0': 'Normal', '1': 'Challenge' };
-
 // Share of recent tries answered correctly for a type, or null while there is too little to judge.
 function recentAccuracy(op) {
   const r = state.adapt.recent[op] || '';
   if (r.length >= 5) return r.replace(/0/g, '').length / r.length;
-  const w = sumDays(lastDayKeys(14)).byOp[op];
-  return w && w[0] >= 5 ? w[1] / w[0] : null;
+  return null;
 }
 
 // Records one answer and moves the type's level when the recent record says so. Returns the change (-1, 0 or +1).
@@ -61,20 +58,6 @@ function challengeBudgetLeft() {
   return (state.adapt.served.match(/c/g) || []).length < ECON.adaptive.maxChallengeServed;
 }
 
-// A parent's "extra practice" (+N% of all problems for a type): that type gains N points of share and the others give them up evenly.
-function applyBoost(ops, p) {
-  const b = parentCtl && parentCtl.boost;
-  if (!b) return p;
-  let q = p.slice();
-  ops.forEach(function (op, i) {
-    const extra = (b[op] || 0) / 100;
-    if (!extra || q[i] >= 1) return;
-    const rest = 1 - q[i], add = Math.min(extra, rest - 1e-6);
-    q = q.map(function (x, j) { return j === i ? x + add : x * (rest - add) / rest; });
-  });
-  return q;
-}
-
 // Weights for picking the next math type: weaker types get more, the boss weak point gets its share, nobody exceeds the cap.
 function typeShares(ops, weakOp) {
   const E = ECON.adaptive;
@@ -87,7 +70,7 @@ function typeShares(ops, weakOp) {
   if (wi >= 0 && ops.length > 1 && w[wi] / sum(w) < E.bossWeakShare) {     // lift the boss weak point to its share, never lower it
     w[wi] = (sum(w) - w[wi]) * E.bossWeakShare / (1 - E.bossWeakShare);
   }
-  let p = applyBoost(ops, w.map(function (x) { return x / sum(w); }));
+  let p = w.map(function (x) { return x / sum(w); });
   const cap = Math.max(E.maxTypeShare, 1 / ops.length);
   for (let pass = 0; pass < 4; pass++) {          // clip anything over the cap and share the excess among the rest
     const over = p.filter(function (x) { return x > cap + 1e-9; }).length;
@@ -109,7 +92,7 @@ function pickNextProblem(lastOp) {
   if (queued.length) id = queued[0];
   else {
     const pool = ops.length > 1 ? ops.filter(function (o) { return o !== lastOp; }) : ops;
-    const shares = typeShares(pool, getWeakOp());
+    const shares = typeShares(pool, null);
     let roll = Math.random();
     id = pool[pool.length - 1];
     for (let i = 0; i < pool.length; i++) { roll -= shares[i]; if (roll < 0) { id = pool[i]; break; } }
@@ -120,4 +103,21 @@ function pickNextProblem(lastOp) {
   else if (opTier(id) < 0) kind = 'easier';
   else if (opTier(id) > 0 && canChallenge() && challengeBudgetLeft()) kind = 'challenge';
   return { op: id, kind: kind, make: function () { return kind === 'warmup' || kind === 'easier' ? genEasy(id) : kind === 'challenge' ? genChallenge(id) : OP_BY_ID[id].gen(opGrade(OP_BY_ID[id])); } };
+}
+
+// ----- boss weak points: one math type hits this boss extra hard -----
+const ELEM_WEAK_OPS = {
+  fire: ['mul', 'pow', 'pct'],
+  water: ['sub', 'div', 'frac'],
+  nature: ['add', 'mean', 'order'],
+  electric: ['mul', 'div', 'sqrt', 'alg'],
+  dark: ['sub', 'neg', 'log'],
+  magic: ['alg', 'order', 'frac', 'quad', 'limit']
+};
+function weakOpForBoss(idx) {
+  const ops = getActiveOps();
+  if (ops.length < 2 || idx < 0 || !monstersList[idx]) return null;
+  const pref = (ELEM_WEAK_OPS[monstersList[idx].element] || []).filter(function (o) { return ops.indexOf(o) !== -1; });
+  const pool = pref.length ? pref : ops;
+  return pool[idx % pool.length];
 }

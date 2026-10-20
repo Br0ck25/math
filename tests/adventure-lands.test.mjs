@@ -88,7 +88,7 @@ test('every road barrier opens with the badge before it, or any later badge, and
   assert.match(hint.text, /Sunny Meadow Badge/);
 });
 
-test('with the Meadow Badge the road north opens, Route 2 makes the grass fiery, and the Practice Map says you are in Ember Hills', async () => {
+test('with the Meadow Badge the road north opens, and Route 2 makes the grass fiery', async () => {
   await put('meadow', 7, 1, 'up');
   const r = await page.evaluate(() => {
     state.badges = ['meadow']; renderOverworld();
@@ -96,12 +96,10 @@ test('with the Meadow Badge the road north opens, Route 2 makes the grass fiery,
     const gate = [state.overworld.map, state.overworld.x, state.overworld.y, state.region];
     const real = Math.random; let fire = 0; Math.random = real;
     for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'fire') fire++;
-    openMap(); const here = document.querySelector('#map-body .map-row.here').innerText; closeMap();
-    return { gate, fire, here, visited: state.regionsVisited.slice() };
+    return { gate, fire, visited: state.regionsVisited.slice() };
   });
   assert.deepEqual(r.gate, ['route2', 6, 22, 'ember']);
   assert.ok(r.fire > 40, 'mostly fire buddies in the grass: ' + r.fire + ' of 80');
-  assert.match(r.here, /Ember Hills/);
   assert.ok(r.visited.includes('ember'));
 });
 

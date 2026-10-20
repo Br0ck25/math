@@ -37,10 +37,6 @@ function ranchAccrue() {
   if (r.at > 0) ranchAdd(clamp((now - r.at) / 1000, 0, ECON.ranch.capHours * 3600));
   r.at = now;
 }
-// A correct answer: every worker does a little work.
-function ranchCheer() {
-  if (ranchWorkers().length) ranchAdd(ECON.ranch.answerSec);
-}
 function ranchHas(good) { return Math.floor(state.ranch.stock[good] || 0); }
 function ranchGive(good, n) { state.ranch.stock[good] = Math.min(ECON.ranch.stockCap, (state.ranch.stock[good] || 0) + n); }
 function ranchStarted() { return Object.keys(state.ranch.workers).length > 0 || RANCH_STATIONS.some(function (s) { return ranchHas(s.id) > 0; }); }
@@ -91,12 +87,12 @@ function feedHoney() {
   saveState();
   renderHub();
 }
-// Parts brew a Super Potion: full HP for your buddy and everyone who fainted wakes up.
+// Parts brew a Potion for battles.
 function craftPotion() {
-  if (ranchHas('parts') < ECON.ranch.partsPerPotion) { soundWrong(); return; }
-  if (potionUseless()) { soundWrong(); toast('Your buddies are already at full HP!'); return; }
+  if (ranchHas('parts') < ECON.ranch.partsPerPotion || state.potions >= 99) { soundWrong(); return; }
   state.ranch.stock.parts -= ECON.ranch.partsPerPotion;
-  applyPotion();
+  state.potions += 1;
+  showPopup('Potion! (' + state.potions + ')');
   saveState();
   updateStatsUI();
   renderHub();
@@ -133,8 +129,8 @@ function renderRanchTab() {
   const sleepyPet = isSleepy(id);
   h += '<div class="care-row"><div><div class="t">🍯 Honey treat for ' + escHtml(d.baseName) + '</div><div class="d">' + ECON.ranch.honeyPerFeed + ' 🍯 · +' + ECON.ranch.honeyXp + ' Buddy XP' + (sleepyPet ? ' · resting right now' : '') + '</div></div>' +
     '<button class="claim-btn" ' + (sleepyPet || ranchHas('honey') < ECON.ranch.honeyPerFeed ? 'disabled' : '') + ' onclick="feedHoney()">Feed</button></div>' +
-    '<div class="care-row"><div><div class="t">💖 Brew a Super Potion</div><div class="d">' + ECON.ranch.partsPerPotion + ' 🔧 parts · full HP and wakes up everyone who fainted</div></div>' +
-    '<button class="claim-btn" ' + (potionUseless() || ranchHas('parts') < ECON.ranch.partsPerPotion ? 'disabled' : '') + ' onclick="craftPotion()">Brew</button></div>';
+    '<div class="care-row"><div><div class="t">💖 Brew a Potion</div><div class="d">' + ECON.ranch.partsPerPotion + ' 🔧 parts · heals ' + ECON.overworld.potionHeal + ' HP in a battle (you have ' + state.potions + ')</div></div>' +
+    '<button class="claim-btn" ' + (state.potions >= 99 || ranchHas('parts') < ECON.ranch.partsPerPotion ? 'disabled' : '') + ' onclick="craftPotion()">Brew</button></div>';
   working.forEach(function (w) {
     const st = ranchStation(r.workers[w]), b = getPetById(w);
     h += '<div class="care-row"><div><div class="t">' + st.icon + ' ' + escHtml(b.baseName) + ' · ' + st.name + '</div><div class="d">' + Math.round(ranchRate(w) * 10) / 10 + ' ' + st.good.toLowerCase() + ' an hour' + (ranchRate(w) > ECON.ranch.perHour ? ' (loves this work!)' : '') + '</div></div>' +

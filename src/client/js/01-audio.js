@@ -44,31 +44,11 @@ function soundTackle() {
   setTimeout(() => playTone(110, 0.12, 'square'), 70);
 }
 
-function soundHitSlash() {
-  if (isMuted) return;
-  initAudio();
-  playTone(550, 0.06, 'triangle');
-  setTimeout(() => playTone(300, 0.1, 'sawtooth'), 50);
-  setTimeout(() => playTone(150, 0.14, 'square'), 110);
-}
-
 function soundCoinChirp() {
   if (isMuted) return;
   initAudio();
   playTone(987.77, 0.05, 'triangle');
   setTimeout(() => playTone(1318.51, 0.12, 'triangle'), 40);
-}
-
-function soundSuperMove() {
-  const notes = [220, 330, 440, 550, 660, 880];
-  notes.forEach((freq, idx) => {
-    setTimeout(() => playTone(freq, 0.15, 'sawtooth'), idx * 50);
-  });
-}
-
-function soundShieldBreak() {
-  playTone(600, 0.1, 'sine');
-  setTimeout(() => playTone(400, 0.2, 'triangle'), 80);
 }
 
 // The little "ding-ding-dong" climbs a semitone for every answer in the combo (up to an octave), so a streak sounds like it is building.

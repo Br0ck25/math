@@ -106,7 +106,7 @@ test('a Trader swaps one spare for a buddy you do not have, once', async () => {
   assert.deepEqual(await choices(), []);               // already traded
 });
 
-test('the Day Care keeper opens the Ranch and the Tutor sets up an optional move', async () => {
+test('the Day Care keeper opens the Ranch and the Tutor teaches a move that was forgotten', async () => {
   await meet('tide-house', 2, 2);
   await page.evaluate(() => talkChoose(0));
   assert.equal(await page.evaluate(() => hubTab), 'ranch');
@@ -116,8 +116,12 @@ test('the Day Care keeper opens the Ranch and the Tutor sets up an optional move
   await meet('grove-house', 2, 2);
   const labels = await choices();
   assert.ok(labels.length >= 1);
+  const before = await page.evaluate(() => abPartyMon(state.activePet).moves.map((m) => m.id));
   await page.evaluate(() => talkChoose(0));
-  assert.ok(await page.evaluate(() => { const p = getActivePetDisplay(); return equippedMoves(p).some((m) => m.optional); }));
+  await page.evaluate(() => talkChoose(0));
+  const after = await page.evaluate(() => abPartyMon(state.activePet).moves.map((m) => m.id));
+  assert.notDeepEqual(after, before);
+  assert.equal(after.length, 4);
   assert.deepEqual(errors, []);
 });
 

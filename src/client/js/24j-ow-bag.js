@@ -37,18 +37,18 @@ function renderPad() {
   document.getElementById('pad-title').innerText = heroName() + "'s team";
   const ids = getTeam();
   document.getElementById('pad-body').innerHTML = ids.map(function (id) {
-    const p = getPetById(id), hp = getPetHp(id), max = getPetMaxHp(id), resting = state.faintedPets.indexOf(id) !== -1, lead = id === state.activePet;
+    const p = getPetById(id), mon = abPartyMon(id), hp = mon.hp, max = mon.max, resting = isSleepy(id), lead = id === state.activePet;
     const status = lead ? '<span class="pad-tag">Leading</span>' : resting ? '<span class="pad-tag rest">Resting</span>' : '<button type="button" class="claim-btn" onclick="padLead(\'' + escHtml(id) + '\')">Lead</button>';
     return '<div class="care-row pad-row' + (resting ? ' resting' : '') + '"><span class="pad-icon">' + p.icon + '</span><div class="pad-main"><div class="t">' + escHtml(p.baseName) + ' · Lv ' + p.level + '</div>' +
       '<div class="pad-hp" role="img" aria-label="HP ' + hp + ' of ' + max + '"><i style="width:' + Math.round(100 * hp / Math.max(1, max)) + '%"></i></div><div class="d">HP ' + hp + '/' + max + '</div></div>' + status + '</div>';
-  }).join('') + (ids.length < 3 ? '<div class="d pad-note">Room for ' + (3 - ids.length) + ' more. Add buddies in the Hub.</div>' : '') +
+  }).join('') + (ids.length < ECON.team.max ? '<div class="d pad-note">Room for ' + (ECON.team.max - ids.length) + ' more. Add buddies in the Hub.</div>' : '') +
     '<div class="bag-actions"><button type="button" class="claim-btn" onclick="padGo()">Change team</button></div>' +
-    '<div class="d pad-note">Changing the lead uses the free swap of a battle.</div>';
+    '<div class="d pad-note">The lead goes first in a battle.</div>';
 }
 function openPad() { showModal('pad-modal', renderPad); }
 function closePad() { hideModal('pad-modal'); }
 function padLead(id) {
-  swapBuddy(id);
+  if (setLead(id)) saveState();
   renderPad();
   if (document.getElementById('overworld-modal').style.display === 'flex') renderOverworld();
 }

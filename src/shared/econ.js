@@ -56,7 +56,7 @@ const ECON = {
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
     netBonus: 1.5, potionHeal: 40, eggEvery: 25, eggPerDay: 8,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
-    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'shield', badges: 1 }, { type: 'clover', badges: 2 }, { type: 'candy', badges: 3 }, { type: 'ult', badges: 4 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
+    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'candy', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
@@ -108,7 +108,7 @@ const ECON = {
   sessionGoal: { start: 25, step: 25, rewardDiv: 2, rewardBase: 12, maxReward: 50 },
   hint: { cost: 1 },
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
-  items: { shield: 100, potion: 20, clover: 25, net: 30, whistle: 45, ult: 33 },
+  items: { potion: 20, net: 30 },
   milestoneGems: { 5: 2, 10: 5, 25: 15 },
   quest: {
     chest: 35, solveBase: 10, opBase: 15, opPer: 2,

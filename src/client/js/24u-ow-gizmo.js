@@ -16,6 +16,24 @@ const GIZMO_CALLS = [
   { from: 'Champion Nova', text: 'I hear you are a Champion now. Come back to the Hall any time for a friendly rematch.', when: function () { return isChampion(); } }
 ];
 
+// A math tip a day.
+const GIZMO_TIPS = {
+  frac: 'Divide the number by the bottom of the fraction first, then multiply by the top.',
+  mean: 'Add all the numbers up, then divide by how many numbers there are.',
+  pow: 'The small number tells you how many times to multiply the big number by itself.',
+  sqrt: 'Which number times itself gives this number?',
+  order: 'Do brackets first, then × and ÷, and last + and −.',
+  pct: 'Find 10% by moving the decimal one place, then build up from there.',
+  dec: 'Line up the decimal points before you add or subtract.',
+  neg: 'Same signs: add and keep the sign. Different signs: subtract and keep the sign of the bigger number.',
+  alg: 'Do the opposite to both sides to get x alone.',
+  log: 'Ask: what power of the small number gives the number in brackets?',
+  quad: 'Find two numbers that multiply to the last number and add to the middle number.',
+  deriv: 'Bring each power down in front and make the power one smaller.',
+  integral: 'Raise each power by one, divide by the new power, then plug in the top number.',
+  limit: 'Try factoring the top, or look at the biggest powers.'
+};
+
 function openGizmo() { showModal('gizmo-modal', renderGizmo); }
 function closeGizmo() { hideModal('gizmo-modal'); }
 function gizmoSetTab(t) { soundClick(); gizmoTab = t; renderGizmo(); }
@@ -74,7 +92,7 @@ function gizmoCallsHtml() {
 }
 
 function gizmoTipsHtml() {
-  const tips = Object.keys(HINT_TIPS).map(function (k) { return HINT_TIPS[k]; });
+  const tips = Object.keys(GIZMO_TIPS).map(function (k) { return GIZMO_TIPS[k]; });
   const text = tips[(dayHash('tip' + dayKey()) + gizmoTip) % tips.length];
   return '<div class="gizmo-row"><div>' + escHtml(text) + '</div></div><button type="button" class="claim-btn" onclick="gizmoTip += 1; soundClick(); renderGizmo()">Another tip</button>';
 }

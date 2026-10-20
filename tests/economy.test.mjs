@@ -36,12 +36,6 @@ test('economy numbers are sane', () => {
   assert.ok(chests.includes(ECON.calendar.length), 'the last day of the calendar has a chest');
 });
 
-test('a streak shield is expensive enough to be a real decision, yet reachable within a day of play', () => {
-  assert.equal(ECON.items.shield, 100);
-  assert.ok(ECON.items.shield > simulate(PROFILES.quick).total / 4, 'dearer than a quarter of a short session');
-  assert.ok(ECON.items.shield < typical.total / 3, 'under a third of a typical day');
-});
-
 test('the long game: a typical player has goals for months, and a buddy takes weeks (not days, not years) to reach the top', () => {
   const g = longGame(PROFILES.typical);
   assert.ok(g.buddyDays > 60 && g.buddyDays < 200, 'buying every buddy takes ' + Math.round(g.buddyDays) + ' days');

@@ -33,12 +33,12 @@ const OW_SERVICES = {
       choices: [{ label: 'Visit the Ranch', run: function () { closeTalk(); hubTab = 'ranch'; openHub(); } }] });
   },
   tutor: function (npc) {
-    const pet = getActivePetDisplay(), art = heroSprite(heroLookColors(npc.look), 'down', 0);
-    const known = movesLearned(pet.level, pet).filter(function (m) { return m.optional; });
-    const lines = ['Buddies learn special moves as they grow. A buddy takes ' + ECON.moves.slots + ' moves into battle, and I can set one up for you.'];
-    if (!known.length) { openTalk({ name: npc.name, art: art, lines: lines.concat([pet.name + ' has no extra moves to set up yet. Keep levelling up!']) }); return; }
-    openTalk({ name: npc.name, art: art, lines: lines.concat(['Which move should ' + pet.name + ' take into battle?']),
-      choices: known.map(function (m) { return { label: moveName(m, pet), run: function () { closeTalk(); owTeach(pet, m); } }; }) });
+    const pet = abPartyMon(state.activePet), art = heroSprite(heroLookColors(npc.look), 'down', 0), have = pet.moves.map(function (m) { return m.id; });
+    const spare = abKnownMoves(pet.element, pet.level, pet.type).filter(function (m) { return have.indexOf(m.id) === -1; });
+    const lines = ['A buddy takes four moves into battle. I can teach ' + pet.name + ' any move it has learned before.'];
+    if (!spare.length) { openTalk({ name: npc.name, art: art, lines: lines.concat([pet.name + ' has no other moves to learn yet. Keep levelling up!']) }); return; }
+    openTalk({ name: npc.name, art: art, lines: lines.concat(['Which move should ' + pet.name + ' learn?']),
+      choices: spare.slice(0, 4).map(function (m) { return { label: m.name + ' (power ' + m.power + ')', run: function () { closeTalk(); owTutorForget(npc, pet, m); } }; }) });
   }
 };
 
@@ -57,14 +57,16 @@ function owTrade(npc) {
   openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: ['It is a deal! Say hello to ' + sp.name + '. Look after it!'] });
 }
 
-// Puts one of the buddy's optional moves into its battle set (it takes the place of the last move when the set is full).
-function owTeach(pet, m) {
-  const now = equippedMoves(pet).filter(function (e) { return e.kind !== 'ult'; }).map(function (e) { return e.id; }), art = worldSprite('k-badge-case');
-  if (now.indexOf(m.id) === -1) {
-    if (now.length >= ECON.moves.slots) now.pop();
-    now.push(m.id);
-    state.moveSet[pet.id] = now;
-    saveState();
-  }
-  openTalk({ name: 'Move set', art: art, lines: [pet.name + ' will use ' + moveName(m, pet) + ' in battle now.', 'You can change moves any time from the Moves sheet in a fight.'] });
+// Which of the four moves does the new one replace?
+function owTutorForget(npc, pet, m) {
+  openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: ['Which move should ' + pet.name + ' forget to learn ' + m.name + '?'],
+    choices: pet.moves.map(function (old, i) { return { label: 'Forget ' + old.name, run: function () { closeTalk(); owTeach(pet, m, i); } }; }) });
+}
+// The move is learned in place of the one forgotten.
+function owTeach(pet, m, i) {
+  const ids = pet.moves.map(function (x) { return x.id; });
+  ids[i] = m.id;
+  state.advMoves[pet.id] = ids;
+  saveState();
+  openTalk({ name: 'Move set', art: worldSprite('k-badge-case'), lines: [pet.name + ' forgot ' + pet.moves[i].name + ' and learned ' + m.name + '!'] });
 }

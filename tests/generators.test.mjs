@@ -44,44 +44,4 @@ test('multiple choice always contains the answer once, with distinct options', a
   assert.deepEqual(bad, []);
 });
 
-test('non-negative answers never get negative decoys (vault and duels)', async () => {
-  const bad = await page.evaluate(() => {
-    const out = [];
-    for (let i = 0; i < 400; i++) {
-      const q = makeMcq({ op: pick(['add', 'sub', 'mul', 'div']), problem: vaultProblem, count: 3 });
-      if (q.opts.some((v) => v < 0)) out.push(q.expr + ' ' + JSON.stringify(q.opts));
-    }
-    return out.slice(0, 5);
-  });
-  assert.deepEqual(bad, []);
-});
-
-test('the game never shows the same problem twice in a row', async () => {
-  const repeats = await page.evaluate(() => {
-    let last = '', n = 0;
-    for (let i = 0; i < 300; i++) {
-      generateProblem();
-      const sig = sigOf(currentProblem);
-      if (sig === last) n++;
-      last = sig;
-    }
-    return n;
-  });
-  assert.equal(repeats, 0);
-});
-
-test('every math type has a usable hint and explanation', async () => {
-  const bad = await page.evaluate(() => {
-    const out = [];
-    MATH_OPS.forEach((op) => {
-      const p = op.gen(5);
-      p.modeTag = op.id;
-      const h = hintFor(p, true);
-      if (!h || /undefined|NaN/.test(h)) out.push(op.id + ': ' + h);
-    });
-    return out;
-  });
-  assert.deepEqual(bad, []);
-});
-
 test('the page loaded without errors', () => { assert.deepEqual(errors, []); });

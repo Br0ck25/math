@@ -22,18 +22,10 @@ function rerenderShop() {
   renderArmor();
   renderAccessories();
   renderSecretPets();
+  renderItemButtons();
   updateStatsUI();
 }
 function openShop() { showModal('shop-modal', rerenderShop); }
-function openShieldShop() {
-  openShop();
-  const btn = document.getElementById('item-shield');
-  if (btn) {
-    if (typeof btn.scrollIntoView === 'function') btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    btn.focus();
-  }
-  buyItem('shield');
-}
 function closeShop() { hideModal('shop-modal', updateStatsUI); }
 
 function renderArmor() {
@@ -158,7 +150,7 @@ function makePetCard(sp, o) {
   const owned = !!o.owned;
   const d = owned ? getPetById(sp.id) : { name: sp.name, icon: sp.icon, element: sp.element, level: 0, stage: 0 };
   const selected = owned && state.activePet === sp.id;
-  const fainted = owned && state.faintedPets.indexOf(sp.id) !== -1;
+  const fainted = owned && isSleepy(sp.id);
 
   const card = document.createElement('div');
   card.className = 'pet-card' + (selected ? ' selected' : '') + (!owned ? ' locked' : '') + (fainted ? ' fainted' : '');
@@ -186,7 +178,7 @@ function makePetCard(sp, o) {
 }
 
 function equipPet(id) {
-  if (state.faintedPets.indexOf(id) !== -1) {
+  if (isSleepy(id)) {
     soundWrong();
     toast(`${getPetById(id).name} is resting! Beat a boss to revive your team.`);
     return;
@@ -195,7 +187,7 @@ function equipPet(id) {
     if (!joinTeamIfRoom(id)) { openReplaceModal(id); return; }
     toast('🎒 ' + getPetById(id).name + ' joined your team!');
   }
-  if (id !== state.activePet && !useSwap(id)) { saveState(); rerenderShop(); return; }
+  if (id !== state.activePet && !setLead(id)) { saveState(); rerenderShop(); return; }
   soundClick();
   saveState();
   rerenderShop();
@@ -238,7 +230,7 @@ function selectOrBuyPet(pet, confirmed) {
   grantBuddy(pet.id);
   state.unlockedPets.push(pet.id);
   checkEarnedGear();
-  const fights = !state.swapUsed && joinTeamIfRoom(pet.id) && useSwap(pet.id);    // a new buddy fights only if the team has room and this battle's swap is still free
+  const fights = joinTeamIfRoom(pet.id);                                             // a new buddy joins the team if there is room
   soundLevelUp();
   launchConfetti();
   toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' Your team is full: choose who it replaces, or leave it in your collection.'));

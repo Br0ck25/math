@@ -8,37 +8,30 @@ import fs from 'node:fs';
 
 // [path regex, tests that cover it]. Several rows may match; the tests are joined.
 export const MAP = [
-  [/shared\/econ\.js/, ['economy', 'wild', 'adaptive']],
-  [/js\/(02-data-core|04-data-buddies|04a-|08-buddies|09-bosses)/, ['content', 'packs', 'art-generated']],
+  [/shared\/econ\.js/, ['economy', 'adaptive', 'adventure-shops', 'adventure-battle']],
+  [/js\/(02-data-core|04-data-buddies|04a-|08-buddies|09-bosses)/, ['content', 'packs', 'art-generated', 'adventure-battle']],
   [/js\/04b-packs/, ['packs', 'content']],
-  [/js\/08[bcd]-/, ['content', 'art', 'ui', 'held']],
-  [/js\/07-math|js\/07a-/, ['generators', 'adaptive']],
-  [/js\/07b-adaptive/, ['adaptive', 'generators']],
-  [/js\/(12-battle|12b-|13-loot|19-quests)/, ['wild', 'backup', 'feel', 'farm', 'adventure-trainers']],
-  [/js\/12[cd]-/, ['moves']],
-  [/js\/(13b-wild|24-raids)/, ['wild', 'legend', 'farm']],
-  [/js\/24b-map/, ['map', 'adventure-gyms']],
-  [/js\/24e-trail/, ['trail', 'map']],
-  [/js\/24c-legend/, ['legend']],
-  [/js\/24d-champion/, ['champion', 'adventure-gyms']],
-  [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],
+  [/js\/08[bcd]-/, ['content', 'art', 'cards']],
+  [/js\/(07-math|07b-adaptive)/, ['generators', 'adaptive']],
+  [/js\/(13-loot|13b-wild|13c-eggs|19-quests)/, ['adventure-trainers', 'adventure-battle']],
+  [/js\/(24b-map|24d-champion)/, ['adventure-gyms', 'adventure-story']],
+  [/js\/20b-tech-tree/, ['tech-tree', 'economy']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm', 'adventure-shops']],
   [/js\/25d-ranch/, ['ranch', 'held']],
-  [/js\/(15-vault|33-shop)/, ['confirm', 'ui']],
-  [/js\/(03b-|23-|35-|35b-|36-)|server\/(15-|16-)/, ['parent-controls', 'parent-page', 'parents', 'challenge', 'challenge-ui']],
-  [/js\/(37|38-|35b-parent-study)|server\/17-|shared\/study/, ['study', 'confirm']],
+  [/js\/33-shop/, ['confirm', 'adventure-shops']],
+  [/js\/(37|38-)|shared\/study/, ['generators']],
   [/js\/26-trading/, ['cards']],
   [/js\/(27-|28-|29-)|server\/20-duels/, ['online-duel', 'server']],
-  [/js\/(03-state|10-save-load|31-account)|server\/10-/, ['backup', 'app', 'parents']],
+  [/js\/(03-state|10-save-load|31-account)|server\/10-/, ['overworld', 'adventure-battle', 'adventure-gizmo', 'server']],
   [/server\/(00-|30-)/, ['server']],
-  [/styles\.css|index\.html/, ['layout', 'windows', 'ui', 'contrast', 'app']],
-  [/js\/(01-|01b-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['speech', 'app', 'ui']],
-  [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
+  [/styles\.css|index\.html/, ['windows', 'adventure-boot', 'overworld', 'adventure-battle']],
+  [/js\/(01-|01b-|05-|06-|11-|17-|32-|34-|97-|97b-|97c-|97d-|97e-|25c-|98-|99-)/, ['speech', 'windows', 'adventure-boot']],
+  [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['adventure-boot', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'art-world']],
+  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'adventure-battle', 'art-world']],
   [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
-const FALLBACK = ['app', 'ui'];
+const FALLBACK = ['overworld', 'adventure-battle'];
 
 export function changedFiles() {
   const sh = (c) => execSync(c, { encoding: 'utf8' }).split('\n').filter(Boolean);

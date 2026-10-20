@@ -20,19 +20,7 @@ function dayKey(d) {
 }
 // The number of the current week (Monday to Sunday), the same for everyone. `weekDaysLeft()` counts the days until the next one.
 function dayNumber(d) { const k = dayKey(d).split('-'); return Math.round(Date.UTC(+k[0], +k[1] - 1, +k[2]) / 86400000); }
-function weekNumber(d) { return Math.floor((dayNumber(d) + 3) / 7); }
 function weekDaysLeft(d) { return 7 - ((dayNumber(d) + 3) % 7); }
-function daysAgoKey(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return dayKey(d);
-}
-// `count` day keys, oldest first, ending `skip` days ago (skip 0 = ends today).
-function lastDayKeys(count, skip) {
-  const out = [];
-  for (let i = (skip || 0) + count - 1; i >= (skip || 0); i--) out.push(daysAgoKey(i));
-  return out;
-}
 // Whole days from a saved day key (see dayKey) to today.
 function daysSince(key) { return Math.round((new Date(dayKey() + 'T12:00:00') - new Date(key + 'T12:00:00')) / 86400000); }
 function fmtAns(a) { return typeof a === 'string' ? a : (Number.isInteger(a) ? String(a) : String(+a.toFixed(2))); }       // study answers are words
@@ -60,4 +48,13 @@ function polyStr(terms) {
     else s += ' ' + (c < 0 ? '−' : '+') + ' ' + body;
   });
   return s || '0';
+}
+function escHtml(t) {
+  return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+// A small number that is the same for the same text, for choosing things by day and land.
+function dayHash(text) {
+  let h = 0;
+  for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 100003;
+  return h;
 }

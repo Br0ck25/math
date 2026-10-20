@@ -25,11 +25,19 @@ const AB_STATUS = { fire: 'burn', nature: 'poison', electric: 'paralysis', dark:
 const AB_STATUS_TAG = { burn: 'BRN', poison: 'PSN', paralysis: 'PAR', sleep: 'SLP' };
 const AB_STATUS_CHANCE = 0.2;
 // The moves a buddy of this element knows at this level (its four newest), as fresh copies with their PP.
-function abMoveList(element, level, type, pp) {
+// Every move a buddy of this element has learned by this level, oldest first.
+function abKnownMoves(element, level, type) {
   const names = AB_MOVE_NAMES[element] || AB_MOVE_NAMES.dark;
-  const all = AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level, status: i > 0 ? AB_STATUS[element] || '' : '' }; }));
-  return all.filter(function (m) { return m.level <= level; }).sort(function (a, b) { return a.level - b.level; }).slice(-4)
-    .map(function (m) { return Object.assign({}, m, { left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, m.pp) : m.pp }); });
+  return AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level, status: i > 0 ? AB_STATUS[element] || '' : '' }; }))
+    .filter(function (m) { return m.level <= level; }).sort(function (a, b) { return a.level - b.level; });
+}
+// The four moves it takes into battle: the ones chosen (state.advMoves), topped up with its newest if fewer than four were chosen. `pp` is the PP left per move id.
+function abMoveList(element, level, type, pp, chosen) {
+  const known = abKnownMoves(element, level, type);
+  if (!Array.isArray(chosen)) chosen = known.slice(-4).map(function (m) { return m.id; });
+  const list = chosen.map(function (id) { return known.find(function (m) { return m.id === id; }); }).filter(Boolean);
+  known.slice().reverse().forEach(function (m) { if (list.length < 4 && list.indexOf(m) === -1) list.push(m); });
+  return list.slice(0, 4).map(function (m) { return Object.assign({}, m, { left: pp && pp[m.id] !== undefined ? clamp(pp[m.id], 0, m.pp) : m.pp }); });
 }
 // A buddy's base strength: dearer store buddies are stronger; the others have a fixed one.
 function abBase(sp) {
@@ -45,13 +53,13 @@ function abShape(seed, element) {
   const off = function (k) { return Math.floor(h / Math.pow(21, k)) % 21 - 10; };
   return { hp: off(0) + (element === 'nature' ? 6 : 0), atk: off(1), def: off(2) + (element === 'nature' ? 4 : 0), spd: off(3) + (AB_SPEED_LEAN[element] || 0) };
 }
-function abBuild(id, name, icon, element, type, base, level, hp, pp) {
+function abBuild(id, name, icon, element, type, base, level, hp, pp, chosen) {
   const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
-  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp) };
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp, chosen) };
 }
-function abMon(id, level, hp, pp) {
+function abMon(id, level, hp, pp, chosen) {
   const sp = getSpecies(id), stage = getFormIndex(sp, level);
-  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp, pp);
+  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp, pp, chosen);
 }
 // A boss from the boss list (a gym leader or a story boss): stronger than a wild buddy, with Elder and Alpha forms as in Practice.
 function abBossMon(index, level) {
@@ -61,7 +69,7 @@ function abBossMon(index, level) {
 // A foe from its description: {id, level} is a buddy, {boss: index, level} a boss.
 function abFoeMon(f) { return f.boss !== undefined ? abBossMon(f.boss, f.level) : abMon(f.id, f.level); }
 // One of your buddies, with the HP it has left.
-function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id]); }
+function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); }
 // Gold's damage formula: level, power and Attack against Defense, then same-type bonus, type effectiveness, a critical hit and a little luck.
 function abDamage(att, def, move, crit) {
   const rel = getTypeRelation(move.type, def.type), eff = rel === 1 ? 2 : rel === -1 ? 0.5 : 1, stab = move.type === att.type ? 1.5 : 1;

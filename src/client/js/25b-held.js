@@ -18,8 +18,6 @@ const HELD_ITEMS = [
   { id: 'lens',  icon: '🔍', name: 'Quick Lens',  text: 'A Speed Strike charges 1 extra energy' },
   { id: 'bait',  icon: '🍯', name: 'Sweet Bait',  text: 'Wild buddies are 25% easier to catch' }
 ];
-let heldUsed = {};                         // once-per-battle items used so far
-
 // Every species has one quirk, always the same one (picked from its id), so nothing needs saving.
 const QUIRKS = [
   { id: 'brave',   icon: '🦁', name: 'Brave',   text: 'The first correct answer of each battle gives 1 extra energy' },
@@ -33,15 +31,9 @@ function quirkOf(buddyId) {
   for (let i = 0; i < buddyId.length; i++) h = (h * 31 + buddyId.charCodeAt(i)) % 100003;
   return QUIRKS[h % QUIRKS.length];
 }
-function activeQuirk(id) { return quirkOf(state.activePet).id === id; }
-
 function roleOf(pet) { return ELEMENT_ROLES[pet.element] || ELEMENT_ROLES.magic; }
 function heldIdOf(buddyId) { return state.held[buddyId] || ''; }
 function holds(buddyId, item) { return heldIdOf(buddyId) === item; }
-// The buddy fighting now has this role / item?
-function activeRole(name) { return roleOf(getActivePetDisplay()).name === name; }
-function activeHolds(item) { return holds(state.activePet, item); }
-
 function buyHeld(id, confirmed) {
   if (state.heldOwned.indexOf(id) !== -1) return;
   const cost = ECON.held.cost[id];
@@ -85,18 +77,4 @@ function renderHoldTab() {
   });
   h += '<div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">You have 💎 ' + state.gems + '</div>';
   document.getElementById('hub-body').innerHTML = h;
-}
-
-// ----- effects in battle -----
-function addEnergy(n) { ultimateCharge = Math.min(3, ultimateCharge + n); }
-// After a correct answer (state.streak already counts it): roles and items that pay out.
-function answerBonuses(isFast) {
-  ranchCheer();
-  if (activeQuirk('brave') && !heldUsed.brave) { heldUsed.brave = true; addEnergy(1); }
-  if (isFast && activeHolds('lens')) addEnergy(typeof hasTech === 'function' && hasTech('second_heart') ? 2 : 1);
-  if (activeRole('Support') && state.streak % 3 === 0) addEnergy(1);
-  if (activeRole('Healer') && state.streak % 4 === 0) {
-    const id = state.activePet, max = getPetMaxHp(id);
-    if (getPetHp(id) < max) { setPetHp(id, getPetHp(id) + 1); toast('💧 Healer: +1 HP'); }
-  }
 }

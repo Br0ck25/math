@@ -36,7 +36,7 @@ test('every emoji on every kind of card is drawn with a plain colour fill (the i
         const c = document.createElement('canvas'); drawCard(c, 'fox');
       });
     });
-    state.faintedPets = ['dog']; drawCard(document.createElement('canvas'), 'dog'); state.faintedPets = [];
+    state.advHp = { dog: 0 }; drawCard(document.createElement('canvas'), 'dog'); state.advHp = {};
     ids.forEach((id) => drawCard(document.createElement('canvas'), id));
     // bosses: plain, elder, alpha, raid
     monstersList.slice(0, 5).forEach((_, i) => [{}, { level: 30 }, { level: 60 }, { level: 60, raid: true }].forEach((o) => drawCardFromDesc(document.createElement('canvas'), bossCard(i, o))));
@@ -51,11 +51,11 @@ test('the buddy picture itself is drawn at full strength unless the buddy is asl
   const r = await page.evaluate(() => {
     window.__emojiFills.length = 0;
     const dog = getSpecies('dog'); if (dog.emoji) { dog.icon = dog.emoji; delete dog.emoji; delete ART_URIS.dog; }   // the emoji path: dog now has a picture
-    state.activePet = 'dog'; state.activeAccessory = 'none'; state.activeArmor = 'none'; state.faintedPets = [];
+    state.activePet = 'dog'; state.activeAccessory = 'none'; state.activeArmor = 'none'; state.advHp = {};
     drawCard(document.createElement('canvas'), 'dog');
     const awake = window.__emojiFills.find((f) => f.text === '🐶');
     window.__emojiFills.length = 0;
-    state.faintedPets = ['dog']; drawCard(document.createElement('canvas'), 'dog'); state.faintedPets = [];
+    state.advHp = { dog: 0 }; drawCard(document.createElement('canvas'), 'dog'); state.advHp = {};
     const asleep = window.__emojiFills.find((f) => f.text === '🐶');
     return { awake: awake && awake.alpha, asleep: asleep && asleep.alpha };
   });

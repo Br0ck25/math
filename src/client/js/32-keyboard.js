@@ -1,5 +1,5 @@
 // =====================================================================
-//  KEYBOARD, OVERLAY TAPS AND ACCESSIBILITY
+//  OVERLAY TAPS, ESCAPE AND ACCESSIBILITY (the map's own keys are in 24g-ow-engine.js)
 // =====================================================================
 // A .modal-overlay with data-close="fnName" closes when its backdrop is tapped AND on Escape.
 // data-esc="fnName" closes on Escape only (game screens, where a stray tap must not quit).
@@ -22,17 +22,6 @@ window.addEventListener('keydown', function (e) {
   const a = document.activeElement;
   if ((e.key === 'Enter' || e.key === ' ') && a && a.getAttribute('role') === 'button' && a.tagName !== 'BUTTON') { e.preventDefault(); a.click(); return; }
   if (e.key === 'Escape' && closeTopOverlay()) return;
-  if (studyOn) { if (e.key === 'Escape') studyEsc(); return; }   // the study pane is on screen: no math keys
-  if (openOverlays().length === 1 && openOverlays()[0].id === 'miss-modal') closeMissCard();      // the "not quite" card does not block typing
-  if (isModalOpen()) return;
-  if (e.key >= '0' && e.key <= '9') pressKey(e.key);
-  else if (e.key === 'Backspace') pressKey('backspace');
-  else if (e.key === 'Enter') checkAnswer();
-  else if (e.key === '-') pressKey('neg');
-  else if (e.key === '.') pressKey('dot');
-  else if (e.key === 'u' || e.key === 'U') triggerSuperMove();
-  else if (e.key === 'p' || e.key === 'P') togglePad();
-  else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') pressKey('clear');
 });
 
 // A close button (✕) that stays at the top-right of every window while its content scrolls, so nobody has to scroll
@@ -64,7 +53,7 @@ function initAccessibility() {
     if (h) { if (!h.id) h.id = m.id + '-title'; m.setAttribute('aria-labelledby', h.id); }
     else m.setAttribute('aria-label', m.id.replace(/-modal$/, '').replace(/-/g, ' '));
   });
-  ['toast', 'feedback-msg', 'streak-msg', 'hint-box', 'floating-popup'].forEach(function (id) {
+  ['toast'].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) { el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); }
   });

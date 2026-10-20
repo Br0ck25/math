@@ -19,7 +19,7 @@ function abStart(opts) {
   const first = party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -101,6 +101,7 @@ function abPanel() {
     box.className = 'vault-opts ab-opts';
     p.appendChild(q); p.appendChild(box);
     fillOptButtons(box, ab.q.opts, abAnswer);
+    p.appendChild(abBtn('Read aloud', function () { speakCurrentProblem(true); }, 'ab-back'));
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'moves') {
     if (m.moves.every(function (mv) { return mv.left <= 0; })) p.appendChild(abBtn('<b>Struggle</b><small>NORMAL &middot; no PP left</small>', function () { abUseMove(-1); }, 'ab-move t-normal'));
@@ -112,6 +113,9 @@ function abPanel() {
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', abThrowNet, '', !wild || state.nets < 1));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
+  } else if (ab.phase === 'learn') {
+    ab.learn.mon.moves.forEach(function (mv, i) { p.appendChild(abBtn('Forget <b>' + escHtml(mv.name) + '</b>', function () { abLearnChoose(i); }, 'ab-move t-' + mv.type)); });
+    p.appendChild(abBtn('Keep my moves', function () { abLearnChoose(-1); }, 'ab-back'));
   } else if (ab.phase === 'team') {
     ab.party.forEach(function (mon, i) {
       p.appendChild(abBtn('<b>' + escHtml(mon.name) + '</b><small>Lv' + mon.level + ' &middot; ' + mon.hp + '/' + mon.max + '</small>', function () { abSwitch(i); }, '', mon.hp <= 0 || i === ab.cur));
@@ -119,13 +123,35 @@ function abPanel() {
     if (!ab.forced) p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   }
 }
-function abEscape() { if (ab && !ab.busy && ab.phase !== 'menu' && !(ab.phase === 'team' && ab.forced) && ab.phase !== 'moves') { ab.phase = 'menu'; abRender(); } }
+function abEscape() { if (ab && !ab.busy && ab.phase !== 'menu' && !(ab.phase === 'team' && ab.forced) && ab.phase !== 'moves' && ab.phase !== 'learn') { ab.phase = 'menu'; abRender(); } }
 
 // ----- your turn -----
-function abFight() { ab.q = makeMcq({ count: 4 }); ab.phase = 'question'; abRender(); }
+// The next battle question: the adaptive math problem (07b-adaptive.js decides the type and level), or a study question in trivia mode.
+let abLastOp = null;
+function abQuestion() {
+  if (studyOn) return Object.assign(makeMcq({ count: 4 }), { t0: Date.now() });
+  const next = pickNextProblem(abLastOp), p = next.make();
+  abLastOp = next.op;
+  noteServed(next.kind === 'challenge');
+  const q = makeMcq({ op: next.op, problem: function () { return p; }, count: 4 });
+  q.kind = next.kind; q.t0 = Date.now();
+  return q;
+}
+// A right or wrong answer teaches the adaptive levels (a quick right answer counts most) and ticks the daily quests.
+function abRecordAnswer(ok) {
+  const q = ab.q, secs = (Date.now() - q.t0) / 1000;
+  if (q.op === 'study') return;
+  const fast = ok && secs <= (4 + state.grade * 2.5) * (HARD_OPS.indexOf(q.op) !== -1 ? 1.6 : 1);
+  recordAdaptive(q.op, ok, fast);
+  if (ok) { questEvent('solve', q.op); return; }
+  if (q.kind === 'challenge') state.adapt.calm[q.op] = true; else state.adapt.easy[q.op] = true;       // after a miss the next one is a gentler warm-up
+}
+function abFight() { ab.q = abQuestion(); ab.phase = 'question'; abRender(); speakCurrentProblem(); }
 function abAnswer(v) {
   if (ab.phase !== 'question') return;
-  if (v !== ab.q.ans) {
+  const right = v === ab.q.ans;
+  abRecordAnswer(right);
+  if (!right) {
     soundWrong();
     ab.phase = 'busy';
     abSteps([['Wrong! The answer was ' + fmtAns(ab.q.ans) + '. ' + abMe().name + "'s attack missed!", null, 1300]]);
@@ -150,6 +176,8 @@ function abUseMove(i) {
 }
 function abSpeed(m) { return m.spd * (m.status === 'paralysis' ? 0.25 : 1); }
 function abSavePp(m) { state.advPp[m.id] = {}; m.moves.forEach(function (mv) { state.advPp[m.id][mv.id] = mv.left; }); }
+// The sound of a hit: a plain thud for normal moves, the element's own sound for the others.
+function abHitSound(att, mv) { if (mv.type === 'normal') soundTackle(); else soundElementHit(att.element); }
 const AB_STATUS_TEXT = { burn: 'was burned!', poison: 'was poisoned!', paralysis: 'is paralyzed! It may not attack!', sleep: 'fell asleep!' };
 // One side attacks: asleep or paralyzed it may lose the turn, otherwise "X used Y!" and the hit. `down` runs if the target faints, `next` if not.
 function abStrike(att, def, mv, down, next) {
@@ -171,7 +199,7 @@ function abHit(att, def, mv, down, next) {
     def.hp = Math.max(0, def.hp - r.dmg);
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
     [def, att].forEach(function (m) { if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; });
-    soundClick();
+    abHitSound(att, mv);
   }, 600]]);
   if (crit) abSteps([['A critical hit!', null, 800]]);
   if (r.eff > 1) abSteps([["It's super effective!", null, 900]]);
@@ -207,32 +235,60 @@ function abFoeFainted() {
     const mon = ab.party.find(function (m) { return m.id === id; });
     abSteps([[mon.name + ' gained ' + each + ' Exp. Points!', function () {
       abGainXp(mon, each);
-      if (mon.leveled) abNow([[mon.name + ' grew to Lv' + mon.level + '!', function () { soundLevelUp(); }, 1200]].concat(mon.evolved ? [['What? ' + mon.evolved + ' evolved into ' + mon.name + '!', null, 1400]] : []));
+      if (mon.leveled) abNow([[mon.name + ' grew to Lv' + mon.level + '!', function () { soundLevelUp(); }, 1200]].concat(mon.evolved ? [['What? ' + mon.evolved + ' evolved into ' + mon.name + '!', null, 1400]] : []).concat(mon.learned.map(function (n) { return [mon.name + ' learned ' + n + '!', null, 1200]; })));
     }, 1000]]);
   });
   abSteps([['', function () {
-    if (ab.i + 1 < ab.foes.length) {
-      ab.i += 1; abSeen(); ab.part = [abMe().id];
-      abSteps([[ab.name + ' sent out ' + abFoe().name + '!', null, 1000], abMenuStep()]);
-    } else if (ab.r + 1 < ab.rounds.length) abNextRound();
-    else abWon();
+    abLearnThen(function () {
+      if (ab.i + 1 < ab.foes.length) {
+        ab.i += 1; abSeen(); ab.part = [abMe().id];
+        abSteps([[ab.name + ' sent out ' + abFoe().name + '!', null, 1000], abMenuStep()]);
+      } else if (ab.r + 1 < ab.rounds.length) abNextRound();
+      else abWon();
+    });
   }, 0]]);
 }
 // Experience for one of your buddies; a level-up raises its stats and keeps its HP gain, and may change its form.
 function abGainXp(mon, amt) {
-  const before = getBuddyLevel(mon.id);
+  const before = getBuddyLevel(mon.id), knownBefore = abKnownMoves(mon.element, before, mon.type).map(function (m) { return m.id; });
   addXpTo(mon.id, amt);
   const now = getBuddyLevel(mon.id);
-  mon.leveled = now > before; mon.evolved = '';
+  mon.leveled = now > before; mon.evolved = ''; mon.learned = []; mon.pending = mon.pending || [];
   if (!mon.leveled) return;
   const fresh = abMon(mon.id, now), oldName = mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
-  fresh.moves = fresh.moves.map(function (m) { return mon.moves.find(function (o) { return o.id === m.id; }) || m; });
-  Object.assign(mon, fresh, { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '' });
+  fresh.moves = mon.moves;                                        // it keeps the moves it has, with their PP
+  Object.assign(mon, fresh, { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '', learned: [], pending: mon.pending });
+  abKnownMoves(mon.element, now, mon.type).filter(function (m) { return knownBefore.indexOf(m.id) === -1; }).forEach(function (m) {
+    if (mon.moves.length < 4) { mon.moves.push(Object.assign({}, m, { left: m.pp })); mon.learned.push(m.name); } else mon.pending.push(m);     // with four moves it asks which to forget
+  });
+  state.advMoves[mon.id] = mon.moves.map(function (m) { return m.id; });
   state.advHp[mon.id] = mon.hp;
+}
+// Moves a full buddy could learn: ask which move to forget, one question at a time, then go on.
+function abLearnThen(next) {
+  const mon = ab.party.find(function (m) { return m.pending && m.pending.length; });
+  if (!mon) { next(); return; }
+  ab.learn = { mon: mon, move: mon.pending.shift(), next: next };
+  ab.phase = 'learn';
+  document.getElementById('ab-text').innerText = mon.name + ' wants to learn ' + ab.learn.move.name + ', but it knows four moves. Forget one?';
+  abRender();
+}
+function abLearnChoose(i) {
+  const L = ab.learn;
+  if (!L || ab.phase !== 'learn') return;
+  ab.phase = 'busy'; ab.learn = null;
+  if (i >= 0) {
+    const old = L.mon.moves[i].name;
+    L.mon.moves[i] = Object.assign({}, L.move, { left: L.move.pp });
+    state.advMoves[L.mon.id] = L.mon.moves.map(function (m) { return m.id; });
+    saveState();
+    abSteps([['1, 2 and... Poof! ' + L.mon.name + ' forgot ' + old + ' and learned ' + L.move.name + '!', null, 1500]]);
+  } else abSteps([[L.mon.name + ' did not learn ' + L.move.name + '.', null, 1000]]);
+  abSteps([['', function () { abLearnThen(L.next); }, 0]]);
 }
 function abMeFainted() {
   const me = abMe();
-  abSteps([[me.name + ' fainted!', function () { state.advHp[me.id] = 0; }, 1200]]);
+  abSteps([[me.name + ' fainted!', function () { state.advHp[me.id] = 0; soundBuddyFaint(); }, 1200]]);
   abSteps([['', function () {
     if (ab.party.some(function (m) { return m.hp > 0; })) { ab.forced = true; ab.phase = 'team'; document.getElementById('ab-text').innerText = 'Choose your next buddy.'; abRender(); }
     else abLost();
@@ -262,9 +318,9 @@ function abThrowNet() {
   state.nets -= 1; ab.phase = 'busy';
   abSteps([['You threw a Catch Net!', null, 1000]]);
   const shakes = got ? 3 : rnd(0, 2);
-  for (let k = 0; k < shakes; k++) abSteps([['...', null, 700]]);
+  for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); }, 700]]);
   if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', null, 1100]]); abFoeTurn(); return; }
-  abSteps([['Gotcha! ' + foe.name + ' was caught!', function () { ab.caught = true; abKeepCaught(foe); }, 1300], ['', function () { abFinish('caught'); }, 0]]);
+  abSteps([['Gotcha! ' + foe.name + ' was caught!', function () { ab.caught = true; soundCatchSuccess(); abKeepCaught(foe); }, 1300], ['', function () { abFinish('caught'); }, 0]]);
 }
 // The caught buddy joins you (or becomes a spare if you already own one). The same rules as a catch on the Practice screen.
 function abKeepCaught(foe) {
@@ -276,14 +332,25 @@ function abKeepCaught(foe) {
 function abRun() {
   if (ab.kind !== 'wild') { ab.phase = 'busy'; abSteps([["No! There's no running from a trainer battle!", null, 1200], abMenuStep()]); return; }
   ab.phase = 'busy';
-  abSteps([['Got away safely!', null, 900], ['', function () { abFinish('run'); }, 0]]);
+  abSteps([['Got away safely!', function () { soundEscape(); }, 900], ['', function () { abFinish('run'); }, 0]]);
 }
 
 // ----- the end -----
 // A trainer beaten pays the trainer prize; a leader or boss pays through the badge or the story.
 function abRoundWon() {
-  const trainer = ab.kind === 'trainer';
+  const trainer = ab.kind === 'trainer', round = ab.rounds[ab.r];
+  if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
   return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (trainer) grantGems(ECON.map.trainerGems, '+' + ECON.map.trainerGems + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
+}
+// A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy, and the daily quests. Run once the battle screen is gone (their windows open above the map).
+function abBossBeaten(idx, level) {
+  const form = getBossFormIndex(level);
+  markBossWin(idx, form);
+  state.monstersDefeated += 1;
+  questEvent('boss');
+  checkBossBuddy(idx, form);
+  checkForSecretLootDrop();
+  saveState();
 }
 function abNextRound() {
   abSteps(abRoundWon());
@@ -303,6 +370,7 @@ function abFinish(result) {
   updateStatsUI();
   hideModal('ab-modal', function () {
     const o = state.overworld;
+    a.after.forEach(function (fn) { fn(); });
     if (result === 'lose') {
       state.advHp = {};
       o.map = o.center.map; o.x = o.center.x; o.y = o.center.y; o.face = 'down'; owTrail = null;

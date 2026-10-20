@@ -50,25 +50,6 @@ test('every map is valid: equal rows, known tiles, warps that land on walkable n
   assert.deepEqual(pictures, [], 'every tile needs its picture in art/world');
 });
 
-test('the Map window has an Adventure row that opens the walk, and the hero stands in the middle of the view', async () => {
-  const r = await page.evaluate(() => {
-    openMap();
-    const row = document.querySelector('#map-body .adventure-row');
-    const text = row && row.innerText;
-    row.querySelector('button').click();
-    const view = document.getElementById('ow-view');
-    return { text, mapShut: document.getElementById('map-modal').style.display, ow: document.getElementById('overworld-modal').style.display,
-      cells: view.querySelectorAll('.ow-cell').length, n: owCols(), hero: view.querySelectorAll('.ow-hero').length, title: document.getElementById('ow-title').innerText };
-  });
-  assert.match(r.text, /Adventure/);
-  assert.equal(r.mapShut, 'none');
-  assert.equal(r.ow, 'flex');
-  assert.equal(r.cells, r.n * r.n);
-  assert.equal(r.hero, 1);
-  assert.equal(r.title, 'Cozy Hollow');
-  assert.deepEqual(errors, []);
-});
-
 test('walls, trees and signs stop the hero; a sign tells its words; a step on open ground moves one tile', async () => {
   await open();
   let o = await walk(['up']);
@@ -172,21 +153,6 @@ test('RUN leaves a walk fight with no penalty and the map comes back', async () 
     return { started, over: !ab, ow: document.getElementById('overworld-modal').style.display, gems: state.gems === gems, level: getBuddyLevel(state.activePet) === level };
   });
   assert.deepEqual(r, { started: true, over: true, ow: 'flex', gems: true, level: true });
-});
-
-test('the map refuses to open during a gym or a raid', async () => {
-  const r = await page.evaluate(() => {
-    state.gym = { region: 'ember', step: 0 };
-    openAdventure();
-    const gymShut = document.getElementById('overworld-modal').style.display;
-    state.gym = null; state.raid = { phase: 0, total: 3, weaks: [], chapter: 0, introSeen: true };
-    openAdventure();
-    const raidShut = document.getElementById('overworld-modal').style.display;
-    state.raid = null;
-    return { gymShut, raidShut };
-  });
-  assert.notEqual(r.gymShut, 'flex');
-  assert.notEqual(r.raidShut, 'flex');
 });
 
 test('the position is saved, restored on reload, and a bad or old save puts the hero back at the start', async () => {

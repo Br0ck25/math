@@ -1,11 +1,10 @@
 // =====================================================================
-//  LOOT DROPS
+//  LOOT DROPS (rare buddies from bosses and gym leaders)
 // =====================================================================
 const ULTRA_CHANCE = 0.005;
-function checkForSecretLootDrop(hadCasualties) {
-  if (hadCasualties) return;
-  const qualifiesForDrop = (state.streak >= 5) || (state.monstersDefeated % 5 === 0);
-  if (!qualifiesForDrop) return;
+// A boss or gym leader beaten on the Adventure may drop a rare buddy (every second one, and always a chance at the pity buddy every tenth).
+function checkForSecretLootDrop() {
+  if (state.monstersDefeated % 2 !== 0) return;
 
   const isMilestonePity = (state.monstersDefeated % 10 === 0);
   const roll = Math.random();
@@ -100,7 +99,7 @@ function showLootModal(pet, lootCategory) {
 
 function closeLootModal(equipNow) {
   soundClick();
-  if (equipNow && pendingLootPet && joinTeamIfRoom(pendingLootPet.id) && useSwap(pendingLootPet.id)) saveState();
+  if (equipNow && pendingLootPet && joinTeamIfRoom(pendingLootPet.id) && setLead(pendingLootPet.id)) saveState();
   document.getElementById('loot-modal').style.display = 'none';
   const offer = equipNow && pendingLootPet && getTeam().indexOf(pendingLootPet.id) === -1 ? pendingLootPet.id : '';
   pendingLootPet = null;

@@ -176,21 +176,6 @@ test('when the whole team faints in a trainer battle, the hero wakes at the last
   assert.deepEqual(errors, []);
 });
 
-test('a team wipe in an ordinary Practice battle still just revives everyone and goes on', async () => {
-  const r = await page.evaluate(async () => {
-    state.gems = 40; state.shields = 0; state.faintedPets = []; state.team = ['dog']; state.activePet = 'dog';
-    state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 60; partyHp = {}; setPetHp('dog', 1); monsterCurrentHp = 99; inputLocked = false;
-    const real = Math.random; Math.random = () => 0.99;
-    userInput = String(currentProblem.answer + 7); checkAnswer();
-    await new Promise((res) => setTimeout(res, 2500));
-    Math.random = real;
-    return { pos: [state.overworld.map, state.overworld.x, state.overworld.y], ow: document.getElementById('overworld-modal').style.display, fainted: state.faintedPets.length };
-  });
-  assert.deepEqual(r.pos, ['hollow', 7, 9]);
-  assert.notEqual(r.ow, 'flex');
-  assert.equal(r.fainted, 0);
-});
-
 test('saved trainer progress is repaired: only real trainers count, once', async () => {
   const r = await page.evaluate(() => {
     const run = (v) => { state.overworld = Object.assign({ map: 'hollow', x: 7, y: 9, face: 'down' }, v); NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return state.overworld.beat.slice(); };

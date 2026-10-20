@@ -67,15 +67,3 @@ test('a buddy emoji in text shows that buddy\'s picture', async () => {
   assert.deepEqual(r, [true, '🐺']);
 });
 
-test('goal line and buddy names never print picture markup as text', async () => {
-  const r = await page.evaluate(() => {
-    const out = [];
-    [0, 100000].forEach((g) => {
-      state.gems = g;
-      const t = nextGoalText();
-      if (/<img|data:image/.test(t)) out.push('goal line with ' + g + ' gems: ' + t.slice(0, 60));
-    });
-    return out;
-  });
-  assert.deepEqual(r, []);
-});

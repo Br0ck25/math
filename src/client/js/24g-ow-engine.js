@@ -174,15 +174,12 @@ window.addEventListener('keydown', function (e) {
 
 // ----- the window -----
 function openAdventure() {
-  if (state.gym) { soundWrong(); toast('Finish or leave the gym first'); return; }
-  if (state.raid) { soundWrong(); toast('Finish the raid boss first'); return; }
-  if (document.getElementById('map-modal').style.display === 'flex') closeMap();
   if (!state.hero.made) { openHeroCreator(); return; }               // the first walk starts with Who are you?
   showAdventureWindow();
 }
 // The game starts on the Adventure: Who are you? for a new player (then a starter buddy), the map for everyone else. True when it opened.
 function adventureBoot() {
-  if (window.__noAdventureBoot || state.gym || state.raid) return false;
+  if (window.__noAdventureBoot) return false;
   document.body.classList.add('adv');
   showAdventureWindow();
   if (!state.hero.made) openHeroCreator();
@@ -191,23 +188,18 @@ function adventureBoot() {
 function showAdventureWindow() {
   showModal('overworld-modal', function () { owSafe = ECON.overworld.graceSteps; owTrail = null; owSetRegion(OW_MAPS[state.overworld.map]); renderOverworld(); });
 }
-// The row at the top of the Map window.
-function adventureRowHtml() {
-  return '<div class="care-row map-row adventure-row"><div class="ow-row-icon">' + worldSprite('t-tall-grass') + '</div><div class="ow-row-text"><div class="t">Adventure</div><div class="d">Walk ' + OW_MAPS[state.overworld.map].name + ' and meet wild buddies in the tall grass</div></div>' +
-    '<div class="map-actions"><button class="claim-btn" onclick="openAdventure()">Explore</button></div></div>';
-}
 
 // ----- a fight that begins on a walk: the Adventure battle screen (24x-ow-battle.js, 24y-ow-arenas.js) -----
 // `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
 function startAdventureFight(sp) {
-  if (state.gym || state.raid || ab) return;
+  if (ab) return;
   owRelease();
   sp = sp || rollWildSpecies([]);
   abStart({ kind: 'wild', foes: [{ id: sp.id, level: abWildLevel() }] });
 }
 // A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
 function startTrainerFight(npc) {
-  if (state.gym || state.raid || ab) return;
+  if (ab) return;
   owRelease();
   if (npc.kind === 'boss') { abStartBoss(npc); return; }
   const foes = [], n = clamp(1 + Math.floor(state.badges.length / 3), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0);

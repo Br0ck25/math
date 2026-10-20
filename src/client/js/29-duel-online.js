@@ -125,10 +125,6 @@ async function rdDecline(id) {
   try { await api('/api/duel/decline', 'POST', { id: id }); } catch (e) {}
   rdRefresh();
 }
-async function rdBlock(name) {
-  try { await api('/api/duel/block', 'POST', { name: name }); toast('🚫 ' + name + ' blocked'); } catch (e) {}
-}
-
 // ----- playing one online duel -----
 async function rdPlay(id) {
   soundClick();
@@ -169,7 +165,6 @@ async function rdAnswer(v) {
     document.getElementById('rd-box').innerHTML = '<p>' + escHtml((r.data && r.data.error) || 'Could not send your answers. Check your internet.') + '</p><button class="key-btn submit-btn" style="width:100%; height:44px;" onclick="rdRetrySubmit()">Try again</button>';
     return;
   }
-  calDayEvent();
   rdShowResult(r.data.summary);
 }
 async function rdRetrySubmit() {

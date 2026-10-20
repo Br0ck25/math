@@ -1,63 +1,20 @@
 // =====================================================================
-//  STUDY: school-subject questions for grades 6-8 (the questions are in 37-study-data.js and 37a-37e; a parent can add more, see
-//  35b-parent-study.js and src/server/17-study.js). Three ways to study: flashcards (self-marked, no gems), Quick Recall (multiple choice)
-//  and Type it. Only the last two pay, and only a little: `ECON.study` has the numbers (a daily gem cap, and a question pays again only after
-//  `freshDays` days) so easy cards cannot be farmed. Missed questions come back first. Nothing here punishes: a wrong answer shows the answer.
+//  STUDY (trivia mode): school-subject questions (the questions are in 37-study-data.js and 37a-37h). While it is on, the whole game asks them
+//  instead of math: battles, signs, tournaments and duels use makeMcq(), which gives a study question in the same shape. Switch it in Settings.
 // =====================================================================
-const STUDY_PARENT_KEY = 'math_quest_pq';
 const STUDY_ID_RE = /^[a-z]{3,7}[0-9]{1,4}$|^p[A-Za-z0-9_-]{3,12}$/;
-let parentQs = [];               // questions this player's parent added (already cleaned)
-let parentOnly = false;           // the parent chose "only my questions": the built-in ones are hidden
-let parentQsOwner = '';          // the player name they belong to (never show one player's to another)
-let studyOn = false;             // the study pane is showing instead of the math problem
-let studyScreen = 'home';        // 'home' | 'card' | 'done'
-let studyRound = null;           // { mode, qs, i, results, phase, t0 }
-let studyNote = '';
+let studyOn = false;             // trivia mode: questions are about school subjects instead of math
+function studyAll() { return STUDY_BANK; }
 
-// ---- the questions --------------------------------------------------------
-function cleanParentQ(r) {
-  const c = cleanStudyQ(r);
-  if (!c || typeof r.id !== 'string' || !/^p[A-Za-z0-9_-]{3,12}$/.test(r.id)) return null;
-  return { id: r.id, s: c.s, g: ECON.study.minLevel, t: 'parent', q: c.q, a: c.a, alt: c.alt, x: '', wrong: c.wrong, parent: true };
-}
-function setParentQs(list, owner, only) {
-  parentOnly = only === true;
-  parentQs = (Array.isArray(list) ? list : []).map(cleanParentQ).filter(Boolean).slice(0, ECON.study.parent.max);
-  parentQsOwner = owner || '';
-  try {
-    if (parentQs.length) localStorage.setItem(STUDY_PARENT_KEY, JSON.stringify({ name: parentQsOwner, only: parentOnly, qs: parentQs.map(function (q) { return { id: q.id, s: q.s, q: q.q, a: q.a, alt: q.alt, wrong: q.wrong }; }) }));
-    else localStorage.removeItem(STUDY_PARENT_KEY);
-  } catch (e) {}
-}
-(function loadParentQs() {
-  try {
-    const c = JSON.parse(localStorage.getItem(STUDY_PARENT_KEY));
-    if (c && typeof c.name === 'string' && acct && acct.name === c.name) setParentQs(c.qs, c.name, c.only);
-  } catch (e) {}
-})();
-// A parent's questions for the player who is signed in right now.
-function studyParent() { return acct && parentQsOwner === acct.name ? parentQs : []; }
-// Only the parent's questions are used (they must have added some, or Study would be empty).
-function studyOnlyParent() { return parentOnly && studyParent().length > 0; }
-async function studyLoadParent() {
-  if (!acct) return;
-  try {
-    const r = await api('/api/study');
-    if (r.status === 200 && Array.isArray(r.data.questions)) { setParentQs(r.data.questions, acct.name, r.data.only); if (studyScreen === 'home') studyRender(); }
-  } catch (e) {}
-}
-function studyAll() { return STUDY_BANK.concat(studyParent()); }
-
-// Does a question belong to a filter ('all', a subject id, 'ky' or 'parent') at a level? A parent's questions ignore the level.
+// Does a question belong to a filter ('all', a subject id or 'ky') at a level?
 function studyMatch(q, filter, level) {
-  if (q.parent) return filter === 'all' || filter === 'parent' || filter === q.s;
-  if (filter === 'parent' || q.g > level) return false;
+  if (q.g > level) return false;
   return filter === 'all' || (filter === 'ky' ? q.t === 'ky' : q.s === filter);
 }
 // The questions for one filter or a list of them (a question in any of them counts).
 function studyPool(filter, level) {
-  const only = studyOnlyParent(), list = Array.isArray(filter) ? filter : [filter];
-  return studyAll().filter(function (q) { return (!only || q.parent) && list.some(function (f) { return studyMatch(q, f, level); }); });
+  const list = Array.isArray(filter) ? filter : [filter];
+  return studyAll().filter(function (q) { return list.some(function (f) { return studyMatch(q, f, level); }); });
 }
 // The subjects the player ticked that are still on offer; none ticked means all.
 function studySelected(filters) {
@@ -67,11 +24,9 @@ function studySelected(filters) {
 }
 function studyFilters() {
   const lvl = state.study.level;
-  const list = [['all', studyOnlyParent() ? '👪 My parent\'s questions' : '🎓 All']];
+  const list = [['all', '🎓 All']];
   STUDY_SUBJECTS.forEach(function (s) { if (studyPool(s.id, lvl).length) list.push([s.id, s.icon + ' ' + s.label]); });
-  if (studyOnlyParent()) return list;
   if (studyPool('ky', lvl).length) list.push(['ky', '🏇 Kentucky']);
-  if (studyParent().length) list.push(['parent', '👪 From my parent']);
   return list;
 }
 
@@ -82,23 +37,6 @@ function studyNorm(s) {
 }
 // The same, with every space gone, so "x = 5", "x=5" and "(x + 2)(x + 3)" compare equal to their short forms.
 function studySquash(s) { return studyNorm(s).replace(/ /g, ''); }
-function oneEditApart(a, b) {
-  if (a === b) return true;
-  if (Math.abs(a.length - b.length) > 1) return false;
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) i++;
-  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1);
-  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
-}
-// Is the typed text right? Case, accents, spaces, "the", commas in numbers and one slip of the finger in a long word are all fine.
-function studyCheck(q, text) {
-  const t = studySquash(text);
-  if (!t) return false;
-  const good = [q.a].concat(q.alt).map(studySquash);
-  if (good.indexOf(t) !== -1) return true;
-  if (/\d/.test(t)) return false;
-  return good.some(function (g) { return !/\d/.test(g) && g.length >= 6 && oneEditApart(g, t); });
-}
 function studyKind(a) { return /^-?[\d,]*\.?\d+$/.test(a) ? 'num' : (/^-?\d+\/\d+$/.test(a) ? 'frac' : 'word'); }
 // What a question asks for, guessed from its words: a person, a place, a work (book, song, painting...) or a term. Wrong choices of the same type look right.
 function studyType(q) {
@@ -138,71 +76,8 @@ function studyChoices(q) {
   return shuffled([q.a].concat(wrong.slice(0, 3)));
 }
 
-// ---- what is remembered ------------------------------------------------------
-function studyDay() {
-  const st = state.study, k = dayKey();
-  if (st.day !== k) { st.day = k; st.gems = 0; }
-  return st;
-}
-// A question pays again only after ECON.study.freshDays days.
-function studyFresh(id) {
-  const p = state.study.paid[id];
-  return p === undefined || dayNumber() - p >= ECON.study.freshDays;
-}
-function studyRecord(q, ok) {
-  const st = state.study, e = st.seen[q.id] || (st.seen[q.id] = [0, 0, 0]);
-  e[ok ? 0 : 1] += 1;
-  e[2] = dayNumber();
-  const i = st.miss.indexOf(q.id);
-  if (ok && i !== -1) st.miss.splice(i, 1);
-  if (!ok && i === -1) { st.miss.push(q.id); if (st.miss.length > ECON.study.missMax) st.miss.shift(); }
-}
-// The parent report counts answers to typed and multiple-choice questions (flashcards are marked by the player, so they are not counted).
-function studyStat(q, ok, secs) {
-  const d = statDay();
-  if (!d.st) d.st = [0, 0];
-  if (!d.sub) d.sub = {};
-  d.st[0] += 1;
-  if (ok) d.st[1] += 1;
-  const o = d.sub[q.s] || (d.sub[q.s] = [0, 0]);
-  o[0] += 1;
-  if (ok) o[1] += 1;
-  d.ms += Math.round(Math.min(Math.max(secs || 0, 0), 60) * 1000);
-}
-// How well a question is known: unseen first, then the ones answered wrong most often.
-function studyKnown(q) {
-  const e = state.study.seen[q.id];
-  return e ? e[0] - 2 * e[1] : -1;
-}
-function studyMastered(pool) {
-  const st = state.study;
-  return pool.filter(function (q) { const e = st.seen[q.id]; return e && e[0] >= 2 && e[0] > e[1] && st.miss.indexOf(q.id) === -1; }).length;
-}
-// A round: up to two of the parent's new or missed questions, then missed ones, then new ones, then the least known.
-function studyPick(pool, n) {
-  const st = state.study, out = [], used = {};
-  const take = function (list, max) {
-    for (let i = 0; i < list.length && out.length < n && max > 0; i++) if (!used[list[i].id]) { used[list[i].id] = 1; out.push(list[i]); max--; }
-  };
-  take(shuffled(pool.filter(function (q) { return q.parent && (!st.seen[q.id] || st.miss.indexOf(q.id) !== -1); })), 2);
-  take(shuffled(pool.filter(function (q) { return st.miss.indexOf(q.id) !== -1; })), 3);
-  const weak = studyWeakSubject();
-  if (weak) take(shuffled(pool.filter(function (q) { return q.s === weak.id; })), 2);          // a boss's weak point: ask its subject more often
-  take(shuffled(pool.filter(function (q) { return !st.seen[q.id]; })), n);
-  take(shuffled(pool).sort(function (a, b) { return studyKnown(a) - studyKnown(b); }), n);
-  return shuffled(out);
-}
-
-// ---- trivia mode ------------------------------------------------------------------
-// While Study is on the whole game asks study questions: battles, tournaments, duels (same room and online) and the vault. The buddies, bosses, progress and
-// rewards are the same; the questions, the Kingdom's name and the weak points change. A parent's own questions are never used outside the player's own battles.
-function triviaWords(s) { return studyOn ? String(s).replace(/Number Kingdom/g, 'Trivia Kingdom').replace(/Number King\b/g, 'Trivia King') : s; }
 // Is this choice the right answer (for a math question, a number; for a study question, the words)?
 function mcqRight(v, ans) { return typeof ans === 'string' ? String(v) === ans : Math.abs(v - ans) < 0.0001; }
-// Parent-report numbers for one multiple-choice answer (math types for math, subjects for study).
-function mcqRecord(q, ok, secs) {
-  if (q.study) { studyRecord(q.study, ok); studyStat(q.study, ok, secs); } else recordStat(q.op, ok, secs, false);
-}
 function studyBuiltin(filters, level) { return STUDY_BANK.filter(function (q) { return filters.some(function (f) { return studyMatch(q, f, level); }); }); }
 // A multiple-choice study question in the shape makeMcq gives (so tournaments, duels and the vault need no other changes). `count` = number of choices.
 function studyMcq(count) {
@@ -217,329 +92,11 @@ function studyMcq(count) {
   if (count && count < opts.length) opts = shuffled([q.a].concat(shuffled(opts.filter(function (o) { return o !== q.a; })).slice(0, count - 1)));
   return { op: 'study', study: q, ans: q.a, opts: opts, expr: q.q, lead: '', html: escHtml(q.q) };
 }
-// A boss's weak point is a math type; in trivia mode it is a school subject instead (the same boss always has the same one).
-const STUDY_MAIN = ['social', 'science', 'lang', 'arts', 'math'];
-function studyWeakSubject() {
-  const w = getWeakOp();
-  if (!w) return null;
-  const pool = studyBuiltin(studySelected(), state.study.level);
-  const have = STUDY_SUBJECTS.filter(function (s) { return STUDY_MAIN.indexOf(s.id) !== -1 && pool.some(function (q) { return q.s === s.id; }); });
-  if (!have.length) return null;
-  let h = 0;
-  for (let i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) % 997;
-  return have[h % have.length];
-}
 
-// ---- the window ---------------------------------------------------------------
-// Study takes the place of the arena and the keypad on the main page (the buddy and the top bars stay). The bottom-bar button switches between the two.
-function studySync() {
-  document.querySelector('.game-container').classList.toggle('study-on', studyOn);
-  document.getElementById('study-pane').style.display = studyOn ? '' : 'none';
-  document.getElementById('study-toggle-text').innerText = studyOn ? '🧮 Math' : '📚 Study';
-  document.getElementById('study-toggle').setAttribute('aria-label', studyOn ? 'Back to math problems' : 'Study school subjects');
-  document.body.classList.toggle('trivia', studyOn);              // settings, the map's name and the practice row change too
-  updatePracticeRow();
-  updateWeakChip();
-}
-function toggleStudy() { if (studyOn) closeStudy(); else openStudy(); }
-function openStudy() {
-  if (studyOn) return;
+function toggleStudy() {
+  studyOn = !studyOn;
   soundClick();
-  pauseClock();
-  studyOn = true;
-  studyScreen = 'home';
-  studyRound = null;
-  studyNote = '';
-  studyDay();
-  studySync();
-  studyRender();
-  studyLoadParent();
-}
-function closeStudy() {
-  if (!studyOn) return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  soundClick();
-  studyOn = false;
-  studyRound = null;
-  studySync();
-  if (!openOverlays().length) resumeClock();
-  saveState();
-  updateStatsUI();
-}
-// Escape and the ✕: from a round go back to the start (what was answered is remembered), from the start close.
-function studyEsc() {
-  if (typeof stopSpeech === 'function') stopSpeech();
-  if (studyScreen === 'home') return closeStudy();
-  soundClick();
-  studyNote = studyScreen === 'card' ? 'Round paused. Everything you answered is remembered.' : '';
-  studyHome();
-}
-function studyHome() {
-  studyScreen = 'home';
-  studyRound = null;
-  saveState();
-  studyRender();
-}
-function studySetLevel(n) {
-  soundClick();
-  state.study.level = clamp(n, ECON.study.minLevel, ECON.study.maxLevel);
-  saveState();
-  studyRender();
-}
-// Tap a subject to add it or take it off; "All" clears the choice.
-function studySetFilter(id) {
-  soundClick();
-  const sel = state.study.subjects, i = sel.indexOf(id);
-  if (id === 'all') state.study.subjects = [];
-  else if (i === -1) sel.push(id);
-  else sel.splice(i, 1);
-  saveState();
-  updatePracticeRow();
-  updateWeakChip();
-  studyRender();
-}
-function studyRender() {
-  const box = document.getElementById('study-box');
-  if (!box) return;
-  if (studyScreen === 'card' && studyRound) box.innerHTML = studyCardHtml();
-  else if (studyScreen === 'done' && studyRound) box.innerHTML = studyDoneHtml();
-  else box.innerHTML = studyHomeHtml();
-  studyFillOpts();
-  const input = document.getElementById('study-in');
-  if (input) input.focus();
-  const next = document.getElementById('study-next');
-  if (next) next.focus();
-}
-// Multiple choice: the four buttons. After an answer they stay, locked, with the right one green and a wrong pick red.
-function studyFillOpts() {
-  const r = studyRound, opts = document.getElementById('study-opts');
-  if (!r || !opts) return;
-  const q = r.qs[r.i];
-  fillOptButtons(opts, r.opts, studyPickOpt);
-  opts.classList.toggle('study-wide', r.opts.some(function (o) { return o.length > 26; }));        // only very long answers get a full-width row each
-  if (r.phase !== 'reveal') return;
-  Array.prototype.forEach.call(opts.children, function (b) {
-    b.disabled = true;
-    if (b.innerText === q.a) b.classList.add('right');
-    else if (b.innerText === r.picked) b.classList.add('wrong');
-  });
-}
-function studyHomeHtml() {
-  const S = ECON.study, st = studyDay();
-  const level = st.level, filters = studyFilters();
-  const sel = studySelected(filters);
-  const pool = studyPool(sel, level);
-  const levelBtns = [6, 7, 8].map(function (n) {
-    return '<button class="grade-btn' + (n === level ? ' active' : '') + '" onclick="studySetLevel(' + n + ')" aria-pressed="' + (n === level) + '">' + n + 'th' + (n === 8 ? ' (all)' : '') + '</button>';
-  }).join('');
-  const filterBtns = filters.map(function (f) {
-    const n = studyPool(f[0], level).length;
-    return '<button class="grade-btn' + (sel.indexOf(f[0]) !== -1 ? ' active' : '') + '" onclick="studySetFilter(\'' + f[0] + '\')" aria-pressed="' + (sel.indexOf(f[0]) !== -1) + '">' + escHtml(f[1]) + ' <small>' + n + '</small></button>';
-  }).join('');
-  const off = pool.length ? '' : ' disabled';
-  const missed = pool.filter(function (q) { return st.miss.indexOf(q.id) !== -1; }).length;
-  return '<h2 style="font-size:1.3rem;">📚 Study</h2>' +
-    '<div class="settings-hint" style="margin-top:2px;">School subjects for grades 6–8. Right answers earn buddy XP and a few gems, up to ' + S.dayCap + ' 💎 a day.</div>' +
-    (studyNote ? '<div class="study-note" role="status">' + escHtml(studyNote) + '</div>' : '') +
-    (studyOnlyParent() ? '<div class="study-note">👪 Your parent chose to practise their own questions.</div>' : !STUDY_BANK.some(function (q) { return q.g > ECON.study.minLevel; }) ? '' : '<div class="settings-label">Level</div><div class="study-chips study-levels">' + levelBtns + '</div>') +
-    '<div class="settings-label">Subjects <small>(tap one or more)</small></div><div class="study-chips">' + filterBtns + '</div>' +
-    '<div class="study-stats" aria-live="polite">' + pool.length + ' questions · ' + studyMastered(pool) + ' learned' + (missed ? ' · ' + missed + ' to review' : '') + ' · today ' + st.gems + '/' + S.dayCap + ' 💎</div>' +
-    '<div class="settings-label">How do you want to study?</div>' +
-    '<button class="key-btn submit-btn study-go" onclick="studyStart(\'mcq\')"' + off + '>🎯 Quick Recall <small>pick the answer</small></button>' +
-    '<button class="grade-btn study-go" onclick="studyStart(\'type\')"' + off + '>⌨️ Type it <small>write the answer</small></button>' +
-    '<button class="grade-btn study-go" onclick="studyStart(\'cards\')"' + off + '>🃏 Flashcards <small>no gems, just practice</small></button>' +
-    (pool.length ? '' : '<div class="settings-hint">No questions here yet.' + (sel.indexOf('parent') !== -1 ? ' A parent can add some from the parent page.' : '') + '</div>') +
-    '<div class="settings-hint">A question pays again after ' + S.freshDays + ' days. Missed questions come back first.</div>' +
-    (pool.some(function (q) { return q.t.indexOf('kaac') === 0; }) ? '<div class="settings-hint">Questions are from the Governor\'s Cup practice materials of the Kentucky Association for Academic Competition (KAAC), used with permission.</div>' : '') +
-    '<button class="key-btn submit-btn study-back" onclick="closeStudy()">🧮 Back to math</button>';
-}
-
-// ---- a round --------------------------------------------------------------------
-function studyStart(mode) {
-  const st = state.study, pool = studyPool(studySelected(), st.level);
-  if (!pool.length) return;
-  soundClick();
-  studyRound = { mode: mode, qs: studyPick(pool, ECON.study.roundSize), i: 0, results: [], phase: 'ask', t0: Date.now(), opts: null };
-  studyNote = '';
-  studyScreen = 'card';
-  studyAsk();
-}
-function studyAsk() {
-  const r = studyRound, q = r.qs[r.i];
-  r.phase = 'ask';
-  r.t0 = Date.now();
-  r.opts = r.mode === 'mcq' ? studyChoices(q) : null;
-  r.picked = '';
-  studyRender();
-  if (typeof speakCurrentStudy === 'function') speakCurrentStudy(false);
-}
-function studySubjectOf(q) { return STUDY_SUBJECTS.filter(function (s) { return s.id === q.s; })[0] || STUDY_SUBJECTS[STUDY_SUBJECTS.length - 1]; }
-function studyCardHtml() {
-  const r = studyRound, q = r.qs[r.i], sub = studySubjectOf(q);
-  const pct = Math.round(r.i / r.qs.length * 100);
-  let body = (r.phase === 'ask' && r.mode !== 'cards' && needsSwitch() && aliveTeamIds().length ? '<div class="study-note" role="status">' + escHtml(studyFaintNote()) + '</div>' : '') + (r.mode === 'mcq' ? '<div class="tour-opts study-opts" id="study-opts"></div>' : '');
-  if (r.phase === 'ask') {
-    if (r.mode === 'type') body = '<input class="acct-input" id="study-in" type="text" maxlength="80" placeholder="Type your answer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" onkeydown="if(event.key===\'Enter\')studySubmitText()">' +
-      '<button class="key-btn submit-btn study-go" onclick="studySubmitText()">Check ➔</button>';
-    else if (r.mode === 'cards') body = '<button class="key-btn submit-btn study-go" onclick="studyReveal()">Show answer</button>';
-  } else {
-    const last = r.results[r.results.length - 1];
-    body += '<div class="study-fb ' + (last.shown ? 'shown' : (last.ok ? 'right' : 'wrong')) + '" id="study-fb" role="status">' + studyFeedback(q, last) + '</div>';
-    if (r.mode === 'cards') body += '<div class="acct-btns"><button class="grade-btn study-go" onclick="studyMark(false)">↻ Again</button><button class="key-btn submit-btn study-go" onclick="studyMark(true)">✓ Got it</button></div>';
-    else body += '<button class="key-btn submit-btn study-go" id="study-next" onclick="studyNext()">' + (r.i + 1 >= r.qs.length ? 'See results ➔' : 'Next ➔') + '</button>';
-  }
-  return '<div class="study-top"><div class="raid-chapter" style="color:#a5b4fc;">Question ' + (r.i + 1) + ' of ' + r.qs.length + ' · ' + sub.icon + ' ' + escHtml(sub.label) + (q.parent ? ' · 👪 from your parent' : '') + '</div>' +
-    '<div class="study-actions"><button class="grade-btn study-speak" id="study-speak-btn" onclick="speakCurrentStudy(true)" aria-label="Read question and choices aloud" title="Read question aloud">🔊 Read</button>' +
-    '<button class="grade-btn study-exit" onclick="studyEsc()" aria-label="Stop this round and go back">⏸ Back</button></div></div>' +
-    '<div class="study-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><i style="width:' + pct + '%"></i></div>' +
-    '<div class="study-q' + (q.q.length > 300 ? ' xlong' : q.q.length > 170 ? ' long' : '') + '">' + escHtml(q.q) + '</div>' + body;
-}
-function studyFeedback(q, res) {
-  if (res.shown) return '<b>Answer: ' + escHtml(q.a) + '</b>' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>Did you know it?';
-  if (res.ok) return '✅ <b>Correct!</b> ' + escHtml(q.a) + (q.x ? '<br>' + escHtml(q.x) : '');
-  return '💡 Good try! The answer is <b>' + escHtml(q.a) + '</b>.' + (q.x ? '<br>' + escHtml(q.x) : '') + '<br>It will come back so you can learn it.';
-}
-function studyAnswered(ok, shown) {
-  const r = studyRound, q = r.qs[r.i];
-  const secs = (Date.now() - r.t0) / 1000;
-  r.results.push({ id: q.id, ok: ok, shown: !!shown, fresh: studyFresh(q.id) });
-  r.phase = 'reveal';
-  if (!shown) {
-    studyRecord(q, ok);
-    studyStat(q, ok, secs);
-    calDayEvent();
-    studyBattle(ok, q.s);
-  }
-  saveState();
-  studyRender();
-}
-// The fight goes on while you study: a right answer hits the foe and a wrong one lets it hit your buddy, with the same damage, shields, fainting and victory
-// code as a math answer (triggerMonsterDamage, triggerBuddyDamage). Gems and XP for the answer itself come from the study round, not from here.
-function studyBattle(ok, subjectId) {
-  if (ok) {
-    soundCorrect(state.streak + 1);
-    buddyReact(state.streak >= 2 && (state.streak + 1) % 3 === 0 ? 'streak' : 'cheer');
-    state.streak += 1;
-    questEvent('streak', state.streak);
-    if (ultimateCharge < 3) ultimateCharge += 1;
-    answerBonuses(false);
-    showPopup(BOSS_HIT_WORD[getBossInfo().element] || 'HIT! 💥');
-    questEvent('solve', 'study');
-    const weak = studyWeakSubject();
-    triggerMonsterDamage(0, !!weak && !!subjectId && weak.id === subjectId, false, 1);
-  } else {
-    soundWrong();
-    bossMistakes += 1;
-    buddyReact('wince');
-    if (state.shields > 0) {
-      state.shields -= 1;
-      soundShieldBreak();
-      showPopup('🛡️ STREAK SHIELD SAVED YOU!');
-      updateStatsUI();
-    } else triggerBuddyDamage();
-  }
-  tickStatus();
-  updateStatsUI();
-  setTimeout(studyAfterHit, 450);                 // the hit lands after a short animation: then say if the buddy fainted
-}
-function studyFaintNote() { return '💤 ' + getActivePetDisplay().name + ' needs rest! Tap a teammate above to send them in.'; }
-function studyAfterHit() {
-  if (!studyOn || !studyRound || studyScreen !== 'card' || !needsSwitch() || !aliveTeamIds().length) return;
-  const fb = document.getElementById('study-fb');
-  if (fb) fb.insertAdjacentHTML('beforeend', '<br><b>' + escHtml(studyFaintNote()) + '</b>');
-}
-// A fainted fighter must be replaced by a teammate first (the same rule as for math answers).
-function studyBlocked() {
-  if (!needsSwitch() || !aliveTeamIds().length) return false;
-  toast(studyFaintNote());
-  soundWrong();
-  return true;
-}
-function studyPickOpt(v) {
-  const r = studyRound;
-  if (!r || r.phase !== 'ask' || studyBlocked()) return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  r.picked = String(v);
-  studyAnswered(String(v) === r.qs[r.i].a, false);
-}
-function studySubmitText() {
-  const r = studyRound, input = document.getElementById('study-in');
-  if (!r || r.phase !== 'ask' || !input || studyBlocked()) return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  if (!input.value.trim()) { toast('Type an answer first'); return; }
-  studyAnswered(studyCheck(r.qs[r.i], input.value), false);
-}
-function studyReveal() {
-  const r = studyRound;
-  if (!r || r.phase !== 'ask') return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  soundClick();
-  studyAnswered(false, true);
-  if (state && state.readAloud && typeof speakText === 'function') {
-    speakText('The answer is: ' + r.qs[r.i].a);
-  }
-}
-// Flashcards: the player says whether they knew it.
-function studyMark(knew) {
-  const r = studyRound;
-  if (!r || r.phase !== 'reveal') return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  const q = r.qs[r.i];
-  r.results[r.results.length - 1].ok = knew;
-  studyRecord(q, knew);
-  calDayEvent();
-  if (knew) soundCorrect(); else soundClick();
-  studyNext();
-}
-function studyNext() {
-  const r = studyRound;
-  if (!r) return;
-  if (typeof stopSpeech === 'function') stopSpeech();
-  soundClick();
-  r.i += 1;
-  if (r.i >= r.qs.length) return studyFinish();
-  studyAsk();
-}
-// Pays for a finished multiple-choice or typed round (flashcards pay nothing).
-function studyFinish() {
-  const r = studyRound, S = ECON.study, st = studyDay();
-  r.paid = 0; r.xp = 0; r.room = Math.max(0, S.dayCap - st.gems);
-  const right = r.results.filter(function (x) { return x.ok; }).length;
-  r.right = right;
-  if (r.mode !== 'cards') {
-    const fresh = r.results.filter(function (x) { return x.ok && x.fresh; });
-    const perfect = right === r.results.length && fresh.length >= Math.ceil(r.results.length / 2);
-    r.fresh = fresh.length;
-    r.paid = Math.min(fresh.length * S.gemPerNew + (perfect ? S.perfectBonus : 0), r.room);
-    r.xp = r.room > 0 ? fresh.length * S.xpPerNew : 0;
-    r.perfect = perfect;
-    if (r.room > 0) fresh.forEach(function (x) { st.paid[x.id] = dayNumber(); });
-    st.gems += r.paid;
-    if (r.xp) addXpTo(state.activePet, r.xp);
-    st.rounds += 1;
-  }
-  studyScreen = 'done';
-  checkParentGoal();
-  if (r.paid) grantGems(r.paid, '📚 +' + r.paid + ' 💎 for studying!', r.perfect);
-  else { saveState(); updateStatsUI(); }
-  studyRender();
-}
-function studyDoneHtml() {
-  const r = studyRound, S = ECON.study;
-  let pay;
-  if (r.mode === 'cards') pay = 'Flashcards are for practice, so they do not earn gems. Try Quick Recall when you feel ready!';
-  else if (r.paid) pay = '+' + r.paid + ' 💎' + (r.xp ? ' and +' + r.xp + ' XP for your buddy' : '') + (r.perfect ? ' (perfect round bonus!)' : '') + '.';
-  else if (!r.room) pay = 'You reached today\'s study limit of ' + S.dayCap + ' 💎. Studying still makes you stronger, and the limit starts over tomorrow!';
-  else pay = 'These questions were all done recently, so no new gems this time. Try another subject for more!';
-  const missed = r.results.filter(function (x) { return !x.ok; }).map(function (x) {
-    const q = studyAll().filter(function (o) { return o.id === x.id; })[0];
-    return q ? '<li><b>' + escHtml(q.q) + '</b><br>' + escHtml(q.a) + '</li>' : '';
-  }).join('');
-  return '<h2 style="font-size:1.3rem;">' + (r.right === r.results.length ? '🌟 Perfect round!' : '🎉 Round done!') + '</h2>' +
-    '<div class="tour-eq">' + r.right + ' / ' + r.results.length + ' ✅</div>' +
-    '<div class="study-note" role="status">' + escHtml(pay) + '</div>' +
-    (missed ? '<div class="settings-label">Worth another look</div><ul class="study-missed">' + missed + '</ul>' : '') +
-    '<button class="key-btn submit-btn study-go" onclick="studyStart(\'' + r.mode + '\')">Study again</button>' +
-    '<button class="grade-btn study-go" onclick="studyHome()">Choose something else</button>' +
-    '<button class="grade-btn study-go" onclick="closeStudy()">🧮 Back to math</button>';
+  document.body.classList.toggle('trivia', studyOn);
+  const b = document.getElementById('study-toggle-btn');
+  if (b) b.innerText = studyOn ? 'Questions: school subjects' : 'Questions: math';
 }

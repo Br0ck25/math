@@ -181,7 +181,7 @@ const twoBuddies = () => page.evaluate(() => {
   return other;
 });
 
-test('the Team window lists the team with level and HP, and Lead changes the fighter through the one free swap', async () => {
+test('the Team window lists the team with level and HP, and Lead changes who goes first', async () => {
   await madeHero();
   const other = await twoBuddies();
   await page.evaluate(() => { openAdventure(); });
@@ -193,17 +193,16 @@ test('the Team window lists the team with level and HP, and Lead changes the fig
   assert.match(rows[1].hp, /^HP \d+ of \d+$/);
   assert.equal(await page.evaluate(() => document.getElementById('pad-title').innerText), "Sam's team");
   await page.click('#pad-body .pad-row >> nth=1 >> button');
-  assert.deepEqual(await page.evaluate(() => [state.activePet, state.swapUsed]), [other, true]);
-  assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row:nth-child(2)').innerText), /Leading/);
-  await page.click('#pad-body .pad-row >> nth=0 >> button');                                                          // a second swap in the same battle is refused
   assert.equal(await page.evaluate(() => state.activePet), other);
-  assert.match(await page.evaluate(() => document.getElementById('toast').innerText), /already swapped/);
+  assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row:nth-child(2)').innerText), /Leading/);
+  await page.click('#pad-body .pad-row >> nth=0 >> button');                                                          // the lead can change back any time
+  assert.notEqual(await page.evaluate(() => state.activePet), other);
 });
 
 test('a resting buddy cannot be made the lead, and Change team opens the Hub on the team tab', async () => {
   await madeHero();
   const other = await twoBuddies();
-  await page.evaluate((o) => { state.faintedPets = [o]; openAdventure(); openPad(); }, other);
+  await page.evaluate((o) => { state.advHp = { [o]: 0 }; openAdventure(); openPad(); }, other);
   assert.equal(await page.evaluate(() => document.querySelectorAll('#pad-body .pad-row button').length), 0, 'no Lead button for a resting buddy');
   assert.match(await page.evaluate(() => document.querySelector('#pad-body .pad-row.resting').innerText), /Resting/);
   await page.click('#pad-body .bag-actions .claim-btn');
@@ -231,5 +230,5 @@ test('a team of one says there is room, and every window fits a 320x568 phone', 
   assert.ok(r.swatches, 'swatches are tappable');
   assert.ok(r.goReachable, 'the Start button can be reached');
   assert.ok(r.input >= 16, 'the name field is 16px or more so iPhones do not zoom');
-  assert.match(r.note, /Room for 2 more/);
+  assert.match(r.note, /Room for 5 more/);
 });

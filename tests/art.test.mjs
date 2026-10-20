@@ -68,35 +68,6 @@ test('a buddy with art shows the picture where its emoji was; the emoji stays fo
   assert.deepEqual(r.emojiOf, [true, '🦊']);
 });
 
-test('the art shows on the battle screen, hub, Dex, shop and legend story, and no picture data ever leaks into visible text', async () => {
-  await withArt();
-  const r = await page.evaluate(() => {
-    const out = {};
-    const F = window.__free; state.unlockedPets = ['dog', F]; state.activePet = F; state.buddyXp[F] = xpForLevel(20); state.gems = 9999;
-    updateStatsUI(); updateBattleUI();
-    out.battle = document.querySelector('#pet-box .buddy-img, #battle-header-arena .buddy-img') !== null;
-    const leaks = [];
-    const scan = (where) => { const t = document.body.innerText; if (/data:image|<img|buddy-img|base64/.test(t)) leaks.push(where); };
-    scan('battle');
-    openHub(); hubPet = F; renderHub(); out.hub = document.querySelector('#hub-modal .buddy-img') !== null; scan('hub'); closeHub();
-    bookTab = 'buddy'; openBook(); out.dexOwned = document.querySelector('#book-body .buddy-img') !== null;
-    state.unlockedPets = ['dog']; renderBook(); out.dexLocked = [...document.querySelectorAll('#book-body .silhouette .buddy-img')].length > 0; scan('dex'); closeBook();
-    openShop(); out.shop = document.querySelector('#shop-modal .buddy-img') !== null; scan('shop'); closeShop();
-    // a duel win line and the legend story are text: they use the emoji
-    out.emojiText = emojiOf(getSpecies(F)) === window.__emoji;
-    out.leaks = leaks;
-    return out;
-  });
-  assert.equal(r.battle, true, 'battle screen');
-  assert.equal(r.hub, true, 'hub');
-  assert.equal(r.dexOwned, true);
-  assert.equal(r.dexLocked, true, 'a buddy you have not caught is a dark silhouette of its picture');
-  assert.equal(r.shop, true, 'shop');
-  assert.equal(r.emojiText, true);
-  assert.deepEqual(r.leaks, [], 'no picture data in visible text');
-  assert.deepEqual(errors, []);
-});
-
 test('the trading card draws the picture, scaled to fit, and falls back to the emoji without it', async () => {
   await withArt();
   const r = await page.evaluate(() => {
@@ -168,31 +139,6 @@ test('svg art: a viewBox-only svg gets its size from the viewBox so every browse
   assert.equal(r.drawn, 1);
   assert.equal(r.ratio, 200);
   assert.equal(r.avatar, true);
-});
-
-test('a boss with art (Rocky, Tyson) shows the picture in the fight, the Dex and on the card, and never as text', async () => {
-  const r = await page.evaluate(async () => {
-    const out = {}, i = monstersList.findIndex((m) => m.name === 'Rocky'), t = monstersList.findIndex((m) => m.name === 'Tyson');
-    out.have = [monstersList[i].icon.startsWith('<img'), monstersList[i].emoji, monstersList[t].icon.startsWith('<img'), monstersList[t].emoji];
-    state.wild.id = ''; state.bossBook[i] = { wins: 1, form: 0, alpha: 0 }; state.bossBook[t] = { wins: 1, form: 0, alpha: 0 };
-    currentMonsterIndex = t; bossLevel = 10; state.bossSwapped = false; state.raid = null; monsterCurrentHp = 5; updateBattleUI();
-    out.fight = document.getElementById('monster-icon').querySelector('.buddy-img') !== null && !/<img|data:image/.test(document.getElementById('monster-icon').innerText);
-    bookTab = 'boss'; openBook(); out.dex = document.querySelectorAll('#book-body .buddy-img').length >= 2; closeBook();
-    artImage(monstersList[t].buddy);
-    await new Promise((res) => setTimeout(res, 300));
-    const real = CanvasRenderingContext2D.prototype.drawImage, calls = [];
-    CanvasRenderingContext2D.prototype.drawImage = function () { calls.push(1); return real.apply(this, arguments); };
-    drawCardFromDesc(document.createElement('canvas'), bossCard(t, { level: 10 }));
-    CanvasRenderingContext2D.prototype.drawImage = real;
-    out.card = calls.length;
-    out.text = !/data:image|buddy-img/.test(document.body.innerText);
-    return out;
-  });
-  assert.deepEqual(r.have, [true, '🐕', true, '🐕‍🦺']);
-  assert.equal(r.fight, true, 'the boss on the fight screen');
-  assert.equal(r.dex, true, 'the boss tab of the Dex');
-  assert.equal(r.card, 1, 'the boss card');
-  assert.equal(r.text, true);
 });
 
 test('pictures are cheap: no image is decoded at load (200 of them made every page slow), a card asks for its picture and is redrawn when it arrives', async () => {

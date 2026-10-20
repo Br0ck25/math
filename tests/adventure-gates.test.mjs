@@ -71,18 +71,17 @@ test('a charm is yours while you hold its badge: old saves have theirs, nothing 
 
 test('winning a badge tells about its charm; the Bag shows the charms you hold', async () => {
   const r = await page.evaluate(() => {
-    state.badges = []; state.gym = { region: 'ember', step: 3 };
-    const res = advanceGym(true); showBadgeStory(res);
-    const story = document.getElementById('raid-panels').innerText;
-    document.getElementById('raid-modal').style.display = 'none'; modalDone();
+    state.badges = [];
+    abGymWon('ember', false);
+    const story = talk.lines.join(' ');
     state.hero.name = 'Sam'; renderBag();
     return { story, bag: document.getElementById('bag-body').innerText };
   });
-  assert.match(r.story, /New charm: Steam Boots/);
+  assert.match(r.story, /Steam Boots/);
   assert.match(r.bag, /Steam Boots/);
   assert.doesNotMatch(r.bag, /Trim Charm/);
-  const sky = await page.evaluate(() => { state.gym = { region: 'skyreach', step: 3 }; showBadgeStory(advanceGym(true)); const t = document.getElementById('raid-panels').innerText; document.getElementById('raid-modal').style.display = 'none'; modalDone(); return t; });
-  assert.doesNotMatch(sky, /New charm/, 'Skyreach has no charm');
+  const sky = await page.evaluate(() => { abGymWon('skyreach', false); return talk.lines.join(' '); });
+  assert.doesNotMatch(sky, /also get the/, 'Skyreach has no charm');
 });
 
 test('every kind of gate blocks with its own kind hint until the charm is held, then is walkable and drawn open', async () => {

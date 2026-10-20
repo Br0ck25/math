@@ -36,7 +36,8 @@ function getBond(id) {
 function addXpTo(id, amt) {
   state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amt);
 }
-function isSleepy(id) { return state.faintedPets.indexOf(id) !== -1; }
+// A buddy with no battle HP left is resting (it wakes at a Buddy Center).
+function isSleepy(id) { return state.advHp[id] === 0; }
 function moodOf(id) {
   if (isSleepy(id)) return { icon: '😴', text: 'Sleepy — wakes up after your next boss win' };
   const c = getCare(id);
@@ -44,32 +45,6 @@ function moodOf(id) {
   const gap = c.last ? daysSince(c.last) : 9;
   if (gap >= 2) return { icon: '🥺', text: 'Feeling a bit hungry...' };
   return { icon: '🙂', text: 'Doing fine' };
-}
-
-// arena reactions
-// kind: 'win' (boss beaten), 'cheer' (a right answer: a small hop), 'wince' (a wrong answer).
-const BUDDY_REACTIONS = {
-  win: { el: 'fighter-icon-wrapper', cls: 'happy-bounce', ms: 1000, bubbles: ['🥳', '❤️', '✨'] },
-  cheer: { el: 'pet-fighter-icon', cls: 'buddy-hop', ms: 420, bubbles: null },      // inner icon: the wrapper is busy tackling
-  wince: { el: 'pet-fighter-icon', cls: 'buddy-wince', ms: 500, bubbles: ['😣', '😵', '🥴'] },
-  streak: { el: 'fighter-icon-wrapper', cls: 'happy-bounce', ms: 900, bubbles: ['🔥', '🎉', '💪', '⭐'] },   // every third answer in a row
-  wake: { el: 'pet-fighter-icon', cls: 'buddy-hop', ms: 420, bubbles: ['😄', '👋'] }
-};
-function buddyReact(kind) {
-  const r = BUDDY_REACTIONS[kind];
-  const w = r && document.getElementById(r.el);
-  const b = document.getElementById('mood-bubble');
-  if (!w || !b) return;
-  w.classList.remove(r.cls);
-  void w.offsetWidth;
-  w.classList.add(r.cls);
-  setTimeout(function () { w.classList.remove(r.cls); }, r.ms);
-  if (r.bubbles) {
-    b.innerText = pick(r.bubbles);
-    b.classList.remove('show');
-    void b.offsetWidth;
-    b.classList.add('show');
-  }
 }
 
 // ----- hub shell -----
@@ -497,9 +472,8 @@ function renderCare() {
   };
   let h = '<div class="hearts" title="Bond">' + heartsHtml(bond) + '</div>' +
     '<div style="font-size:0.68rem; color:var(--text-muted);">Bond ' + bond + '/' + maxB + (bond ? ' · +' + Math.round(bond * ECON.care.bondXpBonus * 100) + '% XP for this buddy' : ' · feed the favorite snack to grow it') + '</div>' +
-    '<div style="font-size:0.66rem; color:var(--text-muted);">' + (restedLeft(id) > 0 ? '😊 Rested: +' + Math.round(ECON.farm.restedXp * 100) + '% XP for ' + restedLeft(id) + ' more wild wins today' : '😴 Rested bonus used up today. Try another buddy!') + '</div>' +
     (getPetById(id).stage === 0 ? '<div style="font-size:0.66rem; color:var(--text-muted);">✨ ' + ECON.evo.bondMin + ' hearts (or its favorite snack on the day) make a Radiant form when it first evolves.</div>' : '');
-  if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. Beat a boss to wake everyone up!</div>';
+  if (sleepy) h += '<div class="care-row" style="justify-content:center;">😴 Shhh... resting. A Buddy Center will wake it up!</div>';
   h += row('🤚 Pet', 'Cuddles today: ' + c.pets + '/' + maxP + ' · +' + ECON.care.petXp + ' XP each', btn('Pet', 'careAct(&quot;pet&quot;)', sleepy || c.pets >= maxP));
   const berries = function (kind, cost, eaten) {          // the Ranch's berries can pay instead of gems
     return !eaten && ranchStarted() ? btn(cost + ' 🫐', 'careAct(&quot;' + kind + '&quot;, &quot;berry&quot;)', sleepy || ranchHas('berry') < cost) : '';

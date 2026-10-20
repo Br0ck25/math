@@ -47,58 +47,6 @@ test('a struggling type steps down after 10 tries and never below Easier', async
   assert.deepEqual(r, { beforeTen: 0, down: -1, floor: -1 });
 });
 
-test('the combo streak never changes difficulty', async () => {
-  const r = await run(() => {
-    state.streak = 500;
-    for (let i = 0; i < 50; i++) generateProblem();
-    return Object.keys(state.adapt.tier).length + state.adapt.served.replace(/n/g, '').length;
-  });
-  assert.equal(r, 0);
-});
-
-test('Challenge problems come from the next grade up; none at the top grade', async () => {
-  const r = await run(() => {
-    const seen = [];
-    const real = OP_BY_ID.mul.gen;
-    OP_BY_ID.mul.gen = (g) => { seen.push(g); return real(g); };
-    state.adapt.tier.mul = 1; state.enabledOps = ['mul', 'add']; state.adapt.on = true;
-    let sawChallenge = false;
-    for (let i = 0; i < 60 && !sawChallenge; i++) { state.adapt.served = ''; generateProblem(); if (currentProblem.challenge) { sawChallenge = currentProblem.modeTag === 'mul'; } }
-    const challengeGrade = seen[seen.length - 1];
-    state.grade = 5; state.adapt.served = '';
-    let any = false;
-    for (let i = 0; i < 80; i++) { generateProblem(); if (currentProblem.challenge) any = true; }
-    OP_BY_ID.mul.gen = real;
-    return { sawChallenge, challengeGrade, topGradeChallenges: any };
-  });
-  assert.deepEqual(r, { sawChallenge: true, challengeGrade: 3, topGradeChallenges: false });
-});
-
-test('at most 4 Challenge problems in any 12, even when every type is at Challenge', async () => {
-  const worst = await run(() => {
-    state.enabledOps = ['add', 'sub', 'mul', 'div'];
-    state.enabledOps.forEach((o) => { state.adapt.tier[o] = 1; });
-    let worst = 0, flags = '';
-    for (let i = 0; i < 300; i++) { generateProblem(); flags += currentProblem.challenge ? 'c' : 'n'; worst = Math.max(worst, (flags.slice(-12).match(/c/g) || []).length); }
-    return worst;
-  });
-  assert.ok(worst <= 4, 'saw ' + worst);
-  assert.ok(worst >= 3, 'challenge problems do appear');
-});
-
-test('after a missed Challenge problem the next one of that type steps back to normal', async () => {
-  const r = await run(() => {
-    state.enabledOps = ['add', 'mul'];
-    state.adapt.tier.mul = 1;
-    currentProblem = { layout: 'inline', expr: '12 × 12', answer: 144, modeTag: 'mul', challenge: true };
-    inputLocked = false; userInput = '1'; state.shields = 0; checkAnswer();
-    return { calm: state.adapt.calm.mul === true, tierKept: state.adapt.tier.mul };
-  });
-  assert.deepEqual(r, { calm: true, tierKept: 1 });
-  const next = await run(() => { const n = pickNextProblem(null); const first = n.op === 'mul' ? n.kind : 'other'; return { first, calmLeft: !!state.adapt.calm.mul || first === 'other' }; });
-  assert.ok(next.first === 'normal' || next.first === 'other');
-});
-
 test('weak types are served more, strong types still appear, and no type passes half', async () => {
   const r = await run(() => {
     state.enabledOps = ['add', 'sub', 'mul', 'div', 'frac'];
@@ -146,22 +94,6 @@ test('with adaptive practice off every type is uniform, at the chosen grade', as
   assert.equal(r.tierShown, 0);
 });
 
-test('Challenge answers earn 50% more XP; gems stay the same', async () => {
-  const r = await run(() => {
-    state.enabledOps = ['add', 'mul'];
-    const xpFor = (challenge) => {
-      state.buddyXp.dog = xpForLevel(10); state.streak = 0; state.shields = 0; state.gems = 0;     // mid-level, so no level-up gems muddy the comparison
-      currentProblem = { layout: 'inline', expr: '2 + 2', answer: 4, modeTag: 'add', challenge };
-      questionStartTime = Date.now() - 100000;                 // slow: no speed bonus either way
-      inputLocked = false; userInput = '4'; checkAnswer();
-      return { xp: state.buddyXp.dog - xpForLevel(10), gems: state.gems };
-    };
-    return { normal: xpFor(false), challenge: xpFor(true) };
-  });
-  assert.equal(r.challenge.xp, Math.round(r.normal.xp * 1.5));
-  assert.equal(r.challenge.gems, r.normal.gems);
-});
-
 test('tournaments, duels and the vault ignore levels: every question is at the chosen grade', async () => {
   const r = await run(() => {
     state.adapt.tier = { mul: 1, add: -1 };
@@ -188,32 +120,6 @@ test('levels survive a reload, a damaged adaptive record is repaired', async () 
   assert.equal(a.recent.mul.length, 20);
   assert.match(a.served, /^cc/);
   assert.deepEqual(a.calm, {});
-});
-
-test('parent report: switch for adaptive practice, current levels listed; online-duel switch works', async () => {
-  const r = await run(() => {
-    state.adapt.tier = { mul: 1, div: -1 }; state.adapt.recent = { div: '0'.repeat(10) };
-    parentUnlocked = true; openParent();
-    const txt = document.getElementById('par-levels').innerText;
-    const out = { challenge: /Multiplication\s*Challenge/.test(txt), easier: /Division\s*Easier/.test(txt) };
-    document.getElementById('par-adaptive').checked = false; document.getElementById('par-adaptive').dispatchEvent(new Event('change'));
-    out.off = state.adapt.on === false && /Off/.test(document.getElementById('par-levels').innerText);
-    document.getElementById('par-adaptive').checked = true; document.getElementById('par-adaptive').dispatchEvent(new Event('change'));
-    out.on = state.adapt.on === true;
-    document.getElementById('par-duels').checked = false; document.getElementById('par-duels').dispatchEvent(new Event('change'));
-    out.duelsOff = state.duelsOnline === false;
-    return out;
-  });
-  assert.deepEqual(r, { challenge: true, easier: true, off: true, on: true, duelsOff: true });
-});
-
-test('a challenge problem is marked on screen', async () => {
-  const r = await run(() => {
-    state.enabledOps = ['mul']; state.adapt.tier.mul = 1; state.adapt.served = '';
-    generateProblem();
-    return document.getElementById('equation-mount').classList.contains('challenge') === currentProblem.challenge && currentProblem.challenge;
-  });
-  assert.equal(r, true);
 });
 
 test('no errors', () => { assert.deepEqual(errors, []); });

@@ -9,6 +9,14 @@ function getTeam() {
   if (t.indexOf(state.activePet) === -1 && owned.indexOf(state.activePet) !== -1) t = [state.activePet].concat(t).slice(0, ECON.team.max);
   return t;
 }
+// The lead is the buddy sent out first in a battle. Changing it is free; only a team member can lead, and one that has fainted cannot.
+function setLead(id) {
+  if (id === state.activePet) return false;
+  if (getTeam().indexOf(id) === -1) { soundWrong(); toast('Only your team can fight. Add it to your team first.'); return false; }
+  if (state.advHp[id] === 0) { soundWrong(); toast(getPetById(id).name + ' has fainted. Rest at a Buddy Center first.'); return false; }
+  state.activePet = id;
+  return true;
+}
 // A new buddy joins the team only if there is room (and then it may fight); otherwise it waits in your collection.
 function joinTeamIfRoom(id) {
   const t = getTeam();
@@ -31,14 +39,13 @@ function renderReplace() {
   list.innerHTML = '';
   getTeam().forEach(function (id) {
     const d = getPetById(id);
-    const resting = state.faintedPets.indexOf(id) !== -1;
-    const fighting = id === state.activePet;
-    const locked = resting || (fighting && state.swapUsed);
+    const resting = false;
+    const locked = false;
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'move-btn' + (locked ? ' off' : '');
     b.disabled = locked;
-    const note = resting ? 'Resting: stays on the team until a boss is beaten' : fighting ? (state.swapUsed ? 'Fighting now (you already swapped this battle)' : 'Fighting now: ' + sp.name + ' takes over (uses your swap)') : 'Lv ' + d.level + ' · ' + roleOf(d).name;
+    const note = 'Lv ' + d.level + ' · ' + roleOf(d).name;
     b.innerHTML = '<span class="mv-icon">' + d.icon + '</span><span class="mv-main"><b>' + escHtml(d.name) + '</b><small>' + escHtml(note) + '</small></span>';
     b.setAttribute('aria-label', 'Replace ' + d.name + '. ' + note);
     b.onclick = function () { replaceTeamMember(id); };
@@ -48,13 +55,13 @@ function renderReplace() {
 function replaceTeamMember(oldId) {
   const newId = replaceFor;
   const t = getTeam(), i = t.indexOf(oldId);
-  if (!newId || i === -1 || state.faintedPets.indexOf(oldId) !== -1 || (oldId === state.activePet && state.swapUsed)) { soundWrong(); return; }
+  if (!newId || i === -1) { soundWrong(); return; }
   t[i] = newId;
   state.team = t;
   const name = getPetById(newId).name;
   closeReplace();
-  if (oldId === state.activePet) useSwap(newId);          // the new buddy takes the fighter's place, using the battle's swap
-  else toast('🎒 ' + name + ' joined your team in place of ' + getPetById(oldId).name + '. Tap it under the arena to send it in.');
+  if (oldId === state.activePet) state.activePet = newId;          // the new buddy takes the lead
+  else toast(name + ' joined your team in place of ' + getPetById(oldId).name + '.');
   soundClick();
   saveState();
   updateStatsUI();
@@ -65,11 +72,11 @@ function toggleTeam(id) {
   const i = t.indexOf(id);
   if (i !== -1) {
     if (id === state.activePet) { soundWrong(); toast('Your fighter has to stay on the team. Swap to another team buddy first.'); return; }
-    if (state.faintedPets.indexOf(id) !== -1) { soundWrong(); toast('A resting buddy stays on the team until you beat a boss.'); return; }
+    if (isSleepy(id)) { soundWrong(); toast('A resting buddy stays on the team until you beat a boss.'); return; }
     if (t.length > 1) t.splice(i, 1);
   } else if (t.length < ECON.team.max) t.push(id);
   else {
-    const drop = t.findIndex(function (x) { return x !== state.activePet && state.faintedPets.indexOf(x) === -1; });      // the oldest buddy that is neither fighting nor resting
+    const drop = t.findIndex(function (x) { return x !== state.activePet && !isSleepy(x); });      // the oldest buddy that is neither fighting nor resting
     if (drop === -1) { soundWrong(); toast('Everyone on your team is fighting or resting right now.'); return; }
     t.splice(drop, 1); t.push(id);
   }
@@ -194,8 +201,6 @@ function tourAnswer(v) {
   const me = tour.mine[tour.me], foe = r.foes[tour.foe];
   const ok = mcqRight(v, tour.answer);
   const secs = (Date.now() - tour.t0) / 1000;
-  mcqRecord(tour.q, ok, secs);
-  calDayEvent();
   let msg;
   let next = 700;
   if (ok) {

@@ -30,16 +30,14 @@ async function handleApi(request, env, url) {
     const r = await signIn(kv, KID_NS, body);
     if (r.res) return r.res;
     const save = await kv.get('save:' + r.name, 'json');
-    return json({ ok: true, name: r.name, token: await newSession(kv, r.name), save: save || null, ...(await parentState(kv, r.name)) });
+    return json({ ok: true, name: r.name, token: await newSession(kv, r.name), save: save || null });
   }
-
-  if (path.indexOf('/api/parent/') === 0) return handleParent(path, request, kv, body);
 
   const who = await authenticate(request, kv);
   if (!who) return json({ error: 'Please sign in again.' }, 401);
 
   if (path === '/api/save' && request.method === 'GET') {
-    return json({ save: (await kv.get('save:' + who.name, 'json')) || null, ...(await parentState(kv, who.name)) });
+    return json({ save: (await kv.get('save:' + who.name, 'json')) || null });
   }
 
   if (path === '/api/save' && request.method === 'PUT') {
@@ -48,18 +46,12 @@ async function handleApi(request, env, url) {
     const cur = await kv.get('save:' + who.name, 'json');
     const curVersion = cur ? cur.version : 0;
     if (!body.force && Number(body.baseVersion) !== curVersion) return json({ conflict: true, save: cur || null }, 409);
-    const parents = await parentState(kv, who.name);
-    clampToControls(body.state, parents.controls);
     const next = { state: body.state, version: curVersion + 1, updatedAt: Date.now() };
     await kv.put('save:' + who.name, JSON.stringify(next));
-    return json({ ok: true, version: next.version, updatedAt: next.updatedAt, ...parents });
+    return json({ ok: true, version: next.version, updatedAt: next.updatedAt });
   }
 
-  if (path === '/api/study' && request.method === 'GET') return json(await liveStudy(kv, who.name));
-
   if (path.indexOf('/api/duel/') === 0) return handleDuel(path, request, url, kv, who, body);
-  if (path.indexOf('/api/challenge/') === 0) return handleChallenge(path, request, kv, who, body);
-  if (path.indexOf('/api/link/') === 0) return handleLink(path, request, kv, who, body);
 
   if (path === '/api/logout' && request.method === 'POST') {
     await kv.delete('sess:' + who.tokenHash);
@@ -70,8 +62,6 @@ async function handleApi(request, env, url) {
     if (!(await checkPassword(kv, who.name, String(body.password || '')))) return json({ error: 'Wrong password.' }, 401);
     await kv.delete('acct:' + who.name);
     await kv.delete('save:' + who.name);
-    await kv.delete('grant:' + who.name);   // parents lose sight of a deleted account
-    await kv.delete('pq:' + who.name);
     await kv.delete('sess:' + who.tokenHash);
     return json({ ok: true });
   }

@@ -92,12 +92,3 @@ const GRADE_DEFAULT_OPS = [
   ['alg', 'quad', 'log', 'pow', 'deriv'],
   ['deriv', 'integral', 'limit']
 ];
-
-const sessionStats = {
-  solved: 0,
-  attempts: 0,
-  goal: ECON.sessionGoal.start,
-  goalClaimed: false,
-  fastestTime: null,
-  byOp: {}
-};

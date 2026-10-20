@@ -83,16 +83,7 @@ const NORMALIZERS = [
     if (s.regionsVisited.indexOf('meadow') === -1) s.regionsVisited.unshift('meadow');
     if (s.region && s.regionsVisited.indexOf(s.region) === -1) s.regionsVisited.push(s.region);
     s.badges.forEach(function (b) { if (s.regionsVisited.indexOf(b) === -1) s.regionsVisited.push(b); });
-    const g = s.gym;
-    const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
-    if (g && isPlainObject(g) && g.region === 'champion' && (s.storySeen.champion || gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; }))) {      // the Champion's Hall needs every badge (a Champion keeps it)
-      const champ = cleanChampionRun(g.champ);
-      s.gym = { region: 'champion', step: champ.fallen.length, champ: champ };
-    } else if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {
-      s.gym = { region: g.region, step: asInt(g.step, 0, ECON.map.trainers, 0) };
-      if (rematch) s.gym.rematch = true;
-      s.region = g.region;
-    } else s.gym = null;
+    s.gym = null;                                                  // a gym is a chain of Adventure fights that is not saved (24y-ow-arenas.js)
     const rm = s.rematch;
     rm.day = typeof rm.day === 'string' ? rm.day.slice(0, 12) : '';
     rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return gymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
@@ -134,17 +125,6 @@ const NORMALIZERS = [
     const w = s.wildWins || {};
     s.wildWins = { day: typeof w.day === 'string' ? w.day.slice(0, 12) : '', n: asInt(w.n, 0, 100000, 0) };
   },
-  function trails(s) {
-    const t = {};
-    REGIONS.forEach(function (r) {
-      const e = s.trails && s.trails[r.id];
-      if (!e || typeof e !== 'object' || typeof e.day !== 'string' || !Array.isArray(e.done)) return;
-      t[r.id] = { day: e.day.slice(0, 12), done: e.done.filter(function (n, i, a) { return Number.isInteger(n) && n >= 0 && n < TRAIL_SPOTS.length && a.indexOf(n) === i; }) };
-    });
-    s.trails = t;
-    const g = s.trailGems || {};
-    s.trailGems = { day: typeof g.day === 'string' ? g.day.slice(0, 12) : '', n: asInt(g.n, 0, 99, 0) };
-  },
   function evoPath(s) {
     const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
     Object.keys(s.evoPath || {}).forEach(function (b) { if (owned.indexOf(b) !== -1 && EVO_PATHS[s.evoPath[b]]) paths[b] = s.evoPath[b]; });
@@ -172,31 +152,6 @@ const NORMALIZERS = [
   function packs(s) {
     s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
   },
-  function wild(s) {
-    const w = s.wild;
-    const ok = w.id && (wildPool().some(function (p) { return p.id === w.id; }) || (w.legend === true && legendPets.some(function (p) { return p.id === w.id; })));
-    w.id = ok ? w.id : '';
-    w.legend = w.legend === true && !!w.id && !w.trainer && legendPets.some(function (p) { return p.id === w.id; });
-    w.shiny = w.shiny === true && !!w.id && !w.trainer;
-    w.trainer = KNOWN_TRAINERS.indexOf(w.trainer) !== -1 && w.id ? w.trainer : '';
-    w.since = asInt(w.since, 0, 50, 0);
-    w.next = asInt(w.next, ECON.wild.bossEvery[0], ECON.wild.bossEvery[1], 6);
-    delete w.miss;                                   // an old catch-streak counter
-    const owned = s.unlockedPets.concat(s.unlockedSecrets), spares = {};
-    Object.keys(s.spares).forEach(function (id) {
-      const n = asInt(s.spares[id], 0, 99, 0);
-      if (n > 0 && owned.indexOf(id) !== -1) spares[id] = n;
-    });
-    s.spares = spares;
-  },
-  function moves(s) {
-    const set = {}, ids = MOVES.filter(function (m) { return m.kind !== 'ult'; }).map(function (m) { return m.id; });
-    Object.keys(s.moveSet || {}).forEach(function (b) {
-      if (!getSpecies(b) || !Array.isArray(s.moveSet[b])) return;
-      set[b] = s.moveSet[b].filter(function (id, i, a) { return ids.indexOf(id) !== -1 && a.indexOf(id) === i; }).slice(0, ECON.moves.slots);
-    });
-    s.moveSet = set;
-  },
   function bossBook(s) {
     const book = {};
     Object.keys(s.bossBook || {}).forEach(function (k) {
@@ -211,11 +166,6 @@ const NORMALIZERS = [
     const sc = s.streakCal;
     sc.count = asInt(sc.count, 0, ECON.calendar.length, 0);
     sc.total = asInt(sc.total, 0, 1e6, 0);
-  },
-  function parent(s) {
-    s.parentGoal.minutes = asInt(s.parentGoal.minutes, ECON.parents.goal.minMinutes, ECON.parents.goal.maxMinutes, 20);
-    s.parentGoal.reward = String(s.parentGoal.reward || '').slice(0, 60);
-    if (!/^[0-9a-f]{64}$|^$/.test(s.parentPinHash)) s.parentPinHash = '';
   },
   function adapt(s) {
     const a = s.adapt, w = ECON.adaptive.window;
@@ -232,7 +182,6 @@ const NORMALIZERS = [
   function social(s) {
     s.duelFriends = s.duelFriends.filter(function (n) { return typeof n === 'string' && /^[a-z0-9_-]{3,20}$/.test(n); }).slice(0, 8);
     s.duelSettled = s.duelSettled.filter(function (n) { return typeof n === 'string'; }).slice(-80);
-    s.challengePaid = s.challengePaid.filter(function (n) { return typeof n === 'string' && n.length <= 20; }).slice(-20);
     ['w', 'l', 't'].forEach(function (k) { s.duelRecord[k] = asInt(s.duelRecord[k], 0, 1e6, 0); });
     s.duelStat.count = asInt(s.duelStat.count, 0, 1e6, 0);
     ['runs', 'trophies', 'wins'].forEach(function (k) { s.tour[k] = asInt(s.tour[k], 0, 1e6, 0); });
@@ -259,10 +208,6 @@ const NORMALIZERS = [
     t.day = typeof t.day === 'string' ? t.day.slice(0, 12) : '';
     t.gems = asInt(t.gems, 0, S.dayCap, 0);
     t.rounds = asInt(t.rounds, 0, 1e6, 0);
-  },
-  function raid(s) {
-    const r = s.raid;
-    if (!r || typeof r !== 'object' || !Array.isArray(r.weaks) || !(r.total >= 2) || !(r.phase >= 0 && r.phase < r.total)) s.raid = null;
   },
   function egg(s) {
     const e = s.egg;
@@ -319,6 +264,11 @@ const NORMALIZERS = [
     const owned = getOwnedIds(), hp = isPlainObject(s.advHp) ? s.advHp : {};
     s.advHp = {};
     Object.keys(hp).forEach(function (id) { if (owned.indexOf(id) !== -1 && Number.isFinite(hp[id])) s.advHp[id] = clamp(Math.floor(hp[id]), 0, 9999); });
+    const mv = isPlainObject(s.advMoves) ? s.advMoves : {};
+    s.advMoves = {};
+    Object.keys(mv).forEach(function (id) {
+      if (owned.indexOf(id) !== -1 && Array.isArray(mv[id])) s.advMoves[id] = mv[id].filter(function (m, i, a) { return typeof m === 'string' && m.length <= 16 && a.indexOf(m) === i; }).slice(0, 4);
+    });
     const pp = isPlainObject(s.advPp) ? s.advPp : {};
     s.advPp = {};
     Object.keys(pp).forEach(function (id) {
@@ -366,20 +316,6 @@ function loadState() {
   }
   normalizeState();
 
-  partyHp = {};
-  markDexSeen(state.wild.id);
-  const wildFight = !!state.wild.id && !!state.bossLevel;
-  if (wildFight || (state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length && state.recentBossTypes.length > 0 && state.bossLevel)) {
-    currentMonsterIndex = state.currentMonsterIndex >= 0 && state.currentMonsterIndex < monstersList.length ? state.currentMonsterIndex : -1;
-    bossLevel = clamp(state.bossLevel, 1, MAX_LEVEL);
-    monsterCurrentHp = getBossMaxHp();
-    if (inChampionBattle()) restoreChampionFoe();
-  } else {
-    currentMonsterIndex = -1;
-    pickNextFoe();
-  }
-  bossMistakes = 0;
-  markBossSeen(currentMonsterIndex);
 }
 
 // Keeps the save well under the server limit by dropping the oldest, least useful history.
@@ -387,7 +323,6 @@ function pruneState() {
   const days = Object.keys(state.stats.days).sort();
   while (days.length > 14) delete state.stats.days[days.shift()];
   state.duelSettled = state.duelSettled.slice(-20);
-  state.challengePaid = state.challengePaid.slice(-20);
 }
 function serializeState() {
   let json = JSON.stringify(state);

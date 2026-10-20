@@ -83,23 +83,12 @@ function studyToWords(q, opts) {
   return str;
 }
 
+// Reads the question on the battle screen aloud (always when asked, or when Read aloud is on).
 function speakCurrentProblem(force) {
   if (!force && (!state || !state.readAloud)) return;
-  if (typeof currentProblem === 'undefined' || !currentProblem) return;
-  const words = mathToWords(currentProblem);
+  if (typeof ab === 'undefined' || !ab || !ab.q) return;
+  const words = ab.q.study ? studyToWords(ab.q.study, ab.q.opts) : mathToWords({ expr: ab.q.expr, layout: 'inline' });
   if (words) speakText(words);
-}
-
-function speakCurrentStudy(force) {
-  if (!force && (!state || !state.readAloud)) return;
-  if (typeof studyRound === 'undefined' || !studyRound || typeof studyScreen === 'undefined' || studyScreen !== 'card') return;
-  const q = studyRound.qs && studyRound.qs[studyRound.i];
-  if (!q) return;
-  if (studyRound.phase === 'reveal') {
-    speakText('The answer is: ' + q.a + (q.x ? '. ' + q.x : ''));
-  } else {
-    speakText(studyToWords(q, studyRound.opts));
-  }
 }
 
 function applyReadAloudPref() {
@@ -108,10 +97,6 @@ function applyReadAloudPref() {
     btn.innerText = state.readAloud ? '🗣️ Read aloud: ON' : '🗣️ Read aloud: OFF';
     btn.classList.toggle('active', !!state.readAloud);
     btn.setAttribute('aria-pressed', state.readAloud ? 'true' : 'false');
-  }
-  const arenaBtn = document.getElementById('arena-speak-btn');
-  if (arenaBtn && state) {
-    arenaBtn.title = state.readAloud ? 'Read problem aloud (Auto-Read is ON)' : 'Read problem aloud';
   }
 }
 
@@ -122,11 +107,7 @@ function toggleReadAloud() {
   applyReadAloudPref();
   if (state.readAloud) {
     toast('🗣️ Read aloud turned ON');
-    if (studyOn && typeof studyRound !== 'undefined' && studyRound && studyScreen === 'card') {
-      speakCurrentStudy(true);
-    } else {
-      speakCurrentProblem(true);
-    }
+    speakCurrentProblem(true);
   } else {
     stopSpeech();
     toast('🗣️ Read aloud turned OFF');

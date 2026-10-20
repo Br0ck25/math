@@ -50,8 +50,3 @@ function modalDone() {
   resumeClock();
   setTimeout(function () { if (!modalBusy) nextModal(); }, 250);
 }
-function isModalOpen() {
-  return Array.prototype.some.call(document.querySelectorAll('.modal-overlay'), function (m) {
-    return m.style.display === 'flex';
-  });
-}
