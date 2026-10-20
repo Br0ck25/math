@@ -10,7 +10,8 @@ function talkOpen() { const open = openOverlays(); return !!open.length && open[
 function owInteract(map, x, y) {
   const npc = owNpcAt(map, x, y);
   if (npc) {
-    if (npc.kind === 'trainer') { owTrainerTalk(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)
+    if (npc.kind === 'trainer') { owTrainerTalk(npc); return; }
+    if (npc.kind === 'gift') { owGift(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)
     npc.face = OW_OPPOSITE[state.overworld.face];                    // the person turns to the hero
     renderOverworld();
     if (npc.kind === 'nurse') { openCenter(npc); return; }
@@ -19,9 +20,17 @@ function owInteract(map, x, y) {
     return;
   }
   const sign = map.signs && map.signs[x + ',' + y];
-  if (!sign) return;
-  if (typeof sign === 'string') openTalk({ name: 'Sign', art: worldSprite('t-sign'), lines: [sign] });
-  else openSignQuiz(sign);
+  if (sign) {
+    if (typeof sign === 'string') openTalk({ name: 'Sign', art: worldSprite('t-sign'), lines: [sign] });
+    else openSignQuiz(sign);
+    return;
+  }
+  const tile = OW_TILES[(map.rows[y] || '').charAt(x)];
+  if (!tile) return;
+  if (tile.gate && !hasKeyItem(tile.gate)) { openTalk({ name: 'Blocked', art: worldSprite(OW_GATES[tile.gate].closed), lines: [OW_GATES[tile.gate].hint] }); return; }
+  const tree = map.trees && map.trees[x + ',' + y];
+  if (tree) owShake(tree);
+  else if (tile.water) owFish();
 }
 
 // ----- the text window -----
@@ -136,4 +145,32 @@ function owEnterGym(id) {
   const go = function () { talk.onClose = null; closeTalk(); closeOverworld(); startGym(id); };
   if (have) { say(['Welcome back, Champion! Want a rematch? The trainers and the leader are stronger now.'], [{ label: 'Rematch!', run: go }]); return; }
   say(['This is the ' + r.name + ' Gym. Beat ' + ECON.map.trainers + ' trainers, then the gym leader, to win a badge.', 'Losing costs nothing, and you can leave any time. Ready?'], [{ label: 'Enter the gym', run: go }]);
+}
+
+// ----- a gift: the person gives a key item the first time (Fisher Gil's rod), and says something else after -----
+function owGift(npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), item = KEY_ITEMS.find(function (k) { return k.id === npc.gift; });
+  if (grantKeyItem(npc.gift)) { saveState(); openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['You got the ' + item.name + '!']) }); }
+  else openTalk({ name: npc.name, art: art, lines: npc.after });
+}
+
+// ----- fishing: tap water with the rod. Sometimes nothing bites; a bite is a normal wild fight with a water buddy. -----
+function owFish() {
+  if (!hasKeyItem('fishing-rod')) { openTalk({ name: 'Water', art: worldSprite('t-water'), lines: ['The water is calm and clear.', 'Maybe something is swimming down there. A Fishing Rod would help!'] }); return; }
+  if (Math.random() >= ECON.overworld.fishBite) { toast('No bite. Try again!'); return; }
+  startAdventureFight(pick(wildPool().filter(function (p) { return p.element === 'water'; })));
+}
+
+// ----- shake trees: once a day each, a rare buddy falls out (the same one all day, a different one tomorrow) -----
+function shakeSpecies(id) {
+  const pool = wildPool().filter(function (p) { return !isStoreBuddy(p) || p.cost >= 150; });          // not the everyday cheap ones
+  return pool[dayHash(id + dayKey()) % pool.length];
+}
+function owShake(id) {
+  const s = state.overworld.shaken, art = worldSprite('t-tree-shake');
+  if (s.day !== dayKey()) { s.day = dayKey(); s.ids = []; }
+  if (s.ids.indexOf(id) !== -1) { openTalk({ name: 'Tree', art: art, lines: ['You shook it again, but nothing more fell out.', 'Come back tomorrow!'] }); return; }
+  s.ids.push(id);
+  saveState();
+  openTalk({ name: 'Tree', art: art, lines: ['You shake the tree... Something fell out!'], onClose: function () { startAdventureFight(shakeSpecies(id)); } });
 }

@@ -15,7 +15,12 @@ let owFromQueue = false;     // the map was opened by the modal queue (after a f
 let owBusy = false;          // a trainer has spotted the hero: no walking until the challenge shows
 let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 
-function owTileAt(map, x, y) { const row = map.rows[y]; return (row && OW_TILES[row.charAt(x)]) || null; }
+// The tile at x,y as the hero meets it: a gate is its open picture, and walkable, once the hero has the charm.
+function owTileAt(map, x, y) {
+  const row = map.rows[y], t = row && OW_TILES[row.charAt(x)];
+  if (!t) return null;
+  return t.gate && hasKeyItem(t.gate) ? { t: OW_GATES[t.gate].open, open: true } : t;
+}
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
 function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y; }) || null; }
 function owNpcById(id) {
@@ -165,12 +170,13 @@ function adventureFight() {
   if (!o.fight) o.foe = '';
   return o.fight;
 }
-function startAdventureFight() {
+// `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
+function startAdventureFight(sp) {
   if (state.gym || state.raid) return;
   owRelease();
   state.overworld.fight = true;
   state.overworld.foe = '';
-  pickNextWild();
+  if (sp) { state.wild.shiny = false; startWild(sp); } else pickNextWild();
   hideModal('overworld-modal');
   setBossTaunt();
   updateStatsUI();

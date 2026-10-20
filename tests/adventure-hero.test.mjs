@@ -112,6 +112,7 @@ test('the Bag shows key items, badges, supplies, held items, goods and the egg f
   assert.equal(r.title, "Sam's Bag");
   assert.match(r.text, /Badge Case/);
   assert.match(r.text, /Running Shoes/);
+  assert.match(r.text, /Steam Boots/, 'the Ember badge brings its charm');
   assert.match(r.text, /Ember Hills/);
   assert.match(r.text, /Gems\s*77/);
   assert.match(r.text, /Streak Shields\s*3/);
@@ -120,7 +121,7 @@ test('the Bag shows key items, badges, supplies, held items, goods and the egg f
   assert.match(r.text, /Oran Berry\s*held by/);
   assert.match(r.text, /Berries\s*9/);
   assert.match(r.text, /fire · 2 of 5/);
-  assert.equal(r.art, 2, 'each key item has its own picture');
+  assert.equal(r.art, 3, 'each key item has its own picture');
   assert.equal(r.over, 'flex');
 });
 

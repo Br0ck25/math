@@ -29,6 +29,7 @@ const state_ = () => page.evaluate(() => JSON.parse(JSON.stringify(state.overwor
 test('the town data is sound: unique ids, people and pickups on free walkable tiles, doors that lead in and back, and everything reachable', async () => {
   const problems = await page.evaluate(() => {
     const out = [], seen = {};
+    state.badges = gymRegions().map((x) => x.id);                                                       // every charm: the gates are open, so everything can be reached
     const unique = (id, what) => { if (seen[id]) out.push('duplicate id ' + id + ' (' + what + ')'); seen[id] = 1; };
     const arrivals = {};                                                                                // map id -> tiles where the hero can appear
     Object.keys(OW_MAPS).forEach((k) => { arrivals[k] = [OW_MAPS[k].start]; });
@@ -44,6 +45,7 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
         if (!n.name || !Array.isArray(n.lines) || !n.lines.length || n.lines.some((l) => typeof l !== 'string' || !l.trim() || l.length > 160)) out.push(n.id + ': needs a name and short lines');
         const l = n.look || {};
         if (!(l.skin in HERO_SKINS && l.hair in HERO_HAIRS && l.outfit in HERO_OUTFITS && l.style in HERO_STYLES)) out.push(n.id + ': bad look');
+        if (n.kind === 'gift' && (!KEY_ITEMS.some((k) => k.id === n.gift) || !Array.isArray(n.after) || !n.after.length)) out.push(n.id + ': a gift needs a real key item and words for after');
         if (n.kind === 'trainer') {
           if (!Array.isArray(n.win) || !n.win.length || n.win.some((w) => typeof w !== 'string' || !w.trim() || w.length > 160)) out.push(n.id + ': a trainer needs words for after the battle');
           const d = OW_STEP[n.face];                                                                  // what the trainer can see must not reach a place the hero appears
@@ -60,6 +62,8 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
         if (['gems', 'net', 'berry', 'ore'].indexOf(o.give) === -1) out.push(o.id + ': unknown gift ' + o.give);
         if (arrivals[k].some((a) => a.x === o.x && a.y === o.y)) out.push(o.id + ': on an arrival tile');
       });
+      Object.keys(m.trees || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); unique(m.trees[p], 'tree'); if (m.rows[y].charAt(x) !== 'Y') out.push(k + ': tree ' + m.trees[p] + ' is not on a shake-tree tile'); });
+      m.rows.forEach((row, y) => row.split('').forEach((c, x) => { if (c === 'Y' && !(m.trees || {})[x + ',' + y]) out.push(k + ': tree tile ' + x + ',' + y + ' has no tree id'); }));
       Object.keys(m.signs || {}).forEach((p) => { const s = m.signs[p]; if (typeof s !== 'string') { unique(s.id, 'sign'); if (!s.text) out.push(s.id + ': no text'); } });
       m.rows.forEach((row, y) => row.split('').forEach((c, x) => {
         if (c !== 'D') return;
@@ -80,6 +84,7 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
       (m.npcs || []).forEach((n) => { if (!reachable(n.x, n.y)) out.push(k + ': nobody can reach ' + n.id); });
       (m.objects || []).forEach((o) => { if (!seenTiles.has(o.x + ',' + o.y)) out.push(k + ': nobody can reach ' + o.id); });
       Object.keys(m.signs || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); if (!reachable(x, y)) out.push(k + ': nobody can reach the sign ' + p); });
+      Object.keys(m.trees || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); if (!reachable(x, y)) out.push(k + ': nobody can reach the tree ' + p); });
     });
     const maps = Object.keys(OW_MAPS), reach = new Set([OW_START.map]);
     for (let i = 0; i < maps.length; i++) maps.forEach((k) => { if (reach.has(k)) OW_MAPS[k].warps.forEach((w) => reach.add(w.to)); });

@@ -10,12 +10,14 @@ const HERO_NAMES = ['Sam', 'Alex', 'Jamie', 'Casey', 'Taylor', 'Morgan', 'Skye',
 const HERO_NAME_MAX = 10;
 const KEY_ITEMS = [
   { id: 'badge-case', name: 'Badge Case', text: 'Keeps the gym badges you win.', art: 'k-badge-case' },
-  { id: 'running-shoes', name: 'Running Shoes', text: 'Hold a direction on the map to walk faster.', art: 'k-shoes' }
-];
-function hasKeyItem(id) { return state.keyItems.indexOf(id) !== -1; }
-// True when the item is new (the caller saves).
+  { id: 'running-shoes', name: 'Running Shoes', text: 'Hold a direction on the map to walk faster.', art: 'k-shoes' },
+  { id: 'fishing-rod', name: 'Fishing Rod', text: 'Tap the water on the map to fish for water buddies.', art: 'k-rod' }
+].concat(Object.keys(OW_GATES).map(function (id) { const g = OW_GATES[id]; return { id: id, name: g.name, text: g.text, art: 'k-' + id, badge: g.badge }; }));
+// A charm comes with its gym badge, so it is never saved: you have it while you hold the badge (old saves have theirs too).
+function hasKeyItem(id) { return state.keyItems.indexOf(id) !== -1 || (!!OW_GATES[id] && hasBadge(OW_GATES[id].badge)); }
+// True when the item is new (the caller saves). Charms cannot be granted: the badge is what gives them.
 function grantKeyItem(id) {
-  if (hasKeyItem(id) || !KEY_ITEMS.some(function (k) { return k.id === id; })) return false;
+  if (hasKeyItem(id) || OW_GATES[id] || !KEY_ITEMS.some(function (k) { return k.id === id; })) return false;
   state.keyItems.push(id);
   return true;
 }

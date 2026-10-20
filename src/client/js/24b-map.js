@@ -153,6 +153,8 @@ function showBadgeStory(res) {
   }
   const st = GYM_STORY[res.region.id];
   const panels = [{ icon: '🏅', text: st.outro }, { icon: '💎', text: 'Badge reward: +' + ECON.map.badgeGems + ' gems!' }];
+  const charm = KEY_ITEMS.find(function (k) { return k.badge === res.region.id; });
+  if (charm) panels.push({ icon: '🎒', text: 'New charm: ' + charm.name + '. ' + charm.text + ' Use it on the Adventure map!' });
   if (res.hall) panels.push({ icon: '👑', text: 'All ' + gymRegions().length + " badges! The Champion's Hall is open: find it at the top of the Map." });
   showStoryModal({ chapter: 'Badge ' + state.badges.length + '/' + gymRegions().length, title: res.region.icon + ' ' + res.region.name + ' Badge!', panels: panels, note: 'Badges: ' + state.badges.length + ' of ' + gymRegions().length, btn: 'Hooray!', cleared: true });
 }
