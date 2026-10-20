@@ -12,6 +12,8 @@ function owInteract(map, x, y) {
   if (npc) {
     npc.face = OW_OPPOSITE[state.overworld.face];                    // the person turns to the hero
     renderOverworld();
+    if (npc.kind === 'nurse') { openCenter(npc); return; }
+    if (npc.kind === 'clerk') { openMart(npc); return; }
     openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.lines });
     return;
   }
@@ -23,7 +25,7 @@ function owInteract(map, x, y) {
 
 // ----- the text window -----
 function openTalk(o) {
-  talk = { name: o.name, art: o.art, lines: o.lines, i: 0, quiz: o.quiz || null };
+  talk = { name: o.name, art: o.art, lines: o.lines, i: 0, quiz: o.quiz || null, choices: o.choices || null };
   showModal('talk-modal', renderTalk);
 }
 function renderTalk() {
@@ -31,7 +33,15 @@ function renderTalk() {
   document.getElementById('talk-art').innerHTML = talk.art;
   document.getElementById('talk-text').innerText = talk.lines[talk.i];
   const last = talk.i >= talk.lines.length - 1, quiz = document.getElementById('talk-quiz');
-  document.getElementById('talk-next').innerText = last ? 'Close' : 'Next';
+  const choices = document.getElementById('talk-choices');
+  choices.innerHTML = '';
+  if (last && talk.choices) talk.choices.forEach(function (c, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'claim-btn talk-choice'; b.innerText = c.label;
+    b.onclick = function () { talkChoose(i); };
+    choices.appendChild(b);
+  });
+  document.getElementById('talk-next').innerText = last ? (talk.choices ? 'Not now' : 'Close') : 'Next';
   quiz.style.display = talk.quiz ? 'block' : 'none';
   if (talk.quiz) {
     const qz = talk.quiz;
@@ -40,13 +50,14 @@ function renderTalk() {
     document.getElementById('talk-note').innerText = qz.paid ? 'This sign already paid today. Practice is free!' : signsLeft() > 0 ? 'A right answer pays ' + ECON.overworld.signGems + ' gems, once a day.' : 'No more sign gems today, but practice is free!';
   }
 }
+function talkChoose(i) { const c = talk && talk.choices && talk.choices[i]; if (c) c.run(); }
 function talkNext() {
   if (!talk) return;
   if (talk.i < talk.lines.length - 1) { talk.i += 1; soundClick(); renderTalk(); } else closeTalk();
 }
 function closeTalk() { talk = null; hideModal('talk-modal', updateStatsUI); }
 window.addEventListener('keydown', function (e) {
-  if ((e.key === 'Enter' || e.key === ' ') && talkOpen() && !talk.quiz) { e.preventDefault(); talkNext(); }
+  if ((e.key === 'Enter' || e.key === ' ') && talkOpen() && !talk.quiz && !(talk.choices && talk.i >= talk.lines.length - 1)) { e.preventDefault(); talkNext(); }
 });
 
 // ----- math signs -----

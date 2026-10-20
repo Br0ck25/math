@@ -22,7 +22,7 @@ export const MAP = [
   [/js\/24c-legend/, ['legend']],
   [/js\/24d-champion/, ['champion']],
   [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],
-  [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm']],
+  [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm', 'adventure-shops']],
   [/js\/25d-ranch/, ['ranch', 'held']],
   [/js\/(15-vault|33-shop)/, ['confirm', 'ui']],
   [/js\/(03b-|23-|35-|35b-|36-)|server\/(15-|16-)/, ['parent-controls', 'parent-page', 'parents', 'challenge', 'challenge-ui']],
@@ -35,8 +35,8 @@ export const MAP = [
   [/js\/(01-|01b-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['speech', 'app', 'ui']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'art-world']],
-  [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero']]
+  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'art-world']],
+  [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
 const FALLBACK = ['app', 'ui'];
 

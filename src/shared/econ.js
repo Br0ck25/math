@@ -46,7 +46,9 @@ const ECON = {
     champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50, swapAt: 0.4, maxSwaps: 4, cooldown: 3 }
   },
   // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
-  overworld: { grassChance: 0.18, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 2, signsPerDay: 5, pickupGems: 5 },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
+  overworld: { grassChance: 0.18, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 2, signsPerDay: 5, pickupGems: 5,
+    // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
+    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'shield', badges: 1 }, { type: 'clover', badges: 2 }, { type: 'candy', badges: 3 }, { type: 'ult', badges: 4 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.

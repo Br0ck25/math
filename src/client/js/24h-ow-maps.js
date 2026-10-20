@@ -31,8 +31,8 @@ const OW_TILES = {
 };
 // A small room: the mat in the bottom wall is the way out (see owRoom()).
 const OW_ROOM_ROWS = ['wwwwwwww', 'wSffffSw', 'wffffffw', 'wfrrrrfw', 'wffffffw', 'wffffffw', 'wwwmwwww'];
-function owRoom(id, name, exit, npcs, objects) {
-  return { id: id, name: name, region: 'meadow', start: { x: 3, y: 5 }, rows: OW_ROOM_ROWS, warps: [{ x: 3, y: 6, to: exit.to, tx: exit.tx, ty: exit.ty }], npcs: npcs || [], objects: objects || [], signs: {} };
+function owRoom(id, name, exit, npcs, objects, rows) {
+  return { id: id, name: name, region: 'meadow', start: { x: 3, y: 5 }, rows: rows || OW_ROOM_ROWS, warps: [{ x: 3, y: 6, to: exit.to, tx: exit.tx, ty: exit.ty }], npcs: npcs || [], objects: objects || [], signs: {} };
 }
 const OW_MAPS = {
   hollow: {
@@ -111,7 +111,7 @@ const OW_MAPS = {
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
-      'T,WNWW,..,WKWW,T',
+      'T,WNDW,..,WKDW,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
       'T,RRR,,..,,,,*,T',
@@ -126,11 +126,11 @@ const OW_MAPS = {
     ],
     warps: [
       { x: 7, y: 15, to: 'route1', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route1', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'meadow-house', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'meadow-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'meadow-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'meadow-mart', tx: 3, ty: 5 }
     ],
     npcs: [
       { id: 'meadow-guide', name: 'Guide Ivy', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 5, outfit: 2, style: 1 },
-        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center and the Mart are the two buildings at the top. Their doors open in the next update.', 'A gym will stand here too. Gyms ask a buddy to be a little stronger first, so train in the tall grass!'] }
+        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'A gym will stand here too. Gyms ask a buddy to be a little stronger first, so train in the tall grass!'] }
     ],
     objects: [
       { id: 'meadow-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
@@ -142,6 +142,12 @@ const OW_MAPS = {
     },
     palette: { roof: '#4F8FE0', roofD: '#2F6CC0' }
   },
+  'meadow-center': owRoom('meadow-center', 'Buddy Center', { to: 'meadow', tx: 4, ty: 5 }, [
+    { id: 'meadow-nurse', kind: 'nurse', name: 'Nurse Joy', x: 3, y: 1, face: 'down', look: { skin: 1, hair: 7, outfit: 6, style: 3 }, lines: ['Welcome to the Buddy Center!'] }
+  ], [], ['wwwwwwww', 'wfffffSw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wfrrrrfw', 'wwwmwwww']),
+  'meadow-mart': owRoom('meadow-mart', 'Mart', { to: 'meadow', tx: 12, ty: 5 }, [
+    { id: 'meadow-clerk', kind: 'clerk', name: 'Clerk Moss', x: 3, y: 2, face: 'down', look: { skin: 3, hair: 3, outfit: 3, style: 0 }, lines: ['Welcome to the Mart!'] }
+  ], [], ['wwwwwwww', 'wSSSSSSw', 'wffffffw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wwwmwwww']),
   'meadow-house': owRoom('meadow-house', 'Meadow House', { to: 'meadow', tx: 3, ty: 10 }, [
     { id: 'meadow-gran', name: 'Gran', x: 4, y: 2, face: 'down', look: { skin: 0, hair: 4, outfit: 5, style: 1 },
       lines: ['Come in, come in! I love visitors.', 'Buddies get stronger when you answer fast and answer right.', 'Wild buddies in the tall grass have a hard time hiding from you.'] }

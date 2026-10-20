@@ -125,4 +125,5 @@ function payItem(type) {
   saveState();
   updateStatsUI();
   renderItemButtons();
+  if (typeof refreshMart === 'function') refreshMart();
 }

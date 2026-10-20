@@ -2120,3 +2120,9 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .talk-art { width: 56px; height: 56px; flex: none; border-radius: 12px; background: #86d06a; overflow: hidden; }
 .talk-text { min-height: 4.2em; text-align: left; font-size: 1rem; line-height: 1.4; cursor: pointer; }
 .talk-next { margin-top: 12px; min-width: 120px; min-height: 44px; animation: none; }
+.talk-choices { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 10px; }
+.talk-choice { min-height: 44px; animation: none; }
+.mart-row { display: flex; align-items: center; gap: 10px; text-align: left; }
+.mart-row.locked { opacity: 0.6; }
+.mart-row .mart-info { flex: 1; min-width: 0; }
+.mart-row .claim-btn { min-height: 44px; min-width: 84px; animation: none; }
