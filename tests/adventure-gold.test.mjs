@@ -271,11 +271,12 @@ test('each route has its own wild table: five kinds with set odds, levels around
     const t = owWildTable('route3'); out.same = JSON.stringify(t) === JSON.stringify((delete OW_WILD_TABLES.route3, owWildTable('route3')));
     out.night = t.night.join() !== t.day.join();
     const seen = new Set(); let lo = 99, hi = 0; for (let i = 0; i < 400; i++) { const x = owRollRoute('route3'); seen.add(x.id); lo = Math.min(lo, x.level); hi = Math.max(hi, x.level); }
-    out.kinds = seen.size <= 5; out.levels = lo >= t.center - 1 && hi <= t.center + 2;
+    out.kinds = seen.size <= 5; out.levels = lo >= (t.lo !== undefined ? t.lo : t.center - 1) && hi <= (t.hi !== undefined ? t.hi : t.center + 1) + 1;
+    out.hand = Object.keys(OW_WILD_HAND).every((k) => ['day', 'morning', 'night'].every((p) => OW_WILD_HAND[k][p].length === 5 && OW_WILD_HAND[k][p].every((id) => getSpecies(id)))) && Object.keys(OW_WILD_HAND).length === 8;
     out.side = owWildTable('route3-side').center === t.center + 1; out.town = owWildTable('meadow');
     return out;
   });
-  assert.deepEqual(r, { centers: r.centers, sizes: '5', samples: 0, rising: true, same: true, night: true, kinds: true, levels: true, side: true, town: null });
+  assert.deepEqual(r, { centers: r.centers, sizes: '5', samples: 0, rising: true, same: true, night: true, kinds: true, levels: true, hand: true, side: true, town: null });
   assert.equal(r.centers[0], 3);
 });
 
@@ -391,6 +392,32 @@ test('the Lighthouse quest: the Keeper needs the Secret Potion, Healer Mei only 
     return out;
   });
   assert.deepEqual(r, { hidden: true, shown: true, got: true, paid: [1, 2, false, true], after: true });
+});
+
+test('phone calls: a trainer you beat calls for a rematch once a day, is back on the map, fights stronger and pays again, and then waits for tomorrow', async () => {
+  const r = await ev(() => {
+    state.overworld.beat = []; state.phone = { day: '', ready: '' };
+    const none = phoneReady();
+    state.overworld.beat = ['route1-pia']; state.phone = { day: '', ready: '' };
+    const id = phoneReady(), npc = OW_MAPS.route1.npcs.find((n) => n.id === id);
+    const out = { none, id, active: !!npc && owNpcActive(npc), call: GIZMO_CALLS.some((c) => c.from === 'Trainer call' && c.when() && /rematch/.test(c.dyn())) };
+    out.sees = !!owTrainerSeeing(OW_MAPS.route1, npc.x + OW_STEP[npc.face][0], npc.y + OW_STEP[npc.face][1]);
+    startTrainerFight(npc); out.rematch = ab.rematch; out.level = ab.foes[0].level > abWildLevel() + 1;
+    return out;
+  });
+  assert.deepEqual(r, { none: '', id: 'route1-pia', active: true, call: true, sees: true, rematch: true, level: true });
+  await ev(() => { state.gems = 0; Math.random = () => 0.3; });
+  for (let k = 0; k < 20; k++) {
+    await page.waitForFunction(() => !ab || (!ab.busy && (ab.phase === 'menu' || ab.phase === 'learn')), null, { timeout: 60000 });
+    if (!(await ev(() => !!ab))) break;
+    if (await ev(() => ab.phase === 'learn')) { await ev(() => abLearnChoose(-1)); continue; }
+    await ev(() => { ab.foes.forEach((f) => { f.hp = 1; f.atk = 1; f.spc = 1; }); abFight(); abAnswer(ab.q.ans); ab.party.forEach((m) => m.moves.forEach((mv) => { mv.left = mv.pp; })); abUseMove(0); });
+    await page.waitForTimeout(400);
+  }
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  const after = await ev(() => ({ gems: state.gems, ready: state.phone.ready, active: owNpcActive(OW_MAPS.route1.npcs.find((n) => n.id === 'route1-pia')), called: phoneReady() }));
+  assert.ok(after.gems > 0, 'the rematch pays its prize again');
+  assert.deepEqual([after.ready, after.called], ['', '']);
 });
 
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {

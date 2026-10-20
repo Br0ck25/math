@@ -37,6 +37,7 @@ function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteg
 function owNpcActive(n) {
   const o = state.overworld;
   if (n.needs && !(n.needs === 'champion' ? isChampion() : hasBadge(n.needs))) return false;
+  if (n.kind === 'trainer' && phoneReady() === n.id) return true;                       // a trainer who called for a rematch is back on the map
   if (n.vanish && (o.beat.indexOf(n.id) !== -1 || (n.story && o.story.indexOf(n.story) !== -1))) return false;
   return true;
 }
@@ -48,7 +49,7 @@ function owNpcById(id) {
 // The trainer who sees the hero on this tile: not beaten yet, and the hero is on a free line of up to `sight` tiles in the way it faces.
 function owTrainerSeeing(map, x, y) {
   return (map.npcs || []).find(function (n) {
-    if ((n.kind !== 'trainer' && n.kind !== 'boss') || !owNpcActive(n) || state.overworld.beat.indexOf(n.id) !== -1) return false;
+    if ((n.kind !== 'trainer' && n.kind !== 'boss') || !owNpcActive(n) || (state.overworld.beat.indexOf(n.id) !== -1 && phoneReady() !== n.id)) return false;
     const d = OW_STEP[n.face], sight = n.sight || ECON.overworld.trainerSight;
     for (let i = 1; i <= sight; i++) {
       const cx = n.x + d[0] * i, cy = n.y + d[1] * i;
@@ -247,9 +248,9 @@ function startTrainerFight(npc) {
   if (ab) return;
   owRelease();
   if (npc.kind === 'boss') { abStartBoss(npc); return; }
-  const foes = [], n = clamp(1 + Math.floor(state.badges.length / 3), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0);
+  const rematch = phoneReady() === npc.id, foes = [], n = clamp(1 + Math.floor(state.badges.length / 3) + (rematch ? 1 : 0), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0) + (rematch ? ECON.phone.levels : 0);
   for (let i = 0; i < n; i++) foes.push({ id: rollWildSpecies(foes.map(function (f) { return f.id; })).id, level: clamp(lvl + rnd(0, 1), 2, MAX_LEVEL) });     // a trainer's buddies are a little above the land's wild ones
-  abStart({ kind: 'trainer', name: npc.name, npc: npc, foes: foes });
+  abStart({ kind: 'trainer', name: npc.name, npc: npc, foes: foes, rematch: rematch });
 }
 // Marks a story beat done; true the first time (the caller pays its prize).
 function owStoryDone(id) {

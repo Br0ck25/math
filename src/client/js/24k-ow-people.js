@@ -131,6 +131,7 @@ function owChallenge(npc) {
 }
 function owTrainerTalk(npc) {
   const art = heroSprite(heroLookColors(npc.look), 'down', 0);
+  if (phoneReady() === npc.id) { openTalk({ name: npc.name, art: art, lines: ['I have been training since our last battle. Ready for a rematch?'], onClose: owStepBack, choices: [{ label: 'Rematch!', run: function () { talk.onClose = null; closeTalk(); startTrainerFight(npc); } }] }); return; }
   if (state.overworld.beat.indexOf(npc.id) !== -1) { openTalk({ name: npc.name, art: art, lines: npc.win }); return; }
   openTalk({ name: npc.name, art: art, lines: npc.lines, onClose: owStepBack,
     choices: [{ label: 'Battle!', run: function () { talk.onClose = null; closeTalk(); startTrainerFight(npc); } }] });

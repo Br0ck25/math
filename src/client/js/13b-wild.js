@@ -51,6 +51,17 @@ function rollWildSpecies(skip) {
 // ----- fixed wild tables per route (Gold): a route has its own few kinds with set odds and a level range; the time of day swaps some of them -----
 // Day: four common kinds (30, 30, 20, 15%) and a rare one (5%). Morning swaps one common kind for a nature or water buddy, night two for dark or magic ones. The levels run around the route's own level.
 const WILD_ODDS = [30, 30, 20, 15, 5];
+// The first journey's routes are written by hand: five kinds each (30, 30, 20, 15 and a rare 5), a level range, and what comes out in the morning and at night.
+const OW_WILD_HAND = {
+  route1:  { lv: [2, 4],   day: ['dog', 'bunny', 'fox', 'otter', 'hedgehog'],        morning: ['dog', 'bunny', 'fox', 'hedgehog', 'hedgehog'],      night: ['jimothy', 'bunny', 'fox', 'otter', 'hedwig'] },
+  route2:  { lv: [5, 8],   day: ['fox', 'ignis', 'tiger', 'bunny', 'phoenix'],       morning: ['fox', 'ignis', 'dog', 'bunny', 'phoenix'],           night: ['fox', 'jimothy', 'panther', 'bunny', 'phoenix'] },
+  route3:  { lv: [13, 16], day: ['otter', 'penguin', 'dolphin', 'olaf', 'shark'],    morning: ['otter', 'penguin', 'pascal', 'olaf', 'shark'],       night: ['otter', 'bat', 'dolphin', 'cosmo', 'shark'] },
+  route4:  { lv: [21, 24], day: ['dog', 'hedgehog', 'bear', 'pascal', 'lion'],       morning: ['dog', 'hedgehog', 'panda', 'pascal', 'lion'],        night: ['dog', 'jimothy', 'bear', 'hedwig', 'lion'] },
+  route5:  { lv: [29, 32], day: ['byte', 'monkey', 'rhino', 'zephyr', 'griffin'],    morning: ['byte', 'monkey', 'rhino', 'butterfly', 'griffin'],   night: ['byte', 'bat', 'rhino', 'zephyr', 'griffin'] },
+  route6:  { lv: [37, 40], day: ['jimothy', 'bat', 'panther', 'wolf', 'scorpion'],   morning: ['jimothy', 'bat', 'panda', 'wolf', 'scorpion'],       night: ['jimothy', 'bat', 'panther', 'wolf', 'scorpion'] },
+  route7:  { lv: [45, 48], day: ['bunny', 'hedwig', 'cosmo', 'crookshanks', 'pegasus'], morning: ['bunny', 'hedwig', 'koala', 'crookshanks', 'pegasus'], night: ['bunny', 'hedwig', 'cosmo', 'jimothy', 'pegasus'] },
+  skyroad: { lv: [53, 56], day: ['pegasus', 'griffin', 'phoenix', 'butterfly', 'koala'], morning: ['pegasus', 'griffin', 'phoenix', 'zephyr', 'koala'], night: ['pegasus', 'bat', 'phoenix', 'butterfly', 'koala'] }
+};
 const OW_WILD_TABLES = {};
 function owRouteLevel(mapId) {
   const m = OW_MAPS[mapId], base = m && /-side$/.test(mapId) ? mapId.replace(/-side$/, '') : mapId, i = OW_LANDS.findIndex(function (L) { return L.routeIn === base; });
@@ -60,6 +71,8 @@ function owRouteLevel(mapId) {
 }
 function owWildTable(mapId) {
   if (OW_WILD_TABLES[mapId] !== undefined) return OW_WILD_TABLES[mapId];
+  const hand = OW_WILD_HAND[mapId.replace(/-side$/, '')];
+  if (hand) { const up = mapId.indexOf('-side') !== -1 ? 1 : 0; return (OW_WILD_TABLES[mapId] = { center: Math.round((hand.lv[0] + hand.lv[1]) / 2) + up, lo: hand.lv[0] + up, hi: hand.lv[1] + up, day: hand.day, morning: hand.morning, night: hand.night, hand: true }); }
   const m = OW_MAPS[mapId], center = owRouteLevel(mapId);
   if (!m || !center || !m.rows.some(function (r) { return r.indexOf('"') !== -1; })) return (OW_WILD_TABLES[mapId] = null);
   const el = regionById(m.region).element, order = function (list, salt) {
@@ -80,7 +93,8 @@ function owRollRoute(mapId) {
   const list = t[owTimeOfDay()] || t.day;
   let r = Math.random() * 100, k = 0;
   while (k < WILD_ODDS.length - 1 && r >= WILD_ODDS[k]) { r -= WILD_ODDS[k]; k++; }
-  return { id: list[k], level: clamp(t.center + rnd(-1, 1) + (k === WILD_ODDS.length - 1 ? 2 : 0), 2, MAX_LEVEL) };
+  const lvl = t.hand ? rnd(t.lo, t.hi + (k === WILD_ODDS.length - 1 ? 1 : 0)) : t.center + rnd(-1, 1) + (k === WILD_ODDS.length - 1 ? 2 : 0);
+  return { id: list[k], level: clamp(lvl, 2, MAX_LEVEL) };
 }
 // How strong your buddies are together: the average level of your ECON.farm.top strongest.
 function teamPower() {

@@ -20,7 +20,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -532,6 +532,7 @@ function abFinish(result) {
     if (result === 'lose') openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, you blacked out! You dropped half your gems.', 'Your buddies were taken to the Buddy Center and feel great again. Ready to try again?'] });
     else if (result === 'win' && a.onWin) a.onWin();
     else if (result === 'win' && a.npc) {
+      if (a.rematch && state.phone.ready === a.npc.id) state.phone.ready = '';                         // the rematch is done for today
       if (o.beat.indexOf(a.npc.id) === -1) o.beat.push(a.npc.id);
       if (a.npc.story) owStoryReward(a.npc.story);
       saveState();

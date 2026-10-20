@@ -216,6 +216,7 @@ const NORMALIZERS = [
     s.tradedUp = tu;
     const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
     s.stoned = st;
+    const ph = isPlainObject(s.phone) ? s.phone : {}; s.phone = { day: typeof ph.day === 'string' ? ph.day.slice(0, 10) : '', ready: typeof ph.ready === 'string' ? ph.ready.slice(0, 40) : '' };
     const ct = s.contest; s.contest = isPlainObject(ct) && typeof ct.day === 'string' ? { day: ct.day.slice(0, 10), balls: asInt(ct.balls, 0, 99, 0), best: isPlainObject(ct.best) ? { name: String(ct.best.name || '').slice(0, 30), score: asInt(ct.best.score, 0, 9999, 0) } : null, done: ct.done === true } : null;
     const ft = {}; Object.keys(isPlainObject(s.fromTrade) ? s.fromTrade : {}).forEach(function (id) { if (getSpecies(id) && s.fromTrade[id]) ft[id] = 1; }); s.fromTrade = ft;
     const hap = {}; Object.keys(isPlainObject(s.happy) ? s.happy : {}).forEach(function (id) { if (s.unlockedPets.concat(s.unlockedSecrets).indexOf(id) !== -1) hap[id] = clamp(Math.floor(Number(s.happy[id])) || 0, 0, 255); });
