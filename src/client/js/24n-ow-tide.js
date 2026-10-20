@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   tide: {
     id: 'tide', name: 'Tide Bay', region: 'tide', start: { x: 7, y: 13 }, palette: OW_TIDE_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route3', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route3', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'tide-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'tide-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'tide-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'tide-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'tide-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'tide-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'route4', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'tide-guide', name: 'Guide Marina', x: 6, y: 11, face: 'right', look: { skin: 1, hair: 6, outfit: 0, style: 1 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'tide-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
+    roads: { '7,0': 'tide' },
     gyms: { '11,9': 'tide' },
     signs: { '12,12': { id: 'tide-quiz', text: 'Dockside quiz! Answer one question.', quiz: true } }
   },
