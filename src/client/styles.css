@@ -1201,7 +1201,7 @@
 
 /* Wrong-answer card countdown (disabled by .reduce-motion, the timer still closes it) */
 .miss-bar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
-#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 10s linear forwards; }
+#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 30s linear forwards; }
 @keyframes miss-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 /* Boss and buddy reactions */

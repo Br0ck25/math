@@ -155,7 +155,7 @@ test('the streak shield costs what the economy says: refused below it, bought at
   assert.equal(r.label, 'Need ' + r.price + ' more 💎', 'out of gems, the button says how many more are needed');
 });
 
-test('a wrong answer opens a card with the right answer that closes by itself after 10 seconds or by the ✕', async () => {
+test('a wrong answer opens a card with the right answer that closes by itself after 30 seconds or by the ✕', async () => {
   await solveWrong();
   const r = await page.evaluate(() => ({
     shown: getComputedStyle(document.getElementById('miss-modal')).display,
@@ -166,7 +166,7 @@ test('a wrong answer opens a card with the right answer that closes by itself af
   }));
   assert.equal(r.shown, 'flex');
   assert.equal(r.answer, r.want);
-  assert.equal(r.ms, 10000);
+  assert.equal(r.ms, 30000);
   assert.ok(r.x, 'sticky exit button');
   await page.evaluate(() => document.querySelector('#miss-modal .modal-x').click());
   assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');

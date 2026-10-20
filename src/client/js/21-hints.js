@@ -152,9 +152,9 @@ function explainMistake() {
   document.getElementById('hint-box').innerText = '📘 How to: ' + text;
   explainHold = 2600;
 }
-// The "not quite" card: the right answer for 10 seconds, over the math area (equation and keypad) so the buddy stage stays in view, or until the player taps the ✕ / Got it / Escape or starts typing.
+// The "not quite" card: the right answer for 30 seconds, over the math area (equation and keypad) so the buddy stage stays in view, or until the player taps the ✕ / Got it / Escape or starts typing.
 // It does not use showModal() on purpose: that pauses the problem clock, and the next problem is already running.
-const MISS_CARD_MS = 10000;
+const MISS_CARD_MS = 30000;
 let missCardTimer = null;
 function showMissCard(said) {
   const p = currentProblem;
