@@ -1,0 +1,89 @@
+// =====================================================================
+//  PEOPLE, SIGNS AND PICKUPS on the Adventure map. One small text window (#talk-modal) serves every person and sign, with an SVG portrait (never emoji).
+//  A math sign asks one makeMcq question (the same one the Trails use, so a parent's locked types, the grade floor and Study mode all apply).
+//  Wrong answers are free. A right one pays ECON.overworld.signGems once per sign per day, for at most signsPerDay signs a day.
+// =====================================================================
+let talk = null;
+function talkOpen() { const open = openOverlays(); return !!open.length && open[open.length - 1].id === 'talk-modal'; }
+
+// What the hero bumped into: a person talks, a sign tells its words or asks its question.
+function owInteract(map, x, y) {
+  const npc = owNpcAt(map, x, y);
+  if (npc) {
+    npc.face = OW_OPPOSITE[state.overworld.face];                    // the person turns to the hero
+    renderOverworld();
+    openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.lines });
+    return;
+  }
+  const sign = map.signs && map.signs[x + ',' + y];
+  if (!sign) return;
+  if (typeof sign === 'string') openTalk({ name: 'Sign', art: worldSprite('t-sign'), lines: [sign] });
+  else openSignQuiz(sign);
+}
+
+// ----- the text window -----
+function openTalk(o) {
+  talk = { name: o.name, art: o.art, lines: o.lines, i: 0, quiz: o.quiz || null };
+  showModal('talk-modal', renderTalk);
+}
+function renderTalk() {
+  document.getElementById('talk-name').innerText = talk.name;
+  document.getElementById('talk-art').innerHTML = talk.art;
+  document.getElementById('talk-text').innerText = talk.lines[talk.i];
+  const last = talk.i >= talk.lines.length - 1, quiz = document.getElementById('talk-quiz');
+  document.getElementById('talk-next').innerText = last ? 'Close' : 'Next';
+  quiz.style.display = talk.quiz ? 'block' : 'none';
+  if (talk.quiz) {
+    const qz = talk.quiz;
+    document.getElementById('talk-q').innerHTML = qz.q.html;
+    fillOptButtons(document.getElementById('talk-opts'), qz.q.opts, answerSignQuiz);
+    document.getElementById('talk-note').innerText = qz.paid ? 'This sign already paid today. Practice is free!' : signsLeft() > 0 ? 'A right answer pays ' + ECON.overworld.signGems + ' gems, once a day.' : 'No more sign gems today, but practice is free!';
+  }
+}
+function talkNext() {
+  if (!talk) return;
+  if (talk.i < talk.lines.length - 1) { talk.i += 1; soundClick(); renderTalk(); } else closeTalk();
+}
+function closeTalk() { talk = null; hideModal('talk-modal', updateStatsUI); }
+window.addEventListener('keydown', function (e) {
+  if ((e.key === 'Enter' || e.key === ' ') && talkOpen() && !talk.quiz) { e.preventDefault(); talkNext(); }
+});
+
+// ----- math signs -----
+function signsToday() {
+  const s = state.overworld.signs;
+  if (s.day !== dayKey()) { s.day = dayKey(); s.ids = []; }
+  return s.ids;
+}
+function signPaid(id) { return signsToday().indexOf(id) !== -1; }
+function signsLeft() { return Math.max(0, ECON.overworld.signsPerDay - signsToday().length); }
+function openSignQuiz(sign) {
+  talk = { name: 'Math sign', art: worldSprite('t-sign'), lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), paid: signPaid(sign.id), done: false } };
+  showModal('talk-modal', renderTalk);
+}
+function answerSignQuiz(value) {
+  const qz = talk && talk.quiz, note = document.getElementById('talk-note');
+  if (!qz || qz.done) return;
+  if (value !== qz.q.ans) { soundWrong(); note.innerText = 'Not quite. Try another one!'; return; }
+  qz.done = true;
+  soundCorrect(1);
+  Array.prototype.forEach.call(document.querySelectorAll('#talk-opts button'), function (b) { b.disabled = true; });
+  if (qz.paid || signsLeft() === 0) { note.innerText = qz.paid ? 'Correct! This sign already paid today.' : 'Correct! No more sign gems today.'; return; }
+  signsToday().push(qz.id);
+  grantGems(ECON.overworld.signGems, 'Correct! +' + ECON.overworld.signGems + ' gems', false);
+  note.innerText = 'Correct! +' + ECON.overworld.signGems + ' gems';
+}
+
+// ----- pickups: a sparkle on the ground, taken once (saved by id) -----
+function owCollect(p) {
+  state.overworld.found.push(p.id);
+  let msg;
+  if (p.give === 'gems') { grantGems(ECON.overworld.pickupGems, 'You found ' + ECON.overworld.pickupGems + ' gems!', false); return; }
+  if (p.give === 'net' && state.nets < maxNets()) { state.nets += 1; msg = 'You found a Catch Net!'; }
+  else if (p.give === 'ore') { ranchGive('ore', ECON.explore.ore); msg = 'You found ' + ECON.explore.ore + ' ore!'; }
+  else { ranchGive('berry', ECON.explore.berries); msg = 'You found ' + ECON.explore.berries + ' berries!'; }      // berries, or instead of a net when the net bag is full
+  soundCoinChirp();
+  saveState();
+  updateStatsUI();
+  toast(msg);
+}

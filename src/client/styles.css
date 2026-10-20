@@ -2112,3 +2112,11 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .pad-row .claim-btn { min-height: 44px; min-width: 56px; animation: none; }
 .bag-sec .d, .pad-note { font-size: 0.8rem; color: var(--text-muted); }
 .bag-sec .bag-key .t { font-size: 0.9rem; font-weight: 800; }
+
+/* Adventure people and signs (24k-ow-people.js): the text window, and the people and sparkles on the map. */
+.ow-pickup { animation: owSparkle 1.4s ease-in-out infinite alternate; }
+@keyframes owSparkle { from { transform: scale(0.7); } to { transform: scale(0.95); } }
+.talk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; text-align: left; }
+.talk-art { width: 56px; height: 56px; flex: none; border-radius: 12px; background: #86d06a; overflow: hidden; }
+.talk-text { min-height: 4.2em; text-align: left; font-size: 1rem; line-height: 1.4; cursor: pointer; }
+.talk-next { margin-top: 12px; min-width: 120px; min-height: 44px; animation: none; }

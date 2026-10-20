@@ -73,8 +73,10 @@ test('walls, trees and signs stop the hero; a sign tells its words; a step on op
   o = await walk(['left', 'left', 'left', 'left', 'left', 'left', 'left', 'left']);                   // the left edge is trees: it stops at x=1
   assert.equal(o.x, 1);
   assert.equal(o.face, 'left');
-  const text = await page.evaluate(() => { state.overworld.x = 4; state.overworld.y = 9; owMove('down'); return document.getElementById('toast').innerText; });
-  assert.match(text, /Cozy Hollow/);
+  const text = await page.evaluate(() => { state.overworld.x = 4; state.overworld.y = 9; owMove('down'); return { open: document.getElementById('talk-modal').style.display, words: document.getElementById('talk-text').innerText }; });
+  assert.equal(text.open, 'flex', 'a sign opens the text window');
+  assert.match(text.words, /Cozy Hollow/);
+  await page.evaluate(() => closeTalk());
   assert.equal(await page.evaluate(() => state.overworld.y), 9, 'the sign is solid');
 });
 
@@ -195,16 +197,16 @@ test('the position is saved, restored on reload, and a bad or old save puts the 
   await walk(['up', 'up', 'up']);
   await page.evaluate(() => closeOverworld());
   await page.reload();
-  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', fight: false });
+  assert.deepEqual(await page.evaluate(() => ({ ...state.overworld })), { map: 'hollow', x: 7, y: 6, face: 'up', fight: false, found: [], signs: { day: '', ids: [] } });
   const fixed = await page.evaluate(() => {
     const bad = [{ map: 'nowhere', x: 3, y: 3, face: 'sideways', fight: 'yes' }, { map: 'hollow', x: 0, y: 0, face: 'left', fight: true }, { map: 'route1', x: 1.5, y: 'a' }, null, 'x'];
     return bad.map((b) => { state.overworld = b; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return { ...state.overworld }; });
   });
-  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false });
-  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', fight: true }, 'a tree tile is not a place to stand');
-  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', fight: false });
-  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false });
-  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false });
+  assert.deepEqual(fixed[0], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] } });
+  assert.deepEqual(fixed[1], { map: 'hollow', x: 7, y: 9, face: 'left', fight: true, found: [], signs: { day: '', ids: [] } }, 'a tree tile is not a place to stand');
+  assert.deepEqual(fixed[2], { map: 'route1', x: 6, y: 22, face: 'down', fight: false, found: [], signs: { day: '', ids: [] } });
+  assert.deepEqual(fixed[3], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] } });
+  assert.deepEqual(fixed[4], { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] } });
 });
 
 test('arrow keys and WASD walk while the map is open, and do not steal keys otherwise', async () => {

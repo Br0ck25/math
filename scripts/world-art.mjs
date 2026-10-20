@@ -38,7 +38,13 @@ const TILE_BODIES = {
   't-wall': rect(0, 0, 100, 100, 'wall') + '<path d="M0 34H100M0 68H100M30 0V34M70 34V68M30 68V100" fill="none" ' + stroke('floorD', 4) + '/><rect x="0" y="92" width="100" height="8" fill="' + INK + '"/>',
   't-roof': rect(0, 0, 100, 100, 'roof') + '<path d="M0 25H100M0 50H100M0 75H100M25 0V25M75 0V25M50 25V50M25 50V75M75 50V75" fill="none" ' + stroke('roofD', 4) + '/><rect x="0" y="92" width="100" height="8" fill="' + INK + '"/>',
   't-house-wall': rect(0, 0, 100, 100, 'wall') + '<path d="M0 36H100M0 70H100" fill="none" ' + stroke('floorD', 4) + '/><rect x="0" y="0" width="100" height="6" fill="' + INK + '"/>',
-  't-door': rect(0, 0, 100, 100, 'wall') + '<rect x="0" y="0" width="100" height="6" fill="' + INK + '"/><rect x="22" y="16" width="56" height="84" rx="10" ' + fill('wood') + ' ' + outline + '/><circle cx="64" cy="60" r="5" fill="#FDE047" stroke="' + INK + '" stroke-width="2"/>'
+  't-door': rect(0, 0, 100, 100, 'wall') + '<rect x="0" y="0" width="100" height="6" fill="' + INK + '"/><rect x="22" y="16" width="56" height="84" rx="10" ' + fill('wood') + ' ' + outline + '/><circle cx="64" cy="60" r="5" fill="#FDE047" stroke="' + INK + '" stroke-width="2"/>',
+  't-counter': rect(0, 0, 100, 100, 'floor') + '<rect x="0" y="34" width="100" height="58" fill="#A16207" ' + outline + '/><rect x="0" y="34" width="100" height="16" fill="#C98A1B" ' + outline + '/>',
+  't-shelf': rect(0, 0, 100, 100, 'floor') + '<rect x="6" y="6" width="88" height="88" rx="6" fill="#A16207" ' + outline + '/><path d="M6 36H94M6 66H94" fill="none" stroke="' + INK + '" stroke-width="3"/>' +
+    [[14, 14, '#EF4444'], [44, 18, '#3B82F6'], [68, 12, '#22C55E'], [18, 44, '#FDE047'], [50, 48, '#A855F7'], [72, 46, '#F97316'], [16, 74, '#14B8A6'], [48, 72, '#EC4899'], [70, 76, '#EF4444']].map((b) => '<rect x="' + b[0] + '" y="' + b[1] + '" width="18" height="18" rx="3" fill="' + b[2] + '" stroke="' + INK + '" stroke-width="2"/>').join(''),
+  't-rug': rect(0, 0, 100, 100, 'floor') + '<rect x="8" y="8" width="84" height="84" rx="10" fill="#DC5A4A" ' + outline + '/><rect x="24" y="24" width="52" height="52" rx="6" fill="#F59E0B" stroke="' + INK + '" stroke-width="2.5"/>',
+  't-center-sign': rect(0, 0, 100, 100, 'wall') + '<rect x="0" y="0" width="100" height="6" fill="' + INK + '"/><rect x="16" y="16" width="68" height="56" rx="9" fill="#F8FAFC" ' + outline + '/><path d="M50 62C28 46 26 32 36 28Q46 25 50 36Q54 25 64 28C74 32 72 46 50 62Z" fill="#EC4899" stroke="' + INK + '" stroke-width="2.5" stroke-linejoin="round"/>',
+  't-mart-sign': rect(0, 0, 100, 100, 'wall') + '<rect x="0" y="0" width="100" height="6" fill="' + INK + '"/><rect x="16" y="16" width="68" height="56" rx="9" fill="#BFDBFE" ' + outline + '/><circle cx="50" cy="44" r="18" fill="#FDE047" stroke="' + INK + '" stroke-width="3"/><path d="M50 34V54M43 40Q50 34 57 40" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>'
 };
 
 // ----- the hero: a body (skin, outfit, legs) and a hair layer drawn on top, in four directions. "right" is "left" turned around. -----
@@ -80,6 +86,7 @@ for (const dir of ['down', 'up', 'left', 'right']) {
 }
 
 const OBJECT_BODIES = {
+  'o-sparkle': '<path d="M50 6Q54 44 94 50Q54 56 50 94Q46 56 6 50Q46 44 50 6Z" fill="#FDE047" ' + outline + '/><circle cx="50" cy="50" r="7" fill="#FFFFFF"/>',
   'o-paw': '<ellipse cx="50" cy="68" rx="22" ry="18" fill="#A16207" ' + outline + '/>' + [[22, 42], [38, 24], [62, 24], [78, 42]].map((p) => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="#A16207" ' + outline + '/>').join('')
 };
 

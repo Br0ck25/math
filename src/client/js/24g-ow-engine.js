@@ -4,6 +4,7 @@
 //  Pictures are SVG (24f-ow-art.js), never emoji. The numbers are in ECON.overworld.
 // =====================================================================
 const OW_FACES = ['down', 'up', 'left', 'right'];
+const OW_OPPOSITE = { down: 'up', up: 'down', left: 'right', right: 'left' };
 const OW_STEP = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
 const OW_KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
 let owSafe = 0;              // safe grass steps left (no fight)
@@ -15,6 +16,8 @@ let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 
 function owTileAt(map, x, y) { const row = map.rows[y]; return (row && OW_TILES[row.charAt(x)]) || null; }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
+function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y; }) || null; }
+function owPickupAt(map, x, y) { return (map.objects || []).find(function (o) { return o.type === 'pickup' && o.x === x && o.y === y && state.overworld.found.indexOf(o.id) === -1; }) || null; }
 function owWarpAt(map, x, y) { return map.warps.find(function (w) { return w.x === x && w.y === y; }) || null; }
 function owOpen() {
   const open = openOverlays(), top = open[open.length - 1];
@@ -39,9 +42,15 @@ function renderOverworld() {
       h += '<span class="ow-cell">' + (t ? worldSprite(t.t) : '') + '</span>';
     }
   }
+  (map.objects || []).forEach(function (ob) {
+    if (ob.type === 'pickup' && o.found.indexOf(ob.id) === -1 && Math.abs(ob.x - o.x) <= half && Math.abs(ob.y - o.y) <= half) h += owActorHtml('ow-pickup', ob.x - o.x + half, ob.y - o.y + half, n, worldSprite('o-sparkle'));
+  });
+  (map.npcs || []).forEach(function (np) {
+    if (Math.abs(np.x - o.x) <= half && Math.abs(np.y - o.y) <= half) h += owActorHtml('ow-npc', np.x - o.x + half, np.y - o.y + half, n, heroSprite(heroLookColors(np.look), np.face, 0));
+  });
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + half, owTrail.y - o.y + half, n, owFollowerHtml());
   h += owActorHtml('ow-hero', half, half, n, heroSprite(heroLookColors(), o.face, owFrame));
-  view.style.setProperty('--ow-n', n);
+  view.style.cssText = '--ow-n:' + n + ';' + Object.keys(map.palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + map.palette[k]; }).join(';');
   view.innerHTML = h;
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;
@@ -53,10 +62,9 @@ function owMove(dir) {
   const o = state.overworld, map = OW_MAPS[o.map], d = OW_STEP[dir];
   o.face = dir;
   const nx = o.x + d[0], ny = o.y + d[1];
-  if (!owWalkable(map, nx, ny)) {                                   // a wall, a tree or a sign: just turn (a sign tells its words)
-    const text = map.signs && map.signs[nx + ',' + ny];
-    if (text) toast(text);
+  if (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny)) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
     renderOverworld();
+    owInteract(map, nx, ny);
     return;
   }
   owTrail = { x: o.x, y: o.y };
@@ -66,7 +74,15 @@ function owMove(dir) {
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; }
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
-  if (!warp && owTileAt(OW_MAPS[o.map], o.x, o.y).grass && owGrassStep()) startAdventureFight();
+  if (warp) return;
+  const here = OW_MAPS[o.map], pickup = owPickupAt(here, o.x, o.y);
+  if (pickup) { owCollect(pickup); renderOverworld(); }
+  if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
+}
+// Space or Enter: talk to or read what the hero faces.
+function owInteractFacing() {
+  const o = state.overworld, d = OW_STEP[o.face];
+  owInteract(OW_MAPS[o.map], o.x + d[0], o.y + d[1]);
 }
 // One step in tall grass: the first graceSteps after a fight are safe, then each step may start a wild fight.
 function owGrassStep() {
@@ -83,6 +99,7 @@ function owHold(dir) {
 function owRelease() { clearTimeout(owHoldTimer); clearInterval(owHoldTimer); owHoldTimer = null; }
 function owClick(dir) { if (owPointerUsed) { owPointerUsed = false; return; } owMove(dir); }
 window.addEventListener('keydown', function (e) {
+  if ((e.key === ' ' || e.key === 'Enter') && owOpen()) { e.preventDefault(); e.stopImmediatePropagation(); owInteractFacing(); return; }
   const dir = OW_KEYS[e.key];
   if (!dir || !owOpen()) return;
   e.preventDefault();

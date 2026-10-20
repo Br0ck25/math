@@ -825,6 +825,20 @@
     </div>
   </div>
 
+  <!-- A person or a sign talks on the Adventure map (24k-ow-people.js). Last of the map windows: it opens on top of them. -->
+  <div class="modal-overlay" id="talk-modal" data-esc="closeTalk">
+    <div class="modal-content talk-content">
+      <div class="talk-head"><span class="talk-art" id="talk-art"></span><b id="talk-name"></b></div>
+      <p class="talk-text" id="talk-text" onclick="talkNext()"></p>
+      <div id="talk-quiz" style="display:none">
+        <div class="vault-equation" id="talk-q"></div>
+        <div class="vault-answers-grid" id="talk-opts"></div>
+        <div class="d" id="talk-note" style="min-height:1.2em; margin-top:6px;"></div>
+      </div>
+      <button type="button" class="claim-btn talk-next" id="talk-next" onclick="talkNext()">Next</button>
+    </div>
+  </div>
+
   <!-- A land's daily Trail: spots that open with a right answer (openTrail) -->
   <div class="modal-overlay" id="trail-modal" data-close="closeTrail">
     <div class="modal-content">

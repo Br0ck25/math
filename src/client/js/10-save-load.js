@@ -318,8 +318,11 @@ const NORMALIZERS = [
   function overworld(s) {
     const o = isPlainObject(s.overworld) ? s.overworld : {};
     const map = OW_MAPS[o.map] || OW_MAPS[OW_START.map];
-    const spot = owWalkable(map, o.x, o.y) ? { x: o.x, y: o.y } : map.start;     // a hero that is not on a walkable tile (a bad or old save) goes back to the start
-    s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down', fight: o.fight === true };
+    const spot = owWalkable(map, o.x, o.y) && !owNpcAt(map, o.x, o.y) ? { x: o.x, y: o.y } : map.start;     // a hero that is not on a free walkable tile (a bad or old save) goes back to the start
+    const known = function (kind, list) { return (Array.isArray(list) ? list : []).filter(function (id, i, a) { return owIds(kind).indexOf(id) !== -1 && a.indexOf(id) === i; }).slice(0, 200); };
+    const sg = isPlainObject(o.signs) ? o.signs : {};
+    s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down', fight: o.fight === true,
+      found: known('pickup', o.found), signs: { day: typeof sg.day === 'string' ? sg.day.slice(0, 10) : '', ids: known('sign', sg.ids) } };
   }
 ];
 function normalizeState() {
