@@ -59,5 +59,23 @@ function renderStatsTab() {
   document.getElementById('hub-body').innerHTML =
     stat('Type', escHtml(m.type.toUpperCase())) + stat('Level', lv + (lv < MAX_LEVEL ? ' (' + (xpForLevel(lv + 1) - xp) + ' XP to next)' : ' (max)')) +
     stat('HP', m.hp + ' / ' + m.max) + stat('Attack', m.atk) + stat('Defense', m.def) + stat('Speed', m.spd) + stat('Special', m.spc) +
-    stat('Held item', item ? escHtml(item.name) : 'none') + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
+    stat('Held item', item ? escHtml(item.name) : 'none') + stoneRow() + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
+}
+
+// An Evolution Stone makes the kinds in STONE_EVOLVERS take their first evolution at once (Gold's stone evolutions).
+function stoneRow() {
+  if (STONE_EVOLVERS.indexOf(hubPet) === -1 || state.stoned[hubPet] || getPetById(hubPet).stage > 0) return '';
+  const n = state.items.stone || 0;
+  return '<div class="care-row"><div><div class="t">💎 Evolution Stone x' + n + '</div><div class="d">' + escHtml(name0(hubPet)) + ' evolves at once.</div></div><button class="claim-btn"' + (n ? '' : ' disabled') + ' onclick="useStone()">Use</button></div>';
+}
+function useStone() {
+  const id = hubPet;
+  if (!state.items.stone || STONE_EVOLVERS.indexOf(id) === -1 || state.stoned[id]) return;
+  state.items.stone -= 1; if (!state.items.stone) delete state.items.stone;
+  const before = getPetById(id);
+  state.stoned[id] = 1;
+  const after = getPetById(id);
+  saveState(); soundLevelUp(); launchConfetti('level');
+  toast(before.name + ' evolved into ' + after.name + '!');
+  renderHub();
 }

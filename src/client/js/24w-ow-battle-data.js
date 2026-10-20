@@ -38,16 +38,44 @@ const AB_STRUGGLE = { id: 'struggle', name: 'Struggle', type: 'normal', power: 5
 const AB_STATUS = { fire: 'burn', water: 'freeze', nature: 'poison', electric: 'paralysis', dark: 'sleep', magic: 'confusion' };
 const AB_STATUS_TAG = { burn: 'BRN', poison: 'PSN', paralysis: 'PAR', sleep: 'SLP', freeze: 'FRZ' };
 const AB_STATUS_CHANCE = 0.2;
-// The moves a buddy of this element knows at this level (its four newest), as fresh copies with their PP.
-// Every move a buddy of this element has learned by this level, oldest first.
-function abKnownMoves(element, level, type) {
+// Gold teaches every kind its own moves at its own pace (about one new move every 6 to 8 levels): each kind's learnset is fixed by its id. Everyone starts with Tackle and the first move of its type (two moves, like a Gold starter).
+// The element's four tiers land near levels 1, 11-17, 28-34 and 44-50; three gentle and two strong normal moves fill in between.
+const AB_WEAK = ['quick', 'growl', 'leer', 'harden', 'smoke'], AB_STRONG = ['slam', 'swords', 'agility'];
+function abLearnset(id, element, type) {
+  let h = 11; for (let i = 0; i < id.length; i++) h = (h * 37 + id.charCodeAt(i)) % 1000003;
+  const rnd = function (n) { h = (h * 1103515245 + 12345) % 2147483648; return h % n; };
+  const lib = function (mid) { return AB_NORMAL.find(function (m) { return m.id === mid; }); };
+  const weak = AB_WEAK.slice(), strong = AB_STRONG.slice(), pick = function (arr) { return arr.splice(rnd(arr.length), 1)[0]; };
+  const names = AB_MOVE_NAMES[element] || AB_MOVE_NAMES.dark, out = [Object.assign({}, lib('tackle'), { level: 1 })];
+  const tierLv = [1, 11 + rnd(7), 28 + rnd(7), 44 + rnd(7)];
+  AB_TIERS.forEach(function (t, i) { out.push({ id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: tierLv[i], status: i > 0 ? AB_STATUS[element] || '' : '' }); });
+  const others = [pick(weak), pick(weak), pick(strong), pick(weak), pick(strong)], lv = [6, 11, 24, 33, 38];
+  others.forEach(function (mid, i) { out.push(Object.assign({}, lib(mid), { level: lv[i] + rnd(3) })); });
+  return out;
+}
+// Moves a TM taught (Gold: single-use machines; ours come from the gym leaders). `el`: the element it needs ('' = any buddy).
+const AB_TMS = {
+  doubleedge: { name: 'Double-Edge', el: '', type: 'normal', power: 120, acc: 100, pp: 15, recoil: true },
+  fireblast: { name: 'Fire Blast', el: 'fire', power: 110, acc: 85, pp: 5 }, surf: { name: 'Surf', el: 'water', power: 95, acc: 100, pp: 15 },
+  solarbeam: { name: 'Solar Beam', el: 'nature', power: 120, acc: 100, pp: 10 }, thunder: { name: 'Thunder', el: 'electric', power: 110, acc: 70, pp: 10 },
+  shadowball: { name: 'Shadow Ball', el: 'dark', power: 80, acc: 100, pp: 15 }, psychic: { name: 'Psychic', el: 'magic', power: 90, acc: 100, pp: 10 },
+  hyperbeam: { name: 'Hyper Beam', el: '', type: 'normal', power: 150, acc: 90, pp: 5 }
+};
+const AB_TM_BY_BADGE = { meadow: 'doubleedge', ember: 'fireblast', tide: 'surf', grove: 'solarbeam', volt: 'thunder', gloom: 'shadowball', mystic: 'psychic', skyreach: 'hyperbeam' };
+function abTmMove(tmId, element, type) {
+  const t = AB_TMS[tmId];
+  return Object.assign({ id: tmId, type: t.type || type, level: 0, status: t.el ? AB_STATUS[element] || '' : '' }, t);
+}
+// Every move a buddy has learned by this level (its learnset), plus the TM moves it was taught, oldest first. Without an id: the old shared ladder.
+function abKnownMoves(element, level, type, id) {
   const names = AB_MOVE_NAMES[element] || AB_MOVE_NAMES.dark;
-  return AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level, status: i > 0 ? AB_STATUS[element] || '' : '' }; }))
-    .filter(function (m) { return m.level <= level; }).sort(function (a, b) { return a.level - b.level; });
+  const base = id ? abLearnset(id, element, type) : AB_NORMAL.concat(AB_TIERS.map(function (t, i) { return { id: element + (i + 1), name: names[i], type: type, power: t.power, acc: t.acc, pp: t.pp, level: t.level, status: i > 0 ? AB_STATUS[element] || '' : '' }; }));
+  const taught = id && state.tmKnown && state.tmKnown[id] ? state.tmKnown[id].filter(function (t) { return AB_TMS[t]; }).map(function (t) { return abTmMove(t, element, type); }) : [];
+  return base.filter(function (m) { return m.level <= level; }).sort(function (a, b) { return a.level - b.level; }).concat(taught);
 }
 // The four moves it takes into battle: the ones chosen (state.advMoves), topped up with its newest if fewer than four were chosen. `pp` is the PP left per move id.
-function abMoveList(element, level, type, pp, chosen) {
-  const known = abKnownMoves(element, level, type);
+function abMoveList(element, level, type, pp, chosen, id) {
+  const known = abKnownMoves(element, level, type, id);
   if (!Array.isArray(chosen)) {                                                   // by default: the newest damaging moves, and the newest stat move last
     const hit = known.filter(function (m) { return !m.fx; }), stat = known.filter(function (m) { return m.fx; }).slice(-1);
     chosen = hit.slice(stat.length ? -3 : -4).concat(stat).map(function (m) { return m.id; });
@@ -87,7 +115,7 @@ function abShape(seed, element) {
 }
 function abBuild(id, name, icon, element, type, base, level, hp, pp, chosen) {
   const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
-  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, held: '', moves: abMoveList(element, level, type, pp, chosen) };
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, held: '', moves: abMoveList(element, level, type, pp, chosen, id) };
 }
 // Gold's gender: most kinds are male or female (legends and the ultra trio have none). A kind you own keeps the one it was caught with (state.genders), else a fixed one from its name.
 function abGenderOf(id) {
@@ -121,7 +149,13 @@ function abFoeMon(f) {
   return m;
 }
 // One of your buddies, with the HP it has left.
-function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return m; }
+// Gold's badge boost: each of the first journey's eight badges raises one stat of your buddies by an eighth (attack, defense, speed, special, and round again).
+const AB_BADGE_STAT = ['atk', 'def', 'spd', 'spc', 'atk', 'def', 'spd', 'spc'];
+function abBadgeBoost(m) {
+  gymRegions().forEach(function (r, i) { if (hasBadge(r.id)) m[AB_BADGE_STAT[i]] = Math.floor(m[AB_BADGE_STAT[i]] * 9 / 8); });
+  return m;
+}
+function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return abBadgeBoost(m); }
 // Gold's damage formula, step by step. Normal moves are physical (Attack against Defense); every other type is special (Special against Special), as in Gold.
 // A burn halves a physical Attack. A critical hit doubles the damage before the +2; then the same-type bonus, type effectiveness and luck follow, each rounded down.
 const AB_CRIT = 17 / 256, AB_CRIT_LENS = 32 / 256;     // the critical hit chance, and with a Scope Lens (one stage up)

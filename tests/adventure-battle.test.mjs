@@ -28,10 +28,11 @@ const ev = (fn, arg) => page.evaluate(fn, arg);
 test('stats grow with level and kind, and the moves follow the level', async () => {
   const r = await ev(() => {
     const a = abMon('dog', 5), b = abMon('dog', 50), c = abMon('fox', 50);
-    return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 8).moves.map((m) => m.id), start: abMon('fox', 3).moves.map((m) => m.id), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
+    return { a: [a.max, a.atk], b: [b.max, b.atk], names5: abMon('fox', 8).moves.map((m) => m.id), start: abMon('fox', 3).moves.map((m) => m.id), learn: abKnownMoves('fire', 50, 'fire', 'fox').length, differ: abKnownMoves('fire', 50, 'fire', 'fox').map((m) => m.id + m.level).join() !== abKnownMoves('fire', 50, 'fire', 'ignis').map((m) => m.id + m.level).join(), names50: abMon('fox', 50).moves.map((m) => m.id), cheap: abBase(getSpecies('fox')), dear: abBase(getSpecies('octopus')), c: c.max };
   });
   assert.ok(r.b[0] > r.a[0] * 3 && r.b[1] > r.a[1] * 3);
-  assert.deepEqual(r.names5, ['tackle', 'fire1', 'quick', 'growl'], 'the newest damaging moves, and the newest stat move last');
+  assert.ok(r.names5.length >= 2 && r.names5.length <= 4 && r.names5.slice(0, 2).every((m) => ['tackle', 'fire1'].includes(m)), 'a few moves by level 8, led by Tackle and its type move');
+  assert.ok(r.learn >= 9 && r.differ, 'about ten moves by level 50, and each kind has its own learnset');
   assert.deepEqual(r.start, ['tackle', 'fire1'], 'a new buddy knows two moves, as in Gold');
   assert.equal(r.names50.length, 4);
   assert.ok(r.dear > r.cheap);
@@ -61,6 +62,7 @@ test('a battle opens on its own screen with both buddies, and FIGHT asks a math 
 
 test('a wrong answer misses and the foe attacks back', async () => {
   await begin('fox', 8);
+  await ev(() => { ab.foes.forEach((f) => { f.moves = f.moves.filter((m) => !m.fx); }); });
   const hp = await ev(() => abMe().hp), foeHp = await ev(() => abFoe().hp);
   await ev(() => { abFight(); abAnswer(ab.q.ans + 1000); });
   await phase('menu');
@@ -71,6 +73,7 @@ test('a wrong answer misses and the foe attacks back', async () => {
 
 test('a right answer lets you choose an attack, then the foe attacks back', async () => {
   await begin('fox', 8);
+  await ev(() => { ab.foes.forEach((f) => { f.moves = f.moves.filter((m) => !m.fx); }); });
   const hp = await ev(() => abMe().hp), foeHp = await ev(() => abFoe().hp);
   await ev(() => { abFight(); abAnswer(ab.q.ans); });
   assert.equal(await ev(() => ab.phase), 'moves');

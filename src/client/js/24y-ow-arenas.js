@@ -42,6 +42,7 @@ function abGymWon(id, rematch) {
   if (res.rematch) { openTalk({ name: 'Gym Leader', art: art, lines: ['A great rematch, Champion! The prize money was paid in the fight.'] }); return; }
   const charm = KEY_ITEMS.find(function (k) { return k.badge === res.region.id; });
   const lines = [GYM_STORY[res.region.id].outro, 'You won the ' + res.region.name + ' Badge!'];
+  if (AB_TM_BY_BADGE[res.region.id]) lines.push('You also get TM ' + AB_TMS[AB_TM_BY_BADGE[res.region.id]].name + '. A Move Tutor can teach it.');
   if (charm) lines.push('You also get the ' + charm.name + '. ' + charm.text + ' Use it on the map!');
   if (res.hall) lines.push('All ' + gymRegions().length + " badges! The Champion's Hall is open.");
   openTalk({ name: res.region.name + ' Gym', art: art, lines: lines });

@@ -124,12 +124,11 @@ function abPanel() {
   } else if (ab.phase === 'pack') {
     const wild = ab.kind === 'wild';
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', function () { abThrowNet('net'); }, '', !wild || state.nets < 1));
-    p.appendChild(abBtn('Great Net <small>x' + (state.items.greatnet || 0) + '</small>', function () { abThrowNet('greatnet'); }, '', !wild || !state.items.greatnet));
-    p.appendChild(abBtn('Ultra Net <small>x' + (state.items.ultranet || 0) + '</small>', function () { abThrowNet('ultranet'); }, '', !wild || !state.items.ultranet));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
-    p.appendChild(abBtn('Super Potion <small>x' + (state.items.superpotion || 0) + '</small>', function () { abUseItem('superpotion'); }, '', !state.items.superpotion || (m.hp >= m.max && !m.status)));
-    p.appendChild(abBtn('Full Heal <small>x' + (state.items.fullheal || 0) + '</small>', function () { abUseItem('fullheal'); }, '', !state.items.fullheal || (!m.status && !(m.conf > 0))));
-    p.appendChild(abBtn('Revive <small>x' + (state.items.revive || 0) + '</small>', function () { abUseItem('revive'); }, '', !state.items.revive || !ab.party.some(function (x) { return x.hp <= 0; })));
+    const carry = [['superpotion', 'Super Potion', function () { return m.hp >= m.max && !m.status; }], ['fullheal', 'Full Heal', function () { return !m.status && !(m.conf > 0); }], ['revive', 'Revive', function () { return !ab.party.some(function (x) { return x.hp <= 0; }); }],
+      ['elixir', 'Elixir', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }], ['xattack', 'X Attack', function () { return abStage(m, 'atk') >= 6; }], ['xdefend', 'X Defend', function () { return abStage(m, 'def') >= 6; }], ['xspeed', 'X Speed', function () { return abStage(m, 'spd') >= 6; }]];
+    carry.forEach(function (c) { if (state.items[c[0]]) p.appendChild(abBtn(c[1] + ' <small>x' + state.items[c[0]] + '</small>', function () { abUseItem(c[0]); }, '', c[2]())); });
+    ['greatnet', 'ultranet'].forEach(function (k) { if (state.items[k]) p.appendChild(abBtn(ITEM_LOOKS[k][1] + ' <small>x' + state.items[k] + '</small>', function () { abThrowNet(k); }, '', !wild)); });
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'learn') {
     ab.learn.mon.moves.forEach(function (mv, i) { p.appendChild(abBtn('Forget <b>' + escHtml(mv.name) + '</b>', function () { abLearnChoose(i); }, 'ab-move t-' + mv.type)); });
@@ -337,15 +336,15 @@ function abFoeFainted() {
 }
 // Experience for one of your buddies; a level-up raises its stats and keeps its HP gain, and may change its form.
 function abGainXp(mon, amt) {
-  const before = getBuddyLevel(mon.id), knownBefore = abKnownMoves(mon.element, before, mon.type).map(function (m) { return m.id; });
+  const before = getBuddyLevel(mon.id), knownBefore = abKnownMoves(mon.element, before, mon.type, mon.id).map(function (m) { return m.id; });
   addXpTo(mon.id, amt);
   const now = getBuddyLevel(mon.id);
   mon.leveled = now > before; mon.evolved = ''; mon.learned = []; mon.pending = mon.pending || [];
   if (!mon.leveled) return;
   const fresh = abMon(mon.id, now), oldName = mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
   fresh.moves = mon.moves;                                        // it keeps the moves it has, with their PP
-  Object.assign(mon, fresh, { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '', learned: [], pending: mon.pending });
-  abKnownMoves(mon.element, now, mon.type).filter(function (m) { return knownBefore.indexOf(m.id) === -1; }).forEach(function (m) {
+  Object.assign(mon, abBadgeBoost(fresh), { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '', learned: [], pending: mon.pending });
+  abKnownMoves(mon.element, now, mon.type, mon.id).filter(function (m) { return knownBefore.indexOf(m.id) === -1; }).forEach(function (m) {
     if (mon.moves.length < 4) { mon.moves.push(Object.assign({}, m, { left: m.pp })); mon.learned.push(m.name); } else mon.pending.push(m);     // with four moves it asks which to forget
   });
   state.advMoves[mon.id] = mon.moves.map(function (m) { return m.id; });
@@ -399,9 +398,14 @@ function abUseItem(kind) {
   if (kind === 'fullheal' && !me.status && !(me.conf > 0)) return;
   const down = ab.party.find(function (x) { return x.hp <= 0; });
   if (kind === 'revive' && !down) return;
+  if (kind === 'elixir' && me.moves.every(function (mv) { return mv.left >= mv.pp; })) return;
+  const XS = { xattack: ['atk', 'Attack'], xdefend: ['def', 'Defense'], xspeed: ['spd', 'Speed'] }[kind];
+  if (XS && abStage(me, XS[0]) >= 6) return;
   state.items[kind] = n - 1; if (!state.items[kind]) delete state.items[kind];
   ab.phase = 'busy';
-  if (kind === 'revive') abSteps([['You used a Revive!', function () { down.hp = Math.max(1, Math.floor(down.max / 2)); state.advHp[down.id] = down.hp; soundLevelUp(); }, 900], [down.name + ' is back on its feet!', null, 900]]);
+  if (kind === 'elixir') abSteps([['You used an Elixir!', function () { me.moves.forEach(function (mv) { mv.left = Math.min(mv.pp, mv.left + 10); state.advPp[me.id] = state.advPp[me.id] || {}; state.advPp[me.id][mv.id] = mv.left; }); soundLevelUp(); }, 900], [me.name + "'s moves got 10 PP back.", null, 900]]);
+  else if (XS) abSteps([['You used an ' + ITEM_LOOKS[kind][1] + '!', function () { me.stg = me.stg || {}; me.stg[XS[0]] = Math.min(6, abStage(me, XS[0]) + 1); soundLevelUp(); }, 900], [me.name + "'s " + XS[1] + ' rose!', null, 900]]);
+  else if (kind === 'revive') abSteps([['You used a Revive!', function () { down.hp = Math.max(1, Math.floor(down.max / 2)); state.advHp[down.id] = down.hp; soundLevelUp(); }, 900], [down.name + ' is back on its feet!', null, 900]]);
   else if (kind === 'fullheal') abSteps([['You used a Full Heal!', function () { me.status = ''; me.conf = 0; soundLevelUp(); }, 900], [me.name + ' feels fine again.', null, 900]]);
   else { const heal = Math.min(ECON.overworld.superPotionHeal, me.max - me.hp); abSteps([['You used a Super Potion!', function () { me.hp += heal; me.status = ''; me.conf = 0; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]); }
   abFoeTurn();

@@ -84,6 +84,7 @@ function advanceGym(leaderWon) {
   if (g.rematch && hasBadge(r.id)) { state.rematch.wins += 1; return { region: r, rematch: true }; }
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
+  if (AB_TM_BY_BADGE[r.id]) state.tms[AB_TM_BY_BADGE[r.id]] = 1;          // each gym leader gives a TM, as in Gold
   return { region: r, hall: !r.far && gymRegions().every(function (g) { return hasBadge(g.id); }) };       // the last badge opens the Champion's Hall
 }
 function markRegionVisited(id) {

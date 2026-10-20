@@ -48,6 +48,40 @@ function rollWildSpecies(skip) {
   }
   return sp;
 }
+// ----- fixed wild tables per route (Gold): a route has its own few kinds with set odds and a level range; the time of day swaps some of them -----
+// Day: four common kinds (30, 30, 20, 15%) and a rare one (5%). Morning swaps one common kind for a nature or water buddy, night two for dark or magic ones. The levels run around the route's own level.
+const WILD_ODDS = [30, 30, 20, 15, 5];
+const OW_WILD_TABLES = {};
+function owRouteLevel(mapId) {
+  const m = OW_MAPS[mapId], base = m && /-side$/.test(mapId) ? mapId.replace(/-side$/, '') : mapId, i = OW_LANDS.findIndex(function (L) { return L.routeIn === base; });
+  if (i < 0) return 0;
+  const lv = ECON.map.levels, here = lv[OW_LANDS[i].land], prev = i ? lv[OW_LANDS[i - 1].land] : 0;
+  return Math.round((prev + here) / 2) + 2 + (base !== mapId ? 1 : 0);
+}
+function owWildTable(mapId) {
+  if (OW_WILD_TABLES[mapId] !== undefined) return OW_WILD_TABLES[mapId];
+  const m = OW_MAPS[mapId], center = owRouteLevel(mapId);
+  if (!m || !center || !m.rows.some(function (r) { return r.indexOf('"') !== -1; })) return (OW_WILD_TABLES[mapId] = null);
+  const el = regionById(m.region).element, order = function (list, salt) {
+    const h = function (id) { let x = 17; const s = salt + id; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 100003; return x; };
+    return list.slice().sort(function (a, b) { return h(a.id) - h(b.id); });
+  };
+  const store = wildPool().filter(isStoreBuddy), secret = wildPool().filter(function (p) { return !isStoreBuddy(p); });
+  const own = function (list) { const l = list.filter(function (p) { return !el || p.element === el; }); return l.length >= 3 ? l : list; };
+  const ofEl = function (list, els, salt) { const l = list.filter(function (p) { return els.indexOf(p.element) !== -1; }); return order(l.length ? l : list, salt); };
+  const day = order(own(store), mapId).slice(0, 4).map(function (p) { return p.id; }), rare = order(own(secret), mapId + 'r')[0].id;
+  const swap = function (slots, els, salt) { const t = day.slice(); slots.forEach(function (s, k) { const c = ofEl(store, els, mapId + salt)[k]; if (c && t.indexOf(c.id) === -1) t[s] = c.id; }); return t; };
+  return (OW_WILD_TABLES[mapId] = { center: center, day: day.concat(rare), morning: swap([2], ['nature', 'water'], 'm').concat(rare), night: swap([1, 2], ['dark', 'magic'], 'n').concat(rare) });
+}
+// One wild buddy for the grass of this map, from its table: { id, level }, or null when the map has no table of its own.
+function owRollRoute(mapId) {
+  const t = owWildTable(mapId);
+  if (!t) return null;
+  const list = t[owTimeOfDay()] || t.day;
+  let r = Math.random() * 100, k = 0;
+  while (k < WILD_ODDS.length - 1 && r >= WILD_ODDS[k]) { r -= WILD_ODDS[k]; k++; }
+  return { id: list[k], level: clamp(t.center + rnd(-1, 1) + (k === WILD_ODDS.length - 1 ? 2 : 0), 2, MAX_LEVEL) };
+}
 // How strong your buddies are together: the average level of your ECON.farm.top strongest.
 function teamPower() {
   const levels = getOwnedIds().map(getBuddyLevel).sort(function (a, b) { return b - a; }).slice(0, ECON.farm.top);

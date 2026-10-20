@@ -189,6 +189,10 @@ const NORMALIZERS = [
     const owned = getOwnedIds(), hp = isPlainObject(s.advHp) ? s.advHp : {};
     s.advHp = {};
     Object.keys(hp).forEach(function (id) { if (owned.indexOf(id) !== -1 && Number.isFinite(hp[id])) s.advHp[id] = clamp(Math.floor(hp[id]), 0, 9999); });
+    const tmc = {}; Object.keys(isPlainObject(s.tms) ? s.tms : {}).forEach(function (t) { if (AB_TMS[t] && s.tms[t]) tmc[t] = 1; }); s.tms = tmc;
+    const tmk = {}, tmOwned = s.unlockedPets.concat(s.unlockedSecrets);
+    Object.keys(isPlainObject(s.tmKnown) ? s.tmKnown : {}).forEach(function (id) { if (tmOwned.indexOf(id) !== -1 && Array.isArray(s.tmKnown[id])) tmk[id] = s.tmKnown[id].filter(function (t, i, a) { return AB_TMS[t] && a.indexOf(t) === i; }).slice(0, 8); });
+    s.tmKnown = tmk;
     const mv = isPlainObject(s.advMoves) ? s.advMoves : {};
     s.advMoves = {};
     Object.keys(mv).forEach(function (id) {
@@ -207,10 +211,12 @@ const NORMALIZERS = [
     s.daycare = { ids: ids, from: from, steps: asInt(dc.steps, 0, 1e9, 0), egg: asInt(dc.egg, 0, 1e6, 0), eggReady: dc.eggReady === true && ids.length === 2 };
     const tu = {}; Object.keys(isPlainObject(s.tradedUp) ? s.tradedUp : {}).forEach(function (id) { if (TRADE_EVOLVERS.indexOf(id) !== -1 && s.tradedUp[id]) tu[id] = 1; });
     s.tradedUp = tu;
+    const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
+    s.stoned = st;
     const gd = {}; Object.keys(isPlainObject(s.genders) ? s.genders : {}).forEach(function (id) { if (getSpecies(id) && (s.genders[id] === 'm' || s.genders[id] === 'f')) gd[id] = s.genders[id]; });
     s.genders = gd;
-    s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
-    const it = {}; ['superpotion', 'fullheal', 'revive', 'greatnet', 'ultranet'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
+    s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.maxRepelSteps * 2, 0);
+    const it = {}; ['superpotion', 'fullheal', 'revive', 'greatnet', 'ultranet', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
     s.items = it;
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },

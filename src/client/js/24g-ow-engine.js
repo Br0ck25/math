@@ -230,6 +230,8 @@ function startAdventureFight(sp, levelBonus) {
   if (ab) return;
   owRelease();
   if (!sp && legendRoute() === state.overworld.map && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: legendOfWeek().id, level: ECON.legend.level }] }); return; }
+  const route = sp ? null : owRollRoute(state.overworld.map);
+  if (route) { abStart({ kind: 'wild', foes: [{ id: route.id, level: route.level, shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] }); return; }
   sp = sp || rollWildSpecies([]);
   abStart({ kind: 'wild', foes: [{ id: sp.id, level: clamp(abWildLevel() + (levelBonus || 0), 2, MAX_LEVEL), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
 }

@@ -45,9 +45,11 @@ function getBuddyXp(id) { return (state.buddyXp && state.buddyXp[id]) || 0; }
 function getBuddyLevel(id) { return levelFromXp(getBuddyXp(id)); }
 // Gold's trade evolutions: the last form of these kinds only appears after they have been traded (the Link Trader at Mystic Peak does it; state.tradedUp).
 const TRADE_EVOLVERS = ['hedgehog', 'pascal', 'rhino', 'scorpion'];
+const STONE_EVOLVERS = ['dog', 'fox', 'bunny', 'otter', 'byte', 'jimothy', 'hedwig', 'penguin'];
 function getFormIndex(sp, level) {
   let idx = 0;
   sp.forms.forEach(function (f, i) { if (level >= f.minLevel) idx = i; });
+  if (idx < 1 && sp.forms.length > 1 && STONE_EVOLVERS.indexOf(sp.id) !== -1 && state.stoned && state.stoned[sp.id]) idx = 1;          // an Evolution Stone: the first evolution at once
   if (idx > 1 && TRADE_EVOLVERS.indexOf(sp.id) !== -1 && !(state.tradedUp && state.tradedUp[sp.id])) idx = 1;
   return idx;
 }

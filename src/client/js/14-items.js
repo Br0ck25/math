@@ -8,6 +8,12 @@ const ITEM_LOOKS = {
   net: ['🕸️', 'Catch Net', 'Throw it at a wild buddy to catch it'],
   greatnet: ['🕸️', 'Great Net', 'A better net: catches x1.5 as well'],
   ultranet: ['🕸️', 'Ultra Net', 'The best net: catches x2 as well'],
+  elixir: ['🧪', 'Elixir', 'Restores 10 PP to every move in a battle'],
+  xattack: ['⚔️', 'X Attack', 'Raises Attack by a stage for the rest of a battle'],
+  xdefend: ['🛡️', 'X Defend', 'Raises Defense by a stage for the rest of a battle'],
+  xspeed: ['💨', 'X Speed', 'Raises Speed by a stage for the rest of a battle'],
+  maxrepel: ['🧴', 'Max Repel', 'No wild buddies in the grass for ' + ECON.overworld.maxRepelSteps + ' steps'],
+  stone: ['💎', 'Evolution Stone', 'Some buddies evolve at once when you use it (see the Stats tab)'],
   superpotion: ['💗', 'Super Potion', 'Heals ' + ECON.overworld.superPotionHeal + ' HP in a battle and cures a status'],
   fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
   revive: ['✨', 'Revive', 'Wakes a resting buddy in a battle with half its HP'],
@@ -42,6 +48,9 @@ function payItem(type) {
   } else if (type === 'repel') {
     state.repelSteps = Math.min(ECON.overworld.repelSteps * 3, state.repelSteps + ECON.overworld.repelSteps);
     showPopup('Repel! (' + state.repelSteps + ' steps)');
+  } else if (type === 'maxrepel') {
+    state.repelSteps = Math.min(ECON.overworld.maxRepelSteps * 2, state.repelSteps + ECON.overworld.maxRepelSteps);
+    showPopup('Max Repel! (' + state.repelSteps + ' steps)');
   } else if (state.items && type !== 'potion') {
     state.items[type] = Math.min(99, (state.items[type] || 0) + 1);
     showPopup(ITEM_LOOKS[type][1] + '! (' + state.items[type] + ')');

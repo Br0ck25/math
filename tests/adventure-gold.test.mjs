@@ -240,6 +240,68 @@ test('routes run sideways too: every route has an east or west gap to a side pat
   assert.deepEqual(r, { all: true, sides: 'east,west', back: true, there: 'route1-side', home: 'route1', contents: [1, 2] });
 });
 
+test('moves at Gold\'s pace: two at the start, about ten by level 50, each kind its own ladder; gym leaders give TMs that a Move Tutor teaches (an element TM only to its type)', async () => {
+  const r = await ev(() => {
+    const out = { start: abMon('fox', 5).moves.length, late: abKnownMoves('fire', 50, 'fire', 'fox').length };
+    const gaps = abKnownMoves('fire', 50, 'fire', 'fox').map((m) => m.level).sort((a, b) => a - b); out.pace = gaps.filter((l) => l > 1).every((l, i, a) => !i || l - a[i - 1] <= 16);
+    state.badges = []; state.tms = {}; state.rematch = { day: '', lands: [], wins: 0 }; state.gym = { region: 'ember', step: 3 }; advanceGym(true);
+    out.tm = Object.keys(state.tms).join();
+    state.unlockedPets = ['fox']; state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.tmKnown = {}; state.advMoves = {};
+    const npc = OW_MAPS['grove-house'].npcs.find((n) => n.kind === 'tutor');
+    OW_SERVICES.tutor(npc); talk.i = talk.lines.length - 1; renderTalk();
+    out.offered = talk.choices.map((c) => c.label).some((l) => /TM Fire Blast/.test(l));
+    state.activePet = 'otter'; state.unlockedPets = ['otter']; state.buddyXp.otter = xpForLevel(20); OW_SERVICES.tutor(npc); talk.i = talk.lines.length - 1; renderTalk();
+    out.waterNo = !talk.choices.map((c) => c.label).some((l) => /Fire Blast/.test(l));
+    state.activePet = 'fox'; state.unlockedPets = ['fox']; OW_SERVICES.tutor(npc); talk.i = talk.lines.length - 1; renderTalk();
+    const i = talk.choices.findIndex((c) => /TM Fire Blast/.test(c.label)); talkChoose(i);
+    out.taught = (state.tmKnown.fox || []).join(); out.used = !state.tms.fireblast;
+    out.known = abKnownMoves('fire', 20, 'fire', 'fox').some((m) => m.id === 'fireblast');
+    return out;
+  });
+  assert.deepEqual(r, { start: 2, late: r.late, pace: true, tm: 'fireblast', offered: true, waterNo: true, taught: 'fireblast', used: true, known: true });
+  assert.ok(r.late >= 9);
+});
+
+test('each route has its own wild table: five kinds with set odds, levels around the route\'s own that rise route by route, a rare slot, and the night swaps kinds', async () => {
+  const r = await ev(() => {
+    const out = { centers: [], sizes: new Set(), samples: 0 };
+    OW_LANDS.forEach((L) => { const t = owWildTable(L.routeIn); out.centers.push(t.center); out.sizes.add(t.day.length); });
+    out.rising = out.centers.every((c, i, a) => !i || c >= a[i - 1]);
+    out.sizes = [...out.sizes].join();
+    const t = owWildTable('route3'); out.same = JSON.stringify(t) === JSON.stringify((delete OW_WILD_TABLES.route3, owWildTable('route3')));
+    out.night = t.night.join() !== t.day.join();
+    const seen = new Set(); let lo = 99, hi = 0; for (let i = 0; i < 400; i++) { const x = owRollRoute('route3'); seen.add(x.id); lo = Math.min(lo, x.level); hi = Math.max(hi, x.level); }
+    out.kinds = seen.size <= 5; out.levels = lo >= t.center - 1 && hi <= t.center + 2;
+    out.side = owWildTable('route3-side').center === t.center + 1; out.town = owWildTable('meadow');
+    return out;
+  });
+  assert.deepEqual(r, { centers: r.centers, sizes: '5', samples: 0, rising: true, same: true, night: true, kinds: true, levels: true, side: true, town: null });
+  assert.equal(r.centers[0], 3);
+});
+
+test('more items: an Elixir gives every move 10 PP back, X items raise a stage, a Max Repel lasts 250 steps, an Evolution Stone evolves a stone kind at once, and each badge boosts one stat by an eighth', async () => {
+  await ev(() => { state.unlockedPets = ['dog', 'fox']; state.activePet = 'fox'; state.buddyXp.fox = xpForLevel(20); state.advPp = {}; });
+  await begin();
+  const r = await ev(() => {
+    state.items = { elixir: 1, xattack: 1 };
+    const me = abMe(); me.moves.forEach((mv) => { mv.left = 1; }); ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); Math.random = () => 0.9;
+    ab.phase = 'pack'; abUseItem('elixir'); const pp = me.moves.map((mv) => mv.left);
+    return { pp, ok: pp.every((n, i) => n === Math.min(me.moves[i].pp, 11)) };
+  });
+  assert.equal(r.ok, true);
+  await menu();
+  const x = await ev(() => { ab.phase = 'pack'; abUseItem('xattack'); return [abMe().stg.atk, state.items.xattack || 0]; });
+  assert.deepEqual(x, [1, 0]);
+  const t = await ev(() => {
+    state.repelSteps = 0; state.gems = 5000; payItem('maxrepel'); const rep = state.repelSteps;
+    state.items = { stone: 1 }; state.stoned = {}; state.buddyXp.dog = xpForLevel(5); hubPet = 'dog';
+    const before = getPetById('dog').stage; useStone(); const after = getPetById('dog').stage; useStone();
+    state.badges = []; const base = abPartyMon('fox'); state.badges = [gymRegions()[0].id, gymRegions()[1].id]; const boosted = abPartyMon('fox');
+    return { rep, before, after, left: state.items.stone || 0, atk: boosted.atk === Math.floor(base.atk * 9 / 8), def: boosted.def === Math.floor(base.def * 9 / 8), spd: boosted.spd === base.spd };
+  });
+  assert.deepEqual(t, { rep: 250, before: 0, after: 1, left: 0, atk: true, def: true, spd: true });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;
@@ -250,7 +312,7 @@ test('a Repel keeps wild buddies out of the grass for its steps, wears off, and 
     state.repelSteps = 99999; NORMALIZERS.forEach((fn) => fn(state));
     return { open, cost, steps, left, fights, worn, next, clamped: state.repelSteps };
   });
-  assert.deepEqual(r, { open: 1, cost: 350, steps: 100, left: 650, fights: 0, worn: 0, next: true, clamped: 300 });
+  assert.deepEqual(r, { open: 1, cost: 350, steps: 100, left: 650, fights: 0, worn: 0, next: true, clamped: 500 });
 });
 
 test('a Berry heals 10 HP when health drops to half or less, and is used up', async () => {

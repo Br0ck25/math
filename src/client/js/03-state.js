@@ -11,6 +11,7 @@ function freshState() {
     cloverLeft: 0,
     daycare: { ids: [], from: {}, steps: 0, egg: 0, eggReady: false },        // buddies left at the Day Care (24vd-ow-daycare.js)
     genders: {},                                     // buddy id -> 'm' or 'f': the gender it was caught with
+    stoned: {},                                      // buddy id -> 1 once an Evolution Stone was used on it
     tradedUp: {},                                    // buddy id -> 1 once traded: its trade evolution can appear
     repelSteps: 0,                                   // grass steps left with no wild fights (Repel)
     heldOwned: [],                                   // held item ids you have bought
@@ -51,6 +52,8 @@ function freshState() {
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    tms: {},                                         // TM ids held (single use), from the gym leaders
+    tmKnown: {},                                     // buddy id -> TM move ids it was taught
     advMoves: {},                                    // Adventure battle moves chosen by buddy id: the move ids it takes into battle (absent = its newest four)
     advPp: {},                                       // Adventure battle PP left by buddy id and move id (missing = full); the Buddy Center restores it
     items: {},                                       // supplies beyond the Potion and the net: superpotion, fullheal, revive (counts)

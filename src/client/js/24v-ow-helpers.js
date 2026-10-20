@@ -36,11 +36,13 @@ const OW_SERVICES = {
   },
   tutor: function (npc) {
     const pet = abPartyMon(state.activePet), art = heroSprite(heroLookColors(npc.look), 'down', 0), have = pet.moves.map(function (m) { return m.id; });
-    const spare = abKnownMoves(pet.element, pet.level, pet.type).filter(function (m) { return have.indexOf(m.id) === -1; });
-    const lines = ['A buddy takes four moves into battle. I can teach ' + pet.name + ' any move it has learned before.'];
-    if (!spare.length) { openTalk({ name: npc.name, art: art, lines: lines.concat([pet.name + ' has no other moves to learn yet. Keep levelling up!']) }); return; }
-    openTalk({ name: npc.name, art: art, lines: lines.concat(['Which move should ' + pet.name + ' learn?']),
-      choices: spare.slice(0, 4).map(function (m) { return { label: m.name + (m.fx ? ' (status)' : ' (power ' + m.power + ')'), run: function () { closeTalk(); owTutorForget(npc, pet, m); } }; }) });
+    const spare = abKnownMoves(pet.element, pet.level, pet.type, pet.id).filter(function (m) { return have.indexOf(m.id) === -1; });
+    const tms = Object.keys(state.tms).filter(function (t) { return AB_TMS[t] && (!AB_TMS[t].el || AB_TMS[t].el === pet.element) && abKnownMoves(pet.element, 100, pet.type, pet.id).every(function (m) { return m.id !== t; }); });
+    const lines = ['A buddy takes four moves into battle. I can teach ' + pet.name + ' any move it has learned before, and any TM you carry.'];
+    if (!spare.length && !tms.length) { openTalk({ name: npc.name, art: art, lines: lines.concat([pet.name + ' has no other moves to learn yet. Keep levelling up!']) }); return; }
+    const list = spare.slice(0, 3).map(function (m) { return { label: m.name + (m.fx ? ' (status)' : ' (power ' + m.power + ')'), run: function () { closeTalk(); owTutorForget(npc, pet, m); } }; })
+      .concat(tms.slice(0, 3).map(function (t) { const m = abTmMove(t, pet.element, pet.type); return { label: 'TM ' + m.name + ' (power ' + m.power + ')', run: function () { closeTalk(); delete state.tms[t]; state.tmKnown[pet.id] = (state.tmKnown[pet.id] || []).concat(t); saveState(); owTutorForget(npc, pet, m); } }; }));
+    openTalk({ name: npc.name, art: art, lines: lines.concat(['Which move should ' + pet.name + ' learn?']), choices: list });
   }
 };
 
@@ -60,6 +62,7 @@ function owTrade(npc) {
 
 // Which of the four moves does the new one replace?
 function owTutorForget(npc, pet, m) {
+  if (pet.moves.length < 4) { owTeach(pet, m, pet.moves.length); return; }
   openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: ['Which move should ' + pet.name + ' forget to learn ' + m.name + '?'],
     choices: pet.moves.map(function (old, i) { return { label: 'Forget ' + old.name, run: function () { closeTalk(); owTeach(pet, m, i); } }; }) });
 }
@@ -69,5 +72,5 @@ function owTeach(pet, m, i) {
   ids[i] = m.id;
   state.advMoves[pet.id] = ids;
   saveState();
-  openTalk({ name: 'Move set', art: worldSprite('k-badge-case'), lines: [pet.name + ' forgot ' + pet.moves[i].name + ' and learned ' + m.name + '!'] });
+  openTalk({ name: 'Move set', art: worldSprite('k-badge-case'), lines: [i < pet.moves.length ? pet.name + ' forgot ' + pet.moves[i].name + ' and learned ' + m.name + '!' : pet.name + ' learned ' + m.name + '!'] });
 }
