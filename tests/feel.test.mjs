@@ -155,7 +155,7 @@ test('the streak shield costs what the economy says: refused below it, bought at
   assert.equal(r.label, 'Need ' + r.price + ' more 💎', 'out of gems, the button says how many more are needed');
 });
 
-test('a wrong answer opens a card with the right answer that closes by itself after 5 seconds or by the ✕', async () => {
+test('a wrong answer opens a card with the right answer that closes by itself after 10 seconds or by the ✕', async () => {
   await solveWrong();
   const r = await page.evaluate(() => ({
     shown: getComputedStyle(document.getElementById('miss-modal')).display,
@@ -166,7 +166,7 @@ test('a wrong answer opens a card with the right answer that closes by itself af
   }));
   assert.equal(r.shown, 'flex');
   assert.equal(r.answer, r.want);
-  assert.equal(r.ms, 5000);
+  assert.equal(r.ms, 10000);
   assert.ok(r.x, 'sticky exit button');
   await page.evaluate(() => document.querySelector('#miss-modal .modal-x').click());
   assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
@@ -307,21 +307,20 @@ test('a new foe is announced over the stage with the buddy sent out, and the ban
   await page.waitForFunction(() => !document.getElementById('foe-intro').classList.contains('show'));
 });
 
-test('the "not quite" card sits over the stage and the keypad stays tappable; typing the next answer puts it away', async () => {
+test('the "not quite" card covers the math area and leaves the buddy stage in view; typing puts it away', async () => {
   await solveWrong();
   await page.waitForFunction(() => !inputLocked);
   const r = await page.evaluate(() => {
     const modal = document.getElementById('miss-modal');
-    const key = document.querySelector('.keypad button');
-    const b = key.getBoundingClientRect();
-    const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
     const card = document.querySelector('#miss-modal .modal-content').getBoundingClientRect();
+    const stage = document.getElementById('battle-header-arena').getBoundingClientRect();
     const eq = document.getElementById('equation-mount').getBoundingClientRect();
-    return { shown: modal.style.display, keyReachable: key === hit || key.contains(hit), clear: card.bottom <= eq.top + 1 };
+    return { shown: modal.style.display, belowStage: card.top >= stage.bottom - 1, coversEq: card.top <= eq.top + 1 && card.bottom >= eq.bottom - 1, onScreen: card.bottom <= window.innerHeight };
   });
   assert.equal(r.shown, 'flex');
-  assert.ok(r.keyReachable, 'the overlay does not swallow keypad taps');
-  assert.ok(r.clear, 'the card ends above the equation');
+  assert.ok(r.belowStage, 'the buddy stage is not covered');
+  assert.ok(r.coversEq, 'the card is over the math problem');
+  assert.ok(r.onScreen);
   await page.evaluate(() => pressKey('5'));
   assert.equal(await page.evaluate(() => document.getElementById('miss-modal').style.display), 'none');
 });

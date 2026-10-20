@@ -1201,7 +1201,7 @@
 
 /* Wrong-answer card countdown (disabled by .reduce-motion, the timer still closes it) */
 .miss-bar-track { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
-#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 5s linear forwards; }
+#miss-bar { height: 100%; width: 100%; background: #f59e0b; transform-origin: left; animation: miss-shrink 10s linear forwards; }
 @keyframes miss-shrink { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 /* Boss and buddy reactions */
@@ -2033,8 +2033,8 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .map-row.locked.next { opacity: 1; border-color: #fbbf24; }
 .map-next { font-size: 0.62rem; font-weight: 800; color: #fde68a; margin-left: 4px; }
 
-/* The "not quite" card docks at the top over the stage: the equation and keypad stay in reach, and the next problem is already running. */
-#miss-modal { background: transparent; align-items: flex-start; pointer-events: none; }
+/* The "not quite" card covers the math area (equation and keypad) and leaves the buddy stage in view. JS sets --miss-top / --miss-max. */
+#miss-modal { background: transparent; align-items: flex-start; pointer-events: none; padding-top: var(--miss-top, 12px); }
 #miss-modal .modal-content { pointer-events: auto; max-height: var(--miss-max, 60vh); overflow-y: auto; }
 #miss-modal.tight .miss-visual, #miss-modal.tight #miss-said, #miss-modal.tight .submit-btn, #miss-modal.tight .modal-content > div:first-child { display: none; }
 #miss-modal.tight .modal-content { padding-top: 8px; padding-bottom: 8px; }
