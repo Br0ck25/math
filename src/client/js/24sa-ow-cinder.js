@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Cinder Mesa. Route 8 leads in from Skyreach (the road opens once you are Champion); the town has a Buddy Center, a Mart, a house and the Cinder Mesa Gym.
+//  LAND PASS: Cinder Mesa. Route 8 leads in from Skyreach (the road opens once you are Champion); the town has a Buddy Center, a Mart, a house and the Cinder Mesa Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_CINDER_PALETTE = { grass: '#C9A27A', grassD: '#B08658', leaf: '#8A5A3C', leafD: '#6A3F28', path: '#E6D2B5', pathD: '#C9B08C', roof: '#C8452B', roofD: '#9B2E1B', water: '#4A7FA0' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,,,,,..,,**,T',
       'T,,,,,..,,,,TT',
       'T,,,,,..,""T,T',
-      'T,,,,,..,"",,T',
+      'T,,,,,..,""g,T',
       'T,,,,,..,"""TT',
       'T,,,,,..,""",T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route8-gem', type: 'pickup', x: 4, y: 14, give: 'gems' },
-      { id: 'route8-net', type: 'pickup', x: 12, y: 19, give: 'net' }
+      { id: 'route8-nook-gem', type: 'pickup', x: 12, y: 18, give: 'gems' },
+      { id: 'route8-nook-net', type: 'pickup', x: 12, y: 19, give: 'net' },
+      { id: 'route8-net', type: 'pickup', x: 5, y: 14, give: 'net' }
     ],
     trees: { '2,7': 'route8-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,,T',
+      'T,,k,,,..,,,,,,T',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'cinder-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'cinder-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'cinder-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'cinder-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'cinder-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'cinder' },
@@ -99,7 +103,7 @@ Object.assign(OW_MAPS, {
       lines: ['Fire buddies love a hot kiln. I keep one going all day.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'cinder-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'cinder', town: 'cinder', routeIn: 'route8', center: 'cinder-center', mart: 'cinder-mart', house: 'cinder-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'cinder', town: 'cinder', routeIn: 'route8', center: 'cinder-center', mart: 'cinder-mart', house: 'cinder-house', charm: '', nook: ['cinder-nook-gem', 'cinder-nook-net'] });
 
 // The airship road: once you are Champion, the west edge of Skyreach opens onto Route 8 (the second journey).
 OW_MAPS.skyreach.rows[5] = 'x' + OW_MAPS.skyreach.rows[5].slice(1);

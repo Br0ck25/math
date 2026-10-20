@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Prism Caverns. Route 13 leads in from Duskhollow (the road opens with the Duskhollow Badge); the town has a Buddy Center, a Mart, a house and the Prism Caverns Gym.
+//  LAND PASS: Prism Caverns. Route 13 leads in from Duskhollow (the road opens with the Duskhollow Badge); the town has a Buddy Center, a Mart, a house and the Prism Caverns Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_PRISM_PALETTE = { grass: '#D9B8E8', grassD: '#BC93D2', leaf: '#8E5FB0', leafD: '#6B3F8C', path: '#EFE3F6', pathD: '#D3C2E0', roof: '#E060A8', roofD: '#B03C80', water: '#5A8FD0' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T"""",..,,,,,T',
       'TT,,,,..,""",T',
       'T,T,,,..,""",T',
-      'T,,,,,..,""",T',
+      'T,q,,,..,""",T',
       'TT,,,,..,""",T',
       'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route13-gem', type: 'pickup', x: 9, y: 6, give: 'gems' },
-      { id: 'route13-net', type: 'pickup', x: 1, y: 19, give: 'net' }
+      { id: 'route13-nook-gem', type: 'pickup', x: 1, y: 18, give: 'gems' },
+      { id: 'route13-nook-net', type: 'pickup', x: 1, y: 19, give: 'net' },
+      { id: 'route13-net', type: 'pickup', x: 8, y: 6, give: 'net' }
     ],
     trees: { '2,8': 'route13-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,,T',
+      'T,,h,,,..,,,,,,T',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'prism-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'prism-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'prism-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'prism-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'prism-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'prism' },
@@ -99,4 +103,4 @@ Object.assign(OW_MAPS, {
       lines: ['Magic buddies glow when they stand in the crystals.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'prism-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'prism', town: 'prism', routeIn: 'route13', center: 'prism-center', mart: 'prism-mart', house: 'prism-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'prism', town: 'prism', routeIn: 'route13', center: 'prism-center', mart: 'prism-mart', house: 'prism-house', charm: '', nook: ['prism-nook-gem', 'prism-nook-net'] });

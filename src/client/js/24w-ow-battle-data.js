@@ -47,7 +47,22 @@ function abBase(sp) {
 // A fighter: species id and level (and its HP, full when not given). Gold's stat formula without the hidden values.
 // Every kind has its own build: up to 10 more or less base strength in HP, Attack, Defense and Speed, fixed by its name; an element leans a little too (electric is quick, nature is sturdy).
 const AB_SPEED_LEAN = { electric: 12, fire: 5, dark: 5, magic: 0, water: -4, nature: -10 };
+// Hand-tuned builds for the buddies you meet most (a gym leader's or a Champion's team, the first few store buddies, the legends); every other kind uses the name-based build below.
+const AB_SHAPES = {
+  dog: { hp: 8, atk: 2, def: 4, spd: -2, spc: 0 }, jimothy: { hp: -2, atk: 4, def: -4, spd: 12, spc: 2 }, fox: { hp: -4, atk: 8, def: -2, spd: 10, spc: 6 }, bunny: { hp: -6, atk: -2, def: -6, spd: 14, spc: 8 },
+  otter: { hp: 2, atk: 2, def: 0, spd: 6, spc: 4 }, hedgehog: { hp: 0, atk: 4, def: 14, spd: -4, spc: -4 }, ignis: { hp: -2, atk: 0, def: -2, spd: 6, spc: 14 }, penguin: { hp: 8, atk: -2, def: 8, spd: -6, spc: 2 },
+  bear: { hp: 12, atk: 8, def: 4, spd: -8, spc: -4 }, olaf: { hp: 10, atk: -4, def: 2, spd: -10, spc: 8 }, hedwig: { hp: -4, atk: 2, def: -2, spd: 10, spc: 12 }, dolphin: { hp: 2, atk: 2, def: 0, spd: 12, spc: 6 },
+  pascal: { hp: 4, atk: -2, def: 12, spd: -6, spc: 6 }, byte: { hp: -4, atk: -2, def: 0, spd: 12, spc: 14 }, crookshanks: { hp: 0, atk: 6, def: -2, spd: 12, spc: 4 }, rhino: { hp: 8, atk: 14, def: 12, spd: -12, spc: -6 },
+  tiger: { hp: 2, atk: 14, def: 0, spd: 8, spc: 0 }, panther: { hp: -2, atk: 10, def: -2, spd: 14, spc: 2 }, bat: { hp: -6, atk: 2, def: -8, spd: 16, spc: 6 }, griffin: { hp: 2, atk: 10, def: 2, spd: 12, spc: 6 },
+  cosmo: { hp: 0, atk: -4, def: 0, spd: 4, spc: 16 }, lion: { hp: 8, atk: 14, def: 6, spd: 2, spc: 0 }, phoenix: { hp: 4, atk: 2, def: 2, spd: 10, spc: 16 }, frostfang: { hp: 2, atk: 12, def: 2, spd: 10, spc: 4 },
+  pegasus: { hp: 0, atk: 2, def: 0, spd: 16, spc: 12 }, panda: { hp: 14, atk: 4, def: 10, spd: -10, spc: 0 }, koala: { hp: 12, atk: -4, def: 6, spd: -12, spc: 10 }, monkey: { hp: 0, atk: 6, def: -4, spd: 14, spc: 4 },
+  turtle: { hp: 6, atk: 0, def: 16, spd: -14, spc: 4 }, octopus: { hp: 2, atk: -2, def: 2, spd: 4, spc: 16 }, wolf: { hp: 2, atk: 12, def: 2, spd: 12, spc: 0 }, shark: { hp: 2, atk: 16, def: -2, spd: 10, spc: 2 },
+  gorilla: { hp: 12, atk: 16, def: 6, spd: -6, spc: -4 },
+  legend_fire: { hp: 10, atk: 6, def: 8, spd: 6, spc: 16 }, legend_water: { hp: 16, atk: 4, def: 10, spd: 2, spc: 12 }, legend_nature: { hp: 14, atk: 8, def: 14, spd: -2, spc: 8 },
+  legend_electric: { hp: 6, atk: 6, def: 4, spd: 16, spc: 14 }, legend_dark: { hp: 8, atk: 16, def: 6, spd: 12, spc: 6 }, legend_magic: { hp: 8, atk: 2, def: 8, spd: 10, spc: 16 }
+};
 function abShape(seed, element) {
+  if (AB_SHAPES[seed]) return AB_SHAPES[seed];
   let h = 7;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 1000003;
   const off = function (k) { return Math.floor(h / Math.pow(21, k)) % 21 - 10; };

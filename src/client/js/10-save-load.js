@@ -209,6 +209,8 @@ const NORMALIZERS = [
     const ids = (Array.isArray(dc.ids) ? dc.ids : []).filter(function (id, i, a) { return dcOwned.indexOf(id) !== -1 && id !== s.activePet && a.indexOf(id) === i; }).slice(0, ECON.daycare.max);
     ids.forEach(function (id) { from[id] = asInt(dc.from && dc.from[id], 1, 100, 1); });
     s.daycare = { ids: ids, from: from, steps: asInt(dc.steps, 0, 1e9, 0), egg: asInt(dc.egg, 0, 1e6, 0), eggReady: dc.eggReady === true && ids.length === 2 };
+    const tu = {}; Object.keys(isPlainObject(s.tradedUp) ? s.tradedUp : {}).forEach(function (id) { if (TRADE_EVOLVERS.indexOf(id) !== -1 && s.tradedUp[id]) tu[id] = 1; });
+    s.tradedUp = tu;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },

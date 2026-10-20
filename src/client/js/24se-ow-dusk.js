@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Duskhollow. Route 12 leads in from Spark City (the road opens with the Spark Badge); the town has a Buddy Center, a Mart, a house and the Duskhollow Gym.
+//  LAND PASS: Duskhollow. Route 12 leads in from Spark City (the road opens with the Spark Badge); the town has a Buddy Center, a Mart, a house and the Duskhollow Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_DUSK_PALETTE = { grass: '#8E86AA', grassD: '#6F6890', leaf: '#4B4470', leafD: '#352F55', path: '#B9B2CC', pathD: '#9A93B3', roof: '#4B2E83', roofD: '#331F5E', water: '#3A4F8A' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,,,,,..,,**,T',
       'T,,,,,..,,,,TT',
       'T,,,,,..,""T,T',
-      'T,,,,,..,"",,T',
+      'T,,,,,..,""l,T',
       'T,,,,,..,"""TT',
       'T,,,,,..,""",T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route12-gem', type: 'pickup', x: 4, y: 14, give: 'gems' },
-      { id: 'route12-net', type: 'pickup', x: 12, y: 19, give: 'net' }
+      { id: 'route12-nook-gem', type: 'pickup', x: 12, y: 18, give: 'gems' },
+      { id: 'route12-nook-net', type: 'pickup', x: 12, y: 19, give: 'net' },
+      { id: 'route12-net', type: 'pickup', x: 5, y: 14, give: 'net' }
     ],
     trees: { '2,7': 'route12-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,,T',
+      'T,,g,,,..,,,,,,T',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'dusk-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'dusk-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'dusk-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'dusk-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'dusk-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'dusk' },
@@ -99,4 +103,4 @@ Object.assign(OW_MAPS, {
       lines: ['Dark buddies love quiet. They are good listeners.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'dusk-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'dusk', town: 'dusk', routeIn: 'route12', center: 'dusk-center', mart: 'dusk-mart', house: 'dusk-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'dusk', town: 'dusk', routeIn: 'route12', center: 'dusk-center', mart: 'dusk-mart', house: 'dusk-house', charm: '', nook: ['dusk-nook-gem', 'dusk-nook-net'] });

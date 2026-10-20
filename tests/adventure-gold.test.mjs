@@ -102,6 +102,28 @@ test('the buddy summary shows type, level, the five stats and the moves with PP'
   assert.equal(await ev(() => document.querySelectorAll('#hub-tabs button').length), 3);
 });
 
+test('hand-tuned builds: the iconic buddies have their own strengths, kept within the shape range, and the rest still get a name-based build', async () => {
+  const r = await ev(() => {
+    const ok = Object.keys(AB_SHAPES).every((k) => getSpecies(k) && Object.values(AB_SHAPES[k]).every((v) => v >= -20 && v <= 20));
+    const turtle = abMon('turtle', 50), bat = abMon('bat', 50), rest = abMon('toon_bluey', 50);
+    return { ok, tanky: turtle.def > bat.def && turtle.spd < bat.spd, fixed: abShape('turtle', 'water') === AB_SHAPES.turtle, other: abShape('toon_bluey', 'nature').atk >= -10 && rest.max > 0 };
+  });
+  assert.deepEqual(r, { ok: true, tanky: true, fixed: true, other: true });
+});
+
+test('trade evolution: Spike, Pascal, Tank and Dusty stop one form short until the Link Trader trades them', async () => {
+  const r = await ev(() => {
+    state.unlockedPets = [state.activePet, 'hedgehog']; state.buddyXp.hedgehog = xpForLevel(100); state.tradedUp = {};
+    const before = getPetById('hedgehog').stage, npc = OW_MAPS['mystic-house'].npcs.find((n) => n.kind === 'linktrader');
+    OW_SERVICES.linktrader(npc); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    const after = getPetById('hedgehog').stage;
+    OW_SERVICES.linktrader(npc);
+    state.tradedUp = { hedgehog: 1, fox: 1, nope: 1 }; NORMALIZERS.forEach((fn) => fn(state));
+    return { before, after, again: talk.lines.join(' ').includes('already been traded'), kept: Object.keys(state.tradedUp).join(), rest: getPetById('fox').stage };
+  });
+  assert.deepEqual(r, { before: 1, after: 2, again: true, kept: 'hedgehog', rest: 0 });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 100; state.repelSteps = 0;

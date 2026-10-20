@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Summit Citadel. Route 15 leads in from Crossroads (the road opens with the Crossroads Badge); the town has a Buddy Center, a Mart, a house and the Summit Citadel Gym.
+//  LAND PASS: Summit Citadel. Route 15 leads in from Crossroads (the road opens with the Crossroads Badge); the town has a Buddy Center, a Mart, a house and the Summit Citadel Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_SUMMIT_PALETTE = { grass: '#E8EEF5', grassD: '#C7D4E4', leaf: '#8FA6C2', leafD: '#6A84A6', path: '#F6F4EE', pathD: '#DAD6C8', roof: '#C9A227', roofD: '#9C7A12', water: '#5C93C8' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,""",..,""",T',
       'TT""",..,""",T',
       'T,T"",..,""",T',
-      'T,,,,,..,,,,,T',
+      'T,g,,,..,,,,,T',
       'TT,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route15-gem', type: 'pickup', x: 9, y: 2, give: 'gems' },
-      { id: 'route15-net', type: 'pickup', x: 1, y: 19, give: 'net' }
+      { id: 'route15-nook-gem', type: 'pickup', x: 1, y: 18, give: 'gems' },
+      { id: 'route15-nook-net', type: 'pickup', x: 1, y: 19, give: 'net' },
+      { id: 'route15-net', type: 'pickup', x: 8, y: 2, give: 'net' }
     ],
     trees: { '2,11': 'route15-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'TTT,,,,..,,,,,,T',
-      'TT,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,TT',
+      'T,,k,,,..,,,,TTT',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -80,7 +82,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'summit-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'summit-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'summit-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'summit-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'summit-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     gyms: { '11,9': 'summit' },
@@ -97,4 +101,4 @@ Object.assign(OW_MAPS, {
       lines: ['From my window I can see every land you have crossed. You came a long way.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'summit-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'summit', town: 'summit', routeIn: 'route15', center: 'summit-center', mart: 'summit-mart', house: 'summit-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'summit', town: 'summit', routeIn: 'route15', center: 'summit-center', mart: 'summit-mart', house: 'summit-house', charm: '', nook: ['summit-nook-gem', 'summit-nook-net'] });

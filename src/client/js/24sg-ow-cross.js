@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Crossroads. Route 14 leads in from Prism Caverns (the road opens with the Prism Badge); the town has a Buddy Center, a Mart, a house and the Crossroads Gym.
+//  LAND PASS: Crossroads. Route 14 leads in from Prism Caverns (the road opens with the Prism Badge); the town has a Buddy Center, a Mart, a house and the Crossroads Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_CROSS_PALETTE = { grass: '#B7D8A0', grassD: '#92BC78', leaf: '#5F9A5A', leafD: '#437A40', path: '#E9DDBC', pathD: '#CDBE95', roof: '#D98A3A', roofD: '#B0651E', water: '#4A8FB8' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,"""".."""",T',
       'T,""""..""""TT',
       'T,,,,,..,,,T,T',
-      'T,,,,,..,,,,,T',
+      'T,,,,,..,,,z,T',
       'T,,,,,..,,,,TT',
       'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route14-gem', type: 'pickup', x: 11, y: 20, give: 'gems' },
-      { id: 'route14-net', type: 'pickup', x: 12, y: 19, give: 'net' }
+      { id: 'route14-nook-gem', type: 'pickup', x: 12, y: 18, give: 'gems' },
+      { id: 'route14-nook-net', type: 'pickup', x: 12, y: 19, give: 'net' },
+      { id: 'route14-net', type: 'pickup', x: 3, y: 20, give: 'net' }
     ],
     trees: { '3,10': 'route14-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,TT',
       'T,,,,,,..,,,,TTT',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,,T',
+      'T,,j,,,..,,,,,,T',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'cross-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'cross-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'cross-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'cross-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'cross-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'cross' },
@@ -99,4 +103,4 @@ Object.assign(OW_MAPS, {
       lines: ['Every road in the world is on this wall. Even the ones you have not walked yet.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'cross-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'cross', town: 'cross', routeIn: 'route14', center: 'cross-center', mart: 'cross-mart', house: 'cross-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'cross', town: 'cross', routeIn: 'route14', center: 'cross-center', mart: 'cross-mart', house: 'cross-house', charm: '', nook: ['cross-nook-gem', 'cross-nook-net'] });

@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Thistle Wood. Route 10 leads in from Coral Reach (the road opens with the Coral Badge); the town has a Buddy Center, a Mart, a house and the Thistle Wood Gym.
+//  LAND PASS: Thistle Wood. Route 10 leads in from Coral Reach (the road opens with the Coral Badge); the town has a Buddy Center, a Mart, a house and the Thistle Wood Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_THISTLE_PALETTE = { grass: '#9CC67A', grassD: '#76A85A', leaf: '#3F7A4A', leafD: '#2C5C37', path: '#D9C9A0', pathD: '#B9A97D', roof: '#7A5C99', roofD: '#563F73', water: '#4C93A8' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,"""".."""",T',
       'T,""""..""""TT',
       'T,,,,,..,,,T,T',
-      'T,,,,,..,,,,,T',
+      'T,,,,,..,,,j,T',
       'T,,,,,..,,,,TT',
       'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route10-gem', type: 'pickup', x: 11, y: 20, give: 'gems' },
-      { id: 'route10-net', type: 'pickup', x: 12, y: 19, give: 'net' }
+      { id: 'route10-nook-gem', type: 'pickup', x: 12, y: 18, give: 'gems' },
+      { id: 'route10-nook-net', type: 'pickup', x: 12, y: 19, give: 'net' },
+      { id: 'route10-net', type: 'pickup', x: 3, y: 20, give: 'net' }
     ],
     trees: { '3,10': 'route10-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,TT',
       'T,,,,,,..,,,,TTT',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,,T',
+      'T,,q,,,..,,,,,,T',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'thistle-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'thistle-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'thistle-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'thistle-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'thistle-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'thistle' },
@@ -99,4 +103,4 @@ Object.assign(OW_MAPS, {
       lines: ['Nature buddies heal fast in the wood. The leaves tell me so.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'thistle-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'thistle', town: 'thistle', routeIn: 'route10', center: 'thistle-center', mart: 'thistle-mart', house: 'thistle-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'thistle', town: 'thistle', routeIn: 'route10', center: 'thistle-center', mart: 'thistle-mart', house: 'thistle-house', charm: '', nook: ['thistle-nook-gem', 'thistle-nook-net'] });

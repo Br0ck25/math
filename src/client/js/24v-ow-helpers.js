@@ -10,10 +10,22 @@ owAddNpc('meadow-house', { id: 'meadow-netmaker', kind: 'talk', name: 'Weaver Wr
   lines: ['I weave Catch Nets. Buy them at the Mart and keep a few for the tall grass!'] });
 owAddNpc('ember-house', { id: 'ember-trader', kind: 'trade', trade: { give: 'fox', get: 'bunny' }, name: 'Trader Rue', x: 2, y: 2, face: 'down', look: { skin: 3, hair: 2, outfit: 1, style: 2 }, lines: ['Hello, traveller! I love swapping buddies.'] });
 owAddNpc('tide-house', { id: 'tide-daycare', kind: 'daycare', name: 'Keeper Marlo', x: 2, y: 2, face: 'down', look: { skin: 0, hair: 4, outfit: 5, style: 1 }, lines: ['Welcome to the Day Care!'] });
+owAddNpc('mystic-house', { id: 'mystic-linktrader', kind: 'linktrader', name: 'Link Trader Orbit', x: 2, y: 2, face: 'down', look: { skin: 2, hair: 1, outfit: 3, style: 2 }, lines: ['Some buddies only reach their last form after a trade.', 'I swap them with a friend across the sea and bring them straight back. Same buddy, new strength!'] });
 owAddNpc('grove-house', { id: 'grove-tutor', kind: 'tutor', name: 'Tutor Selene', x: 2, y: 2, face: 'down', look: { skin: 4, hair: 7, outfit: 4, style: 1 }, lines: ['Hello! I teach buddies new moves.'] });
 owAddNpc('volt-house', { id: 'volt-trader', kind: 'trade', trade: { give: 'otter', get: 'hedgehog' }, name: 'Trader Kip', x: 2, y: 2, face: 'down', look: { skin: 1, hair: 6, outfit: 0, style: 2 }, lines: ['Hi there! Got a spare buddy to swap?'] });
 
 const OW_SERVICES = {
+  linktrader: function (npc) {
+    const art = heroSprite(heroLookColors(npc.look), 'down', 0), pool = TRADE_EVOLVERS.filter(function (id) { return getOwnedIds().indexOf(id) !== -1 && !state.tradedUp[id]; });
+    if (!pool.length) { openTalk({ name: npc.name, art: art, lines: npc.lines.concat([getOwnedIds().some(function (id) { return TRADE_EVOLVERS.indexOf(id) !== -1; }) ? 'Everything you have has already been traded. Wonderful!' : 'Bring me Spike, Pascal, Tank or Dusty and I will trade them for you.']) }); return; }
+    openTalk({ name: npc.name, art: art, lines: npc.lines, choices: pool.map(function (id) {
+      return { label: 'Trade ' + getPetById(id).baseName, run: function () {
+        closeTalk(); state.tradedUp[id] = 1; saveState(); updateStatsUI();
+        const now = getPetById(id);
+        openTalk({ name: npc.name, art: art, lines: ['Here it is, back from the trade!', now.stage > 1 ? 'Oh! It evolved into ' + now.name + '!' : 'It is stronger inside now. At level ' + getSpecies(id).forms[2].minLevel + ' it will evolve!'] });
+      } };
+    }) });
+  },
   trade: function (npc) {
     const t = npc.trade, give = getSpecies(t.give), get = getSpecies(t.get), art = heroSprite(heroLookColors(npc.look), 'down', 0);
     if (state.overworld.traded.indexOf(npc.id) !== -1) { openTalk({ name: npc.name, art: art, lines: ['Thank you for the trade! My ' + give.name + ' is very happy with its new friend.'] }); return; }

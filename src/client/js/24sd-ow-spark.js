@@ -1,5 +1,5 @@
 // =====================================================================
-//  LAND PASS: Spark City. Route 11 leads in from Thistle Wood (the road opens with the Thistle Badge); the town has a Buddy Center, a Mart, a house and the Spark City Gym.
+//  LAND PASS: Spark City. Route 11 leads in from Thistle Wood (the road opens with the Thistle Badge); the town has a Buddy Center, a Mart, a house and the Spark City Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
 const OW_SPARK_PALETTE = { grass: '#C9D4DC', grassD: '#A9B8C4', leaf: '#6B7F95', leafD: '#4C6076', path: '#E8E8EE', pathD: '#C8CAD6', roof: '#E0B020', roofD: '#B08408', water: '#3E88B8' };
@@ -27,7 +27,7 @@ Object.assign(OW_MAPS, {
       'T,""",..,""",T',
       'TT""",..,""",T',
       'T,T"",..,""",T',
-      'T,,,,,..,,,,,T',
+      'T,k,,,..,,,,,T',
       'TT,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T',
@@ -45,7 +45,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'route11-gem', type: 'pickup', x: 9, y: 2, give: 'gems' },
-      { id: 'route11-net', type: 'pickup', x: 1, y: 19, give: 'net' }
+      { id: 'route11-nook-gem', type: 'pickup', x: 1, y: 18, give: 'gems' },
+      { id: 'route11-nook-net', type: 'pickup', x: 1, y: 19, give: 'net' },
+      { id: 'route11-net', type: 'pickup', x: 8, y: 2, give: 'net' }
     ],
     trees: { '2,11': 'route11-tree' },
     signs: {}
@@ -65,9 +67,9 @@ Object.assign(OW_MAPS, {
       'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,,,,,,..,,,s,,T',
-      'TTT,,,,..,,,,,,T',
-      'TT,,,,,..,,,,,,T',
+      'TTT,,,,..,,,s,TT',
+      'T,,z,,,..,,,,TTT',
+      'T,,T,,,..,,,,,,T',
       'TTTTTTT..TTTTTTT'
     ],
     warps: [
@@ -81,7 +83,9 @@ Object.assign(OW_MAPS, {
     ],
     objects: [
       { id: 'spark-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
-      { id: 'spark-net', type: 'pickup', x: 13, y: 11, give: 'net' }
+      { id: 'spark-net', type: 'pickup', x: 13, y: 11, give: 'net' },
+      { id: 'spark-nook-gem', type: 'pickup', x: 1, y: 13, give: 'gems' },
+      { id: 'spark-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
     roads: { '7,0': 'spark' },
@@ -99,4 +103,4 @@ Object.assign(OW_MAPS, {
       lines: ['I am building a calculator that fits in a hat. It does not fit in a hat yet.', 'Everything is bigger and tougher on this side of the Peak.', 'Keep your buddies rested and your nets stocked.'] }
   ], [{ id: 'spark-house-net', type: 'pickup', x: 6, y: 4, give: 'net' }])
 });
-OW_LANDS.push({ land: 'spark', town: 'spark', routeIn: 'route11', center: 'spark-center', mart: 'spark-mart', house: 'spark-house', charm: '', nook: [] });
+OW_LANDS.push({ land: 'spark', town: 'spark', routeIn: 'route11', center: 'spark-center', mart: 'spark-mart', house: 'spark-house', charm: '', nook: ['spark-nook-gem', 'spark-nook-net'] });
