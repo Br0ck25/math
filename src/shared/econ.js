@@ -84,7 +84,6 @@ const ECON = {
   evolveGems: 25,
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
   items: { potion: 20, net: 30, repel: 25 },
-  calendar: { length: 14, chests: { 3: 40, 7: 90, 14: 200 } },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.
   adaptive: {

@@ -126,11 +126,6 @@ const NORMALIZERS = [
     });
     s.bossBook = book;
   },
-  function calendar(s) {
-    const sc = s.streakCal;
-    sc.count = asInt(sc.count, 0, ECON.calendar.length, 0);
-    sc.total = asInt(sc.total, 0, 1e6, 0);
-  },
   function adapt(s) {
     const a = s.adapt, w = ECON.adaptive.window;
     ['miss', 'easy', 'calm', 'recent', 'tier'].forEach(function (k) { if (!isPlainObject(a[k])) a[k] = {}; });
@@ -148,7 +143,6 @@ const NORMALIZERS = [
     s.duelSettled = s.duelSettled.filter(function (n) { return typeof n === 'string'; }).slice(-80);
     ['w', 'l', 't'].forEach(function (k) { s.duelRecord[k] = asInt(s.duelRecord[k], 0, 1e6, 0); });
     s.duelStat.count = asInt(s.duelStat.count, 0, 1e6, 0);
-    s.raidsCleared = asInt(s.raidsCleared, 0, 1e6, 0);
   },
   function study(s) {
     const t = s.study, S = ECON.study, today = dayNumber();

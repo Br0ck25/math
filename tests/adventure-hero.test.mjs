@@ -136,7 +136,7 @@ test('without the Badge Case the Bag does not list badges, and a hostile name is
   assert.equal(safe, 0);
 });
 
-test('Bag buttons: Shop leaves the walk for the shop; Change look edits without giving the items again', async () => {
+test('Bag buttons: Wardrobe leaves the walk for the wardrobe; Change look edits without giving the items again', async () => {
   await madeHero();
   await page.evaluate(() => { openAdventure(); openBag(); });
   await page.evaluate(() => openHeroCreator());
@@ -149,7 +149,7 @@ test('Bag buttons: Shop leaves the walk for the shop; Change look edits without 
   assert.deepEqual(r.keys, [], 'editing the look is not a first start');
   assert.equal(r.bag, 'flex');
   assert.notEqual(r.creator, 'flex');
-  await page.click('#bag-body .claim-btn >> text=Shop');
+  await page.click('#bag-body .claim-btn >> text=Wardrobe');
   assert.equal(await shown('shop-modal'), true);
   assert.equal(await shown('overworld-modal'), true, 'the map stays underneath');
   assert.equal(await shown('bag-modal'), false);

@@ -114,20 +114,20 @@ test('earned gear: locked until the achievement, then awarded once, never for sa
     selectOrBuyAccessory(crown);
     out.notBought = state.unlockedAccessories.indexOf('raidcrown') === -1 && state.gems === 9999;
     out.lockText = gearLockText(crown);
-    state.raidsCleared = 1; out.early = checkEarnedGear();
-    state.raidsCleared = 2; out.awarded = checkEarnedGear();
+    state.badges = gymRegions().slice(0, 7).map((g) => g.id); out.early = checkEarnedGear();
+    state.badges = gymRegions().map((g) => g.id); out.awarded = checkEarnedGear();
     out.again = checkEarnedGear();
-    state.champ.wins = 3; state.monstersDefeated = 100; state.streakCal.count = 14;
+    state.champ.wins = 3; state.monstersDefeated = 100; state.unlockedPets = storePets.slice(0, 25).map((p) => p.id); state.unlockedSecrets = secretCompanions.slice(0, 25).map((p) => p.id);
     out.rest = checkEarnedGear();
     out.all = ['raidcrown', 'champmedal', 'sunshine'].every((id) => state.unlockedAccessories.indexOf(id) !== -1) && state.unlockedArmor.indexOf('centurion') !== -1;
     return out;
   });
-  assert.deepEqual(r, { notBought: true, lockText: '🏆 Clear 2 raid bosses', early: 0, awarded: 1, again: 0, rest: 6, all: true });
+  assert.deepEqual(r, { notBought: true, lockText: '🏆 Win 8 gym badges', early: 0, awarded: 1, again: 0, rest: 6, all: true });
 });
 
 test('cartoon cast gear is earned by collecting the cartoon buddies', async () => {
   const r = await inPage(() => {
-    state.raidsCleared = 0; state.champ.wins = 0; state.monstersDefeated = 0; state.streakCal.count = 0;      // only the cast counters matter here
+    state.badges = []; state.champ.wins = 0; state.monstersDefeated = 0; state.unlockedPets = ['dog']; state.unlockedSecrets = [];      // only the cast counters matter here
     const reset = () => { state.unlockedAccessories = ['none']; state.unlockedArmor = ['none']; state.unlockedPets = ['dog']; state.unlockedSecrets = []; };
     const secrets = secretCompanions.filter((p) => p.show), headliners = storePets.filter((p) => p.id.indexOf('toon_') === 0);
     const all = headliners.concat(mythicCompanions.filter((p) => p.show), secrets);
@@ -154,7 +154,7 @@ test('earned gear shows as a secret in the shop and the book', async () => {
     openBook(); bookTab = 'gear'; renderBook();
     const book = document.getElementById('book-body').innerText;
     closeBook();
-    return { shop: shop.includes('Clear 2 raid bosses'), book: book.includes('Secret') && book.includes("Win the Champion's Hall 3 times") };
+    return { shop: shop.includes('Win 8 gym badges'), book: book.includes('Secret') && book.includes("Win the Champion's Hall 3 times") };
   });
   assert.deepEqual(r, { shop: true, book: true });
 });

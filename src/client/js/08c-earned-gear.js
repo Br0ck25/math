@@ -3,8 +3,8 @@
 //  and is awarded the moment the matching counter reaches n. To add one, add the data row and (if needed) a counter here.
 // =====================================================================
 const EARN_COUNTERS = {
-  raids: function () { return state.raidsCleared; },
-  calendarDay: function () { return state.streakCal.count; },
+  badges: function () { return state.badges.length; },
+  caught: function () { return getOwnedIds().length; },
   bosses: function () { return state.monstersDefeated; },
   champion: function () { return state.champ.wins; },
   cartoons: function () { return ownedCartoons().length; },

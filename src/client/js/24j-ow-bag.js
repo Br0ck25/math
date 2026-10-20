@@ -21,7 +21,7 @@ function renderBag() {
     bagSection('Key items', keys || '<div class="d">Nothing yet.</div>') +
     bagSection('Badges (' + badges.length + ')', hasKeyItem('badge-case') ? '<div class="d">' + (badges.length ? badges.join(', ') : 'None yet. Win one at a gym!') + '</div>' : '<div class="d">You need the Badge Case.</div>') +
     bagSection('Supplies', supplies) + bagSection('Held items', held) + bagSection('Egg', egg) +
-    '<div class="bag-actions"><button type="button" class="claim-btn" onclick="bagGo(\'shop\')">Shop</button><button type="button" class="claim-btn" onclick="bagGo(\'hub\')">Buddy Hub</button><button type="button" class="claim-btn" onclick="openHeroCreator()">Change look</button></div>';
+    '<div class="bag-actions"><button type="button" class="claim-btn" onclick="bagGo(\'shop\')">Wardrobe</button><button type="button" class="claim-btn" onclick="bagGo(\'hub\')">Buddy Hub</button><button type="button" class="claim-btn" onclick="openHeroCreator()">Change look</button></div>';
 }
 function openBag() { showModal('bag-modal', renderBag); }
 function closeBag() { hideModal('bag-modal'); }

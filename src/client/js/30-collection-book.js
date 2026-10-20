@@ -155,7 +155,7 @@ function renderBook() {
       h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint);
     });
   } else if (bookTab === 'boss') {
-    h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles! 👑 Raids cleared: ' + state.raidsCleared + '</div><div class="pet-grid">';
+    h += '<div class="book-sub">Meet a boss to add it to your book. Beat bigger forms to earn titles!</div><div class="pet-grid">';
     monstersList.forEach(function (m, i) {
       const e = state.bossBook[i];
       if (bookMissingOnly && e) return;

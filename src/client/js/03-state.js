@@ -24,7 +24,6 @@ function freshState() {
     activeAccessory: 'none',
     unlockedArmor: ['none'],
     activeArmor: 'none',
-    streakCal: { count: 0, last: '', total: 0, claimed: [] },
     adapt: { on: true, miss: {}, easy: {}, calm: {}, recent: {}, tier: {}, served: '' },
     reduceMotion: null,
     seen: { hub: false, welcome: '' },
@@ -34,7 +33,6 @@ function freshState() {
     duelSettled: [],
     duelRecord: { w: 0, l: 0, t: 0 },
     team: [],
-    raidsCleared: 0,
     region: 'meadow',                                // where you are on the map (wild buddies of its type are more common)
     regionsVisited: ['meadow'],                      // regions visited in the Number Kingdom
     badges: [],                                      // gym badges: region ids

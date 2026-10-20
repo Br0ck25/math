@@ -139,11 +139,11 @@ const accessoriesList = [
   { id: 'skateboard', name: 'Skateboard',       icon: '🛹', cost: 128, slot: 'back', renderIcon: '🛹' },
   { id: 'sax',        name: 'Jazz Sax',         icon: '🎷', cost: 118, slot: 'side', renderIcon: '🎷' },
   { id: 'comet',      name: 'Comet Trail',      icon: '☄️', cost: 340, slot: 'aura', renderIcon: '☄️' },
-  { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'raids', n: 2, text: 'Clear 2 raid bosses' } },
+  { id: 'raidcrown',  name: 'Raid Slayer Crown',icon: '⚜️', cost: 0,   slot: 'head', renderIcon: '⚜️', earn: { key: 'badges', n: 8, text: 'Win 8 gym badges' } },
   { id: 'champlaurel', name: "Champion's Laurel", icon: '🏵️', cost: 0,  slot: 'head', renderIcon: '🏵️', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'champtrophy', name: "Champion's Trophy", icon: '🏆', cost: 0, slot: 'back', renderIcon: '🏆', earn: { key: 'champion', n: 1, text: "Beat Champion Nova in the Champion's Hall" } },
   { id: 'champmedal', name: 'Champion Medal',   icon: '🥇', cost: 0,   slot: 'neck', renderIcon: '🥇', earn: { key: 'champion', n: 3, text: "Win the Champion's Hall 3 times" } },
-  { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'calendarDay', n: 14, text: 'Reach day 14 on the streak calendar' } },
+  { id: 'sunshine',   name: 'Sunshine Aura',    icon: '☀️', cost: 0,   slot: 'aura', renderIcon: '☀️', earn: { key: 'caught', n: 50, text: 'Catch 50 buddies' } },
   // ---- cartoon cast gear: 11 to buy, 2 earned by collecting the cartoon buddies ----
   { id: 'krabbypatty', name: 'Krabby Patty',      icon: '🍔', cost: 120, slot: 'side', renderIcon: '🍔' },
   { id: 'jellyrod',    name: 'Jellyfishing Rod',  icon: '🎣', cost: 105, slot: 'side', renderIcon: '🎣' },
