@@ -386,7 +386,8 @@ test('Catch Nets: you choose after a win how many (up to 3) to throw; more nets,
     const sp = getSpecies('fox'); state.activePet = 'dog'; state.nets = 0;
     const c = [0, 1, 2, 3].map((n) => wildCatchChance(sp, { nets: n }));
     out.chances = c; out.flawless = wildCatchChance(sp, { flawless: true }) / c[0]; out.cap = wildCatchChance(getSpecies('hedgehog'), { nets: 3, flawless: true });
-    const win = async () => { state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0; monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false); await wait(4000); };
+    const win = async () => { state.wild.id = 'fox'; bossLevel = 5; bossMistakes = 0; monsterCurrentHp = 1; inputLocked = false; triggerMonsterDamage(99, false); for (let i = 0; i < 400 && monsterCurrentHp <= 0; i++) await wait(20);                 // the next foe has been picked (the game's own timer)
+      for (let i = 0; i < 400 && state.nets > 0 && document.getElementById('catch-modal').style.display !== 'flex'; i++) await wait(20); await wait(100); };      // and the catch window is up when nets are in stock: wait for these, not for a fixed time, so a slow machine never starts the next win first
     state.unlockedPets = ['dog']; state.spares = {}; state.gems = 1000; modalDone();
     // no nets in stock: no window, the roll just happens
     const real = Math.random; Math.random = () => 0.99;
