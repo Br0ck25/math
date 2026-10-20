@@ -829,8 +829,8 @@ body.trivia .math-only { display: none; }
 .ab-xpbar { height: 4px; background: #e2e8f0; }
 .ab-xpbar i { display: block; height: 100%; width: 0; background: #3b82f6; transition: width 0.6s ease; }
 .ab-hpnum { text-align: right; font-size: 0.72rem; margin-top: 2px; }
-.ab-sprite { position: absolute; width: 104px; height: 104px; display: grid; place-items: center; font-size: 3.4rem; transition: opacity 0.5s, transform 0.5s; }
-.ab-sprite .buddy-img { width: 100%; height: 100%; object-fit: contain; }
+.ab-sprite { position: absolute; width: 104px; height: 104px; display: grid; place-items: center; font-size: 5.5rem; transition: opacity 0.5s, transform 0.5s; }
+.ab-sprite .buddy-img { width: 100%; height: 100%; max-width: none; object-fit: contain; }
 .ab-foe-sprite { top: 24px; right: 10px; }
 .ab-me-sprite { bottom: 50px; left: 14px; transform: scaleX(-1); }
 .ab-sprite.ab-gone { opacity: 0; transform: translateY(24px); }
@@ -856,7 +856,7 @@ body.trivia .math-only { display: none; }
 #ab-modal { padding: 0; align-items: stretch; justify-content: stretch; background: var(--bg-dark); }
 #ab-modal .ab-content { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto; padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); }
 #ab-modal .ab-field { flex: 1 0 200px; height: auto; }
-#ab-modal .ab-sprite { width: 28%; height: auto; aspect-ratio: 1; max-width: 160px; }
+#ab-modal .ab-sprite { width: 36%; height: auto; aspect-ratio: 1; max-width: 220px; }
 #ab-modal .ab-foe-sprite { top: 14%; }
 #ab-modal .ab-me-sprite { bottom: 24%; }
 .ab-fx { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle, #fff 0 25%, var(--fx, #94a3b8) 60%, transparent 72%); opacity: 0; pointer-events: none; }

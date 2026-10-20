@@ -17,6 +17,7 @@ test('a new player lands on Who are you?, then picks a starter, then stands in C
   assert.equal(await shown(page, 'starter-modal'), true, 'Prof. Pi offers the first buddy');
   await page.evaluate(() => chooseStarter('fox'));
   assert.equal(await page.evaluate(() => state.activePet), 'fox');
+  assert.doesNotMatch(await page.evaluate(() => document.getElementById('toast').innerText), /<img|data:image/, 'the welcome note shows words, never picture markup');
   assert.deepEqual(await page.evaluate(() => [state.overworld.map, document.getElementById('ow-title').innerText]), ['hollow', 'Cozy Hollow']);
   assert.deepEqual(errors, []);
 });

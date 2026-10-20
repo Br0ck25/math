@@ -27,9 +27,11 @@ test('the battle fills the whole screen and an attack plays a picture on the tar
   const r = await ev(() => {
     const c = document.querySelector('#ab-modal .ab-content').getBoundingClientRect();
     abFx(abMe(), abFoe(), { type: 'fire' }, true);
-    return { w: c.width, h: c.height, fx: !!document.querySelector('#ab-modal .ab-fx.t-fire'), shake: document.getElementById('ab-foe-icon').classList.contains('ab-shake') };
+    const sp = document.getElementById('ab-me-icon').getBoundingClientRect().width;
+    return { sp, w: c.width, h: c.height, fx: !!document.querySelector('#ab-modal .ab-fx.t-fire'), shake: document.getElementById('ab-foe-icon').classList.contains('ab-shake') };
   });
   assert.deepEqual([r.w, r.h], [390, 780]);
+  assert.ok(r.sp >= 100, 'the buddies are drawn big, like in Gold');
   assert.ok(r.fx && r.shake);
 });
 

@@ -171,5 +171,5 @@ function chooseStarter(id) {
   launchConfetti();
   saveState();
   closeStarterModal();
-  toast('🌟 You chose ' + sp.icon + ' ' + sp.name + ' as your partner! Rival Riley is waiting on the Map!');
+  toast('🌟 You chose ' + sp.name + ' as your partner! Rival Riley is waiting on the Map!');
 }
