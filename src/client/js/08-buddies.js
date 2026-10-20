@@ -45,11 +45,16 @@ function getBuddyXp(id) { return (state.buddyXp && state.buddyXp[id]) || 0; }
 function getBuddyLevel(id) { return levelFromXp(getBuddyXp(id)); }
 // Gold's trade evolutions: the last form of these kinds only appears after they have been traded (the Link Trader at Mystic Peak does it; state.tradedUp).
 const TRADE_EVOLVERS = ['hedgehog', 'pascal', 'rhino', 'scorpion'];
+// Gold's friendship: a win with a buddy, a level and a long walk raise it, a faint lowers it. The kinds in HAPPY_EVOLVERS take their first evolution when it is high.
+const HAPPY_EVOLVERS = ['bear', 'panda', 'koala', 'bat'], HAPPY_EVO_AT = 220;
+function happyOf(id) { return state.happy && state.happy[id] || 0; }
+function addHappy(id, n) { if (!state.happy) state.happy = {}; state.happy[id] = clamp(happyOf(id) + n, 0, 255); }
 const STONE_EVOLVERS = ['dog', 'fox', 'bunny', 'otter', 'byte', 'jimothy', 'hedwig', 'penguin'];
 function getFormIndex(sp, level) {
   let idx = 0;
   sp.forms.forEach(function (f, i) { if (level >= f.minLevel) idx = i; });
   if (idx < 1 && sp.forms.length > 1 && STONE_EVOLVERS.indexOf(sp.id) !== -1 && state.stoned && state.stoned[sp.id]) idx = 1;          // an Evolution Stone: the first evolution at once
+  if (idx < 1 && sp.forms.length > 1 && HAPPY_EVOLVERS.indexOf(sp.id) !== -1 && happyOf(sp.id) >= HAPPY_EVO_AT) idx = 1;
   if (idx > 1 && TRADE_EVOLVERS.indexOf(sp.id) !== -1 && !(state.tradedUp && state.tradedUp[sp.id])) idx = 1;
   return idx;
 }

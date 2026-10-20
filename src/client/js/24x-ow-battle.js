@@ -184,9 +184,13 @@ function abAnswer(v) {
   abRender();
 }
 // FIGHT's attack, after a right answer. The faster buddy moves first (a priority move beats speed); the foe's move is picked now so the order is fair.
+// Gold's obedience: a buddy you got in a trade will not always listen above a level set by your badges (10, plus 10 for each badge). Your own catches always do.
+function abObeyLevel() { return Math.min(100, 10 + 10 * state.badges.length); }
+function abDisobeys(m) { return !!state.fromTrade[m.id] && m.level > abObeyLevel() && Math.random() < 0.5; }
 function abUseMove(i) {
   const me = abMe(), foe = abFoe(), mv = i < 0 ? AB_STRUGGLE : me.moves[i];
   if (ab.phase !== 'moves' || mv.left <= 0) return;
+  if (abDisobeys(me)) { ab.phase = 'busy'; abSteps([[me.name + ' is loafing around.', null, 1100]]); abFoeTurn(); return; }
   if (i >= 0) { mv.left -= 1; abSavePp(me); }
   ab.phase = 'busy';
   const fm = abPickMove(foe, me), mp = mv.pri || 0, fp = fm.pri || 0;
@@ -342,6 +346,7 @@ function abGainXp(mon, amt) {
   const before = getBuddyLevel(mon.id), knownBefore = abKnownMoves(mon.element, before, mon.type, mon.id).map(function (m) { return m.id; });
   addXpTo(mon.id, amt);
   const now = getBuddyLevel(mon.id);
+  addHappy(mon.id, 3 + (now > before ? 5 : 0));
   mon.leveled = now > before; mon.evolved = ''; mon.learned = []; mon.pending = mon.pending || [];
   if (!mon.leveled) return;
   const fresh = abMon(mon.id, now), oldName = mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
@@ -377,7 +382,7 @@ function abLearnChoose(i) {
 }
 function abMeFainted() {
   const me = abMe();
-  abSteps([[me.name + ' fainted!', function () { state.advHp[me.id] = 0; soundBuddyFaint(); }, 1200]]);
+  abSteps([[me.name + ' fainted!', function () { state.advHp[me.id] = 0; addHappy(me.id, -3); soundBuddyFaint(); }, 1200]]);
   abSteps([['', function () {
     if (ab.party.some(function (m) { return m.hp > 0; })) { ab.forced = true; ab.phase = 'team'; document.getElementById('ab-text').innerText = 'Choose your next buddy.'; abRender(); }
     else abLost();

@@ -33,6 +33,7 @@ function hatchEgg() {
   if (chosen) {
     grantBuddy(chosen.id);
     (isStoreBuddy(chosen) ? state.unlockedPets : state.unlockedSecrets).push(chosen.id);
+    if (egg.inherit && (!AB_TMS[egg.inherit].el || AB_TMS[egg.inherit].el === chosen.element)) state.tmKnown[chosen.id] = [egg.inherit];          // an egg move: a TM move one parent knew
     if (typeof soundBuddyCry === 'function') soundBuddyCry(chosen.id);
     toast('🐣 Your ' + egg.element + ' Egg hatched into ' + chosen.name + ' ' + emojiOf(chosen) + '!');
     return chosen;

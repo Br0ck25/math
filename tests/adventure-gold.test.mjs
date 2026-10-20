@@ -337,6 +337,24 @@ test('Ether restores 10 PP to one chosen move, a PP Up raises a move\'s PP by a 
   assert.deepEqual(u, { ups: 3, left: 2, pp: true, rope: ['meadow', 7, 7, 0] });
 });
 
+test('friendship, egg moves and obedience: wins, levels and walks raise friendship (a faint lowers it) and a friendly Bear evolves; an egg passes a parent TM move; a traded buddy above its badge level sometimes loafs', async () => {
+  const r = await ev(() => {
+    state.unlockedPets = ['dog', 'bear']; state.activePet = 'dog'; state.buddyXp.bear = xpForLevel(5); state.happy = {};
+    const out = { before: getPetById('bear').stage };
+    addHappy('bear', 100); out.mid = getPetById('bear').stage; addHappy('bear', 200); out.friend = [happyOf('bear'), getPetById('bear').stage]; addHappy('bear', -300); out.floor = happyOf('bear');
+    state.happy = { bear: 999, nope: 5 }; NORMALIZERS.forEach((fn) => fn(state)); out.kept = JSON.stringify(state.happy);
+    state.tmKnown = { fox: ['fireblast'] }; state.unlockedPets = ['dog', 'fox'];
+    state.egg = { element: 'fire', rarity: 'common', steps: 0, target: 1, inherit: 'fireblast' }; state.unlockedPets = ['dog']; state.unlockedSecrets = [];
+    const got = hatchEgg(); out.egg = got ? (state.tmKnown[got.id] || []).join() : 'none'; out.eggEl = got && got.element === 'fire';
+    state.fromTrade = { dog: 1 }; state.badges = []; state.buddyXp.dog = xpForLevel(30);
+    out.limit = abObeyLevel(); let loaf = 0; for (let i = 0; i < 200; i++) if (abDisobeys({ id: 'dog', level: 30 })) loaf++; out.loaf = loaf > 40 && loaf < 160;
+    state.badges = ['a', 'b', 'c']; out.limit3 = abObeyLevel(); out.obeys = (() => { let n = 0; for (let i = 0; i < 100; i++) if (abDisobeys({ id: 'dog', level: 30 })) n++; return n; })();
+    out.own = (() => { state.fromTrade = {}; return abDisobeys({ id: 'dog', level: 99 }); })();
+    return out;
+  });
+  assert.deepEqual(r, { before: 0, mid: 0, friend: [255, 1], floor: 0, kept: '{"bear":255}', egg: 'fireblast', eggEl: true, limit: 10, loaf: true, limit3: 40, obeys: 0, own: false });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

@@ -60,7 +60,7 @@ function renderStatsTab() {
   document.getElementById('hub-body').innerHTML =
     stat('Type', escHtml(m.type.toUpperCase())) + stat('Level', lv + (lv < MAX_LEVEL ? ' (' + (xpForLevel(lv + 1) - xp) + ' XP to next)' : ' (max)')) +
     stat('HP', m.hp + ' / ' + m.max) + stat('Attack', m.atk) + stat('Defense', m.def) + stat('Speed', m.spd) + stat('Special', m.spc) +
-    stat('Held item', item ? escHtml(item.name) : 'none') + stoneRow() + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
+    stat('Friendship', happyOf(hubPet) + ' / 255' + (HAPPY_EVOLVERS.indexOf(hubPet) !== -1 && getPetById(hubPet).stage < 1 ? ' (evolves at ' + HAPPY_EVO_AT + ')' : '')) + stat('Held item', item ? escHtml(item.name) : 'none') + stoneRow() + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
 }
 
 // An Evolution Stone makes the kinds in STONE_EVOLVERS take their first evolution at once (Gold's stone evolutions).

@@ -25,7 +25,7 @@ function owDaycareTalk(npc, lines) {
       saveState(); updateStatsUI(); toast(getPetById(id).baseName + ' is back with you!');
     } });
   });
-  if (d.eggReady) choices.push({ label: 'Take the egg', run: function () { closeTalk(); if (awardEgg(getPetById(d.ids[0]).element, 'common')) { d.eggReady = false; d.egg = 0; saveState(); } else toast('You already carry an egg. Hatch it first!'); } });
+  if (d.eggReady) choices.push({ label: 'Take the egg', run: function () { closeTalk(); if (awardEgg(getPetById(d.ids[0]).element, 'common')) { const inh = d.ids.map(function (x) { return (state.tmKnown[x] || [])[0]; }).filter(Boolean)[0]; if (inh) state.egg.inherit = inh; d.eggReady = false; d.egg = 0; saveState(); } else toast('You already carry an egg. Hatch it first!'); } });
   if (d.ids.length < ECON.daycare.max) choices.push({ label: 'Leave a buddy', run: function () { owDaycareLeave(npc); } });
   openTalk({ name: npc.name, art: art, lines: lines, choices: choices.length ? choices : null });
 }

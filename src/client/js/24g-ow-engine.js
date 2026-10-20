@@ -6,6 +6,7 @@ const OW_FACES = ['down', 'up', 'left', 'right'];
 const OW_OPPOSITE = { down: 'up', up: 'down', left: 'right', right: 'left' };
 const OW_STEP = { down: [0, 1], up: [0, -1], left: [-1, 0], right: [1, 0] };
 const OW_KEYS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right' };
+let owStepsWalked = 0;        // steps this session: every 50 raise the lead's friendship
 let owSafe = 0;              // safe grass steps left (no fight)
 let owTrail = null;          // where the hero stood a step ago: the buddy walks there
 let owFrame = 0;             // which walking picture
@@ -139,7 +140,7 @@ function owMove(dir) {
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, nx, ny);
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
-  owWalkEgg(); owDaycareStep();
+  owWalkEgg(); owDaycareStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
   if (warp) return;

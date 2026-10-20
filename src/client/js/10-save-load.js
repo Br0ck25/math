@@ -172,6 +172,7 @@ const NORMALIZERS = [
       const defTarget = (ECON.egg && ECON.egg.steps && ECON.egg.steps[rar]) || 5;
       const target = asInt(e.target, 1, 50, defTarget);
       s.egg = { element: e.element, rarity: rar, steps: asInt(e.steps, 0, target, 0), target: target };
+      if (typeof e.inherit === 'string' && AB_TMS[e.inherit]) s.egg.inherit = e.inherit;
     }
   },
   function readAloud(s) {
@@ -215,6 +216,9 @@ const NORMALIZERS = [
     s.tradedUp = tu;
     const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
     s.stoned = st;
+    const ft = {}; Object.keys(isPlainObject(s.fromTrade) ? s.fromTrade : {}).forEach(function (id) { if (getSpecies(id) && s.fromTrade[id]) ft[id] = 1; }); s.fromTrade = ft;
+    const hap = {}; Object.keys(isPlainObject(s.happy) ? s.happy : {}).forEach(function (id) { if (s.unlockedPets.concat(s.unlockedSecrets).indexOf(id) !== -1) hap[id] = clamp(Math.floor(Number(s.happy[id])) || 0, 0, 255); });
+    s.happy = hap;
     const gd = {}; Object.keys(isPlainObject(s.genders) ? s.genders : {}).forEach(function (id) { if (getSpecies(id) && (s.genders[id] === 'm' || s.genders[id] === 'f')) gd[id] = s.genders[id]; });
     s.genders = gd;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.maxRepelSteps * 2, 0);

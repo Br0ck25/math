@@ -55,6 +55,7 @@ function owTrade(npc) {
   grantBuddy(sp.id);
   (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id);
   state.overworld.traded.push(npc.id);
+  state.fromTrade[sp.id] = 1;
   saveState();
   updateStatsUI();
   openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: ['It is a deal! Say hello to ' + sp.name + '. Look after it!'] });
