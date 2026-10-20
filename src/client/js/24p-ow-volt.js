@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   volt: {
     id: 'volt', name: 'Volt Valley', region: 'volt', start: { x: 7, y: 13 }, palette: OW_VOLT_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route5', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route5', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'volt-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'volt-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'volt-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'volt-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'volt-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'volt-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'route6', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'volt-guide', name: 'Guide Spark', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 4, outfit: 3, style: 2 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'volt-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
+    roads: { '7,0': 'volt' },
     gyms: { '11,9': 'volt' },
     signs: { '12,12': { id: 'volt-quiz', text: 'Power quiz! Answer one question.', quiz: true } }
   },
