@@ -26,18 +26,15 @@ beforeEach(async () => {
 test('state defaults and normalizers for tech tree', async () => {
   const r = await page.evaluate(() => {
     const fresh = freshState();
-    const defaults = { stars: fresh.stars, tech: fresh.techUnlocked, solves: fresh.techSolves };
+    const defaults = { stars: fresh.stars, tech: fresh.techUnlocked };
     state.stars = 'invalid';
-    state.techSolves = -10;
     state.techUnlocked = ['quick_sparks', 'fake_tech', 'quick_sparks'];
     NORMALIZERS.forEach((fn) => fn(state));
-    return { defaults, normalized: { stars: state.stars, solves: state.techSolves, tech: state.techUnlocked } };
+    return { defaults, normalized: { stars: state.stars, tech: state.techUnlocked } };
   });
   assert.equal(r.defaults.stars, 0);
   assert.deepEqual(r.defaults.tech, []);
-  assert.equal(r.defaults.solves, 0);
   assert.equal(r.normalized.stars, 0);
-  assert.equal(r.normalized.solves, 0);
   assert.deepEqual(r.normalized.tech, ['quick_sparks']);
 });
 

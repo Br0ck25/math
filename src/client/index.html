@@ -23,7 +23,7 @@
       <div class="ow-head"><h2 style="font-size:1.15rem; margin-bottom:6px;" id="ow-title">Adventure</h2>
         <button type="button" class="ow-back-chip" onclick="openMenu()">Menu</button>
         <button type="button" class="ow-back-chip" id="ow-gizmo-btn" style="display:none" onclick="openGizmo()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-k-gizmo"/></svg> Gizmo</button></div>
-      <div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div>
+      <div class="ow-stage" id="ow-stage"><div class="ow-view" id="ow-view" role="img" aria-label="Adventure map"></div></div>
       <div class="ow-pad">
         <button type="button" class="ow-key ow-side team" aria-label="Team" onclick="openPad()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-o-paw"/></svg><span>Team</span></button>
         <button type="button" class="ow-key ow-side bag" aria-label="Bag" onclick="openBag()"><svg class="w-sprite" viewBox="0 0 100 100" aria-hidden="true"><use href="#w-u-bag"/></svg><span>Bag</span></button>
@@ -32,7 +32,7 @@
         <button type="button" class="ow-key down" aria-label="Walk down" onpointerdown="owHold('down')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('down')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
         <button type="button" class="ow-key right" aria-label="Walk right" onpointerdown="owHold('right')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('right')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
       </div>
-      <p class="ow-hint">Walk in the tall grass to meet wild buddies. Arrow keys work too.</p>
+      <p class="ow-hint">Touch and hold the map to walk, and tap your hero to talk. Arrow keys work too.</p>
     </div>
   </div>
 

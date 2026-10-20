@@ -8,6 +8,7 @@ let gizmoTab = 'map', gizmoTip = 0;
 
 // Notes that unlock as the story goes on. `when` is a function of the save, so nothing here is stored.
 const GIZMO_CALLS = [
+  { from: 'Radio news', text: '', when: function () { return !!legendRoute(); }, dyn: function () { return legendOfWeek().name + ' was seen on ' + OW_MAPS[legendRoute()].name + ' today. Walk in the tall grass there!'; } },
   { from: 'Prof. Pi', text: 'Welcome to the team! Come and see me in Cozy Hollow any time. Every buddy you meet makes my Dex book better.', when: function () { return true; } },
   { from: 'Mum', text: 'Take your time, and eat something! Your buddies are always happy to see you home.', when: function () { return true; } },
   { from: 'Nurse Joy', text: 'Any Buddy Center will wake your sleepy buddies. The first visit each day is free!', when: function () { return state.badges.length > 0; } },
@@ -87,7 +88,7 @@ function gizmoClaim(i) { if (i < 0) claimQuestChest(); else claimQuest(i); rende
 
 function gizmoCallsHtml() {
   return GIZMO_CALLS.filter(function (c) { return c.when(); }).map(function (c) {
-    return '<div class="gizmo-row"><div><b>' + escHtml(c.from) + '</b><div class="d">' + escHtml(c.text) + '</div></div></div>';
+    return '<div class="gizmo-row"><div><b>' + escHtml(c.from) + '</b><div class="d">' + escHtml(c.dyn ? c.dyn() : c.text) + '</div></div></div>';
   }).join('');
 }
 

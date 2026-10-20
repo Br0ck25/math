@@ -62,36 +62,44 @@ function owOpen() {
   const open = openOverlays(), top = open[open.length - 1];
   return !!top && top.id === 'overworld-modal';
 }
-function owCols() { return window.innerWidth <= 360 ? 7 : 9; }
+// How many tiles the view shows: as many columns as fit the width (an odd number, so the hero is in the middle), and as many rows as fit the height.
+function owGrid() {
+  const stage = document.getElementById('ow-stage'), w = (stage && stage.clientWidth) || window.innerWidth - 16, h = (stage && stage.clientHeight) || Math.round(window.innerHeight * 0.55);
+  const odd = function (n) { return n % 2 ? n : n - 1; };
+  const cols = clamp(odd(Math.round(w / 46)), 7, 15), tile = w / cols;
+  return { cols: cols, rows: Math.max(5, odd(Math.floor(h / tile))), tile: tile };
+}
 
 // ----- drawing: the tiles around the hero, then the buddy and the hero on top -----
-function owActorHtml(cls, vx, vy, n, inner) {
-  return '<span class="ow-actor ' + cls + '" style="left:' + (vx / n * 100).toFixed(3) + '%;top:' + (vy / n * 100).toFixed(3) + '%">' + inner + '</span>';
+function owActorHtml(cls, vx, vy, g, inner) {
+  return '<span class="ow-actor ' + cls + '" style="left:' + (vx / g.cols * 100).toFixed(3) + '%;top:' + (vy / g.rows * 100).toFixed(3) + '%">' + inner + '</span>';
 }
 function owFollowerHtml() {
   const art = BUDDY_ART[state.activePet];
   return art ? '<img class="ow-buddy" alt="" src="' + art + '">' : worldSprite('o-paw', 'ow-buddy');
 }
 function renderOverworld() {
-  const o = state.overworld, map = OW_MAPS[o.map], n = owCols(), half = (n - 1) / 2, view = document.getElementById('ow-view');
+  const o = state.overworld, map = OW_MAPS[o.map], g = owGrid(), hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
+  const inView = function (x, y) { return Math.abs(x - o.x) <= hx && Math.abs(y - o.y) <= hy; };
   let h = '';
-  for (let vy = 0; vy < n; vy++) {
-    for (let vx = 0; vx < n; vx++) {
-      const t = owTileAt(map, o.x - half + vx, o.y - half + vy);
+  for (let vy = 0; vy < g.rows; vy++) {
+    for (let vx = 0; vx < g.cols; vx++) {
+      const x = o.x - hx + vx, y = o.y - hy + vy;
+      const t = owTileAt(map, x, y) || owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1));      // past the edge the border carries on (trees, walls), never black
       h += '<span class="ow-cell">' + (t ? worldSprite(t.t) : '') + '</span>';
     }
   }
   (map.objects || []).forEach(function (ob) {
-    if (ob.type === 'pickup' && o.found.indexOf(ob.id) === -1 && Math.abs(ob.x - o.x) <= half && Math.abs(ob.y - o.y) <= half) h += owActorHtml('ow-pickup', ob.x - o.x + half, ob.y - o.y + half, n, worldSprite('o-sparkle'));
+    if (ob.type === 'pickup' && o.found.indexOf(ob.id) === -1 && inView(ob.x, ob.y)) h += owActorHtml('ow-pickup', ob.x - o.x + hx, ob.y - o.y + hy, g, worldSprite('o-sparkle'));
   });
   (map.npcs || []).forEach(function (np) {
     if (!owNpcActive(np)) return;
-    if (Math.abs(np.x - o.x) <= half && Math.abs(np.y - o.y) <= half) h += owActorHtml('ow-npc', np.x - o.x + half, np.y - o.y + half, n, heroSprite(heroLookColors(np.look), np.face, 0));
-    if (np.alert && Math.abs(np.x - o.x) <= half && Math.abs(np.y - 1 - o.y) <= half) h += owActorHtml('ow-alert', np.x - o.x + half, np.y - 1 - o.y + half, n, worldSprite('fx-alert'));
+    if (inView(np.x, np.y)) h += owActorHtml('ow-npc', np.x - o.x + hx, np.y - o.y + hy, g, heroSprite(heroLookColors(np.look), np.face, 0));
+    if (np.alert && inView(np.x, np.y - 1)) h += owActorHtml('ow-alert', np.x - o.x + hx, np.y - 1 - o.y + hy, g, worldSprite('fx-alert'));
   });
-  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + half, owTrail.y - o.y + half, n, owFollowerHtml());
-  h += owActorHtml('ow-hero', half, half, n, heroSprite(heroLookColors(), o.face, owFrame));
-  view.style.cssText = '--ow-n:' + n + ';' + Object.keys(map.palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + map.palette[k]; }).join(';');
+  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
+  h += owActorHtml('ow-hero', hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
+  view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + Object.keys(map.palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + map.palette[k]; }).join(';');
   view.innerHTML = h;
   view.className = 'ow-view ow-' + owTimeOfDay();
   view.setAttribute('aria-label', map.name + ' map');
@@ -172,6 +180,30 @@ window.addEventListener('keydown', function (e) {
   owMove(dir);
 });
 
+window.addEventListener('resize', function () { if (owOpen()) renderOverworld(); });
+// Touch or mouse on the map: hold on a side of the hero to walk that way (slide to turn); tap the hero to talk to or read what it faces.
+(function owTouch() {
+  const view = document.getElementById('ow-view');
+  let held = '';
+  const dirAt = function (e) {
+    const hero = view.querySelector('.ow-hero');
+    if (!hero) return '';
+    const r = hero.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+    if (Math.abs(dx) < r.width * 0.6 && Math.abs(dy) < r.height * 0.6) return 'talk';
+    return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+  };
+  const go = function (e) {
+    const d = dirAt(e);
+    if (d === held) return;
+    held = d;
+    owRelease();
+    if (d === 'talk') owInteractFacing(); else if (d) owHold(d);
+  };
+  view.addEventListener('pointerdown', function (e) { if (!owOpen()) return; e.preventDefault(); view.setPointerCapture(e.pointerId); go(e); });
+  view.addEventListener('pointermove', function (e) { if (held && held !== 'talk') go(e); });
+  ['pointerup', 'pointercancel'].forEach(function (k) { view.addEventListener(k, function () { held = ''; owRelease(); }); });
+})();
+
 // ----- the window -----
 function openAdventure() {
   if (!state.hero.made) { openHeroCreator(); return; }               // the first walk starts with Who are you?
@@ -187,6 +219,7 @@ function adventureBoot() {
 }
 function showAdventureWindow() {
   showModal('overworld-modal', function () { owSafe = ECON.overworld.graceSteps; owTrail = null; owSetRegion(OW_MAPS[state.overworld.map]); renderOverworld(); });
+  renderOverworld();                                              // again once it is on screen, so the tiles fit its real size
 }
 
 // ----- a fight that begins on a walk: the Adventure battle screen (24x-ow-battle.js, 24y-ow-arenas.js) -----
@@ -194,8 +227,9 @@ function showAdventureWindow() {
 function startAdventureFight(sp) {
   if (ab) return;
   owRelease();
+  if (!sp && legendRoute() === state.overworld.map && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: legendOfWeek().id, level: ECON.legend.level }] }); return; }
   sp = sp || rollWildSpecies([]);
-  abStart({ kind: 'wild', foes: [{ id: sp.id, level: abWildLevel() }] });
+  abStart({ kind: 'wild', foes: [{ id: sp.id, level: abWildLevel(), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
 }
 // A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
 function startTrainerFight(npc) {

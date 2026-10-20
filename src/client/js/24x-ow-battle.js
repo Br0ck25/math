@@ -170,9 +170,19 @@ function abUseMove(i) {
   if (i >= 0) { mv.left -= 1; abSavePp(me); }
   ab.phase = 'busy';
   const fm = abPickMove(foe, me), mp = mv.pri || 0, fp = fm.pri || 0;
-  const first = mp !== fp ? mp > fp : abSpeed(me) !== abSpeed(foe) ? abSpeed(me) > abSpeed(foe) : Math.random() < 0.5;
+  const claw = me.held === 'claw' && Math.random() < 60 / 256;                                        // a Quick Claw sometimes goes first
+  const first = mp !== fp ? mp > fp : claw || (abSpeed(me) !== abSpeed(foe) ? abSpeed(me) > abSpeed(foe) : Math.random() < 0.5);
   const mine = function (next) { abStrike(me, foe, mv, abFoeFainted, next); }, theirs = function (next) { abStrike(foe, me, fm, abMeFainted, next); };
   if (first) mine(function () { theirs(abEndRound); }); else theirs(function () { mine(abEndRound); });
+}
+// A Berry is eaten when a buddy is at half its HP or less (and still up): it heals and is used up.
+function abBerry(m) {
+  if (m.held !== 'berry' || m.hp <= 0 || m.hp * 2 > m.max || ab.party.indexOf(m) === -1) return;
+  m.held = ''; delete state.held[m.id];
+  state.heldOwned = state.heldOwned.filter(function (i) { return i !== 'berry'; });
+  const heal = Math.min(ECON.held.berryHeal, m.max - m.hp);
+  m.hp += heal;
+  abNow([[m.name + ' ate its Berry and restored ' + heal + ' HP!', null, 1100]]);
 }
 function abSpeed(m) { return m.spd * (m.status === 'paralysis' ? 0.25 : 1); }
 function abSavePp(m) { state.advPp[m.id] = {}; m.moves.forEach(function (mv) { state.advPp[m.id][mv.id] = mv.left; }); }
@@ -194,10 +204,11 @@ function abStrike(att, def, mv, down, next) {
 // One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
 function abHit(att, def, mv, down, next) {
   if (Math.random() * 100 >= mv.acc) { abSteps([[att.name + "'s attack missed!", null, 900]]); next(); return; }
-  const crit = Math.random() < AB_CRIT, r = abDamage(att, def, mv, crit);
+  const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     def.hp = Math.max(0, def.hp - r.dmg);
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
+    abBerry(def);
     [def, att].forEach(function (m) { if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; });
     abHitSound(att, mv);
   }, 600]]);
@@ -224,6 +235,8 @@ function abPickMove(foe, me) {
 function abEndRound() {
   abSteps([['', function () {
     const list = [];
+    const me = abMe();
+    if (me.held === 'leftovers' && me.hp > 0 && me.hp < me.max) list.push([me.name + ' restored a little HP with its Leftovers.', function () { me.hp = Math.min(me.max, me.hp + Math.max(1, Math.floor(me.max / 16))); state.advHp[me.id] = me.hp; }, 900]);
     [abFoe(), abMe()].forEach(function (m) {
       if (m.hp > 0 && (m.status === 'burn' || m.status === 'poison')) list.push([m.name + ' is hurt by its ' + (m.status === 'burn' ? 'burn' : 'poison') + '!', function () { m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.max / 8))); if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; }, 900]);
     });
@@ -332,6 +345,8 @@ function abThrowNet() {
 // The caught buddy joins you (or becomes a spare if you already own one). The same rules as a catch on the Practice screen.
 function abKeepCaught(foe) {
   const sp = getSpecies(foe.id);
+  if (foe.shiny) state.shinies[sp.id] = 1;
+  if (sp.legend) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! Sell it in the buddy hub.'); }
   else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); checkEarnedGear(); toast(sp.name + ' joined your collection!'); }
   saveState();

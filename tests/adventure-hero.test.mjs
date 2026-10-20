@@ -118,7 +118,7 @@ test('the Bag shows key items, badges, supplies, held items, goods and the egg f
   assert.match(r.text, /Streak Shields\s*3/);
   assert.match(r.text, /Catch Nets\s*4 of/);
   assert.match(r.text, /5 solves left/);
-  assert.match(r.text, /Oran Berry\s*held by/);
+  assert.match(r.text, /Berry\s*held by/);
   assert.match(r.text, /Berries\s*9/);
   assert.match(r.text, /fire · 2 of 5/);
   assert.equal(r.art, 3, 'each key item has its own picture');

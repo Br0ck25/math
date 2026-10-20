@@ -107,7 +107,7 @@ function evoBonus(path) { return EVO_PATHS[path] || { hp: 0, atk: 0 }; }
 // XP for a buddy (the fighter by default).
 function awardBuddyXp(amount, id) {
   id = id || state.activePet;
-  amount = Math.round(amount * (1 + ECON.care.bondXpBonus * getBond(id) + (quirkOf(id).id === 'curious' ? ECON.quirk.xp : 0)));
+  amount = Math.round(amount * (1 + ECON.care.bondXpBonus * getBond(id)));
   const before = getPetById(id);
   const oldMax = getPetMaxHp(id);
   const curHp = getPetHp(id);

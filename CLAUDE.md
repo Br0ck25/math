@@ -66,7 +66,7 @@ Use the file map below and the area rules in `.claude/rules/` (they load when yo
 - While you work: build + lint run after each edit of `src/` (hook, silent when fine) and the tests for the files you changed run when you finish (Stop hook, skipped if nothing changed since the last green run). Fix what they print; never skip or weaken a test.
 - `npm run test:quick` runs build, lint and only the tests covering your changed files (one line when green). `node --test tests/x.test.mjs` runs one file. Prefer these.
 - `npm test` builds, lints, then runs every test (about 3 minutes); CI runs it on every PR. Run it yourself only when you touched shared things (`econ.js`, `03-state.js`, `10-save-load.js`, `styles.css`, `index.html`, `30-router.js`, `build.mjs`) or before a big commit.
-- `npm run lint` checks the browser script and the Worker for calls to functions that do not exist and for page handlers with no function behind them (an earlier refactor silently deleted `hubStep`). `npm run check` verifies `worker.js` is current. `npm run sim` prints the gem economy.
+- `npm run lint` checks the browser script and the Worker for calls to functions that do not exist and for page handlers with no function behind them (an earlier refactor silently deleted `hubStep`). `npm run check` verifies `worker.js` is current.
 - A change that touches what players see needs a test, not just a screenshot. In the cloud sandbox Playwright's Chromium is already installed; do not run `playwright install`.
 
 ## Reuse before writing (most important rule)
@@ -74,7 +74,6 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Dates: `dayKey(d?)`, `daysAgoKey(n)`, `lastDayKeys(count, skip)`. Do not hand-roll date strings.
 - Modals: `showModal(id, before)` / `hideModal(id, after)`; give the overlay `data-close="fn"` (tap + Escape) or `data-esc="fn"` (Escape only, for game screens). No per-modal `…OnOverlay` functions.
 - Rewards: `grantGems(n, message, big)` for any payout that celebrates. Costs/rewards/limits live ONLY in `ECON` (`src/shared/econ.js`).
-  After changing a number there run `npm run sim`; the economy tests must pass.
 - Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (battles, signs, tournament, duels). Battles use `abQuestion()`.
 - Buddy gear: every accessory has a `slot` (head, face, neck, back, side, aura); positions come only from `GEAR_SLOTS` in `08b-buddy-gear.js` and are used by the battle screen, hub and trading card. Never add per-item pixel offsets in CSS. Armor is the corner badge. New gear needs no CSS.
 - Text safety: `escHtml()` for anything a user typed or the server sent, before it goes into `innerHTML`.

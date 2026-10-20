@@ -45,7 +45,7 @@ function renderReplace() {
     b.type = 'button';
     b.className = 'move-btn' + (locked ? ' off' : '');
     b.disabled = locked;
-    const note = 'Lv ' + d.level + ' · ' + roleOf(d).name;
+    const note = 'Lv ' + d.level;
     b.innerHTML = '<span class="mv-icon">' + d.icon + '</span><span class="mv-main"><b>' + escHtml(d.name) + '</b><small>' + escHtml(note) + '</small></span>';
     b.setAttribute('aria-label', 'Replace ' + d.name + '. ' + note);
     b.onclick = function () { replaceTeamMember(id); };

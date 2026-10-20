@@ -1,37 +1,15 @@
 // =====================================================================
-//  ROLES AND HELD ITEMS  (the "Hold" tab of the buddy hub)
-//  Every element has a role with a small passive that works while that buddy fights. A buddy can also hold one item (bought with gems).
+//  HELD ITEMS  (the "Hold" tab of the buddy hub): Gold's held items. A buddy holds one, and it works in Adventure battles (24x-ow-battle.js).
+//  Berry heals when HP is half or less and is used up; Leftovers heal a little every round; Quick Claw sometimes moves first; Scope Lens raises the
+//  critical hit chance; Type Charm makes the holder's own type hit 10% harder.
 // =====================================================================
-const ELEMENT_ROLES = {
-  fire:     { icon: '⚔️', name: 'Attacker',  text: '+1 damage on Speed Strikes' },
-  water:    { icon: '💧', name: 'Healer',    text: 'Heals 1 HP after every 4th correct answer' },
-  nature:   { icon: '🛡️', name: 'Tank',      text: 'Takes 1 less damage from every hit' },
-  electric: { icon: '⚡', name: 'Speedster', text: 'Speed Strikes are easier to get (25% more time)' },
-  dark:     { icon: '🕵️', name: 'Trickster', text: 'Wild buddies are 25% easier to catch' },
-  magic:    { icon: '✨', name: 'Support',   text: 'Every 3rd correct answer charges 1 extra energy' },
-  shadow:   { icon: '🌟', name: 'Wildcard',  text: 'Deals 25% more damage (shadow power)' }
-};
 const HELD_ITEMS = [
-  { id: 'berry', icon: '🫐', name: 'Oran Berry',  text: 'Heals ' + ECON.held.berryHeal + ' HP once per battle when health is low' },
-  { id: 'shell', icon: '🐚', name: 'Hard Shell',  text: 'Blocks the first hit of every battle' },
-  { id: 'charm', icon: '🔮', name: 'Type Charm',  text: '+1 damage on super-effective hits' },
-  { id: 'lens',  icon: '🔍', name: 'Quick Lens',  text: 'A Speed Strike charges 1 extra energy' },
-  { id: 'bait',  icon: '🍯', name: 'Sweet Bait',  text: 'Wild buddies are 25% easier to catch' }
+  { id: 'berry',     icon: '🫐', name: 'Berry',      text: 'Heals ' + ECON.held.berryHeal + ' HP when health drops to half or less. Used up.' },
+  { id: 'leftovers', icon: '🍙', name: 'Leftovers',  text: 'Heals 1/16 of its HP every round of a battle' },
+  { id: 'claw',      icon: '🪝', name: 'Quick Claw', text: 'Sometimes moves first in a round' },
+  { id: 'lens',      icon: '🔍', name: 'Scope Lens', text: 'Critical hits happen more often' },
+  { id: 'charm',     icon: '🔮', name: 'Type Charm', text: 'Moves of its own type do 10% more damage' }
 ];
-// Every species has one quirk, always the same one (picked from its id), so nothing needs saving.
-const QUIRKS = [
-  { id: 'brave',   icon: '🦁', name: 'Brave',   text: 'The first correct answer of each battle gives 1 extra energy' },
-  { id: 'calm',    icon: '🧘', name: 'Calm',    text: 'Status effects last ' + ECON.quirk.calmLess + ' problem less' },
-  { id: 'quick',   icon: '💨', name: 'Quick',   text: 'Speed Strikes get ' + Math.round((ECON.quirk.speed - 1) * 100) + '% more time' },
-  { id: 'curious', icon: '🔎', name: 'Curious', text: 'Earns ' + Math.round(ECON.quirk.xp * 100) + '% more XP' },
-  { id: 'lucky',   icon: '🍀', name: 'Lucky',   text: 'Wild buddies are ' + Math.round((ECON.quirk.catch - 1) * 100) + '% easier to catch' }
-];
-function quirkOf(buddyId) {
-  let h = 0;
-  for (let i = 0; i < buddyId.length; i++) h = (h * 31 + buddyId.charCodeAt(i)) % 100003;
-  return QUIRKS[h % QUIRKS.length];
-}
-function roleOf(pet) { return ELEMENT_ROLES[pet.element] || ELEMENT_ROLES.magic; }
 function heldIdOf(buddyId) { return state.held[buddyId] || ''; }
 function holds(buddyId, item) { return heldIdOf(buddyId) === item; }
 function buyHeld(id, confirmed) {
@@ -62,10 +40,8 @@ function giveHeld(id) {
 }
 
 function renderHoldTab() {
-  const pet = getPetById(hubPet), role = roleOf(pet), mine = heldIdOf(hubPet);
-  let h = '<div class="care-row"><div><div class="t">' + role.icon + ' Role: ' + role.name + '</div><div class="d">' + role.text + '. Roles come from the buddy\'s type, so mix them in your team!</div></div></div>' +
-    '<div class="care-row"><div><div class="t">' + quirkOf(hubPet).icon + ' Quirk: ' + quirkOf(hubPet).name + '</div><div class="d">' + quirkOf(hubPet).text + '. Every species has its own.</div></div></div>' +
-    '<div style="font-size:0.78rem; font-weight:800; margin:6px 0 2px;">🎒 Held item (one per buddy)</div>';
+  const mine = heldIdOf(hubPet);
+  let h = '<div style="font-size:0.78rem; font-weight:800; margin:6px 0 2px;">🎒 Held item (one per buddy)</div>';
   HELD_ITEMS.forEach(function (it) {
     const owned = state.heldOwned.indexOf(it.id) !== -1;
     const holder = Object.keys(state.held).find(function (b) { return state.held[b] === it.id; });

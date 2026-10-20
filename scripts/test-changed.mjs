@@ -8,14 +8,14 @@ import fs from 'node:fs';
 
 // [path regex, tests that cover it]. Several rows may match; the tests are joined.
 export const MAP = [
-  [/shared\/econ\.js/, ['economy', 'adaptive', 'adventure-shops', 'adventure-battle']],
+  [/shared\/econ\.js/, ['adaptive', 'adventure-shops', 'adventure-battle', 'adventure-gold']],
   [/js\/(02-data-core|04-data-buddies|04a-|08-buddies|09-bosses)/, ['content', 'packs', 'art-generated', 'adventure-battle']],
   [/js\/04b-packs/, ['packs', 'content']],
   [/js\/08[bcd]-/, ['content', 'art', 'cards']],
   [/js\/(07-math|07b-adaptive)/, ['generators', 'adaptive']],
-  [/js\/(13-loot|13b-wild|13c-eggs|19-quests)/, ['adventure-trainers', 'adventure-battle']],
+  [/js\/(13-loot|13b-wild|13c-eggs|19-quests)/, ['adventure-trainers', 'adventure-battle', 'adventure-gold']],
   [/js\/(24b-map|24d-champion)/, ['adventure-gyms', 'adventure-story']],
-  [/js\/20b-tech-tree/, ['tech-tree', 'economy']],
+  [/js\/20b-tech-tree/, ['tech-tree']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm', 'adventure-shops']],
   [/js\/25d-ranch/, ['ranch', 'held']],
   [/js\/33-shop/, ['confirm', 'adventure-shops']],
@@ -28,7 +28,7 @@ export const MAP = [
   [/js\/(01-|01b-|05-|06-|11-|17-|32-|34-|97-|97b-|97c-|97d-|97e-|25c-|98-|99-)/, ['speech', 'windows', 'adventure-boot']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['adventure-boot', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'adventure-battle', 'art-world']],
+  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'adventure-battle', 'adventure-gold', 'art-world']],
   [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
 const FALLBACK = ['overworld', 'adventure-battle'];

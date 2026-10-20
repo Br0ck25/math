@@ -55,7 +55,7 @@ function abShape(seed, element) {
 }
 function abBuild(id, name, icon, element, type, base, level, hp, pp, chosen) {
   const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
-  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp, chosen) };
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, held: '', moves: abMoveList(element, level, type, pp, chosen) };
 }
 function abMon(id, level, hp, pp, chosen) {
   const sp = getSpecies(id), stage = getFormIndex(sp, level);
@@ -67,12 +67,20 @@ function abBossMon(index, level) {
   return abBuild('', form === 2 ? 'Alpha ' + m.name : form === 1 ? 'Elder ' + m.name : m.name, m.icon, m.element, m.element, 82 + form * 12, level);
 }
 // A foe from its description: {id, level} is a buddy, {boss: index, level} a boss.
-function abFoeMon(f) { return f.boss !== undefined ? abBossMon(f.boss, f.level) : abMon(f.id, f.level); }
+function abFoeMon(f) {
+  if (f.boss !== undefined) return abBossMon(f.boss, f.level);
+  const m = abMon(f.id, f.level);
+  if (f.shiny) {                                                    // a shiny buddy is a little stronger, and glows once caught
+    m.shiny = true; m.name = 'Shiny ' + m.name;
+    ['max', 'hp', 'atk', 'def', 'spd', 'spc'].forEach(function (k) { m[k] = Math.floor(m[k] * 1.1); });
+  }
+  return m;
+}
 // One of your buddies, with the HP it has left.
-function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); }
+function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return m; }
 // Gold's damage formula, step by step. Normal moves are physical (Attack against Defense); every other type is special (Special against Special), as in Gold.
 // A burn halves a physical Attack. A critical hit doubles the damage before the +2; then the same-type bonus, type effectiveness and luck follow, each rounded down.
-const AB_CRIT = 17 / 256;
+const AB_CRIT = 17 / 256, AB_CRIT_LENS = 32 / 256;     // the critical hit chance, and with a Scope Lens (one stage up)
 function abDamage(att, def, move, crit) {
   const special = move.type !== 'normal';
   let A = special ? att.spc : att.atk, D = special ? def.spc : def.def;
@@ -81,6 +89,7 @@ function abDamage(att, def, move, crit) {
   A = Math.max(1, A); D = Math.max(1, D);
   const rel = getTypeRelation(move.type, def.type), eff = rel === 1 ? 2 : rel === -1 ? 0.5 : 1;
   let d = Math.floor(Math.floor((Math.floor(2 * att.level / 5) + 2) * move.power * A / D) / 50);
+  if (att.held === 'charm' && move.type === att.type) d = Math.floor(d * 110 / 100);                    // a Type Charm: its own type hits 10% harder
   if (crit) d *= 2;
   d = Math.min(d, 997) + 2;
   if (move.type === att.type && move.type !== 'normal') d = Math.floor(d * 3 / 2);

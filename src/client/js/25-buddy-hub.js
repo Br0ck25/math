@@ -83,7 +83,7 @@ function renderHub() {
   const gear = hubPet === state.activePet ? activeGear() : { acc: null, armor: null };
   ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
-  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' ' + roleOf(d).name + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
+  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + ' · ' + moodOf(hubPet).icon + ' ' + moodOf(hubPet).text;
   const tabs = [['care', '💖 Care'], ['room', '🏠 Room'], ['tree', '🌳 Tree'], ['card', '🃏 Card'], ['tour', '🏆 Cup'], ['duel', '⚔️ Duel'], ['hold', '🎒 Hold'], ['ranch', '🏡 Ranch']];
   const hint = hubHint(hubPet);
   const hintEl = document.getElementById('hub-hint');

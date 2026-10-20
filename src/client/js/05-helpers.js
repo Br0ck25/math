@@ -58,3 +58,5 @@ function dayHash(text) {
   for (let i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 100003;
   return h;
 }
+// The number of the current week (Monday to Sunday), the same for everyone.
+function weekNumber(d) { return Math.floor((dayNumber(d) + 3) / 7); }

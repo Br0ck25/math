@@ -18,28 +18,13 @@ beforeEach(async () => {
   await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.wild.id = ''; currentMonsterIndex = 0; bossLevel = 5; });
 });
 
-test('every element has a role, and the hub says which', async () => {
-  const r = await page.evaluate(() => {
-    const out = {};
-    ['fire', 'water', 'nature', 'electric', 'dark', 'magic', 'shadow'].forEach((e) => { out[e] = roleOf({ element: e }).name; });
-    hubPet = 'dog'; renderHub();
-    out.sub = document.getElementById('hub-sub').innerText;
-    hubTab = 'hold'; renderHub(); out.body = document.getElementById('hub-body').innerText;
-    return out;
-  });
-  assert.deepEqual([r.fire, r.water, r.nature, r.electric, r.dark, r.magic, r.shadow], ['Attacker', 'Healer', 'Tank', 'Speedster', 'Trickster', 'Support', 'Wildcard']);
-  assert.match(r.sub, /nature Tank/);
-  assert.match(r.body, /Role: Tank/);
-  assert.match(r.body, /Oran Berry/);
-});
-
 test('held items: buy, give to one buddy, moving it takes it from the other, bad saves repaired', async () => {
   const r = await page.evaluate(() => {
     const out = {};
     state.gems = 100; state.unlockedPets = ['dog', 'fox']; hubPet = 'dog'; hubTab = 'hold';
     buyHeld('berry'); confirmBuy(); out.bought = [state.heldOwned.join(), state.gems];
     buyHeld('berry'); out.once = state.gems;
-    state.gems = 5; buyHeld('shell'); out.poor = [state.heldOwned.length, state.gems];
+    state.gems = 5; buyHeld('claw'); out.poor = [state.heldOwned.length, state.gems];
     giveHeld('berry'); out.dog = state.held.dog;
     hubPet = 'fox'; giveHeld('berry'); out.moved = [state.held.dog, state.held.fox];
     giveHeld('berry'); out.back = Object.keys(state.held).length;

@@ -91,3 +91,17 @@ function sellAllSpares() {
   toast('💰 Sold ' + n + ' spare' + (n === 1 ? '' : 's') + ' for ' + total + ' 💎');
   renderHub();
 }
+
+// ----- the roaming legend (Gold's roaming beasts): after you are Champion, one legendary buddy a week roams one route a day -----
+function legendOfWeek() { return legendPets[weekNumber() % legendPets.length]; }
+function legendState() {
+  const l = state.legend, w = weekNumber();
+  if (l.week !== w) { l.week = w; l.caught = false; }
+  return l;
+}
+// The route the legend is on today ('' when it is not roaming: you are not Champion yet, or you caught it this week).
+function legendRoute() {
+  if (!isChampion() || legendState().caught) return '';
+  const routes = OW_LANDS.map(function (l) { return l.routeIn; });
+  return routes[dayHash(weekNumber() + dayKey()) % routes.length];
+}

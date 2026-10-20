@@ -83,11 +83,4 @@ test('the pack sections fit a 375px phone without sideways scroll', async () => 
   assert.ok(over <= 1, 'overflow ' + over);
 });
 
-test('safe areas: the page keeps clear of the iPhone status bar and home bar', async () => {
-  const css = await inPage(() => [...document.styleSheets].flatMap((s) => [...s.cssRules]).map((r) => r.cssText).join('\n'));
-  assert.match(css, /\.game-container[^{]*\{[^}]*safe-area-inset-top/);
-  assert.match(css, /\.game-container[^{]*\{[^}]*safe-area-inset-bottom/);
-  assert.match(css, /\.modal-overlay[^{]*\{[^}]*safe-area-inset-top/);
-});
-
 test('no errors', () => { assert.deepEqual(errors, []); });

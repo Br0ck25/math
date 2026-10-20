@@ -18,7 +18,6 @@ function migrateState(old) {
   };
   state.unlockedPets = fixList(state.unlockedPets);
   state.unlockedSecrets = fixList(state.unlockedSecrets);
-  state.faintedPets = fixList(state.faintedPets);
   if (typeof state.activePet === 'string' && state.activePet.slice(-4) === '_evo') state.activePet = state.activePet.slice(0, -4);
 
   if (old && old.companionSolves) {
@@ -65,14 +64,6 @@ const NORMALIZERS = [
     if (!s.activeArmor || s.unlockedArmor.indexOf(s.activeArmor) === -1) s.activeArmor = 'none';
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
   },
-  function records(s) {
-    const r = s.records;
-    r.fastest = isFinite(r.fastest) ? clamp(r.fastest, 0, 3600) : 0;
-    r.bestStreak = asInt(r.bestStreak, 0, 1000000, 0);
-    r.solved = asInt(r.solved, 0, 100000000, 0);
-    r.attempts = asInt(r.attempts, 0, 100000000, 0);
-    if (typeof r.fastestOp !== 'string' || !OP_BY_ID[r.fastestOp]) r.fastestOp = '';
-  },
   function map(s) {
     s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
@@ -92,10 +83,6 @@ const NORMALIZERS = [
     s.champ.wins = asInt(s.champ.wins, 0, 1e6, 0);
     s.champ.day = typeof s.champ.day === 'string' ? s.champ.day.slice(0, 12) : '';
   },
-  function daily(s) {
-    s.daily.day = typeof s.daily.day === 'string' ? s.daily.day.slice(0, 12) : '';
-    s.daily.fights = asInt(s.daily.fights, 0, 1000, 0);
-  },
   function held(s) {
     const ids = HELD_ITEMS.map(function (i) { return i.id; });
     s.heldOwned = s.heldOwned.filter(function (id, i) { return ids.indexOf(id) !== -1 && s.heldOwned.indexOf(id) === i; });
@@ -112,18 +99,9 @@ const NORMALIZERS = [
     RANCH_STATIONS.forEach(function (st) { stock[st.id] = clamp(Number(r.stock && r.stock[st.id]) || 0, 0, ECON.ranch.stockCap); });
     s.ranch = { at: clamp(Number(r.at) || 0, 0, Date.now()), workers: workers, stock: stock };       // a time in the future (clock set back) counts as now
   },
-  function rested(s) {
-    const r = s.rested || {}, owned = s.unlockedPets.concat(s.unlockedSecrets), fights = {};
-    Object.keys(r.fights || {}).forEach(function (id) { if (owned.indexOf(id) !== -1) fights[id] = asInt(r.fights[id], 0, 100000, 0); });
-    s.rested = { day: typeof r.day === 'string' ? r.day.slice(0, 12) : '', fights: fights };
-  },
   function spring(s) {
     const sp = s.spring || {};
     s.spring = { day: typeof sp.day === 'string' ? sp.day.slice(0, 12) : '' };
-  },
-  function wildWins(s) {
-    const w = s.wildWins || {};
-    s.wildWins = { day: typeof w.day === 'string' ? w.day.slice(0, 12) : '', n: asInt(w.n, 0, 100000, 0) };
   },
   function evoPath(s) {
     const owned = s.unlockedPets.concat(s.unlockedSecrets), paths = {};
@@ -143,11 +121,8 @@ const NORMALIZERS = [
   function legend(s) {
     const l = s.legend;
     l.week = asInt(l.week, -1, 1e6, -1);
-    l.day = typeof l.day === 'string' ? l.day.slice(0, 12) : '';
     l.caught = l.caught === true;
-    l.misses = asInt(l.misses, 0, 20, 0);
-    l.race = l.caught && (l.race === 'won' || l.race === 'lost') ? l.race : '';
-    l.wins = asInt(l.wins, 0, 1e6, 0);
+    s.legend = { week: l.week, caught: l.caught };
   },
   function packs(s) {
     s.packClaims = s.packClaims.filter(function (id, i, a) { return typeof id === 'string' && PACK_BY_ID[id] && a.indexOf(id) === i; });
@@ -160,7 +135,6 @@ const NORMALIZERS = [
       book[k] = { wins: asInt(e.wins, 0, 1e6, 0), form: asInt(e.form, -1, 2, -1), alpha: asInt(e.alpha, 0, 1e6, 0) };
     });
     s.bossBook = book;
-    s.bossSwapped = s.bossSwapped === true;
   },
   function calendar(s) {
     const sc = s.streakCal;
@@ -186,7 +160,6 @@ const NORMALIZERS = [
     s.duelStat.count = asInt(s.duelStat.count, 0, 1e6, 0);
     ['runs', 'trophies', 'wins'].forEach(function (k) { s.tour[k] = asInt(s.tour[k], 0, 1e6, 0); });
     s.raidsCleared = asInt(s.raidsCleared, 0, 1e6, 0);
-    s.lastRaidAt = asInt(s.lastRaidAt, 0, 1e9, 0);
   },
   function study(s) {
     const t = s.study, S = ECON.study, today = dayNumber();
@@ -243,7 +216,6 @@ const NORMALIZERS = [
   },
   function tech(s) {
     s.stars = asInt(s.stars, 0, 1e6, 0);
-    s.techSolves = asInt(s.techSolves, 0, 100, 0);
     const validIds = (ECON.tech && ECON.tech.nodes) ? ECON.tech.nodes.map(function (n) { return n.id; }) : [];
     s.techUnlocked = (Array.isArray(s.techUnlocked) ? s.techUnlocked : []).filter(function (id, i, a) {
       return validIds.indexOf(id) !== -1 && a.indexOf(id) === i;
