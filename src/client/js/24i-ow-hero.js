@@ -12,6 +12,7 @@ const KEY_ITEMS = [
   { id: 'badge-case', name: 'Badge Case', text: 'Keeps the gym badges you win.', art: 'k-badge-case' },
   { id: 'running-shoes', name: 'Running Shoes', text: 'Hold a direction on the map to walk faster.', art: 'k-shoes' },
   { id: 'fishing-rod', name: 'Fishing Rod', text: 'Tap the water on the map to fish. It becomes a Good Rod with 3 badges and a Super Rod for the Champion.', art: 'k-rod' },
+  { id: 'secret-potion', name: 'Secret Potion', text: 'A medicine for a sick buddy. Take it to the Lighthouse Keeper in Tide Bay.', art: 'k-badge-case' },
   { id: 'gizmo', name: 'Gizmo', text: 'A map for travelling back to towns you know, a clock, notes from friends and math tips.', art: 'k-gizmo' }
 ].concat(Object.keys(OW_GATES).map(function (id) { const g = OW_GATES[id]; return { id: id, name: g.name, text: g.text, art: 'k-' + id, badge: g.badge }; }));
 // A charm comes with its gym badge, so it is never saved: you have it while you hold the badge (old saves have theirs too).

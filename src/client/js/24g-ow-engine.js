@@ -230,6 +230,12 @@ function showAdventureWindow() {
 function startAdventureFight(sp, levelBonus) {
   if (ab) return;
   owRelease();
+  if (state.overworld.map === 'meadow-park' && !sp) {                       // the park: wild buddies only during the contest, and only while there are Park Balls
+    if (!contestActive() || state.contest.balls < 1) return;
+    const w = rollWildSpecies([]);
+    abStart({ kind: 'wild', contest: true, foes: [{ id: w.id, level: clamp(abWildLevel() + rnd(0, 2), 2, MAX_LEVEL) }] });
+    return;
+  }
   if (!sp && legendRoute() === state.overworld.map && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: legendOfWeek().id, level: ECON.legend.level }] }); return; }
   const route = sp ? null : owRollRoute(state.overworld.map);
   if (route) { abStart({ kind: 'wild', foes: [{ id: route.id, level: route.level, shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] }); return; }

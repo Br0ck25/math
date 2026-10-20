@@ -10,6 +10,10 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **World:** towns, routes, caves-as-nooks, gyms (trainers then leader), eight badges, charms standing in for HM gates, Elite Four then Champion, a second journey with eight more gyms and a final master, Buddy Centers that heal for free, Marts with stock that grows with badges, Day Care with eggs, trade NPCs, a trade evolution, roaming legend, shiny buddies, time of day, shake trees, fishing rods (Old, Good, Super), Repel, Gizmo (map, clock, calls, tips), Dex with seen and caught, rival fights.
 - **Moves:** every kind has its own learnset (two moves at the start, about ten by level 50, a new one every 6 to 8 levels), six stat moves with Gold's stages, and TMs: each gym leader gives one and a Move Tutor teaches it (an element TM only to buddies of that type).
 - **Wild tables:** every route and side path has its own five kinds with set odds (30, 30, 20, 15, 5), a level range around the route's level that rises route by route, and morning, day and night variants.
+- **Friendship and obedience:** wins, levels and walks raise a buddy's friendship (a faint lowers it) and four kinds evolve when it is high; a buddy from a Trader disobeys above the level its badges allow (10 plus 10 a badge); eggs can pass a parent's TM move.
+- **Forced grass:** every route has a band of tall grass across the whole road, so there is no way past without stepping on it (Repel helps).
+- **Items:** Ether, PP Up (up to three times a move) and Escape Rope are in.
+- **Side game and quest:** the Catching Contest and the Lighthouse fetch quest.
 - **Evolution and stats:** the Link Trader's trade evolutions, Evolution Stones (a stone kind takes its first evolution at once) and Gold's badge boost (each of the first eight badges raises one stat by an eighth).
 - **Items:** Potion, Super Potion, Full Heal, Revive, Catch Net (a Poke Ball), Great Net (x1.5), Ultra Net (x2), Repel, Max Repel, Elixir (10 PP back), X Attack, X Defend and X Speed, Evolution Stone, bag limit 99; held items; potions found on the ground.
 
@@ -20,10 +24,9 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Currency is called gems.**
 - **Stats:** a fixed build per kind (hand-tuned for about 40), no hidden DVs, no stat experience.
 
-## Still missing (ordered by how much a Gold player would notice)
-1. **Side games:** Bug-Catching Contest, Game Corner, Safari Zone, Battle Tower, phone calls from trainers wanting rematches.
-2. **Set pieces:** the Team Rocket takeover, the Lighthouse, Red on Mt. Silver (ours is Master Ori with six legends).
+## Still missing
+1. **Game Corner, Safari Zone and Battle Tower.** The Catching Contest (Tuesdays, Thursdays and Saturdays, in the Sunny Park next to Meadow Town) is the one side game built.
+2. **Phone calls from trainers** asking for rematches (the Gizmo has calls, but only story notes).
 3. **Hand-written content:** per-route wild lists and trainer teams are generated from fixed rules, not written one by one; learnsets are generated per kind.
-4. **Happiness evolution**, egg moves from breeding, Ether, Escape Rope, PP Up.
-5. **Obedience:** Gold's traded buddies disobey above a level without the matching badge. Ours never disobey.
-6. **Seventeen types, held-item variety and abilities of later games** are outside Gold anyway.
+4. **Big story set pieces beyond ours:** the Scramblers stand in for the Team Rocket takeover, and Master Ori for Red. The Lighthouse quest is in.
+5. **Seventeen types and the abilities of later games** are outside Gold anyway.

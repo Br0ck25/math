@@ -81,6 +81,8 @@ const ECON = {
   // Shop item prices. The shield is dear on purpose: it must be a real decision, never a cheap way to skip a problem. (Rare Candy's price depends on the buddy's level.)
   // Money, as in Gold: only trainers pay, `base` x the level of their last buddy. Wild buddies pay nothing. Leaders, the Elite Four, the Champion and the Master pay `leaderBase`; everyone else `trainerBase`.
   money: { trainerBase: 16, leaderBase: 100 },
+  // The Catching Contest (24vf-ow-contest.js): on `days` of the week (0 = Sunday) you get `balls` Park Balls; the best catch is judged and ranks 1-3 need `ranks` points.
+  contest: { days: [2, 4, 6], balls: 20, ranks: [600, 450, 300] },
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
   items: { potion: 300, net: 200, greatnet: 600, ultranet: 1200, repel: 350, superpotion: 700, fullheal: 600, revive: 1500, elixir: 1500, xattack: 500, xdefend: 550, xspeed: 350, maxrepel: 700, stone: 2100, ether: 1200, ppup: 9800, escaperope: 550 },

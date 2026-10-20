@@ -20,7 +20,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -123,6 +123,7 @@ function abPanel() {
     });
   } else if (ab.phase === 'pack') {
     const wild = ab.kind === 'wild';
+    if (ab.contest) { p.appendChild(abBtn('Park Ball <small>x' + state.contest.balls + '</small>', abThrowPark, '', state.contest.balls < 1)); p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back')); return; }
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', function () { abThrowNet('net'); }, '', !wild || state.nets < 1));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
     const carry = [['superpotion', 'Super Potion', function () { return m.hp >= m.max && !m.status; }], ['fullheal', 'Full Heal', function () { return !m.status && !(m.conf > 0); }], ['revive', 'Revive', function () { return !ab.party.some(function (x) { return x.hp <= 0; }); }],
@@ -434,6 +435,22 @@ function abPotion() {
   const heal = Math.min(ECON.overworld.potionHeal, me.max - me.hp);
   abSteps([['You used a Potion!', function () { me.hp += heal; me.status = ''; me.conf = 0; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]);
   abFoeTurn();
+}
+// A Park Ball in the Catching Contest: the same catch rule as a Catch Net, but the buddy only counts for the judge.
+function abThrowPark() {
+  if (!ab.contest || state.contest.balls < 1) return;
+  const foe = abFoe(), got = Math.random() < abCatchChance(foe, 1);
+  state.contest.balls -= 1; ab.phase = 'busy';
+  abSteps([['You threw a Park Ball!', null, 1000]]);
+  const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe, 1)));
+  for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); }, 700]]);
+  if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', null, 1100]]); abFoeTurn(); return; }
+  abSteps([['Gotcha! ' + foe.name + ' was caught!', function () {
+    ab.caught = true; soundCatchSuccess();
+    const score = contestScore(foe);
+    if (!state.contest.best || score > state.contest.best.score) state.contest.best = { name: foe.name, score: score };
+    saveState();
+  }, 1300], ['', function () { abFinish('caught'); }, 0]]);
 }
 // `kind`: 'net' (a Poke Ball), 'greatnet' or 'ultranet'; the better ones multiply the catch value (ECON.overworld.ballMult).
 function abThrowNet(kind) {

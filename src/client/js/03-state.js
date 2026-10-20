@@ -13,6 +13,7 @@ function freshState() {
     genders: {},                                     // buddy id -> 'm' or 'f': the gender it was caught with
     happy: {},                                       // buddy id -> friendship 0-255 (wins, levels and walks raise it)
     fromTrade: {},                                   // buddy id -> 1 when it came from a Trader: it disobeys above the level its badges allow
+    contest: null,                                   // today's Catching Contest: { day, balls, best: { name, score }, done }
     stoned: {},                                      // buddy id -> 1 once an Evolution Stone was used on it
     tradedUp: {},                                    // buddy id -> 1 once traded: its trade evolution can appear
     repelSteps: 0,                                   // grass steps left with no wild fights (Repel)

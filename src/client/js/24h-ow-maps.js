@@ -202,7 +202,7 @@ const OW_LANDS = [
 // The towns the Gizmo can travel to once the hero has stood in them: Cozy Hollow, then each land's town.
 function owTowns() { return [OW_START.map].concat(OW_LANDS.map(function (l) { return l.town; })); }
 // The story beats that are saved once done (state.overworld.story): the Scramblers' three schemes and Riley's reveal.
-const OW_STORY = ['tide-ferry', 'volt-blackout', 'gloom-scramblers', 'riley-reveal'];
+const OW_STORY = ['lighthouse', 'tide-ferry', 'volt-blackout', 'gloom-scramblers', 'riley-reveal'];
 // Everything the save may name: npc ids, pickup ids and quiz sign ids across all maps.
 function owIds(kind) {
   const ids = [];

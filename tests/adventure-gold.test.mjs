@@ -355,6 +355,44 @@ test('friendship, egg moves and obedience: wins, levels and walks raise friendsh
   assert.deepEqual(r, { before: 0, mid: 0, friend: [255, 1], floor: 0, kept: '{"bear":255}', egg: 'fireblast', eggEl: true, limit: 10, loaf: true, limit3: 40, obeys: 0, own: false });
 });
 
+test('the Catching Contest: only on contest days, 20 Park Balls, wild buddies appear in the park grass, a catch is judged by level, health and rarity and is not kept, and the prize follows the rank', async () => {
+  const r = await ev(() => {
+    const out = { days: ECON.contest.days.join(), park: OW_MAPS.meadow.warps.some((w) => w.to === 'meadow-park') && OW_MAPS['meadow-park'].warps[0].to === 'meadow' };
+    const judge = OW_MAPS['meadow-park'].npcs[0];
+    const realDay = contestDay; contestDay = () => false; state.contest = null; OW_SERVICES.judge(judge); out.closed = /Tuesdays/.test(talk.lines.join(' '));
+    contestDay = () => true; OW_SERVICES.judge(judge); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    out.started = [state.contest.balls, contestActive()];
+    state.overworld.map = 'meadow-park'; startAdventureFight(); out.fight = !!ab && ab.contest;
+    return out;
+  });
+  assert.deepEqual(r, { days: '2,4,6', park: true, closed: true, started: [20, true], fight: true });
+  await menu();
+  await ev(() => { ab.foes[0].hp = 1; Math.random = () => 0; ab.phase = 'pack'; abRender(); abThrowPark(); });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  const s2 = await ev(() => { const c = state.contest; const keep = getOwnedIds().length; return { balls: c.balls, best: !!c.best && c.best.score > 0, ranks: [contestRank(700), contestRank(500), contestRank(350), contestRank(10)] }; });
+  assert.deepEqual(s2, { balls: 19, best: true, ranks: [1, 2, 3, 4] });
+  const prize = await ev(() => {
+    state.contest.best = { name: 'Fox', score: 650 }; state.items = {}; const judge = OW_MAPS['meadow-park'].npcs[0];
+    OW_SERVICES.judge(judge); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    return [state.items.stone || 0, state.contest.done, contestActive(), /YOU/.test(talk.lines.join(' '))];
+  });
+  assert.deepEqual(prize, [1, true, false, true]);
+});
+
+test('the Lighthouse quest: the Keeper needs the Secret Potion, Healer Mei only gives it to a Gloom Badge holder, and handing it over pays an Evolution Stone and two Revives once', async () => {
+  const r = await ev(() => {
+    const keeper = OW_MAPS['tide-house'].npcs.find((n) => n.kind === 'lighthouse'), mei = OW_MAPS['gloom-house'].npcs.find((n) => n.id === 'gloom-mei');
+    const out = { hidden: !owNpcActive(mei) };
+    state.badges = ['gloom']; out.shown = owNpcActive(mei);
+    owGift(mei); out.got = hasKeyItem('secret-potion');
+    state.items = {}; OW_SERVICES.lighthouse(keeper); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    out.paid = [state.items.stone || 0, state.items.revive || 0, hasKeyItem('secret-potion'), state.overworld.story.includes('lighthouse')];
+    OW_SERVICES.lighthouse(keeper); out.after = /light shines again/.test(talk.lines.join(' '));
+    return out;
+  });
+  assert.deepEqual(r, { hidden: true, shown: true, got: true, paid: [1, 2, false, true], after: true });
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;
