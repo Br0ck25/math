@@ -64,6 +64,21 @@ function abStartHall() {
   if (state.gym || ab || !championOpen()) return;
   abStart({ rounds: abHallRounds(), onWin: abHallWon });
 }
+// ----- Silver Peak: Master Ori's six legends, one fight -----
+function abStartMaster() {
+  if (state.gym || ab || !hasBadge('summit')) return;
+  const lvl = clamp(Math.max(getBuddyLevel(state.activePet), ECON.map.master.minLevel) + ECON.map.master.levels, 1, MAX_LEVEL);
+  abStart({ rounds: [{ kind: 'leader', name: MASTER_NAME, foes: MASTER_TEAM.map(function (id) { return { id: id, level: lvl }; }) }], onWin: abMasterWon });
+}
+function abMasterWon() {
+  const ch = state.champ, M = ECON.map.master, first = ch.master === 0, pays = first || ch.masterDay !== dayKey(), gems = first ? M.firstGems : (pays ? M.repeatGems : 0);
+  if (pays) ch.masterDay = dayKey();
+  ch.master += 1;
+  state.gems += gems;
+  if (first) state.nets += M.nets;
+  saveState(); updateStatsUI();
+  openTalk({ name: 'Silver Peak', art: worldSprite('t-gym-door'), lines: [first ? 'Master Ori bows: "My six legends are at their best, and you still won. There is nobody left to beat. You are the greatest trainer in the Number Kingdom."' : 'Master Ori smiles: "Back again? My legends missed you."', gems ? (first ? 'Master reward: +' : 'Daily reward: +') + gems + ' gems' + (first ? ' and ' + M.nets + ' Catch Nets!' : '!') : 'No more gems today, but come back tomorrow!'], onClose: owStepBack });
+}
 function abHallWon() {
   const res = championReward(), art = worldSprite('t-gym-door'), lines = [];
   saveState(); updateStatsUI();

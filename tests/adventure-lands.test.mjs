@@ -55,7 +55,7 @@ test('every land with a town has what a town needs: a gym door, a Center and a M
 });
 
 test('the lands table is in story order and matches the gym lands', async () => {
-  const r = await page.evaluate(() => ({ lands: OW_LANDS.map((L) => L.land), order: gymRegions().map((g) => g.id), ids: new Set(OW_LANDS.map((L) => L.town)).size === OW_LANDS.length }));
+  const r = await page.evaluate(() => ({ lands: OW_LANDS.map((L) => L.land), order: allGymRegions().map((g) => g.id), ids: new Set(OW_LANDS.map((L) => L.town)).size === OW_LANDS.length }));
   assert.deepEqual(r.lands, r.order.slice(0, r.lands.length));
   assert.ok(r.ids);
 });
@@ -66,7 +66,12 @@ test('every road barrier opens with the badge before it, or any later badge, and
     Object.keys(OW_MAPS).forEach((k) => {
       const m = OW_MAPS[k];
       Object.keys(m.roads || {}).forEach((p) => {
-        const [x, y] = p.split(',').map(Number), badge = m.roads[p], ids = gymRegions().map((g) => g.id);
+        const [x, y] = p.split(',').map(Number), badge = m.roads[p], ids = allGymRegions().map((g) => g.id);
+        if (badge === 'champion') {                                                                       // the way to the second journey
+          state.badges = []; state.storySeen.champion = 0; const closed = !owWalkable(m, x, y);
+          state.storySeen.champion = 1; const opens = owWalkable(m, x, y); state.storySeen.champion = 0;
+          out.push({ map: k, p, badge, closed, opens, later: true, earlier: true }); return;
+        }
         state.badges = [];
         const closed = !owWalkable(m, x, y);
         state.badges = [badge];
@@ -219,16 +224,16 @@ test('Tide Bay: the road from Ember Hills opens with the Ember Badge, Route 3 tu
   assert.ok(r.tide.every((row) => /~~T$/.test(row)));
 });
 
-test('all eight gym lands have a town, in story order, chained by roads: each town\'s exit leads to the next route and opens with its own badge', async () => {
+test('all sixteen gym lands have a town, in story order, chained by roads: each town\'s exit leads to the next route and opens with its own badge (the Champion opens the way beyond Skyreach)', async () => {
   const r = await page.evaluate(() => {
     const out = { lands: OW_LANDS.map((L) => L.land), chain: [], journey: [] };
     for (let i = 0; i + 1 < OW_LANDS.length; i++) {
       const a = OW_LANDS[i], b = OW_LANDS[i + 1], town = OW_MAPS[a.town];
-      const roadTile = Object.keys(town.roads || {}).find((p) => town.roads[p] === a.land), warp = town.warps.find((w) => w.to === b.routeIn);
+      const roadTile = Object.keys(town.roads || {}).find((p) => town.roads[p] === (a.land === 'skyreach' ? 'champion' : a.land)), warp = town.warps.find((w) => w.to === b.routeIn);
       out.chain.push([a.land + '>' + b.land, !!roadTile, !!warp, !!warp && roadTile === warp.x + ',' + warp.y]);
     }
     // the journey: with the badges won so far, the next town is reachable from the start by walking and warping, and not before
-    const ids = gymRegions().map((g) => g.id), reachableMaps = () => {
+    const ids = allGymRegions().map((g) => g.id), reachableMaps = () => {
       const seen = new Set([OW_START.map]), q = [OW_START.map];
       while (q.length) {
         const k = q.shift(), m = OW_MAPS[k], tiles = new Set(), w = [m.start];
@@ -240,22 +245,22 @@ test('all eight gym lands have a town, in story order, chained by roads: each to
       return seen;
     };
     OW_LANDS.forEach((L, i) => {
-      state.badges = ids.slice(0, i);                                                                 // the badges you hold on arriving at land i
+      state.badges = ids.slice(0, i); state.storySeen.champion = i >= 8 ? 1 : 0;                      // the badges you hold on arriving at land i (a Champion from Cinder Mesa on)
       const here = reachableMaps();
       out.journey.push([L.land, here.has(L.town), i + 1 < OW_LANDS.length && here.has(OW_LANDS[i + 1].town)]);
     });
     return out;
   });
-  assert.deepEqual(r.lands, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'skyreach']);
+  assert.deepEqual(r.lands, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'skyreach', 'cinder', 'coral', 'thistle', 'spark', 'dusk', 'prism', 'cross', 'summit']);
   r.chain.forEach((c) => assert.deepEqual(c.slice(1), [true, true, true], c[0]));
   r.journey.forEach((j) => assert.equal(j[1], true, j[0] + ' can be reached with the badges before it'));
   assert.ok(r.journey.slice(0, -1).every((j) => j[2] === false), 'the next town is never reachable before its road opens');
 });
 
-test('Skyreach is the last land: no charm nook of its own, its gym needs level 56, and its road leads on to the Champion\'s Walk', async () => {
+test('Skyreach ends the first journey: no charm nook of its own, its gym needs level 56, and its road leads on to the Champion\'s Walk', async () => {
   await put('skyreach', 11, 10, 'up');
   const r = await page.evaluate(() => {
-    const L = OW_LANDS[OW_LANDS.length - 1];
+    const L = OW_LANDS[7];
     owMove('up');
     const out = { land: L.land, charm: L.charm, nook: L.nook, name: document.getElementById('talk-name').innerText, text: talk.lines.join(' '), road: OW_MAPS.skyreach.roads['7,0'], to: OW_MAPS.skyreach.warps.find((w) => w.x === 7 && w.y === 0).to };
     return out;

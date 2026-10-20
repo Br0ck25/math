@@ -27,7 +27,7 @@ const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
 
 test('a land opens with a note when its level is reached, except the Meadow which is open from the start', async () => {
   const r = await page.evaluate(() => {
-    state.buddyXp.dog = xpForLevel(90); state.storySeen = { map: 1 };
+    state.buddyXp.dog = xpForLevel(58); state.storySeen = { map: 1 };
     checkRegionUnlocks();
     return { meadow: !!state.storySeen.open_meadow, sky: !!state.storySeen.open_skyreach, toast: document.getElementById('toast').innerText };
   });
@@ -41,7 +41,7 @@ test('every gym door on a map is on a gym tile, and every gym tile has a land wi
     const out = [];
     Object.keys(OW_MAPS).forEach((k) => {
       const m = OW_MAPS[k], doors = Object.keys(m.gyms || {});
-      doors.forEach((p) => { const [x, y] = p.split(',').map(Number); if (m.rows[y].charAt(x) !== 'G') out.push(k + ': ' + p + ' is not a gym tile'); if (m.gyms[p] !== 'champion' && (!regionById(m.gyms[p]).gym || regionById(m.gyms[p]).id !== m.gyms[p])) out.push(k + ': ' + m.gyms[p] + ' has no gym'); });
+      doors.forEach((p) => { const [x, y] = p.split(',').map(Number); if (m.rows[y].charAt(x) !== 'G') out.push(k + ': ' + p + ' is not a gym tile'); if (m.gyms[p] !== 'champion' && m.gyms[p] !== 'master' && (!regionById(m.gyms[p]).gym || regionById(m.gyms[p]).id !== m.gyms[p])) out.push(k + ': ' + m.gyms[p] + ' has no gym'); });
       m.rows.forEach((row, y) => row.split('').forEach((c, x) => { if (c === 'G' && doors.indexOf(x + ',' + y) === -1) out.push(k + ': gym tile ' + x + ',' + y + ' leads nowhere'); }));
     });
     return out;

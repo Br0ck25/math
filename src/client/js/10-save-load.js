@@ -65,7 +65,7 @@ const NORMALIZERS = [
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
   },
   function map(s) {
-    s.badges = s.badges.filter(function (id, i) { return gymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
+    s.badges = s.badges.filter(function (id, i) { return allGymRegions().some(function (r) { return r.id === id; }) && s.badges.indexOf(id) === i; });
     if (!REGIONS.some(function (r) { return r.id === s.region; })) s.region = 'meadow';
     const regList = REGIONS.map(function (r) { return r.id; });
     s.regionsVisited = (Array.isArray(s.regionsVisited) ? s.regionsVisited : ['meadow']).filter(function (id, i, a) {
@@ -77,10 +77,12 @@ const NORMALIZERS = [
     s.gym = null;                                                  // a gym is a chain of Adventure fights that is not saved (24y-ow-arenas.js)
     const rm = s.rematch;
     rm.day = typeof rm.day === 'string' ? rm.day.slice(0, 12) : '';
-    rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return gymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
+    rm.lands = Array.isArray(rm.lands) ? rm.lands.filter(function (id, i, a) { return allGymRegions().some(function (r) { return r.id === id; }) && a.indexOf(id) === i; }).slice(0, ECON.map.rematch.perDay) : [];
     rm.wins = asInt(rm.wins, 0, 1e6, 0);
-    if (!isPlainObject(s.champ)) s.champ = { wins: 0, day: '' };
+    if (!isPlainObject(s.champ)) s.champ = { wins: 0, master: 0, day: '', masterDay: '' };
     s.champ.wins = asInt(s.champ.wins, 0, 1e6, 0);
+    s.champ.master = asInt(s.champ.master, 0, 1e6, 0);
+    s.champ.masterDay = typeof s.champ.masterDay === 'string' ? s.champ.masterDay.slice(0, 12) : '';
     s.champ.day = typeof s.champ.day === 'string' ? s.champ.day.slice(0, 12) : '';
   },
   function held(s) {

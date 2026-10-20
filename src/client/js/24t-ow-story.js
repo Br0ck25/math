@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
 
 // ----- the Champion's Walk: a road of Ace trainers, Riley's last race, and the Hall door. After you win, Nova stands by the road. -----
 owSetTile('skyreach', 7, 0, 'x');
-OW_MAPS.skyreach.roads = { '7,0': 'skyreach' };
+OW_MAPS.skyreach.roads = Object.assign(OW_MAPS.skyreach.roads || {}, { '7,0': 'skyreach' });
 OW_MAPS.skyreach.warps.push({ x: 7, y: 0, to: 'champwalk', tx: 6, ty: 18 });
 const OW_ACE = { levelBonus: 1 };
 Object.assign(OW_MAPS, {

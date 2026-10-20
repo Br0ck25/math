@@ -22,7 +22,8 @@ function owTileAt(map, x, y) {
 }
 // The road to the next land opens with the badge of the land before it, or any later badge (a save that already went on).
 function owRoadOpen(badge) {
-  const ids = gymRegions().map(function (r) { return r.id; });
+  if (badge === 'champion') return isChampion();                 // the way to the second journey
+  const ids = allGymRegions().map(function (r) { return r.id; });
   return ids.slice(ids.indexOf(badge)).some(hasBadge);
 }
 // Walking into a land makes its buddies the ones in the grass (the same as travelling there on the Map).

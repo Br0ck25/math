@@ -35,7 +35,7 @@ const ECON = {
   // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
   // Winning the gym gives a badge and gems; all the gym badges open the Champion's Hall.
   map: {
-    levels: { meadow: 1, ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48, skyreach: 56 },
+    levels: { meadow: 1, ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48, skyreach: 56, cinder: 60, coral: 64, thistle: 68, spark: 72, dusk: 76, prism: 80, cross: 85, summit: 90 },
     trainers: 3, trainerGems: 4, regionShare: 0.8, badgeGems: 60,
     // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
     // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
@@ -43,7 +43,9 @@ const ECON = {
     // The Champion's Hall (24d-champion.js), open once every gym badge is won (a Champion keeps it when gyms are added): Champion Nova's six buddies (one of each type), `levels` above your buddy.
     // Nova swaps a buddy that is below `swapAt` of its HP (or that your buddy beats) for a clearly better one: at most `maxSwaps` times, never again within `cooldown` hits.
     // The first win pays `firstGems`, `nets` Catch Nets, one of each held item and three secret gear pieces (and makes you Champion); after that a win pays `repeatGems` once a day.
-    champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50}
+    champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50},
+    // Silver Peak (24y-ow-arenas.js): Master Ori's six legends, `levels` above your buddy (never below `minLevel`). The first win pays `firstGems` and `nets`, a repeat win `repeatGems` once a day.
+    master: { levels: 3, minLevel: 90, firstGems: 1000, nets: 5, repeatGems: 100 }
   },
   // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
   overworld: { grassChance: 0.18, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 2, signsPerDay: 5, pickupGems: 5,

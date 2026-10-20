@@ -147,8 +147,17 @@ function owTrainerTalk(npc) {
 }
 
 // ----- gyms: stepping on a gym door offers that land's gym (the usual gym run on the battle screen: trainers, Riley, then the leader) -----
+// ----- Silver Peak: the door of Master Ori -----
+function owEnterMaster() {
+  const art = worldSprite('t-gym-door'), say = function (lines, choices) { openTalk({ name: 'Silver Peak', art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
+  if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
+  if (!hasBadge('summit')) { say(['The door is frozen shut. It opens for a trainer with the Summit Badge.']); return; }
+  const go = function () { talk.onClose = null; closeTalk(); abStartMaster(); };
+  say(state.champ.master ? ['Master Ori is ready for another match.'] : ['Master Ori waits at the top of the world with the six legends.', 'One fight, six buddies, no gym trainers first. Ready?'], [{ label: state.champ.master ? 'Rematch!' : 'Face the Master', run: go }]);
+}
 function owEnterGym(id) {
   if (id === 'champion') { owEnterHall(); return; }
+  if (id === 'master') { owEnterMaster(); return; }
   const r = regionById(id), art = worldSprite('t-gym-door'), name = r.name + ' Gym';
   const say = function (lines, choices) { openTalk({ name: name, art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
   if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
