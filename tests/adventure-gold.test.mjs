@@ -33,6 +33,16 @@ test('the battle fills the whole screen and an attack plays a picture on the tar
   assert.ok(r.fx && r.shake);
 });
 
+test('every buddy can be caught: in the wild pool, a boss prize, or in the weekly legend rotation, and each one can fight', async () => {
+  const r = await ev(() => {
+    const wild = wildPool().concat(legendRoster()).concat(bossBuddies).map((b) => b.id);
+    const lost = allBuddies().filter((b) => wild.indexOf(b.id) === -1).map((b) => b.id);
+    const bad = allBuddies().filter((b) => { try { const m = abMon(b.id, 10); return !(m.max > 0 && m.moves.length >= 2); } catch (e) { return true; } }).map((b) => b.id);
+    return { lost, bad };
+  });
+  assert.deepEqual(r, { lost: [], bad: [] });
+});
+
 test('a Berry heals 10 HP when health drops to half or less, and is used up', async () => {
   await ev(() => { state.heldOwned = ['berry']; state.held = { [state.activePet]: 'berry' }; });
   await begin();

@@ -19,7 +19,7 @@ function weatherToday() { return WEATHER[dayHash(dayKey() + 'weather') % WEATHER
 // Which kinds of wild buddy come out when (Gold's wild buddies change with the time of day).
 const TIME_FAVOURS = { morning: ['nature', 'water'], night: ['dark', 'magic'] };
 function wildPool() {
-  return storePets.filter(function (p) { return !p.requiresAllStorePets; }).concat(secretCompanions);
+  return storePets.concat(secretCompanions);
 }
 function isStoreBuddy(sp) { return storePets.indexOf(sp) !== -1; }
 function spareValueOf(id) {
@@ -93,7 +93,9 @@ function sellAllSpares() {
 }
 
 // ----- the roaming legend (Gold's roaming beasts): after you are Champion, one legendary buddy a week roams one route a day -----
-function legendOfWeek() { return legendPets[weekNumber() % legendPets.length]; }
+// The six legends, then the storybook heroes and the ultra trio, one a week: every buddy can be caught.
+function legendRoster() { return legendPets.concat(mythicCompanions, ultraPets); }
+function legendOfWeek() { const r = legendRoster(); return r[weekNumber() % r.length]; }
 function legendState() {
   const l = state.legend, w = weekNumber();
   if (l.week !== w) { l.week = w; l.caught = false; }

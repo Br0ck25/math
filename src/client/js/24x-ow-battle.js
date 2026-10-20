@@ -361,7 +361,7 @@ function abThrowNet() {
 function abKeepCaught(foe) {
   const sp = getSpecies(foe.id);
   if (foe.shiny) state.shinies[sp.id] = 1;
-  if (sp.legend) legendState().caught = true;
+  if (sp.id === legendOfWeek().id) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! Sell it in the buddy hub.'); }
   else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); checkEarnedGear(); toast(sp.name + ' joined your collection!'); }
   saveState();
