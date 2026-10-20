@@ -76,7 +76,7 @@ test('the fishing rod grows with you: Old, Good with 3 badges, Super for the Cha
 test('the Day Care: two buddies grow a level per 40 steps, a same-type pair leaves an egg, taking one back costs by levels gained, and they leave the team', async () => {
   const r = await ev(() => {
     const fire = storePets.filter((p) => p.element === 'fire' && p.id !== state.activePet).slice(0, 2).map((p) => p.id);
-    state.unlockedPets = [state.activePet].concat(fire); state.team = state.unlockedPets.slice(); state.gems = 1000; state.egg = null;
+    state.unlockedPets = [state.activePet].concat(fire); state.genders = { [fire[0]]: 'm', [fire[1]]: 'f' }; state.team = state.unlockedPets.slice(); state.gems = 1000; state.egg = null;
     const npc = OW_MAPS['tide-house'].npcs.find((n) => n.kind === 'daycare'), out = {};
     const talkTo = (i) => { talk.i = talk.lines.length - 1; renderTalk(); talkChoose(i); };
     for (let k = 0; k < 2; k++) { OW_SERVICES.daycare(npc); talkTo(talk.choices.length - 1); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0); }
@@ -198,6 +198,30 @@ test('stat moves: Growl lowers the foe Attack by a stage (it shows in the damage
     return out;
   });
   assert.deepEqual(r, { stage: -1, lower: true, floor: -6, up: 4, spd: 200 });
+});
+
+test('gender: most kinds are male or female (legends have none), a wild buddy gets one by chance and keeps it when caught, and only a male and a female of one type leave a Day Care egg', async () => {
+  const r = await ev(() => {
+    const out = { legend: abGenderOf('legend_fire'), ultra: abGenderOf('janie') || abGenderOf(ultraPets[0].id), some: ['dog', 'fox', 'bunny', 'otter', 'bear', 'wolf'].map(abGenderOf).every((g) => g === 'm' || g === 'f') };
+    let m = 0, f = 0; for (let i = 0; i < 200; i++) { const x = abFoeMon({ id: 'dog', level: 3 }); if (x.g === 'm') m++; else f++; } out.mixed = m > 40 && f > 40;
+    state.genders = { dog: 'f', fox: 'f', otter: 'm' };
+    out.same = daycareCompatible('dog', 'fox'); out.pair = daycareCompatible('fox', 'otter'); out.type = daycareCompatible('dog', 'otter');
+    out.tag = abGenderTag({ g: 'f' }).trim();
+    state.genders = { nope: 'm', dog: 'x', fox: 'm' }; NORMALIZERS.forEach((fn) => fn(state)); out.kept = Object.keys(state.genders).join();
+    return out;
+  });
+  assert.deepEqual(r, { legend: '', ultra: '', some: true, mixed: true, same: false, pair: false, type: false, tag: '\u2640', kept: 'fox' });
+});
+
+test('Gold shows the people first: you from behind and the trainer before its buddy, then the buddies replace them; the first buddy starts at level 5', async () => {
+  assert.equal(await ev(() => { state.buddyXp = {}; state.unlockedPets = []; state.unlockedSecrets = []; chooseStarter('bunny'); return getBuddyLevel('bunny'); }), 5);
+  const r = await ev(() => {
+    openAdventure(); abStart({ rounds: [{ kind: 'trainer', name: 'Scout Pia', foes: [{ id: 'fox', level: 3 }] }] });
+    return { foe: !!document.querySelector('#ab-foe-icon .ab-person'), me: !!document.querySelector('#ab-me-icon .ab-person'), boxes: document.querySelector('#ab-modal .ab-field').classList.contains('ab-intro') };
+  });
+  assert.deepEqual(r, { foe: true, me: true, boxes: true });
+  await menu();
+  assert.deepEqual(await ev(() => [!!document.querySelector('#ab-foe-icon .ab-person'), !!document.querySelector('#ab-me-icon .ab-person'), document.querySelector('#ab-modal .ab-field').classList.contains('ab-intro')]), [false, false, false]);
 });
 
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {

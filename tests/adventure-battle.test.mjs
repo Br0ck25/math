@@ -165,6 +165,7 @@ test('the faster buddy attacks first, and a priority move beats speed', async ()
     const real = abStrike;
     abStrike = function (att, def, mv) { log.push(att === abMe() ? 'me' : 'foe'); };
     const me = abMe(), foe = abFoe();
+    foe.moves = [foe.moves.find((m) => !m.pri && !m.fx)];                                  // a plain attack, so no priority or stat move changes the order
     const run = (mySpd, foeSpd, pri) => { log.length = 0; me.spd = mySpd; foe.spd = foeSpd; ab.phase = 'moves'; const mv = me.moves[0]; const old = mv.pri; mv.pri = pri; mv.left = 5; abUseMove(0); mv.pri = old; return log.join(''); };
     const out = [run(100, 5, 0), run(5, 100, 0), run(5, 100, 1)];
     abStrike = real;

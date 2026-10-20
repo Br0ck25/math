@@ -34,7 +34,7 @@ function renderHub() {
   ic.className = 'hub-icon' + (sleepy ? ' sleepy' : '');
   ic.innerHTML = avatarHtml(d, 56) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
-  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + (sleepy ? ' · resting, a Buddy Center wakes it up' : '');
+  document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + abGenderTag({ g: abGenderOf(hubPet) }) + (sleepy ? ' · resting, a Buddy Center wakes it up' : '');
   document.getElementById('hub-hint').innerText = '';
   const tb = document.getElementById('hub-tabs');
   tb.innerHTML = '';

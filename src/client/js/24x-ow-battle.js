@@ -20,13 +20,14 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
+    const intro = abIntro();
     abRender();
-    abSteps(abIntro());
-    abSteps([['Go! ' + abMe().name + '!', null, 800], abMenuStep()]);
+    abSteps(intro);
+    abSteps([['Go! ' + abMe().name + '!', function () { ab.introMe = false; abRender(); }, 800], abMenuStep()]);
   });
   return true;
 }
@@ -39,8 +40,17 @@ function abLoadRound() {
   abSeen();
 }
 function abSeen() { const f = abFoe(); if (f.id) markDexSeen(f.id); }
+// Gold shows the people first: you from behind, and the trainer in front of the foe's buddy until it is sent out.
 function abIntro() {
-  return ab.kind === 'wild' ? [['A wild ' + abFoe().name + ' appeared!', null, 1100]] : [[ab.name + ' wants to battle!', null, 1100], [ab.name + ' sent out ' + abFoe().name + '!', null, 1000]];
+  if (ab.kind === 'wild') return [['A wild ' + abFoe().name + ' appeared!', null, 1100]];
+  ab.introFoe = true;
+  return [[ab.name + ' wants to battle!', function () { abRender(); }, 1300], [ab.name + ' sent out ' + abFoe().name + '!', function () { ab.introFoe = false; abRender(); }, 1000]];
+}
+// A look for a trainer with no map person (a gym trainer): fixed by the name.
+function abTrainerLook() {
+  if (ab.npc && ab.npc.look) return ab.npc.look;
+  let h = 7; for (let i = 0; i < ab.name.length; i++) h = (h * 31 + ab.name.charCodeAt(i)) % 100003;
+  return { skin: h % HERO_SKINS.length, hair: (h >> 3) % HERO_HAIRS.length, outfit: (h >> 5) % HERO_OUTFITS.length, style: (h >> 7) % HERO_STYLES.length };
 }
 function abMenuStep() { return [null, function () { ab.phase = 'menu'; document.getElementById('ab-text').innerText = 'What will ' + abMe().name + ' do?'; }, 0]; }
 // Steps that must come right after the current one (a level-up message after the experience).
@@ -65,20 +75,21 @@ function abRender() {
   if (!ab) return;
   const f = abFoe(), m = abMe();
   document.getElementById('ab-foe-name').innerText = f.name;
-  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level + (f.status ? ' ' + AB_STATUS_TAG[f.status] : '') + (f.conf > 0 ? ' CNF' : '');
+  document.getElementById('ab-foe-lv').innerText = 'Lv' + f.level + abGenderTag(f) + (f.status ? ' ' + AB_STATUS_TAG[f.status] : '') + (f.conf > 0 ? ' CNF' : '');
   const fb = document.getElementById('ab-foe-hp');
   fb.style.width = Math.round(f.hp / f.max * 100) + '%'; fb.className = abHpClass(f);
   document.getElementById('ab-me-name').innerText = m.name;
-  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level + (m.status ? ' ' + AB_STATUS_TAG[m.status] : '') + (m.conf > 0 ? ' CNF' : '');
+  document.getElementById('ab-me-lv').innerText = 'Lv' + m.level + abGenderTag(m) + (m.status ? ' ' + AB_STATUS_TAG[m.status] : '') + (m.conf > 0 ? ' CNF' : '');
   const mb = document.getElementById('ab-me-hp');
   mb.style.width = Math.round(m.hp / m.max * 100) + '%'; mb.className = abHpClass(m);
   document.getElementById('ab-me-num').innerText = m.hp + ' / ' + m.max;
   const lo = xpForLevel(m.level), hi = xpForLevel(m.level + 1);
   document.getElementById('ab-me-xp').style.width = (m.level >= MAX_LEVEL ? 100 : clamp(Math.round((getBuddyXp(m.id) - lo) / Math.max(1, hi - lo) * 100), 0, 100)) + '%';
-  setIconHtml(document.getElementById('ab-foe-icon'), f.icon);
-  setIconHtml(document.getElementById('ab-me-icon'), m.icon);
-  document.getElementById('ab-foe-icon').classList.toggle('ab-gone', f.hp <= 0 || !!ab.caught);
-  document.getElementById('ab-me-icon').classList.toggle('ab-gone', m.hp <= 0);
+  setIconHtml(document.getElementById('ab-foe-icon'), ab.introFoe ? '<span class="ab-person">' + heroSprite(heroLookColors(abTrainerLook()), 'down', 0) + '</span>' : f.icon);
+  setIconHtml(document.getElementById('ab-me-icon'), ab.introMe ? '<span class="ab-person">' + heroSprite(heroLookColors(), 'up', 0) + '</span>' : m.icon);
+  document.getElementById('ab-foe-icon').classList.toggle('ab-gone', !ab.introFoe && (f.hp <= 0 || !!ab.caught));
+  document.getElementById('ab-me-icon').classList.toggle('ab-gone', !ab.introMe && m.hp <= 0);
+  document.querySelector('#ab-modal .ab-field').classList.toggle('ab-intro', !!(ab.introMe || ab.introFoe));
   abPanel();
 }
 function abBtn(label, fn, cls, disabled) {
@@ -226,15 +237,22 @@ function abFx(att, def, mv, hit) {
   if (typeof motionReduced === 'function' && motionReduced()) return;
   const mine = ab.party.indexOf(att) !== -1, fid = function (me) { return document.getElementById(me ? 'ab-me-icon' : 'ab-foe-icon'); };
   const a = fid(mine), d = fid(!mine), field = a.parentNode;
-  const play = function (el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function () { el.classList.remove(cls); }, 700); };
+  const play = function (el, cls) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(function () { el.classList.remove(cls); }, 900); };
   play(a, 'ab-lunge');
   if (!hit) return;
+  // the attack: three bits fly from the attacker to the target, then an impact in the move's own style plays on the target
+  const from = mine ? ['24%', '62%'] : ['72%', '28%'], to = mine ? ['72%', '28%'] : ['24%', '62%'];
   const fx = document.createElement('div');
-  fx.className = 'ab-fx t-' + mv.type + (mine ? ' ab-fx-up' : ' ab-fx-down');
+  fx.className = 'ab-fx t-' + mv.type;
+  fx.style.cssText = '--sx:' + from[0] + ';--sy:' + from[1] + ';--ex:' + to[0] + ';--ey:' + to[1];
+  for (let k = 0; k < 3; k++) { const q = document.createElement('i'); q.className = 'ab-proj'; q.style.setProperty('--k', k); fx.appendChild(q); }
+  const hitEl = document.createElement('b'); hitEl.className = 'ab-impact'; fx.appendChild(hitEl);
   field.appendChild(fx);
-  setTimeout(function () { fx.remove(); }, 700);
+  setTimeout(function () { fx.remove(); }, 1100);
   play(d, 'ab-shake');
 }
+// A hard hit rattles the whole screen.
+function abBump() { const f = document.querySelector('#ab-modal .ab-field'); if (!f) return; f.classList.remove('ab-bump'); void f.offsetWidth; f.classList.add('ab-bump'); setTimeout(function () { f.classList.remove('ab-bump'); }, 500); }
 // A stat move: it moves one stat of the user or the target by stages, with Gold's messages when it cannot go further.
 function abStatMove(att, def, mv, next) {
   const who = mv.fx.on === 'self' ? att : def, stat = mv.fx.stat;
@@ -260,8 +278,8 @@ function abHit(att, def, mv, down, next) {
     [def, att].forEach(function (m) { if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; });
     abHitSound(att, mv);
   }, 600]]);
-  if (crit) abSteps([['A critical hit!', null, 800]]);
-  if (r.eff > 1) abSteps([["It's super effective!", null, 900]]);
+  if (crit) abSteps([['A critical hit!', abBump, 800]]);
+  if (r.eff > 1) abSteps([["It's super effective!", abBump, 900]]);
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
   abSteps([['', function () {
     if (def.hp <= 0) { down(); return; }
@@ -416,7 +434,7 @@ function abKeepCaught(foe) {
   if (foe.shiny) state.shinies[sp.id] = 1;
   if (sp.id === legendOfWeek().id) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! A Trader may want it.'); }
-  else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
+  else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
   saveState();
 }
 function abRun() {

@@ -89,9 +89,20 @@ function abBuild(id, name, icon, element, type, base, level, hp, pp, chosen) {
   const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
   return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, held: '', moves: abMoveList(element, level, type, pp, chosen) };
 }
+// Gold's gender: most kinds are male or female (legends and the ultra trio have none). A kind you own keeps the one it was caught with (state.genders), else a fixed one from its name.
+function abGenderOf(id) {
+  const sp = getSpecies(id);
+  if (!sp || sp.legend || sp.ultra) return '';
+  if (state.genders && state.genders[id]) return state.genders[id];
+  let h = 5; for (let i = 0; i < id.length; i++) h = (h * 33 + id.charCodeAt(i)) % 1009;
+  return h % 2 ? 'm' : 'f';
+}
+function abGenderTag(m) { return m.g === 'm' ? ' \u2642' : m.g === 'f' ? ' \u2640' : ''; }
 function abMon(id, level, hp, pp, chosen) {
   const sp = getSpecies(id), stage = getFormIndex(sp, level);
-  return abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp, pp, chosen);
+  const mon = abBuild(id, sp.forms[stage].name, sp.forms[stage].icon, sp.element, battleElement(sp), abBase(sp) + stage * 12, level, hp, pp, chosen);
+  mon.g = abGenderOf(id);
+  return mon;
 }
 // A boss from the boss list (a gym leader or a story boss): stronger than a wild buddy, with Elder and Alpha forms as in Practice.
 function abBossMon(index, level) {
@@ -102,6 +113,7 @@ function abBossMon(index, level) {
 function abFoeMon(f) {
   if (f.boss !== undefined) return abBossMon(f.boss, f.level);
   const m = abMon(f.id, f.level);
+  if (m.g) m.g = f.g || (Math.random() < 0.5 ? 'm' : 'f');          // a wild buddy is male or female by chance
   if (f.shiny) {                                                    // a shiny buddy is a little stronger, and glows once caught
     m.shiny = true; m.name = 'Shiny ' + m.name;
     ['max', 'hp', 'atk', 'def', 'spd', 'spc'].forEach(function (k) { m[k] = Math.floor(m[k] * 1.1); });

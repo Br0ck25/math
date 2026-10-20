@@ -10,8 +10,10 @@ function owDaycareStep() {
   if (!d.ids.length) return;
   d.steps += 1;
   if (d.steps % D.stepsPerLevel === 0) d.ids.forEach(function (id) { const lv = getBuddyLevel(id); if (lv < MAX_LEVEL) state.buddyXp[id] = Math.max(getBuddyXp(id), xpForLevel(lv + 1)); });
-  if (d.ids.length === 2 && !d.eggReady && getPetById(d.ids[0]).element === getPetById(d.ids[1]).element && ++d.egg >= D.eggSteps) d.eggReady = true;
+  if (d.ids.length === 2 && !d.eggReady && daycareCompatible(d.ids[0], d.ids[1]) && ++d.egg >= D.eggSteps) d.eggReady = true;
 }
+// A pair leaves an egg when they are the same type and one is male, one female (Gold: a genderless buddy never does).
+function daycareCompatible(a, b) { const ga = abGenderOf(a), gb = abGenderOf(b); return !!ga && !!gb && ga !== gb && getPetById(a).element === getPetById(b).element; }
 function owDaycareTalk(npc, lines) {
   const d = state.daycare, art = heroSprite(heroLookColors(npc.look), 'down', 0), choices = [];
   d.ids.forEach(function (id) {
@@ -41,6 +43,6 @@ function owDaycareLeave(npc) {
 OW_SERVICES.daycare = function (npc) {
   const d = state.daycare;
   owDaycareTalk(npc, d.eggReady ? ['Oh! There is an egg! Your buddies must get along well.']
-    : d.ids.length ? ['Your buddies are doing fine. They grow a little every ' + ECON.daycare.stepsPerLevel + ' steps you walk.', 'Two buddies of the same type may even leave an egg.']
-    : ['I look after buddies for you. They grow while you walk, up to two at a time.', 'Two of the same type may leave an egg. Taking one back costs ' + ECON.daycare.base + ' gems plus ' + ECON.daycare.perLevel + ' for each level gained.']);
+    : d.ids.length ? ['Your buddies are doing fine. They grow a little every ' + ECON.daycare.stepsPerLevel + ' steps you walk.', 'A male and a female of the same type may even leave an egg.']
+    : ['I look after buddies for you. They grow while you walk, up to two at a time.', 'A male and a female of the same type may leave an egg. Taking one back costs ' + ECON.daycare.base + ' gems plus ' + ECON.daycare.perLevel + ' for each level gained.']);
 };

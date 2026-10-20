@@ -207,6 +207,8 @@ const NORMALIZERS = [
     s.daycare = { ids: ids, from: from, steps: asInt(dc.steps, 0, 1e9, 0), egg: asInt(dc.egg, 0, 1e6, 0), eggReady: dc.eggReady === true && ids.length === 2 };
     const tu = {}; Object.keys(isPlainObject(s.tradedUp) ? s.tradedUp : {}).forEach(function (id) { if (TRADE_EVOLVERS.indexOf(id) !== -1 && s.tradedUp[id]) tu[id] = 1; });
     s.tradedUp = tu;
+    const gd = {}; Object.keys(isPlainObject(s.genders) ? s.genders : {}).forEach(function (id) { if (getSpecies(id) && (s.genders[id] === 'm' || s.genders[id] === 'f')) gd[id] = s.genders[id]; });
+    s.genders = gd;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.repelSteps * 3, 0);
     const it = {}; ['superpotion', 'fullheal', 'revive', 'greatnet', 'ultranet'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
     s.items = it;

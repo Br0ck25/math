@@ -859,17 +859,6 @@ body.trivia .math-only { display: none; }
 #ab-modal .ab-sprite { width: 36%; height: auto; aspect-ratio: 1; max-width: 220px; }
 #ab-modal .ab-foe-sprite { top: 14%; }
 #ab-modal .ab-me-sprite { bottom: 24%; }
-.ab-fx { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: radial-gradient(circle, #fff 0 25%, var(--fx, #94a3b8) 60%, transparent 72%); opacity: 0; pointer-events: none; }
-.ab-fx-up { left: 24%; top: 62%; animation: abFlyUp 0.55s ease-in forwards; }
-.ab-fx-down { left: 72%; top: 28%; animation: abFlyDown 0.55s ease-in forwards; }
-.ab-fx.t-fire { --fx: #f97316; }
-.ab-fx.t-water { --fx: #38bdf8; }
-.ab-fx.t-nature { --fx: #22c55e; }
-.ab-fx.t-electric { --fx: #facc15; }
-.ab-fx.t-dark { --fx: #7c3aed; }
-.ab-fx.t-magic { --fx: #f472b6; }
-@keyframes abFlyUp { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(190%, -130%) scale(1.8); } }
-@keyframes abFlyDown { 0% { opacity: 1; transform: translate(0, 0) scale(0.6); } 100% { opacity: 0; transform: translate(-190%, 130%) scale(1.8); } }
 .ab-foe-sprite.ab-lunge { animation: abLungeFoe 0.45s ease; }
 .ab-me-sprite.ab-lunge { animation: abLungeMe 0.45s ease; }
 @keyframes abLungeFoe { 50% { transform: translate(-30px, 18px); } }
@@ -907,3 +896,39 @@ body.trivia .math-only { display: none; }
 
 
 
+
+/* the people shown before a fight: you from behind, and a trainer in front of its first buddy (Gold) */
+.ab-person { display: grid; place-items: center; width: 100%; height: 100%; }
+.ab-person svg { width: 70%; height: auto; max-height: 100%; image-rendering: pixelated; }
+.ab-me-sprite .ab-person { transform: none; }
+.ab-field.ab-intro .ab-box { visibility: hidden; }
+
+/* attack pictures (24x-ow-battle.js abFx): bits fly from the attacker to the target, then an impact plays there. The colour and the shape follow the move's type. */
+.ab-fx { position: absolute; inset: 0; pointer-events: none; z-index: 4; --c1: #e5e7eb; --c2: #94a3b8; }
+.ab-fx.t-fire { --c1: #fde047; --c2: #ef4444; } .ab-fx.t-water { --c1: #bae6fd; --c2: #0ea5e9; } .ab-fx.t-nature { --c1: #bbf7d0; --c2: #16a34a; }
+.ab-fx.t-electric { --c1: #fef9c3; --c2: #eab308; } .ab-fx.t-dark { --c1: #c4b5fd; --c2: #3b0764; } .ab-fx.t-magic { --c1: #fbcfe8; --c2: #ec4899; }
+.ab-proj { position: absolute; left: var(--sx); top: var(--sy); width: 30px; height: 30px; margin: -15px 0 0 -15px; opacity: 0; background: radial-gradient(circle, var(--c1) 0 30%, var(--c2) 65%, transparent 72%); animation: abTravel 0.5s calc(var(--k) * 0.07s) ease-in forwards; }
+.ab-fx.t-water .ab-proj { width: 18px; height: 24px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: linear-gradient(var(--c1), var(--c2)); }
+.ab-fx.t-nature .ab-proj { width: 26px; height: 16px; border-radius: 0 100% 0 100%; background: linear-gradient(135deg, var(--c1), var(--c2)); animation-name: abTravelSpin; }
+.ab-fx.t-electric .ab-proj { width: 18px; height: 34px; background: linear-gradient(var(--c1), var(--c2)); clip-path: polygon(55% 0, 15% 55%, 45% 55%, 30% 100%, 90% 40%, 55% 40%); }
+.ab-fx.t-dark .ab-proj { border-radius: 50%; background: radial-gradient(circle, #000 0 35%, var(--c2) 60%, var(--c1) 70%, transparent 75%); }
+.ab-fx.t-magic .ab-proj { width: 28px; height: 28px; background: linear-gradient(var(--c1), var(--c2)); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation-name: abTravelSpin; }
+.ab-fx.t-normal .ab-proj { width: 20px; height: 20px; border-radius: 50%; background: radial-gradient(circle, #fff 0 40%, var(--c2) 70%, transparent 75%); }
+.ab-impact { position: absolute; left: var(--ex); top: var(--ey); width: 90px; height: 90px; margin: -45px 0 0 -45px; opacity: 0; animation: abImpact 0.45s 0.38s ease-out forwards; background: radial-gradient(circle, #fff 0 18%, var(--c1) 30%, var(--c2) 55%, transparent 70%); border-radius: 50%; }
+.ab-fx.t-fire .ab-impact { animation-name: abImpactFlame; }
+.ab-fx.t-water .ab-impact { background: transparent; border: 4px solid var(--c2); box-shadow: 0 0 0 8px rgba(14,165,233,0.35); animation-name: abImpactRipple; }
+.ab-fx.t-nature .ab-impact { border-radius: 0 100% 0 100%; background: linear-gradient(135deg, var(--c1), var(--c2)); animation-name: abImpactSpin; }
+.ab-fx.t-electric .ab-impact { border-radius: 0; width: 60px; height: 110px; margin: -55px 0 0 -30px; background: linear-gradient(var(--c1), var(--c2)); clip-path: polygon(55% 0, 10% 52%, 42% 52%, 25% 100%, 92% 38%, 56% 38%); animation-name: abImpactBolt; }
+.ab-fx.t-dark .ab-impact { border-radius: 0; width: 110px; height: 14px; margin: -7px 0 0 -55px; background: linear-gradient(90deg, transparent, #000, var(--c1), transparent); box-shadow: 0 0 0 0 transparent; animation-name: abImpactSlash; }
+.ab-fx.t-magic .ab-impact { border-radius: 0; background: linear-gradient(var(--c1), var(--c2)); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation-name: abImpactSpin; }
+.ab-fx.t-normal .ab-impact { border-radius: 0; background: #fff; clip-path: polygon(50% 0, 60% 35%, 100% 25%, 70% 50%, 100% 75%, 60% 65%, 50% 100%, 40% 65%, 0 75%, 30% 50%, 0 25%, 40% 35%); animation-name: abImpactSpin; }
+@keyframes abTravel { 0% { opacity: 1; left: var(--sx); top: var(--sy); transform: scale(0.6); } 100% { opacity: 1; left: var(--ex); top: var(--ey); transform: scale(1.1); } }
+@keyframes abTravelSpin { 0% { opacity: 1; left: var(--sx); top: var(--sy); transform: rotate(0) scale(0.6); } 100% { opacity: 1; left: var(--ex); top: var(--ey); transform: rotate(540deg) scale(1.1); } }
+@keyframes abImpact { 0% { opacity: 1; transform: scale(0.3); } 100% { opacity: 0; transform: scale(1.5); } }
+@keyframes abImpactFlame { 0% { opacity: 1; transform: scale(0.3); filter: blur(0); } 60% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(1.8) translateY(-14px); filter: blur(3px); } }
+@keyframes abImpactRipple { 0% { opacity: 1; transform: scale(0.2); } 100% { opacity: 0; transform: scale(1.7); } }
+@keyframes abImpactSpin { 0% { opacity: 1; transform: scale(0.2) rotate(0); } 100% { opacity: 0; transform: scale(1.6) rotate(200deg); } }
+@keyframes abImpactBolt { 0%, 20%, 40% { opacity: 1; transform: scale(1); } 10%, 30% { opacity: 0.2; } 100% { opacity: 0; transform: scale(1.2); } }
+@keyframes abImpactSlash { 0% { opacity: 1; transform: rotate(-35deg) scaleX(0.1); } 40% { opacity: 1; transform: rotate(-35deg) scaleX(1); } 100% { opacity: 0; transform: rotate(-35deg) scaleX(1.1); } }
+.ab-field.ab-bump { animation: abBump 0.45s ease; }
+@keyframes abBump { 20% { transform: translate(-6px, 3px); } 40% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 2px); } 80% { transform: translate(3px, -1px); } }

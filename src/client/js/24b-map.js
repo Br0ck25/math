@@ -154,6 +154,7 @@ function chooseStarter(id) {
   if (!sp) return;
   if (state.unlockedPets.indexOf(id) === -1) state.unlockedPets.push(id);
   grantBuddy(id);
+  state.buddyXp[id] = Math.max(getBuddyXp(id), xpForLevel(5));          // Gold: the first buddy starts at level 5
   state.activePet = id;
   if (Array.isArray(state.team) && state.team.indexOf(id) === -1) {
     state.team.unshift(id);
