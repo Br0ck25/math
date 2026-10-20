@@ -83,7 +83,7 @@ test('every road barrier opens with the badge before it, or any later badge, and
   assert.ok(r.length >= 1);
   r.forEach((o) => assert.deepEqual([o.closed, o.opens, o.later, o.earlier], [true, true, true, true], JSON.stringify(o)));
   await put('meadow', 7, 1, 'up');
-  const hint = await page.evaluate(() => { owMove('up'); return { x: state.overworld.y, name: document.getElementById('talk-name').innerText, text: document.getElementById('talk-text').innerText }; });
+  const hint = await page.evaluate(() => { state.badges = []; renderOverworld(); owMove('up'); return { x: state.overworld.y, name: document.getElementById('talk-name').innerText, text: document.getElementById('talk-text').innerText }; });
   assert.deepEqual([hint.x, hint.name], [1, 'Road guard']);
   assert.match(hint.text, /Sunny Meadow Badge/);
 });
@@ -178,3 +178,46 @@ for (const [w, h] of [[320, 568], [420, 800]]) {
     await page.setViewportSize({ width: 1280, height: 720 });
   });
 }
+
+test('every nook is behind its charm gate: unreachable without the charm, reachable with it (the nook in each town, and the one on each route)', async () => {
+  const r = await page.evaluate(() => {
+    const reach = (k) => {                                                       // tiles the hero can stand on from every arrival tile of map k
+      const m = OW_MAPS[k], starts = [m.start];
+      Object.keys(OW_MAPS).forEach((o) => OW_MAPS[o].warps.forEach((w) => { if (w.to === k) starts.push({ x: w.tx, y: w.ty }); }));
+      const seen = new Set(), q = [];
+      starts.forEach((a) => { if (owWalkable(m, a.x, a.y) && !seen.has(a.x + ',' + a.y)) { seen.add(a.x + ',' + a.y); q.push([a.x, a.y]); } });
+      while (q.length) { const [cx, cy] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (owWalkable(m, nx, ny) && !owNpcAt(m, nx, ny) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); }
+      return seen;
+    };
+    const nooks = [];
+    OW_LANDS.forEach((L) => { if (L.nook.length) nooks.push({ map: L.town, ids: L.nook }); const route = OW_MAPS[L.routeIn]; const ids = route.objects.filter((o) => /-nook-/.test(o.id)).map((o) => o.id); if (ids.length) nooks.push({ map: L.routeIn, ids }); });
+    const out = [], real = hasKeyItem;
+    state.badges = gymRegions().map((x) => x.id);
+    nooks.forEach((n) => {
+      const m = OW_MAPS[n.map], at = (id) => { const o = m.objects.find((p) => p.id === id); return o.x + ',' + o.y; };
+      hasKeyItem = () => false;
+      const without = reach(n.map);
+      hasKeyItem = real;
+      const withAll = reach(n.map);
+      out.push({ map: n.map, closed: n.ids.every((id) => !without.has(at(id))), open: n.ids.every((id) => withAll.has(at(id))) });
+    });
+    return out;
+  });
+  assert.ok(r.length >= 4);
+  r.forEach((o) => assert.deepEqual([o.closed, o.open], [true, true], JSON.stringify(o)));
+});
+
+test('Tide Bay: the road from Ember Hills opens with the Ember Badge, Route 3 turns the grass to water buddies, and the pond is right there to fish in', async () => {
+  await put('ember', 7, 1, 'up');
+  const r = await page.evaluate(() => {
+    state.badges = ['ember']; renderOverworld();
+    owMove('up');
+    const gate = [state.overworld.map, state.overworld.x, state.overworld.y, state.region];
+    let water = 0; for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'water') water++;
+    return { gate, water, trainers: OW_MAPS.route3.npcs.map((n) => n.face + '@' + n.x), tide: OW_MAPS.tide.rows.slice(13, 15) };
+  });
+  assert.deepEqual(r.gate, ['route3', 6, 22, 'tide']);
+  assert.ok(r.water > 40, 'mostly water buddies: ' + r.water + ' of 80');
+  assert.deepEqual(r.trainers, ['left@10', 'right@3'], 'the route is the mirror of Route 2, so its trainers stand the other way round');
+  assert.ok(r.tide.every((row) => /~~T$/.test(row)));
+});

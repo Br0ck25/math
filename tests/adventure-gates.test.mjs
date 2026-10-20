@@ -153,17 +153,18 @@ test('the main road never needs a charm: with every road open and no charm, ever
       });
     }
     const near = (k, x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => tiles[k] && tiles[k].has((x + dx) + ',' + (y + dy)));
-    const out = { maps: maps.filter((k) => !reached.has(k)), gyms: [], people: [], side: [] };
+    const out = { maps: maps.filter((k) => !reached.has(k)), gyms: [], people: [], side: [], nooks: [] };
     maps.forEach((k) => {
       const m = OW_MAPS[k];
       Object.keys(m.gyms || {}).forEach((p) => { if (!(tiles[k] && tiles[k].has(p))) out.gyms.push(k + ':' + p); });
       (m.npcs || []).forEach((n) => { if (!near(k, n.x, n.y)) out.people.push(n.id); });
-      (m.objects || []).forEach((o) => { if (!(tiles[k] && tiles[k].has(o.x + ',' + o.y))) out.side.push(o.id); });
+      (m.objects || []).forEach((o) => { if (!(tiles[k] && tiles[k].has(o.x + ',' + o.y))) out.side.push(o.id); if (/-nook-/.test(o.id)) out.nooks.push(o.id); });
     });
     return out;
   });
   assert.deepEqual([r.maps, r.gyms, r.people], [[], [], []]);
-  assert.deepEqual(r.side.sort(), ['ember-nook-gem', 'ember-nook-ore', 'route1-nook-gem', 'route1-nook-net', 'route2-nook-gem', 'route2-nook-net'], 'the goods behind the gates are the only thing that waits for a charm');
+  assert.ok(r.nooks.length >= 6);
+  assert.deepEqual(r.side.sort(), r.nooks.sort(), 'the goods in the nooks (behind the gates) are the only thing that waits for a charm');
 });
 
 test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', async () => {

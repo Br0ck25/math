@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   ember: {
     id: 'ember', name: 'Ember Hills', region: 'ember', start: { x: 7, y: 13 }, palette: OW_EMBER_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route2', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route2', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'ember-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'ember-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'ember-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'ember-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'ember-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'ember-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'route3', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'ember-guide', name: 'Guide Cinder', x: 6, y: 11, face: 'right', look: { skin: 4, hair: 5, outfit: 1, style: 2 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'ember-nook-gem', type: 'pickup', x: 2, y: 14, give: 'gems' }
     ],
     trees: {},
+    roads: { '7,0': 'ember' },
     gyms: { '11,9': 'ember' },
     signs: { '12,12': { id: 'ember-quiz', text: 'Hot quiz! Answer one question.', quiz: true } }
   },
