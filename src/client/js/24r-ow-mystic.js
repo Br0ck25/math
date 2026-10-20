@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   mystic: {
     id: 'mystic', name: 'Mystic Peak', region: 'mystic', start: { x: 7, y: 13 }, palette: OW_MYSTIC_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route7', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route7', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'mystic-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'mystic-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'mystic-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'mystic-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'mystic-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'mystic-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'skyroad', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'mystic-guide', name: 'Guide Stella', x: 6, y: 11, face: 'right', look: { skin: 1, hair: 6, outfit: 4, style: 3 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'mystic-nook-net', type: 'pickup', x: 2, y: 14, give: 'net' }
     ],
     trees: {},
+    roads: { '7,0': 'mystic' },
     gyms: { '11,9': 'mystic' },
     signs: { '12,12': { id: 'mystic-quiz', text: 'Starry quiz! Answer one question.', quiz: true } }
   },
