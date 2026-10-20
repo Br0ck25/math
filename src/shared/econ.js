@@ -55,9 +55,9 @@ const ECON = {
     // The story's one-time prizes (gems), by story beat: the Scramblers' schemes put right (24t-ow-story.js).
     
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
-    netBonus: 1.5, potionHeal: 40, eggEvery: 25, eggPerDay: 8, blackoutShare: 0.5,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
+    netBonus: 1.5, potionHeal: 40, superPotionHeal: 100, eggEvery: 25, eggPerDay: 8, blackoutShare: 0.5,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is worth a Great Ball (x netBonus), a Potion heals potionHeal HP
-    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'repel', badges: 1 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
+    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'repel', badges: 1 }, { type: 'fullheal', badges: 1 }, { type: 'superpotion', badges: 2 }, { type: 'revive', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 400, leftovers: 600, claw: 500, lens: 500, charm: 600 }, berryHeal: 10 },
   // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
@@ -83,7 +83,7 @@ const ECON = {
   money: { trainerBase: 16, leaderBase: 100 },
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
-  items: { potion: 300, net: 200, repel: 350 },
+  items: { potion: 300, net: 200, repel: 350, superpotion: 700, fullheal: 600, revive: 1500 },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.
   adaptive: {

@@ -113,6 +113,9 @@ function abPanel() {
     const wild = ab.kind === 'wild';
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', abThrowNet, '', !wild || state.nets < 1));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
+    p.appendChild(abBtn('Super Potion <small>x' + (state.items.superpotion || 0) + '</small>', function () { abUseItem('superpotion'); }, '', !state.items.superpotion || (m.hp >= m.max && !m.status)));
+    p.appendChild(abBtn('Full Heal <small>x' + (state.items.fullheal || 0) + '</small>', function () { abUseItem('fullheal'); }, '', !state.items.fullheal || (!m.status && !(m.conf > 0))));
+    p.appendChild(abBtn('Revive <small>x' + (state.items.revive || 0) + '</small>', function () { abUseItem('revive'); }, '', !state.items.revive || !ab.party.some(function (x) { return x.hp <= 0; })));
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'learn') {
     ab.learn.mon.moves.forEach(function (mv, i) { p.appendChild(abBtn('Forget <b>' + escHtml(mv.name) + '</b>', function () { abLearnChoose(i); }, 'ab-move t-' + mv.type)); });
@@ -354,6 +357,21 @@ function abSwitch(i) {
 }
 
 // ----- the pack -----
+// The other supplies of the pack: a Super Potion heals more, a Full Heal cures a status, a Revive wakes the first resting buddy with half its HP.
+function abUseItem(kind) {
+  const me = abMe(), n = state.items[kind] || 0;
+  if (n < 1 || ab.phase !== 'pack') return;
+  if (kind === 'superpotion' && me.hp >= me.max && !me.status) return;
+  if (kind === 'fullheal' && !me.status && !(me.conf > 0)) return;
+  const down = ab.party.find(function (x) { return x.hp <= 0; });
+  if (kind === 'revive' && !down) return;
+  state.items[kind] = n - 1; if (!state.items[kind]) delete state.items[kind];
+  ab.phase = 'busy';
+  if (kind === 'revive') abSteps([['You used a Revive!', function () { down.hp = Math.max(1, Math.floor(down.max / 2)); state.advHp[down.id] = down.hp; soundLevelUp(); }, 900], [down.name + ' is back on its feet!', null, 900]]);
+  else if (kind === 'fullheal') abSteps([['You used a Full Heal!', function () { me.status = ''; me.conf = 0; soundLevelUp(); }, 900], [me.name + ' feels fine again.', null, 900]]);
+  else { const heal = Math.min(ECON.overworld.superPotionHeal, me.max - me.hp); abSteps([['You used a Super Potion!', function () { me.hp += heal; me.status = ''; me.conf = 0; state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]); }
+  abFoeTurn();
+}
 function abPotion() {
   const me = abMe();
   if (state.potions < 1 || (me.hp >= me.max && !me.status)) return;
@@ -384,6 +402,9 @@ function abKeepCaught(foe) {
 function abRun() {
   if (ab.kind !== 'wild') { ab.phase = 'busy'; abSteps([["No! There's no running from a trainer battle!", null, 1200], abMenuStep()]); return; }
   ab.phase = 'busy';
+  ab.runs = (ab.runs || 0) + 1;                                           // Gold: the escape chance grows with your Speed over the foe's, and with every try
+  const f = Math.floor(abMe().spd * 32 / Math.max(1, Math.floor(abFoe().spd / 4) % 256)) + 30 * ab.runs;
+  if (f <= 255 && Math.floor(Math.random() * 256) >= f) { abSteps([["Can't escape!", null, 900]]); abFoeTurn(); return; }
   abSteps([['Got away safely!', function () { soundEscape(); }, 900], ['', function () { abFinish('run'); }, 0]]);
 }
 

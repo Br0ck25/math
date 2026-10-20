@@ -14,9 +14,9 @@ function renderBag() {
     const who = Object.keys(state.held).filter(function (b) { return state.held[b] === it.id; })[0];
     return bagRow(it.name, who ? 'held by ' + escHtml(getPetById(who).baseName) : 'not held');
   }).join('') || '<div class="d">None yet. Find them in the Hold tab of the Hub.</div>';
-  const supplies = bagRow('Gems', state.gems) + bagRow('Streak Shields', state.shields) + bagRow('Catch Nets', state.nets + ' of ' + maxNets()) +
-    bagRow('Repel', state.repelSteps > 0 ? state.repelSteps + ' steps left' : 'none') + bagRow('Lucky Clover', state.cloverLeft > 0 ? state.cloverLeft + ' solves left' : 'none');
-  const egg = state.egg ? bagRow('Egg', escHtml(state.egg.element) + ' · ' + state.egg.steps + ' of ' + state.egg.target) : '<div class="d">No egg right now. Bosses and quests give eggs.</div>';
+  const supplies = bagRow('Gems', state.gems) + bagRow('Potion', state.potions) + bagRow('Super Potion', state.items.superpotion || 0) + bagRow('Full Heal', state.items.fullheal || 0) + bagRow('Revive', state.items.revive || 0) +
+    bagRow('Catch Nets', state.nets + ' of ' + maxNets()) + bagRow('Repel', state.repelSteps > 0 ? state.repelSteps + ' steps left' : 'none');
+  const egg = state.egg ? bagRow('Egg', escHtml(state.egg.element) + ' · ' + state.egg.steps + ' of ' + state.egg.target) : '<div class="d">No egg right now. Leave two buddies of one type at the Day Care.</div>';
   document.getElementById('bag-body').innerHTML =
     bagSection('Key items', keys || '<div class="d">Nothing yet.</div>') +
     bagSection('Badges (' + badges.length + ')', hasKeyItem('badge-case') ? '<div class="d">' + (badges.length ? badges.join(', ') : 'None yet. Win one at a gym!') + '</div>' : '<div class="d">You need the Badge Case.</div>') +

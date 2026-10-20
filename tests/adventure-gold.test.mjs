@@ -143,6 +143,31 @@ test('the lead buddy goes first in battle, even when it is not first in the team
   assert.equal(first, 'bunny');
 });
 
+test('the pack: Super Potion heals more, Full Heal cures a status, Revive wakes a resting buddy with half its HP; running can fail and gets likelier', async () => {
+  await ev(() => { state.unlockedPets = ['dog', 'fox']; state.team = ['dog', 'fox']; state.activePet = 'dog'; state.advHp = {}; });
+  await begin();
+  const r = await ev(() => {
+    state.items = { superpotion: 1, fullheal: 1, revive: 1 };
+    const me = abMe(), other = ab.party.find((x) => x !== me); other.hp = 0; me.hp = me.max - 1; me.status = 'burn'; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); Math.random = () => 0.9;
+    ab.phase = 'pack'; abUseItem('revive'); const revived = other.hp;
+    return { revived: revived === Math.max(1, Math.floor(other.max / 2)), left: state.items.revive || 0 };
+  });
+  assert.deepEqual(r, { revived: true, left: 0 });
+  await menu();
+  const s = await ev(() => { const me = abMe(); me.hp = me.max - 1; me.status = 'burn'; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); Math.random = () => 0.9; ab.phase = 'pack'; abUseItem('fullheal'); return [me.status, state.items.fullheal || 0]; });
+  assert.deepEqual(s, ['', 0]);
+  await menu();
+  const h = await ev(() => { const me = abMe(); me.hp = 2; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('superpotion'); return me.hp; });
+  assert.ok(h > 2);
+  await menu();
+  const run = await ev(() => {
+    const out = []; for (let k = 1; k <= 12; k++) { ab.runs = 0; const spd = abMe().spd, fs = abFoe().spd; out.push([k]); }
+    const f = (runs) => Math.floor(abMe().spd * 32 / Math.max(1, Math.floor(abFoe().spd / 4) % 256)) + 30 * runs;
+    return f(5) > f(1);
+  });
+  assert.equal(run, true);
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

@@ -6,6 +6,9 @@ function itemCost(type) { return ECON.items[type]; }
 const ITEM_LOOKS = {
   potion: ['💖', 'Potion', 'Heals ' + ECON.overworld.potionHeal + ' HP in a battle and cures a status'],
   net: ['🕸️', 'Catch Net', 'Throw it at a wild buddy to catch it'],
+  superpotion: ['💗', 'Super Potion', 'Heals ' + ECON.overworld.superPotionHeal + ' HP in a battle and cures a status'],
+  fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
+  revive: ['✨', 'Revive', 'Wakes a resting buddy in a battle with half its HP'],
   repel: ['🧴', 'Repel', 'No wild buddies in the grass for ' + ECON.overworld.repelSteps + ' steps']
 };
 
@@ -37,6 +40,9 @@ function payItem(type) {
   } else if (type === 'repel') {
     state.repelSteps = Math.min(ECON.overworld.repelSteps * 3, state.repelSteps + ECON.overworld.repelSteps);
     showPopup('Repel! (' + state.repelSteps + ' steps)');
+  } else if (state.items && type !== 'potion') {
+    state.items[type] = Math.min(99, (state.items[type] || 0) + 1);
+    showPopup(ITEM_LOOKS[type][1] + '! (' + state.items[type] + ')');
   } else if (type === 'potion') {
     state.potions = Math.min(99, state.potions + 1);
     showPopup('Potion! (' + state.potions + ')');

@@ -104,7 +104,7 @@ test('the Running Shoes make a held D-pad key walk faster', async () => {
 test('the Bag shows key items, badges, supplies, held items and the egg from the real save', async () => {
   await madeHero();
   const r = await page.evaluate(() => {
-    state.badges = ['ember']; state.shields = 3; state.nets = 4; state.gems = 77; state.cloverLeft = 5;
+    state.badges = ['ember']; state.potions = 3; state.items = { revive: 2 }; state.nets = 4; state.gems = 77;
     state.heldOwned = ['berry']; state.held = { dog: 'berry' }; state.egg = { element: 'fire', rarity: 'common', steps: 2, target: 5 };
     openAdventure(); openBag();
     return { title: document.getElementById('bag-title').innerText, text: document.getElementById('bag-body').innerText, art: document.querySelectorAll('#bag-body .bag-key-art use').length, over: document.getElementById('bag-modal').style.display };
@@ -115,9 +115,9 @@ test('the Bag shows key items, badges, supplies, held items and the egg from the
   assert.match(r.text, /Steam Boots/, 'the Ember badge brings its charm');
   assert.match(r.text, /Ember Hills/);
   assert.match(r.text, /Gems\s*77/);
-  assert.match(r.text, /Streak Shields\s*3/);
+  assert.match(r.text, /Potion\s*3/);
+  assert.match(r.text, /Revive\s*2/);
   assert.match(r.text, /Catch Nets\s*4 of/);
-  assert.match(r.text, /5 solves left/);
   assert.match(r.text, /Berry\s*held by/);
   assert.match(r.text, /fire · 2 of 5/);
   assert.equal(r.art, 3, 'each key item has its own picture');
