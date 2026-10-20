@@ -54,7 +54,7 @@ Object.assign(OW_MAPS, {
   grove: {
     id: 'grove', name: 'Leaf Grove', region: 'grove', start: { x: 7, y: 13 }, palette: OW_GROVE_PALETTE,
     rows: [
-      'TTTTTTTTTTTTTTTT',
+      'TTTTTTTxTTTTTTTT',
       'T,,,,,,,,,,,,,,T',
       'T,RRRR,..,RRRR,T',
       'T,RRRR,..,RRRR,T',
@@ -73,7 +73,8 @@ Object.assign(OW_MAPS, {
     ],
     warps: [
       { x: 7, y: 15, to: 'route4', tx: 6, ty: 1 }, { x: 8, y: 15, to: 'route4', tx: 7, ty: 1 },
-      { x: 3, y: 9, to: 'grove-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'grove-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'grove-mart', tx: 3, ty: 5 }
+      { x: 3, y: 9, to: 'grove-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'grove-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'grove-mart', tx: 3, ty: 5 },
+      { x: 7, y: 0, to: 'route5', tx: 6, ty: 22 }
     ],
     npcs: [
       { id: 'grove-guide', name: 'Guide Willow', x: 6, y: 11, face: 'right', look: { skin: 1, hair: 5, outfit: 2, style: 1 },
@@ -86,6 +87,7 @@ Object.assign(OW_MAPS, {
       { id: 'grove-nook-ore', type: 'pickup', x: 2, y: 14, give: 'ore' }
     ],
     trees: {},
+    roads: { '7,0': 'grove' },
     gyms: { '11,9': 'grove' },
     signs: { '12,12': { id: 'grove-quiz', text: 'Garden quiz! Answer one question.', quiz: true } }
   },
