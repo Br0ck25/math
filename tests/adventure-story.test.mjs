@@ -50,7 +50,6 @@ test('the story data is sound: known beats, prizes only for real beats, every ne
       if (n.kind === 'boss' && !monstersList.some((m) => m.element === n.boss && !m.slays && !m.minLevel)) out.push(n.id + ': no boss of ' + n.boss);
       if (n.vanish && !(n.kind === 'trainer' || n.kind === 'boss' || n.story)) out.push(n.id + ': vanish needs a fight or a story');
     }));
-    Object.keys(ECON.overworld.storyGems).forEach((s) => { if (OW_STORY.indexOf(s) === -1 || !(ECON.overworld.storyGems[s] > 0)) out.push('prize for ' + s); });
     Object.keys(OW_MAPS).forEach((k) => Object.keys(OW_MAPS[k].signs || {}).forEach((p) => { const s = OW_MAPS[k].signs[p]; if (s.story && (OW_STORY.indexOf(s.story) === -1 || !(s.rounds >= 2) || !owIds('trainer').includes(s.after))) out.push(s.id + ': a puzzle needs a beat, rounds and a trainer to beat first'); }));
     return { out, story: OW_STORY, ids: owIds('story') };
   });
@@ -102,7 +101,7 @@ test('Riley and the Ace trainers are a little stronger than a normal trainer (le
 });
 
 for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide-ferry', 20, 5, 12, [7, 13]], ['volt', 'volt-zag', 'volt-blackout', 25, 5, 12, [7, 13]]]) {
-  test('the ' + map + ' puzzle: a Scrambler guards it, then three questions in a row (wrong answers free) fix it for a one-time prize', async () => {
+  test('the ' + map + ' puzzle: a Scrambler guards it, then three questions in a row (wrong answers free) fix it once', async () => {
     await put(map, start[0], start[1], 'up');
     await page.evaluate(() => owMove('up'));                                                              // into the Scrambler\'s sight
     await wait(300);
@@ -136,11 +135,11 @@ for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide
     assert.match(r.notes[1], /Question 2 of 3/);
     assert.match(r.notes[2], /Question 3 of 3/);
     assert.deepEqual(r.before, [0, []]);
-    assert.deepEqual(r.after.slice(0, 2), [gems, [story]]);
+    assert.deepEqual(r.after.slice(0, 2), [0, [story]]);
     assert.equal(r.after[2], 'All fixed! Thank you!');
     assert.equal(r.after[3], true);
     assert.match(r.again, /back|on time|back on/);
-    assert.equal(r.gemsAfterAgain, gems, 'the prize is paid once, ever');
+    assert.equal(r.gemsAfterAgain, 0, 'a story puzzle pays nothing: Gold pays money only for trainers');
     assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('math_quest_save')).overworld.story), [story]);
     assert.deepEqual(errors, []);
   });
@@ -160,7 +159,7 @@ test('the hideout in Gloom Marsh: a door in the rocks, two Scramblers, then Boss
   assert.deepEqual(r, { kind: 'leader', npc: 'gloom-boss', foes: 3, boss: 'dark', name: true, buddies: true });
 });
 
-test('winning against Boss Scramble pays the story prize once, and the boss is gone', async () => {
+test('winning against Boss Scramble pays its prize money and the story is marked once, and the boss is gone', async () => {
   await put('gloom-hideout', 4, 3, 'up');
   await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; state.gems = 0; state.buddyXp[state.activePet] = xpForLevel(30); });
   await page.evaluate(() => owMove('up'));                                                                // 4,3 -> 4,2: the boss at 4,1 is next to the hero: a bump talks
@@ -173,7 +172,6 @@ test('winning against Boss Scramble pays the story prize once, and the boss is g
   const r = await page.evaluate(() => ({ beat: state.overworld.beat.includes('gloom-boss'), story: state.overworld.story.slice(), gems: state.gems, here: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1), ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-text').innerText }));
   assert.ok(r.beat);
   assert.deepEqual(r.story, ['gloom-scramblers']);
-  assert.ok(r.gems >= await page.evaluate(() => ECON.overworld.storyGems['gloom-scramblers']), 'the prize is paid');
   assert.equal(r.here, false);
   assert.equal(r.ow, 'flex');
   assert.match(r.talk, /my numbers|Counting is more fun|all back in order/i);

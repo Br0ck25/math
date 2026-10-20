@@ -1,6 +1,5 @@
 {
   loadState();
-  checkEarnedGear();
   addCloseButtons();
   initAccessibility();
   applyMotionPref();

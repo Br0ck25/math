@@ -116,9 +116,9 @@ function answerSignQuiz(value) {
 function owCollect(p) {
   state.overworld.found.push(p.id);
   let msg;
-  if (p.give === 'gems') { grantGems(ECON.overworld.pickupGems, 'You found ' + ECON.overworld.pickupGems + ' gems!', false); return; }
-  if (p.give === 'net' && state.nets < maxNets()) { state.nets += 1; msg = 'You found a Catch Net!'; }
-  else { grantGems(ECON.overworld.pickupGems, 'You found ' + ECON.overworld.pickupGems + ' gems!', false); return; }      // a gem find, or instead of a net when the net bag is full
+  if (p.give === 'gems') { state.potions = Math.min(99, state.potions + 1); msg = 'You found a Potion!'; }
+  else if (p.give === 'net' && state.nets < maxNets()) { state.nets += 1; msg = 'You found a Catch Net!'; }
+  else { state.potions = Math.min(99, state.potions + 1); msg = 'You found a Potion!'; }      // instead of a net when the net bag is full
   soundCoinChirp();
   saveState();
   updateStatsUI();

@@ -854,7 +854,7 @@ body.trivia .math-only { display: none; }
 .ab-move.t-normal { border-color: #94a3b8; }
 /* the fight fills the screen: the field takes the spare height, the text and menu sit at the bottom */
 #ab-modal { padding: 0; align-items: stretch; justify-content: stretch; background: var(--bg-dark); }
-#ab-modal .ab-content { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto; padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); }
+#ab-modal .ab-content { width: 100%; max-width: 720px; height: 100%; max-height: none; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; overflow-y: auto; padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px)); }
 #ab-modal .ab-field { flex: 1 0 200px; height: auto; }
 #ab-modal .ab-sprite { width: 36%; height: auto; aspect-ratio: 1; max-width: 220px; }
 #ab-modal .ab-foe-sprite { top: 14%; }
@@ -883,7 +883,7 @@ body.trivia .math-only { display: none; }
 .menu-grid .ab-btn { min-height: 52px; }
 /* The map is the whole screen: no card around it. The D-pad is only for a mouse; a finger holds the map itself. */
 #overworld-modal { padding: 0; align-items: stretch; justify-content: stretch; background: var(--bg-dark); }
-#overworld-modal .ow-content { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; padding: max(8px, env(safe-area-inset-top, 0px)) 8px max(8px, env(safe-area-inset-bottom, 0px)); overflow: hidden; }
+#overworld-modal .ow-content { width: 100%; max-width: 720px; height: 100%; max-height: none; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; padding: max(8px, env(safe-area-inset-top, 0px)) 8px max(8px, env(safe-area-inset-bottom, 0px)); overflow: hidden; }
 .ow-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; }
 @media (pointer: coarse) {
 #overworld-modal .ow-pad { display: none; }

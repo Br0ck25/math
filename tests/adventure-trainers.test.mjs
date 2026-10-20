@@ -83,15 +83,15 @@ test('a trainer sends out more buddies as you win badges', async () => {
   assert.deepEqual(r, [1, 2, 3, 3]);
 });
 
-test('winning pays the trainer gems, marks the trainer beaten, and brings the map back with the trainer\'s words', async () => {
+test('winning pays the prize money, marks the trainer beaten, and brings the map back with the trainer\'s words', async () => {
   await startPia();
   await menu();
-  const gems = await page.evaluate(() => { state.gems = 0; return state.gems; });
+  const gems = await page.evaluate(() => { state.gems = 0; return state.gems; }), lvl = await page.evaluate(() => abFoe().level);
   await page.evaluate(() => { abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); });
   await over();
   await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
   const r = await page.evaluate(() => ({ gems: state.gems, beat: state.overworld.beat.slice(), ow: document.getElementById('overworld-modal').style.display, name: document.getElementById('talk-name').innerText, words: document.getElementById('talk-text').innerText, pos: [state.overworld.map, state.overworld.x, state.overworld.y] }));
-  assert.ok(r.gems - gems >= await page.evaluate(() => ECON.map.trainerGems), 'at least the trainer prize');
+  assert.equal(r.gems - gems, (await page.evaluate(() => ECON.money.trainerBase)) * lvl, "Gold's prize: the class base times the level of its last buddy");
   assert.deepEqual(r.beat, ['route1-pia']);
   assert.equal(r.ow, 'flex');
   assert.equal(r.name, 'Scout Pia');

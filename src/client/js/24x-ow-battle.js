@@ -16,7 +16,8 @@ function abMe() { return ab.party[ab.cur]; }
 function abStart(opts) {
   if (ab) return false;
   const party = getTeam().map(abPartyMon);
-  const first = party.findIndex(function (m) { return m.hp > 0; });
+  const lead = party.findIndex(function (m) { return m.id === state.activePet && m.hp > 0; });          // the lead goes first, as the first slot does in Gold; if it is resting, the first one that can fight
+  const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
   ab = { after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
@@ -377,7 +378,7 @@ function abKeepCaught(foe) {
   if (foe.shiny) state.shinies[sp.id] = 1;
   if (sp.id === legendOfWeek().id) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! Sell it in the buddy hub.'); }
-  else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); checkEarnedGear(); toast(sp.name + ' joined your collection!'); }
+  else { grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
   saveState();
 }
 function abRun() {
@@ -387,11 +388,15 @@ function abRun() {
 }
 
 // ----- the end -----
-// A trainer beaten pays the trainer prize; a leader or boss pays through the badge or the story.
+// Gold's prize money: a trainer pays its class base x the level of its last buddy (a leader, the Elite Four, the Champion and the Master pay the big base); wild buddies pay nothing.
+function abPrize(round) {
+  const base = round.base || (round.kind === 'leader' ? ECON.money.leaderBase : ECON.money.trainerBase), last = round.foes[round.foes.length - 1];
+  return base * last.level;
+}
 function abRoundWon() {
-  const trainer = ab.kind === 'trainer', round = ab.rounds[ab.r];
+  const round = ab.rounds[ab.r], prize = ab.kind === 'wild' ? 0 : abPrize({ kind: ab.kind, base: round.base, foes: ab.foes });
   if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
-  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (trainer) grantGems(ECON.map.trainerGems, '+' + ECON.map.trainerGems + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
+  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) grantGems(prize, ab.name + ' paid you ' + prize + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
 }
 // A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy. Run once the battle screen is gone (their windows open above the map).
 function abBossBeaten(idx, level) {

@@ -34,7 +34,6 @@ function hatchEgg() {
     grantBuddy(chosen.id);
     (isStoreBuddy(chosen) ? state.unlockedPets : state.unlockedSecrets).push(chosen.id);
     if (typeof soundBuddyCry === 'function') soundBuddyCry(chosen.id);
-    checkEarnedGear();
     toast('🐣 Your ' + egg.element + ' Egg hatched into ' + chosen.name + ' ' + emojiOf(chosen) + '!');
     return chosen;
   }

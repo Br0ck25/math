@@ -21,15 +21,12 @@ function renderBag() {
     bagSection('Key items', keys || '<div class="d">Nothing yet.</div>') +
     bagSection('Badges (' + badges.length + ')', hasKeyItem('badge-case') ? '<div class="d">' + (badges.length ? badges.join(', ') : 'None yet. Win one at a gym!') + '</div>' : '<div class="d">You need the Badge Case.</div>') +
     bagSection('Supplies', supplies) + bagSection('Held items', held) + bagSection('Egg', egg) +
-    '<div class="bag-actions"><button type="button" class="claim-btn" onclick="bagGo(\'shop\')">Wardrobe</button><button type="button" class="claim-btn" onclick="bagGo(\'hub\')">Buddy Hub</button><button type="button" class="claim-btn" onclick="openHeroCreator()">Change look</button></div>';
+    '<div class="bag-actions"><button type="button" class="claim-btn" onclick="bagGo()">Buddy Hub</button><button type="button" class="claim-btn" onclick="openHeroCreator()">Change look</button></div>';
 }
 function openBag() { showModal('bag-modal', renderBag); }
 function closeBag() { hideModal('bag-modal'); }
-// Opens the Shop or the Hub over the map; closing them brings the map back.
-function bagGo(where) {
-  closeBag();
-  if (where === 'shop') openShop(); else { hubTab = 'hold'; openHub(); }
-}
+// Opens the Hub over the map; closing it brings the map back.
+function bagGo() { closeBag(); hubTab = 'hold'; openHub(); }
 
 // ----- the team and the PC box: six buddies fight, the rest wait in the box (Gold's PC) -----
 function padRow(id, action) {

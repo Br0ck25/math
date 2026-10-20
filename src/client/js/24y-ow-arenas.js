@@ -39,9 +39,9 @@ function abGymWon(id, rematch) {
   state.gym = null;
   saveState(); updateStatsUI();
   if (!res) { openTalk({ name: 'Gym Leader', art: art, lines: ['Well fought! You beat the gym again.'] }); return; }
-  if (res.rematch) { openTalk({ name: 'Gym Leader', art: art, lines: ['A great rematch, Champion!', res.gems ? 'Rematch reward: +' + res.gems + ' gems.' : 'No more rematch gems today, but come back tomorrow!'] }); return; }
+  if (res.rematch) { openTalk({ name: 'Gym Leader', art: art, lines: ['A great rematch, Champion! The prize money was paid in the fight.'] }); return; }
   const charm = KEY_ITEMS.find(function (k) { return k.badge === res.region.id; });
-  const lines = [GYM_STORY[res.region.id].outro, 'You won the ' + res.region.name + ' Badge! +' + ECON.map.badgeGems + ' gems.'];
+  const lines = [GYM_STORY[res.region.id].outro, 'You won the ' + res.region.name + ' Badge!'];
   if (charm) lines.push('You also get the ' + charm.name + '. ' + charm.text + ' Use it on the map!');
   if (res.hall) lines.push('All ' + gymRegions().length + " badges! The Champion's Hall is open.");
   openTalk({ name: res.region.name + ' Gym', art: art, lines: lines });
@@ -56,7 +56,7 @@ function abStartBoss(npc) {
 
 // ----- the Hall: the Elite Four, then Nova -----
 function abHallRounds() {
-  const mine = getBuddyLevel(state.activePet), rounds = ELITE_FOUR.map(function (e) { return { kind: 'trainer', name: e.name, foes: abTeamOf(e.element, 5, mine) }; });
+  const mine = getBuddyLevel(state.activePet), rounds = ELITE_FOUR.map(function (e) { return { kind: 'trainer', base: ECON.money.leaderBase, name: e.name, foes: abTeamOf(e.element, 5, mine) }; });
   rounds.push({ kind: 'leader', name: CHAMPION_NAME, foes: CHAMPION_TEAM.map(function (id) { return { id: id, level: clamp(mine + ECON.map.champion.levels, 1, MAX_LEVEL) }; }) });
   return rounds;
 }
@@ -71,19 +71,15 @@ function abStartMaster() {
   abStart({ rounds: [{ kind: 'leader', name: MASTER_NAME, foes: MASTER_TEAM.map(function (id) { return { id: id, level: lvl }; }) }], onWin: abMasterWon });
 }
 function abMasterWon() {
-  const ch = state.champ, M = ECON.map.master, first = ch.master === 0, pays = first || ch.masterDay !== dayKey(), gems = first ? M.firstGems : (pays ? M.repeatGems : 0);
-  if (pays) ch.masterDay = dayKey();
+  const ch = state.champ, first = ch.master === 0;
   ch.master += 1;
-  state.gems += gems;
-  if (first) state.nets += M.nets;
   saveState(); updateStatsUI();
-  openTalk({ name: 'Silver Peak', art: worldSprite('t-gym-door'), lines: [first ? 'Master Ori bows: "My six legends are at their best, and you still won. There is nobody left to beat. You are the greatest trainer in the Number Kingdom."' : 'Master Ori smiles: "Back again? My legends missed you."', gems ? (first ? 'Master reward: +' : 'Daily reward: +') + gems + ' gems' + (first ? ' and ' + M.nets + ' Catch Nets!' : '!') : 'No more gems today, but come back tomorrow!'], onClose: owStepBack });
+  openTalk({ name: 'Silver Peak', art: worldSprite('t-gym-door'), lines: [first ? 'Master Ori bows: "My six legends are at their best, and you still won. There is nobody left to beat. You are the greatest trainer in the Number Kingdom."' : 'Master Ori smiles: "Back again? My legends missed you."'], onClose: owStepBack });
 }
 function abHallWon() {
   const res = championReward(), art = worldSprite('t-gym-door'), lines = [];
   saveState(); updateStatsUI();
   lines.push(res.first ? 'Nova bows: "Six buddies and not one of them could stop you. You are the Number Kingdom Champion!"' : 'Nova laughs: "Another win! My team needs more practice, Champion."');
-  lines.push(res.gems ? (res.first ? 'Champion reward: +' : 'Daily reward: +') + res.gems + ' gems!' : 'No more gems today, but come back tomorrow!');
-  if (res.first) lines.push("New gear: Champion's Laurel, Trophy and Mantle. Find them in the Wardrobe. You also get " + res.nets + ' Catch Nets and a held item of each kind.');
+  lines.push(res.first ? 'The prize money was paid in each fight.' : 'The prize money was paid in each fight again.');
   openTalk({ name: "Champion's Hall", art: art, lines: lines, onClose: owStepBack });
 }

@@ -1,5 +1,5 @@
 // =====================================================================
-//  BUDDY DEX  (the Collection Book: every buddy seen or caught, bosses, gear)
+//  BUDDY DEX  (the Collection Book: every buddy seen or caught, and bosses)
 // =====================================================================
 // A buddy counts as "seen" once met in a battle (the dex shows its name and type); owned buddies always count.
 function markDexSeen(id) { if (id && state.dexSeen && !state.dexSeen[id]) state.dexSeen[id] = 1; }
@@ -32,7 +32,6 @@ function checkBossBuddy(idx, form) {
   if (n < need) { toast('🏆 Alpha ' + m.name + ' beaten ' + n + '/' + need + ': ' + (need - n) + ' more and it joins you!'); return null; }
   grantBuddy(sp.id);
   state.unlockedSecrets.push(sp.id);
-  checkEarnedGear();
   saveState();
   enqueueModal(function () { showLootModal(sp, 'boss'); });
   return sp;
@@ -63,15 +62,12 @@ function bookCounts() {
   const buddyTotal = allBuddies().length;
   const buddyFound = getOwnedIds().length;
   const bossFound = Object.keys(state.bossBook).filter(function (k) { return monstersList[k]; }).length;
-  const gearTotal = (accessoriesList.length - 1) + (armorList.length - 1);
-  const gearFound = (state.unlockedAccessories.length - 1) + (state.unlockedArmor.length - 1);
   const buddySeen = allBuddies().filter(function (p) { return dexSeen(p.id); }).length;
   return {
     seen: buddySeen,
     buddy: { found: buddyFound, total: buddyTotal },
     boss: { found: bossFound, total: monstersList.length },
-    gear: { found: Math.max(0, gearFound), total: gearTotal },
-    all: { found: buddyFound + bossFound + Math.max(0, gearFound), total: buddyTotal + monstersList.length + gearTotal }
+    all: { found: buddyFound + bossFound, total: buddyTotal + monstersList.length }
   };
 }
 
@@ -112,7 +108,7 @@ function bookBuddy(sp, lockedHint) {
 
 function renderBook() {
   const c = bookCounts();
-  document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + (Object.keys(state.shinies).length ? ' · ✨ Shiny ' + Object.keys(state.shinies).length : '') + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses and gear';
+  document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + (Object.keys(state.shinies).length ? ' · ✨ Shiny ' + Object.keys(state.shinies).length : '') + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses';
 
   const ms = document.getElementById('book-milestones');
   ms.innerHTML = '';
@@ -126,7 +122,7 @@ function renderBook() {
     ms.appendChild(b);
   });
 
-  const tabs = [['buddy', '🐾 Buddies'], ['boss', '👾 Bosses'], ['gear', '🎩 Gear']];
+  const tabs = [['buddy', '🐾 Buddies'], ['boss', '👾 Bosses']];
   const tb = document.getElementById('book-tabs');
   tb.innerHTML = '';
   tabs.forEach(function (t) {
@@ -169,22 +165,6 @@ function renderBook() {
         hint: bossHint(m, e), hintColor: bossHintColor(m, e),
         click: 'openBossCard(' + i + ')'
       });
-    });
-    h += '</div>';
-  } else {
-    h += '<div class="mystery-section-title">Body Armor (' + (state.unlockedArmor.length - 1) + ' / ' + (armorList.length - 1) + ')</div><div class="pet-grid">';
-    armorList.filter(function (a) { return a.id !== 'none'; }).forEach(function (a) {
-      const own = state.unlockedArmor.indexOf(a.id) !== -1;
-      if (bookMissingOnly && own) return;
-      h += own ? bookCard({ icon: a.icon, name: a.name, hint: '+' + a.hp + ' HP', hintColor: '#7dd3fc' })
-               : bookCard({ locked: true, icon: a.icon, name: a.earn ? '🔒 Secret' : '???', hint: gearLockText(a), hintColor: '#f59e0b' });
-    });
-    h += '</div><div class="mystery-section-title">Accessories (' + (state.unlockedAccessories.length - 1) + ' / ' + (accessoriesList.length - 1) + ')</div><div class="pet-grid">';
-    accessoriesList.filter(function (a) { return a.id !== 'none'; }).forEach(function (a) {
-      const own = state.unlockedAccessories.indexOf(a.id) !== -1;
-      if (bookMissingOnly && own) return;
-      h += own ? bookCard({ icon: a.icon, name: a.name, hint: 'Collected', hintColor: '#10b981' })
-               : bookCard({ locked: true, icon: a.icon, name: a.earn ? '🔒 Secret' : '???', hint: gearLockText(a), hintColor: '#f59e0b' });
     });
     h += '</div>';
   }

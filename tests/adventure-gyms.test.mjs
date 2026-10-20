@@ -108,14 +108,14 @@ const winChain = async () => {
   }
 };
 
-test('a gym is a chain: win every round with the same team and the badge, gems and charm come at the end', async () => {
+test('a gym is a chain: win every round with the same team and the badge and charm come at the end, and every trainer and the leader pay their prize money', async () => {
   await page.evaluate(() => { state.buddyXp[state.activePet] = xpForLevel(20); state.gems = 0; abStartGym('meadow'); });
   await page.evaluate(() => { Math.random = () => 0.5; });
   await winChain();
   await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
   const r = await page.evaluate(() => ({ badges: state.badges.slice(), gems: state.gems, name: document.getElementById('talk-name').innerText, ow: document.getElementById('overworld-modal').style.display }));
   assert.deepEqual(r.badges, ['meadow']);
-  assert.ok(r.gems >= await page.evaluate(() => ECON.map.badgeGems));
+  assert.ok(r.gems > 0, 'the trainers and the leader paid');
   assert.match(r.name, /Gym/);
   assert.equal(r.ow, 'flex');
 });

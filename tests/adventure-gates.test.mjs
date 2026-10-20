@@ -120,15 +120,15 @@ test('the Route 1 nook is behind thorny bushes: closed without the Trim Charm, o
   const blocked = await page.evaluate(() => { owMove('left'); return { x: state.overworld.x, text: document.getElementById('talk-text').innerText }; });
   assert.equal(blocked.x, 4);
   assert.match(blocked.text, /Trim Charm from the Sunny Meadow Gym/);
-  await page.evaluate(() => { closeTalk(); state.badges = ['meadow']; state.gems = 0; state.nets = 0; });
+  await page.evaluate(() => { closeTalk(); state.badges = ['meadow']; state.potions = 0; state.nets = 0; });
   const r = await page.evaluate(() => {
     owMove('left'); owMove('left'); owMove('up');                       // (3,2) the bush, (2,2), (2,1) the net
     const net = state.nets; owMove('left');                              // (1,1) the gems
-    return { pos: [state.overworld.x, state.overworld.y], net, gems: state.gems, found: state.overworld.found.slice() };
+    return { pos: [state.overworld.x, state.overworld.y], net, gems: state.potions, found: state.overworld.found.slice() };
   });
   assert.deepEqual(r.pos, [1, 1]);
   assert.equal(r.net, 1);
-  assert.equal(r.gems, await page.evaluate(() => ECON.overworld.pickupGems));
+  assert.equal(r.gems, 1, 'a Potion in the nook');
   assert.deepEqual(r.found, ['route1-nook-net', 'route1-nook-gem']);
 });
 

@@ -214,16 +214,16 @@ test('math signs stop paying after signsPerDay signs a day, and the question fol
   assert.match(r.final, /No more sign gems today/);
 });
 
-test('pickups: walking onto a sparkle takes it once, it is saved, and a full net bag gives gems instead', async () => {
+test('pickups: walking onto a sparkle takes it once, it is saved, and a full net bag gives a Potion instead', async () => {
   await put('hollow-home', 6, 3, 'down');
   const r = await page.evaluate(() => {
-    state.gems = 0; const gems0 = state.gems;
+    state.potions = 0; const gems0 = state.potions;
     owMove('down');                                                                                       // (6,4): a gem sparkle
-    const after = { gems: state.gems, found: state.overworld.found.slice(), sparkles: document.querySelectorAll('.ow-pickup').length };
+    const after = { gems: state.potions, found: state.overworld.found.slice(), sparkles: document.querySelectorAll('.ow-pickup').length };
     owMove('up'); owMove('down');
-    return { gems0, after, again: state.gems };
+    return { gems0, after, again: state.potions };
   });
-  assert.equal(r.after.gems, await page.evaluate(() => ECON.overworld.pickupGems));
+  assert.equal(r.after.gems, 1, 'a Potion, as a find on the ground is in Gold');
   assert.deepEqual(r.after.found, ['hollow-home-gem']);
   assert.equal(r.after.sparkles, 0, 'the sparkle is gone');
   assert.equal(r.again, r.after.gems, 'taken once');
@@ -231,13 +231,13 @@ test('pickups: walking onto a sparkle takes it once, it is saved, and a full net
   await page.reload();
   assert.deepEqual(await page.evaluate(() => state.overworld.found), ['hollow-home-gem'], 'saved by id');
   const net = await page.evaluate(() => {
-    state.hero.made = true; state.overworld.found = []; state.gems = 0; state.nets = maxNets();
+    state.hero.made = true; state.overworld.found = []; state.potions = 0; state.nets = maxNets();
     state.overworld.map = 'meadow-house'; state.overworld.x = 2; state.overworld.y = 4; state.overworld.face = 'left'; openAdventure(); owMove('left');
-    return { nets: state.nets, gems: state.gems, toast: document.getElementById('toast').innerText };
+    return { nets: state.nets, gems: state.potions, toast: document.getElementById('toast').innerText };
   });
   assert.equal(net.nets, await page.evaluate(() => maxNets()));
-  assert.equal(net.gems, await page.evaluate(() => ECON.overworld.pickupGems));
-  assert.match(net.toast, /gems/);
+  assert.equal(net.gems, 1);
+  assert.match(net.toast, /Potion/);
   const open = await page.evaluate(() => { state.overworld.found = []; state.nets = 0; state.overworld.x = 2; state.overworld.y = 4; state.overworld.face = 'left'; renderOverworld(); owMove('left'); return { nets: state.nets, found: state.overworld.found.slice() }; });
   assert.deepEqual(open, { nets: 1, found: ['meadow-house-net'] }, 'with room in the bag it is a Catch Net');
 });

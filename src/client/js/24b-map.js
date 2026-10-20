@@ -81,16 +81,9 @@ function advanceGym(leaderWon) {
   if (!g) return null;
   const r = regionById(g.region);
   state.gym = null;
-  if (g.rematch && hasBadge(r.id)) {
-    const rm = state.rematch, pays = rematchPays(r.id);
-    if (rm.day !== dayKey()) { rm.day = dayKey(); rm.lands = []; }
-    rm.wins += 1;
-    if (pays && rm.lands.indexOf(r.id) === -1) { rm.lands.push(r.id); state.gems += ECON.map.rematch.gems; return { region: r, rematch: true, gems: ECON.map.rematch.gems }; }
-    return { region: r, rematch: true, gems: 0 };
-  }
+  if (g.rematch && hasBadge(r.id)) { state.rematch.wins += 1; return { region: r, rematch: true }; }
   if (hasBadge(r.id)) return null;
   state.badges.push(r.id);
-  state.gems += ECON.map.badgeGems;
   return { region: r, hall: !r.far && gymRegions().every(function (g) { return hasBadge(g.id); }) };       // the last badge opens the Champion's Hall
 }
 function markRegionVisited(id) {

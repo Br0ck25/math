@@ -58,10 +58,6 @@ const NORMALIZERS = [
     s.grade = clamp(parseInt(s.grade, 10) || 0, 0, GRADES.length - 1);
     if (!s.enabledOps.length) s.enabledOps = GRADE_DEFAULT_OPS[s.grade].slice();
     if (s.unlockedPets.indexOf('dog') === -1) s.unlockedPets.unshift('dog');
-    if (!s.unlockedAccessories.length) s.unlockedAccessories = ['none'];
-    if (!s.activeAccessory) s.activeAccessory = 'none';
-    if (!s.unlockedArmor.length) s.unlockedArmor = ['none'];
-    if (!s.activeArmor || s.unlockedArmor.indexOf(s.activeArmor) === -1) s.activeArmor = 'none';
     if (!getSpecies(s.activePet) || s.unlockedPets.concat(s.unlockedSecrets).indexOf(s.activePet) === -1) s.activePet = 'dog';
   },
   function map(s) {

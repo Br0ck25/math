@@ -1,6 +1,6 @@
 // =====================================================================
 //  WILD BUDDIES: which buddies live in the wild (rollWildSpecies), today's weather, and the spares you can sell. Wild fights are 24x-ow-battle.js.
-//  A caught buddy you already own becomes a spare that can be sold for gems (see sellSpare). Numbers live in ECON.wild / ECON.sell.
+//  A caught buddy you already own becomes a spare that can be traded to a Trader. Numbers live in ECON.wild / ECON.sell.
 // =====================================================================
 // Today's weather: the same for everyone all day. It only favours some types of wild buddies; it never makes anything harder.
 // buddies: store buddies that only show up in this weather (and show up more often in it).
@@ -22,11 +22,6 @@ function wildPool() {
   return storePets.concat(secretCompanions);
 }
 function isStoreBuddy(sp) { return storePets.indexOf(sp) !== -1; }
-function spareValueOf(id) {
-  const sp = getSpecies(id);
-  const base = sp ? spareValue(isStoreBuddy(sp), sp.cost, sp.legend) : 0;
-  return base;
-}
 
 // One random wild species, favouring the land you are in; never one in `skip` (the species that fought last by default).
 function rollWildSpecies(skip) {
@@ -63,34 +58,6 @@ function journeyLevel() {
   return Math.min(getBestLevel(), Math.max(1, Math.round(teamPower() * ECON.farm.lead)));
 }
 function spareCount(id) { return state.spares[id] || 0; }
-function sellSpare(id) {
-  if (spareCount(id) < 1) return;
-  const v = spareValueOf(id);
-  state.spares[id] -= 1;
-  if (!state.spares[id]) delete state.spares[id];
-  state.gems += v;
-  soundCoinChirp();
-  saveState();
-  updateStatsUI();
-  toast('💰 Sold a spare ' + getSpecies(id).name + ' for ' + v + ' 💎');
-  renderHub();
-}
-function sellAllSpares() {
-  let total = 0, n = 0;
-  Object.keys(state.spares).forEach(function (id) {
-    const c = spareCount(id);
-    total += c * spareValueOf(id);
-    n += c;
-  });
-  if (!n) return;
-  state.spares = {};
-  state.gems += total;
-  soundCoinChirp();
-  saveState();
-  updateStatsUI();
-  toast('💰 Sold ' + n + ' spare' + (n === 1 ? '' : 's') + ' for ' + total + ' 💎');
-  renderHub();
-}
 
 // ----- the roaming legend (Gold's roaming beasts): after you are Champion, one legendary buddy a week roams one route a day -----
 // The six legends, then the storybook heroes and the ultra trio, one a week: every buddy can be caught.

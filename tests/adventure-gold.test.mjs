@@ -124,9 +124,28 @@ test('trade evolution: Spike, Pascal, Tank and Dusty stop one form short until t
   assert.deepEqual(r, { before: 1, after: 2, again: true, kept: 'hedgehog', rest: 0 });
 });
 
+test("Gold's money: only trainers pay, the class base times the level of the last buddy; a wild buddy, a level-up and a badge pay nothing", async () => {
+  const r = await ev(() => {
+    const foes = [{ level: 10 }, { level: 22 }], gems0 = state.gems;
+    const out = { trainer: abPrize({ kind: 'trainer', foes }), leader: abPrize({ kind: 'leader', foes }), elite: abPrize({ kind: 'trainer', base: ECON.money.leaderBase, foes }) };
+    awardBuddyXp(500000); out.levelUp = state.gems - gems0;
+    state.rematch = { day: '', lands: [], wins: 0 }; state.badges = []; state.gym = { region: 'meadow', step: 3 }; advanceGym(true); out.badge = state.gems - gems0;
+    return out;
+  });
+  assert.deepEqual(r, { trainer: 16 * 22, leader: 100 * 22, elite: 100 * 22, levelUp: 0, badge: 0 });
+});
+
+test('the lead buddy goes first in battle, even when it is not first in the team list', async () => {
+  const first = await ev(() => {
+    state.unlockedPets = ['dog', 'fox', 'bunny']; state.team = ['dog', 'fox', 'bunny']; state.activePet = 'bunny'; state.advHp = {};
+    openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 5 }] }); return abMe().id;
+  });
+  assert.equal(first, 'bunny');
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
-    ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 100; state.repelSteps = 0;
+    ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;
     const open = ECON.overworld.mart.find((m) => m.type === 'repel').badges, cost = itemCost('repel');
     payItem('repel'); const steps = state.repelSteps, left = state.gems;
     let fights = 0; for (let i = 0; i < steps; i++) if (owGrassStep()) fights++;
@@ -134,7 +153,7 @@ test('a Repel keeps wild buddies out of the grass for its steps, wears off, and 
     state.repelSteps = 99999; NORMALIZERS.forEach((fn) => fn(state));
     return { open, cost, steps, left, fights, worn, next, clamped: state.repelSteps };
   });
-  assert.deepEqual(r, { open: 1, cost: 25, steps: 100, left: 75, fights: 0, worn: 0, next: true, clamped: 300 });
+  assert.deepEqual(r, { open: 1, cost: 350, steps: 100, left: 650, fights: 0, worn: 0, next: true, clamped: 300 });
 });
 
 test('a Berry heals 10 HP when health drops to half or less, and is used up', async () => {

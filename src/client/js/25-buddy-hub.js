@@ -32,8 +32,7 @@ function renderHub() {
   const sleepy = isSleepy(hubPet);
   const ic = document.getElementById('hub-icon');
   ic.className = 'hub-icon' + (sleepy ? ' sleepy' : '');
-  const gear = hubPet === state.activePet ? activeGear() : { acc: null, armor: null };
-  ic.innerHTML = avatarHtml(d, 56, gearMarkup(gear.acc, gear.armor)) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
+  ic.innerHTML = avatarHtml(d, 56) + (sleepy ? '<span style="font-size:1.2rem;">💤</span>' : '');
   document.getElementById('hub-name').innerText = d.name;
   document.getElementById('hub-sub').innerText = 'Lv ' + d.level + ' · ' + d.element + (sleepy ? ' · resting, a Buddy Center wakes it up' : '');
   document.getElementById('hub-hint').innerText = '';

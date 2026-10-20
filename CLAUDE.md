@@ -48,7 +48,7 @@ Use the file map below and the area rules in `.claude/rules/` (they load when yo
 - Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`. Lands, gyms and badges `24b-map.js`, Hall rewards `24d-`.
 - Rules and numbers: `src/shared/econ.js` (`ECON`, also used by the Worker). Saved state: `03-state.js` (defaults), `10-save-load.js` (migrations, normalizers).
 - Math questions: generators `07-math-generators.js`, difficulty `07b-adaptive.js`, trivia mode `38-study.js` and the banks `37*-study-*.js`, `src/shared/study.js`.
-- Meta screens (opened from the Menu): hub `25-` (held items and duels), held items `25b-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), Dex `30-`, account `31-`, shop `33-`, settings `17-`.
+- Meta screens (opened from the Menu): hub `25-` (held items and duels), held items `25b-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), Dex `30-`, account `31-`, settings `17-`.
 - Server: accounts `10-`, router and security headers `30-router.js`. Page shell `src/client/index.html`, styles `styles.css`.
 - Tests: one area per file in `tests/`; `node scripts/test-changed.mjs --list` shows which cover your change. Add a row to `MAP` in `scripts/test-changed.mjs` for any new source file.
 

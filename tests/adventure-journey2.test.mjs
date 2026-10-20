@@ -62,21 +62,17 @@ test('the road west out of Skyreach opens for the Champion and leads to Cinder M
   assert.deepEqual(r, { closed: true, open: true, warp: true, lvl: 60, rows: 'cinder' });
 });
 
-test('Silver Peak: the door needs the Summit Badge; Master Ori\'s six legends pay once big, then a little once a day', async () => {
+test('Silver Peak: the door needs the Summit Badge; Master Ori\'s six legends pay Gold\'s prize (the big base times the last legend\'s level) every time', async () => {
   const shut = await ev(() => { owEnterMaster(); return talk.lines.join(' '); });
   assert.match(shut, /Summit Badge/);
-  await ev(() => { closeTalk(); state.badges = ['summit']; state.gems = 0; state.nets = 0; state.buddyXp[state.activePet] = xpForLevel(95); abStartMaster(); });
-  const team = await ev(() => ab.foes.map((f) => f.id));
+  await ev(() => { closeTalk(); state.badges = ['summit']; state.gems = 0; state.buddyXp[state.activePet] = xpForLevel(95); abStartMaster(); });
+  const team = await ev(() => ab.foes.map((f) => f.id)), prize = await ev(() => ECON.money.leaderBase * ab.foes[5].level);
   assert.deepEqual(team, ['legend_fire', 'legend_water', 'legend_nature', 'legend_electric', 'legend_dark', 'legend_magic']);
   await winChain();
-  const first = await ev(() => [state.champ.master, state.gems, state.nets]);
-  assert.deepEqual(first, [1, await ev(() => ECON.map.master.firstGems), await ev(() => ECON.map.master.nets)]);
+  assert.deepEqual(await ev(() => [state.champ.master, state.gems]), [1, prize]);
   await ev(() => { closeTalk(); state.gems = 0; abStartMaster(); });
   await winChain();
-  assert.deepEqual(await ev(() => [state.champ.master, state.gems]), [2, 0], 'the first win already paid today');
-  await ev(() => { closeTalk(); state.gems = 0; state.champ.masterDay = ''; abStartMaster(); });
-  await winChain();
-  assert.deepEqual(await ev(() => [state.champ.master, state.gems]), [3, await ev(() => ECON.map.master.repeatGems)], 'a new day pays the repeat reward');
+  assert.deepEqual(await ev(() => [state.champ.master, state.gems]), [2, prize], 'a rematch pays again');
 });
 
 test('the Scramblers return: two puzzle signs guarded by a Scrambler each, a lair boss in Duskhollow, and Riley at the Crossroads and the Citadel; each route has its own layout', async () => {

@@ -75,9 +75,8 @@ function getPetById(id) {
     ultra: !!sp.ultra
   };
 }
-function getArmorHp() { return getArmor(state.activeArmor).hp; }
 // HP and attack of a buddy at a level and evolution stage (also used to show the jump when it evolves).
-function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage + getArmorHp(); }
+function petHpAt(level, stage) { return 3 + Math.floor(level / 8) + stage; }
 function petAttackAt(level, stage) { return 1 + Math.floor(level / 12) + stage; }
 function getPetMaxHp(id) { const p = getPetById(id); return petHpAt(p.level, p.stage); }
 function getPetAttack(id) { const p = getPetById(id); return petAttackAt(p.level, p.stage); }
@@ -105,7 +104,6 @@ function awardBuddyXp(amount, id) {
   state.buddyXp[id] = Math.min(xpForLevel(MAX_LEVEL), getBuddyXp(id) + amount);
   let after = getPetById(id);
   if (after.level > before.level) {
-    state.gems += ECON.levelUpGemsPerLevel * (after.level - before.level);
     const newMax = getPetMaxHp(id);
     partyHp[id] = Math.min(newMax, curHp + (newMax - oldMax));
     soundLevelUp();
@@ -113,7 +111,6 @@ function awardBuddyXp(amount, id) {
     toast('⬆️ ' + after.baseName + ' grew to Lv ' + after.level + '!');
     checkRegionUnlocks();
     if (after.stage > before.stage) {
-      state.gems += ECON.evolveGems;
       enqueueModal(function () { openEvoModal(before, after); });
     }
   }
@@ -216,6 +213,5 @@ function replaceTeamMember(oldId) {
   soundClick();
   saveState();
   updateStatsUI();
-  if (typeof rerenderShop === 'function' && document.getElementById('shop-modal').style.display === 'flex') rerenderShop();
   if (document.getElementById('pad-modal').style.display === 'flex') padRefresh();
 }

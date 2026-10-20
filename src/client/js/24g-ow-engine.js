@@ -250,11 +250,7 @@ function owStoryDone(id) {
   saveState();
   return true;
 }
-function owStoryReward(id) {
-  if (!owStoryDone(id)) return;
-  const gems = ECON.overworld.storyGems[id];
-  if (gems) grantGems(gems, 'Story reward: +' + gems + ' gems!', true);
-}
+function owStoryReward(id) { owStoryDone(id); }          // a story beat pays no money in Gold: only trainers do (abPrize)
 // One step back the way the hero came (it faces where it was walking), if that tile is free.
 function owStepBack() {
   const o = state.overworld, m = OW_MAPS[o.map], d = OW_STEP[OW_OPPOSITE[o.face]], bx = o.x + d[0], by = o.y + d[1];

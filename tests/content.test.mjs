@@ -10,13 +10,12 @@ before(async () => {
 after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
-test('the collection has the planned size: 353 buddies, 55 bosses, 121 pieces of gear', async () => {
+test('the collection has the planned size: 353 buddies, 55 bosses', async () => {
   const c = await inPage(() => ({
     buddies: bookCounts().buddy.total, bosses: monstersList.length,
-    gear: (accessoriesList.length - 1) + (armorList.length - 1),
     store: storePets.length, mythic: mythicCompanions.length, secret: secretCompanions.length, legend: legendPets.length
   }));
-  assert.deepEqual(c, { buddies: 353, bosses: 55, gear: 121, store: 44, mythic: 36, secret: 209, legend: 6 });
+  assert.deepEqual(c, { buddies: 353, bosses: 55, store: 44, mythic: 36, secret: 209, legend: 6 });
 });
 
 test('every buddy and boss is an animal, creature or monster, never an object; only show and storybook characters may be people', async () => {
@@ -89,76 +88,6 @@ test('every boss is complete: unique name and icon slot, valid type, 3-6 HP and 
   assert.deepEqual(bad, []);
 });
 
-test('every piece of gear is complete and unique; earned pieces say how to get them', async () => {
-  const bad = await inPage(() => {
-    const out = [], ids = new Set(), icons = new Set();
-    accessoriesList.concat(armorList).filter((g) => g.id !== 'none').forEach((g) => {
-      if (ids.has(g.id)) out.push('duplicate id ' + g.id);
-      ids.add(g.id);
-      if (!g.name || !g.icon || !g.renderIcon) out.push(g.id + ' incomplete');
-      if (g.earn) {
-        if (g.cost !== 0 || !EARN_COUNTERS[g.earn.key] || !(g.earn.n >= 1) || !g.earn.text) out.push(g.id + ' bad earn rule');
-      } else if (!(g.cost > 0)) out.push(g.id + ' has no price');
-    });
-    accessoriesList.filter((g) => g.id !== 'none' && ids.has(g.id)).forEach((g) => { if (icons.has(g.renderIcon + g.slot)) out.push('same look twice: ' + g.id); icons.add(g.renderIcon + g.slot); });
-    return out;
-  });
-  assert.deepEqual(bad, []);
-});
-
-test('earned gear: locked until the achievement, then awarded once, never for sale', async () => {
-  const r = await inPage(() => {
-    const out = {};
-    state.gems = 9999;
-    const crown = accessoriesList.find((a) => a.id === 'raidcrown');
-    selectOrBuyAccessory(crown);
-    out.notBought = state.unlockedAccessories.indexOf('raidcrown') === -1 && state.gems === 9999;
-    out.lockText = gearLockText(crown);
-    state.badges = gymRegions().slice(0, 7).map((g) => g.id); out.early = checkEarnedGear();
-    state.badges = gymRegions().map((g) => g.id); out.awarded = checkEarnedGear();
-    out.again = checkEarnedGear();
-    state.champ.wins = 3; state.monstersDefeated = 100; state.unlockedPets = storePets.slice(0, 25).map((p) => p.id); state.unlockedSecrets = secretCompanions.slice(0, 25).map((p) => p.id);
-    out.rest = checkEarnedGear();
-    out.all = ['raidcrown', 'champmedal', 'sunshine'].every((id) => state.unlockedAccessories.indexOf(id) !== -1) && state.unlockedArmor.indexOf('centurion') !== -1;
-    return out;
-  });
-  assert.deepEqual(r, { notBought: true, lockText: '🏆 Win 8 gym badges', early: 0, awarded: 1, again: 0, rest: 6, all: true });
-});
-
-test('cartoon cast gear is earned by collecting the cartoon buddies', async () => {
-  const r = await inPage(() => {
-    state.badges = []; state.champ.wins = 0; state.monstersDefeated = 0; state.unlockedPets = ['dog']; state.unlockedSecrets = [];      // only the cast counters matter here
-    const reset = () => { state.unlockedAccessories = ['none']; state.unlockedArmor = ['none']; state.unlockedPets = ['dog']; state.unlockedSecrets = []; };
-    const secrets = secretCompanions.filter((p) => p.show), headliners = storePets.filter((p) => p.id.indexOf('toon_') === 0);
-    const all = headliners.concat(mythicCompanions.filter((p) => p.show), secrets);
-    const give = (list) => { list.forEach((p) => { (p.secret ? state.unlockedSecrets : state.unlockedPets).push(p.id); }); return checkEarnedGear(); };
-    const out = {};
-    reset(); out.none = checkEarnedGear();
-    reset(); out.nine = give(secrets.slice(0, 9));
-    reset(); out.ten = give(secrets.slice(0, 10));
-    out.pass = state.unlockedAccessories.indexOf('fanpass') !== -1 && state.unlockedAccessories.indexOf('goldspatula') === -1;
-    reset(); out.fiveHeadliners = give(headliners.slice(0, 5));
-    out.coat = give(headliners.slice(5)) === 1 && state.unlockedArmor.indexOf('circuscoat') !== -1;
-    reset(); give(all);
-    out.spatula = state.unlockedAccessories.indexOf('goldspatula') !== -1 && state.unlockedAccessories.indexOf('fanpass') !== -1;
-    return out;
-  });
-  assert.deepEqual(r, { none: 0, nine: 0, ten: 1, pass: true, fiveHeadliners: 0, coat: true, spatula: true });
-});
-
-test('earned gear shows as a secret in the shop and the book', async () => {
-  const r = await inPage(() => {
-    state.unlockedAccessories = ['none']; state.unlockedArmor = ['none'];
-    renderAccessories();
-    const shop = document.getElementById('accessories-grid').innerText;
-    openBook(); bookTab = 'gear'; renderBook();
-    const book = document.getElementById('book-body').innerText;
-    closeBook();
-    return { shop: shop.includes('Win 8 gym badges'), book: book.includes('Secret') && book.includes("Win the Champion's Hall 3 times") };
-  });
-  assert.deepEqual(r, { shop: true, book: true });
-});
-
 test('new store buddies sit in price order before the Bandit', async () => {
   const r = await inPage(() => {
     const costs = storePets.map((p) => p.cost);
@@ -200,15 +129,6 @@ test('cartoon cast: kid-friendly shows only, every character complete, and the t
 
 test('no errors', () => { assert.deepEqual(errors, []); });
 
-test('found ultra buddies appear in their own shop section and not among the ordinary secrets', async () => {
-  const r = await inPage(() => {
-    state.unlockedSecrets = ['secret_amber', 'secret_papaw']; state.buddyXp.secret_amber = 0; state.buddyXp.secret_papaw = 0;
-    renderSecretPets();
-    return { found: document.getElementById('ultra-found-count').innerText, total: document.getElementById('ultra-total-count').innerText, cards: document.querySelectorAll('#ultra-pet-grid .pet-card').length, regular: document.getElementById('secret-found-count').innerText };
-  });
-  assert.deepEqual(r, { found: '2', total: '3', cards: 2, regular: '0' });
-});
-
 test('four slayer bosses: a cow, a Harpy Eagle, Māra and Rocky, each strong against one buddy', async () => {
   const r = await inPage(() => {
     const list = monstersList.map((m, i) => ({ i, m })).filter((x) => x.m.slays);
@@ -221,49 +141,5 @@ test('four slayer bosses: a cow, a Harpy Eagle, Māra and Rocky, each strong aga
   r.slice(0, 3).forEach((b) => { assert.ok(b.hp >= 5 && b.hp <= 6, 'plays like a normal boss'); assert.equal(b.taunts, 2); });
   assert.equal(r[3].name, 'Rocky');
   assert.equal(r[3].taunts, 2);
-});
-
-test('boss buddies: ordinary strength, own shop section, boss card progress, and a safe saved book', async () => {
-  const r = await inPage(() => {
-    const out = {};
-    out.notUltra = bossBuddies.every((b) => !b.ultra && battleElement(b) === b.element);
-    out.packs = ['boss_harpy', 'boss_mara', 'boss_rocky'].map((id) => packOf(getSpecies(id)).id);
-    out.all = bossBuddies.length === monstersList.length && monstersList.every((m, i) => getSpecies(m.buddy) && getSpecies(m.buddy).name === m.name);
-    out.moves = new Set(bossBuddies.map((b) => b.superMove)).size;
-    out.moveSample = bossBuddies[0].superMove + ' / ' + bossBuddies[50].superMove;
-    out.rarity = rarityOf('boss_mara').name;
-    state.unlockedSecrets = ['boss_harpy']; state.buddyXp.boss_harpy = 0;
-    renderSecretPets();
-    out.shop = [document.getElementById('bossbuddy-found-count').innerText, document.getElementById('bossbuddy-total-count').innerText, document.querySelectorAll('#bossbuddy-pet-grid .pet-card').length, document.getElementById('secret-found-count').innerText];
-    state.bossBook = { 50: { wins: 'x', form: 99, alpha: -4 }, 999: { wins: 1 }, 51: 7 };
-    NORMALIZERS.forEach((fn) => fn(state));
-    out.book = JSON.stringify(state.bossBook);
-    state.bossBook = { 50: { wins: 5, form: 2, alpha: 2 } };
-    bookTab = 'boss'; renderBook();
-    out.progress = document.getElementById('book-body') ? document.getElementById('book-body').innerText : document.body.innerText;
-    return out;
-  });
-  assert.equal(r.notUltra, true);
-  assert.equal(r.all, true, 'every boss has a buddy of the same name');
-  assert.ok(r.moves >= 45, 'buddies have their own ultimates, not one shared move: ' + r.moves);
-  assert.equal(r.moveSample, 'Drake Blaze / Stampede Slam');
-  assert.deepEqual(r.packs, ['boss-electric', 'boss-dark', 'boss-fire']);
-  assert.equal(r.rarity, 'BOSS');
-  assert.deepEqual(r.shop, ['1', '55', 1, '0'], 'boss buddies are not counted as ordinary secrets');
-  assert.equal(r.book, '{"50":{"wins":0,"form":2,"alpha":0}}');
-  assert.match(r.progress, /Alpha wins: 2\/3/);
-  assert.doesNotMatch(r.progress, /Beaten x5/);
-});
-
-test('the shop no longer sells buddies, armor or gear: only owned or earnable pieces are listed', async () => {
-  const r = await inPage(() => {
-    state.gems = 9999; state.unlockedPets = ['dog']; state.unlockedArmor = ['none']; state.unlockedAccessories = [];
-    rerenderShop();
-    const cards = document.getElementById('pet-grid').children.length;
-    const paid = armorList.find((a) => !a.earn && a.cost > 0 && state.unlockedArmor.indexOf(a.id) === -1);
-    if (paid) selectOrBuyArmor(paid);
-    return { cards, gems: state.gems, owned: state.unlockedArmor.indexOf(paid && paid.id) !== -1 };
-  });
-  assert.deepEqual(r, { cards: 1, gems: 9999, owned: false });
 });
 

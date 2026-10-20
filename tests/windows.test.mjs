@@ -11,7 +11,7 @@ after(async () => { await browser.close(); });
 const inPage = (fn, arg) => page.evaluate(fn, arg);
 
 const OPEN = {
-  'shop-modal': 'openShop', 'settings-modal': 'openSettings', 'book-modal': 'openBook',
+  'settings-modal': 'openSettings', 'book-modal': 'openBook',
   'hub-modal': 'openHub', 'reset-modal': 'openResetModal'
 };
 
