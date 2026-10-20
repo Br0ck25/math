@@ -12,11 +12,29 @@ let owTrail = null;          // where the hero stood a step ago: the buddy walks
 let owFrame = 0;             // which walking picture
 let owUnsaved = 0;           // steps since the last save
 let owFromQueue = false;     // the map was opened by the modal queue (after a fight), so closing it must call modalDone()
+let owBusy = false;          // a trainer has spotted the hero: no walking until the challenge shows
 let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 
 function owTileAt(map, x, y) { const row = map.rows[y]; return (row && OW_TILES[row.charAt(x)]) || null; }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
 function owNpcAt(map, x, y) { return (map.npcs || []).find(function (n) { return n.x === x && n.y === y; }) || null; }
+function owNpcById(id) {
+  for (const k of Object.keys(OW_MAPS)) { const n = (OW_MAPS[k].npcs || []).find(function (p) { return p.id === id; }); if (n) return n; }
+  return null;
+}
+// The trainer who sees the hero on this tile: not beaten yet, and the hero is on a free line of up to `sight` tiles in the way it faces.
+function owTrainerSeeing(map, x, y) {
+  return (map.npcs || []).find(function (n) {
+    if (n.kind !== 'trainer' || state.overworld.beat.indexOf(n.id) !== -1) return false;
+    const d = OW_STEP[n.face], sight = n.sight || ECON.overworld.trainerSight;
+    for (let i = 1; i <= sight; i++) {
+      const cx = n.x + d[0] * i, cy = n.y + d[1] * i;
+      if (cx === x && cy === y) return true;
+      if (!owWalkable(map, cx, cy) || owNpcAt(map, cx, cy)) return false;
+    }
+    return false;
+  }) || null;
+}
 function owPickupAt(map, x, y) { return (map.objects || []).find(function (o) { return o.type === 'pickup' && o.x === x && o.y === y && state.overworld.found.indexOf(o.id) === -1; }) || null; }
 function owWarpAt(map, x, y) { return map.warps.find(function (w) { return w.x === x && w.y === y; }) || null; }
 function owOpen() {
@@ -47,6 +65,7 @@ function renderOverworld() {
   });
   (map.npcs || []).forEach(function (np) {
     if (Math.abs(np.x - o.x) <= half && Math.abs(np.y - o.y) <= half) h += owActorHtml('ow-npc', np.x - o.x + half, np.y - o.y + half, n, heroSprite(heroLookColors(np.look), np.face, 0));
+    if (np.alert && Math.abs(np.x - o.x) <= half && Math.abs(np.y - 1 - o.y) <= half) h += owActorHtml('ow-alert', np.x - o.x + half, np.y - 1 - o.y + half, n, worldSprite('fx-alert'));
   });
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + half, owTrail.y - o.y + half, n, owFollowerHtml());
   h += owActorHtml('ow-hero', half, half, n, heroSprite(heroLookColors(), o.face, owFrame));
@@ -58,7 +77,7 @@ function renderOverworld() {
 
 // ----- walking -----
 function owMove(dir) {
-  if (!owOpen()) return;
+  if (!owOpen() || owBusy) return;
   const o = state.overworld, map = OW_MAPS[o.map], d = OW_STEP[dir];
   o.face = dir;
   const nx = o.x + d[0], ny = o.y + d[1];
@@ -77,10 +96,13 @@ function owMove(dir) {
   if (warp) return;
   const here = OW_MAPS[o.map], pickup = owPickupAt(here, o.x, o.y);
   if (pickup) { owCollect(pickup); renderOverworld(); }
+  const seer = owTrainerSeeing(here, o.x, o.y);
+  if (seer) { owChallenge(seer); return; }
   if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
 }
 // Space or Enter: talk to or read what the hero faces.
 function owInteractFacing() {
+  if (owBusy) return;
   const o = state.overworld, d = OW_STEP[o.face];
   owInteract(OW_MAPS[o.map], o.x + d[0], o.y + d[1]);
 }
@@ -137,14 +159,36 @@ function adventureRowHtml() {
 // True while the current wild fight began on the map. A flag left over from a foe that was replaced meanwhile (a gym, a legend hunt, a boss) is cleared.
 function adventureFight() {
   const o = state.overworld;
-  if (o.fight && (state.gym || !state.wild.id || state.wild.legend || state.wild.trainer)) o.fight = false;
+  if (o.fight && (state.gym || !state.wild.id || state.wild.legend || (state.wild.trainer && !o.foe))) o.fight = false;     // a trainer is fine when the walk began it
+  if (!o.fight) o.foe = '';
   return o.fight;
 }
 function startAdventureFight() {
   if (state.gym || state.raid) return;
   owRelease();
   state.overworld.fight = true;
+  state.overworld.foe = '';
   pickNextWild();
+  hideModal('overworld-modal');
+  setBossTaunt();
+  updateStatsUI();
+  saveState();
+  announceFoe();
+}
+// A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
+function startTrainerFight(npc) {
+  if (state.gym || state.raid) return;
+  owRelease();
+  const sp = rollWildSpecies([]);
+  state.wild.id = sp.id;
+  state.wild.trainer = npc.name;
+  state.wild.shiny = false;
+  state.wild.legend = false;
+  markDexSeen(sp.id);
+  bossLevel = clamp(foeBaseLevel() + rnd(0, 1), 1, MAX_LEVEL);
+  gymFoeReset();
+  state.overworld.fight = true;
+  state.overworld.foe = npc.id;
   hideModal('overworld-modal');
   setBossTaunt();
   updateStatsUI();
@@ -154,23 +198,56 @@ function startAdventureFight() {
 // Won a fight that began on the map: the next Practice foe waits, and the map comes back after any catch window.
 function adventureWin() {
   if (!adventureFight()) return false;
-  state.overworld.fight = false;
+  const o = state.overworld, npc = o.foe ? owNpcById(o.foe) : null;
+  if (npc && o.beat.indexOf(npc.id) === -1) o.beat.push(npc.id);        // a trainer is beaten for good
+  o.fight = false;
+  o.foe = '';
   pickNextWild();
   setBossTaunt();
   updateStatsUI();
   saveState();
-  enqueueModal(function () { owFromQueue = true; showAdventureWindow(); });
+  enqueueModal(function () { owFromQueue = true; showAdventureWindow(); if (npc) owTrainerTalk(npc); });
+  return true;
+}
+// The whole team fainted in a fight that began on the map: everyone is revived and the hero wakes outside the last Buddy Center. Nothing is lost.
+function adventureWipe() {
+  if (!adventureFight()) return false;
+  const o = state.overworld, c = o.center;
+  o.fight = false;
+  o.foe = '';
+  o.map = c.map; o.x = c.x; o.y = c.y; o.face = 'down';
+  state.faintedPets = [];
+  partyHp = {};
+  pickNextWild();
+  setBossTaunt();
+  generateProblem();                                                  // answering is open again for Practice
+  updateStatsUI();
+  saveState();
+  enqueueModal(function () {
+    owFromQueue = true;
+    showAdventureWindow();
+    openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, your buddies got very tired.', 'They rested at the Buddy Center and feel great again. No gems were lost. Ready to try again?'] });
+  });
   return true;
 }
 // "Back to the map" in a fight that began there: no penalty, the foe walks away.
 function adventureBack() {
   if (!adventureFight()) return;
+  const trainer = !!state.overworld.foe;
   state.overworld.fight = false;
+  state.overworld.foe = '';
   pickNextWild();
   setBossTaunt();
   updateStatsUI();
   saveState();
   showAdventureWindow();
+  if (trainer) owStepBack();                                          // the trainer is still waiting: one step back out of its sight
+}
+// One step back the way the hero came (it faces where it was walking), if that tile is free.
+function owStepBack() {
+  const o = state.overworld, m = OW_MAPS[o.map], d = OW_STEP[OW_OPPOSITE[o.face]], bx = o.x + d[0], by = o.y + d[1];
+  if (owWalkable(m, bx, by) && !owNpcAt(m, bx, by) && !owWarpAt(m, bx, by)) { o.x = bx; o.y = by; owTrail = null; saveState(); }
+  renderOverworld();
 }
 function refreshAdventureButton() {
   const b = document.getElementById('ow-back-btn');

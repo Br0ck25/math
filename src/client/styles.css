@@ -2126,3 +2126,4 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .mart-row.locked { opacity: 0.6; }
 .mart-row .mart-info { flex: 1; min-width: 0; }
 .mart-row .claim-btn { min-height: 44px; min-width: 84px; animation: none; }
+.ow-alert { pointer-events: none; }

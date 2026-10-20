@@ -100,7 +100,12 @@ const OW_MAPS = {
       { x: 6, y: 23, to: 'hollow', tx: 7, ty: 1 }, { x: 7, y: 23, to: 'hollow', tx: 8, ty: 1 },
       { x: 6, y: 0, to: 'meadow', tx: 7, ty: 14 }, { x: 7, y: 0, to: 'meadow', tx: 8, ty: 14 }
     ],
-    npcs: [],
+    npcs: [
+      { id: 'route1-pia', kind: 'trainer', name: 'Scout Pia', x: 3, y: 9, face: 'right', look: { skin: 1, hair: 2, outfit: 2, style: 3 },
+        lines: ['I spotted you! Let us see how your buddy does.'], win: ['Great battle! You and your buddy work well together.'] },
+      { id: 'route1-leo', kind: 'trainer', name: 'Kid Leo', x: 10, y: 14, face: 'left', look: { skin: 4, hair: 0, outfit: 3, style: 2 },
+        lines: ['Hey, you there! I just caught a new buddy. Want to battle?'], win: ['Wow, you are quick! I need more practice.'] }
+    ],
     objects: [{ id: 'route1-berries', type: 'pickup', x: 11, y: 9, give: 'berry' }],
     signs: { }
   },
@@ -161,7 +166,7 @@ function owIds(kind) {
     const m = OW_MAPS[k];
     if (kind === 'pickup') (m.objects || []).forEach(function (o) { if (o.type === 'pickup') ids.push(o.id); });
     else if (kind === 'sign') Object.keys(m.signs || {}).forEach(function (p) { if (m.signs[p].quiz) ids.push(m.signs[p].id); });
-    else (m.npcs || []).forEach(function (n) { ids.push(n.id); });
+    else (m.npcs || []).forEach(function (n) { if (kind !== 'trainer' || n.kind === 'trainer') ids.push(n.id); });
   });
   return ids;
 }

@@ -86,6 +86,7 @@ for (const dir of ['down', 'up', 'left', 'right']) {
 }
 
 const OBJECT_BODIES = {
+  'fx-alert': '<path d="M50 94L38 74H24Q10 74 10 60V24Q10 10 24 10H76Q90 10 90 24V60Q90 74 76 74H62Z" fill="#FFFFFF" ' + outline + '/><rect x="43" y="20" width="14" height="32" rx="6" fill="#EF4444" stroke="' + INK + '" stroke-width="3"/><circle cx="50" cy="62" r="7" fill="#EF4444" stroke="' + INK + '" stroke-width="3"/>',
   'o-sparkle': '<path d="M50 6Q54 44 94 50Q54 56 50 94Q46 56 6 50Q46 44 50 6Z" fill="#FDE047" ' + outline + '/><circle cx="50" cy="50" r="7" fill="#FFFFFF"/>',
   'o-paw': '<ellipse cx="50" cy="68" rx="22" ry="18" fill="#A16207" ' + outline + '/>' + [[22, 42], [38, 24], [62, 24], [78, 42]].map((p) => '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="#A16207" ' + outline + '/>').join('')
 };

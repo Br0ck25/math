@@ -44,6 +44,15 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
         if (!n.name || !Array.isArray(n.lines) || !n.lines.length || n.lines.some((l) => typeof l !== 'string' || !l.trim() || l.length > 160)) out.push(n.id + ': needs a name and short lines');
         const l = n.look || {};
         if (!(l.skin in HERO_SKINS && l.hair in HERO_HAIRS && l.outfit in HERO_OUTFITS && l.style in HERO_STYLES)) out.push(n.id + ': bad look');
+        if (n.kind === 'trainer') {
+          if (!Array.isArray(n.win) || !n.win.length || n.win.some((w) => typeof w !== 'string' || !w.trim() || w.length > 160)) out.push(n.id + ': a trainer needs words for after the battle');
+          const d = OW_STEP[n.face];                                                                  // what the trainer can see must not reach a place the hero appears
+          for (let i = 1; i <= (n.sight || ECON.overworld.trainerSight); i++) {
+            const cx = n.x + d[0] * i, cy = n.y + d[1] * i;
+            if (!owWalkable(m, cx, cy) || owNpcAt(m, cx, cy)) break;
+            if (arrivals[k].some((a) => a.x === cx && a.y === cy)) out.push(n.id + ': sees an arrival tile ' + cx + ',' + cy);
+          }
+        }
       });
       (m.objects || []).forEach((o) => {
         unique(o.id, 'pickup');

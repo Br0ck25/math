@@ -10,6 +10,7 @@ function talkOpen() { const open = openOverlays(); return !!open.length && open[
 function owInteract(map, x, y) {
   const npc = owNpcAt(map, x, y);
   if (npc) {
+    if (npc.kind === 'trainer') { owTrainerTalk(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)
     npc.face = OW_OPPOSITE[state.overworld.face];                    // the person turns to the hero
     renderOverworld();
     if (npc.kind === 'nurse') { openCenter(npc); return; }
@@ -25,7 +26,7 @@ function owInteract(map, x, y) {
 
 // ----- the text window -----
 function openTalk(o) {
-  talk = { name: o.name, art: o.art, lines: o.lines, i: 0, quiz: o.quiz || null, choices: o.choices || null };
+  talk = { name: o.name, art: o.art, lines: o.lines, i: 0, quiz: o.quiz || null, choices: o.choices || null, onClose: o.onClose || null };
   showModal('talk-modal', renderTalk);
 }
 function renderTalk() {
@@ -55,7 +56,11 @@ function talkNext() {
   if (!talk) return;
   if (talk.i < talk.lines.length - 1) { talk.i += 1; soundClick(); renderTalk(); } else closeTalk();
 }
-function closeTalk() { talk = null; hideModal('talk-modal', updateStatsUI); }
+function closeTalk() {
+  const t = talk;
+  talk = null;
+  hideModal('talk-modal', function () { updateStatsUI(); if (t && t.onClose) t.onClose(); });
+}
 window.addEventListener('keydown', function (e) {
   if ((e.key === 'Enter' || e.key === ' ') && talkOpen() && !talk.quiz && !(talk.choices && talk.i >= talk.lines.length - 1)) { e.preventDefault(); talkNext(); }
 });
@@ -97,4 +102,25 @@ function owCollect(p) {
   saveState();
   updateStatsUI();
   toast(msg);
+}
+
+// ----- trainers: a "!" over its head, then its words, then the battle (or "Not now": one step back) -----
+function owChallenge(npc) {
+  owRelease();
+  owBusy = true;
+  npc.alert = true;
+  renderOverworld();
+  setTimeout(function () {
+    owBusy = false;
+    npc.alert = false;
+    if (!owOpen()) return;                                           // the map was closed meanwhile
+    renderOverworld();
+    owTrainerTalk(npc);
+  }, 650);
+}
+function owTrainerTalk(npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0);
+  if (state.overworld.beat.indexOf(npc.id) !== -1) { openTalk({ name: npc.name, art: art, lines: npc.win }); return; }
+  openTalk({ name: npc.name, art: art, lines: npc.lines, onClose: owStepBack,
+    choices: [{ label: 'Battle!', run: function () { talk.onClose = null; closeTalk(); startTrainerFight(npc); } }] });
 }

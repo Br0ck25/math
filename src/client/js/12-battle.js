@@ -339,6 +339,8 @@ function triggerBuddyDamage() {
       return;
     }
 
+    if (adventureWipe()) return;                    // on the Adventure map the hero wakes at the last Buddy Center instead
+
     // the whole team has fainted: everyone is revived and the battle goes on
     state.faintedPets = [];
     partyHp = {};
