@@ -173,45 +173,17 @@ test('Route 1 leads to Meadow Town, which is painted in its own colours, and bac
   assert.equal(await page.evaluate(() => document.getElementById('ow-view').style.getPropertyValue('--w-roof')), '', 'Route 1 keeps the default colours');
 });
 
-test('a math sign: wrong answers are free, a right one pays once per day, and the second time it only practises', async () => {
+test('a math sign is practice: wrong answers are free, a right one pays nothing, and the question follows the types the child may be asked', async () => {
   await put('meadow', 12, 13, 'up');
-  await page.evaluate(() => { state.gems = 10; owMove('up'); });
+  await page.evaluate(() => { state.gems = 10; state.enabledOps = ['mul']; owMove('up'); });
   assert.equal(await shown('talk-modal'), true);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Math sign');
   assert.equal(await page.evaluate(() => document.querySelectorAll('#talk-opts button').length), 3);
-  const wrong = await page.evaluate(() => { const bad = talk.quiz.q.opts.find((v) => v !== talk.quiz.q.ans); const i = talk.quiz.q.opts.indexOf(bad); document.querySelectorAll('#talk-opts button')[i].click(); return { gems: state.gems, note: document.getElementById('talk-note').innerText, paid: state.overworld.signs.ids.length }; });
-  assert.deepEqual(wrong, { gems: 10, note: 'Not quite. Try another one!', paid: 0 });
-  const right = await page.evaluate(() => { const i = talk.quiz.q.opts.indexOf(talk.quiz.q.ans); document.querySelectorAll('#talk-opts button')[i].click(); return { gems: state.gems, note: document.getElementById('talk-note').innerText, ids: state.overworld.signs.ids.slice(), disabled: Array.from(document.querySelectorAll('#talk-opts button')).every((b) => b.disabled) }; });
-  assert.equal(right.gems, 10 + (await page.evaluate(() => ECON.overworld.signGems)));
-  assert.deepEqual(right.ids, ['meadow-quiz']);
-  assert.match(right.note, /Correct! \+\d+ gems/);
-  assert.ok(right.disabled);
-  await page.evaluate(() => closeTalk());
-  const again = await page.evaluate(() => { owMove('up'); const note = document.getElementById('talk-note').innerText; const i = talk.quiz.q.opts.indexOf(talk.quiz.q.ans); document.querySelectorAll('#talk-opts button')[i].click(); return { note, gems: state.gems }; });
-  assert.match(again.note, /already paid today/);
-  assert.equal(again.gems, right.gems, 'no second payment');
-  await page.evaluate(() => { closeTalk(); state.overworld.signs.day = '1999-01-01'; });
-  const nextDay = await page.evaluate(() => { owMove('up'); const i = talk.quiz.q.opts.indexOf(talk.quiz.q.ans); document.querySelectorAll('#talk-opts button')[i].click(); return state.gems; });
-  assert.equal(nextDay, right.gems + (await page.evaluate(() => ECON.overworld.signGems)), 'a new day pays again');
-});
-
-test('math signs stop paying after signsPerDay signs a day, and the question follows the types the child may be asked', async () => {
-  await put('meadow', 12, 13, 'up');
-  const r = await page.evaluate(() => {
-    state.gems = 0; state.enabledOps = ['mul'];
-    const s = state.overworld.signs; s.day = dayKey(); s.ids = [];
-    OW_MAPS.meadow.signs['12,12'].id;                                                                      // the real sign
-    const fake = []; for (let i = 0; i < ECON.overworld.signsPerDay; i++) fake.push('x' + i);
-    s.ids = fake.slice();                                                                                  // already paid at the daily limit (other signs)
-    owMove('up');
-    const op = talk.quiz.q.op, note = document.getElementById('talk-note').innerText;
-    const i = talk.quiz.q.opts.indexOf(talk.quiz.q.ans); document.querySelectorAll('#talk-opts button')[i].click();
-    return { op, note, gems: state.gems, final: document.getElementById('talk-note').innerText };
-  });
-  assert.equal(r.op, 'mul');
-  assert.match(r.note, /No more sign gems today/);
-  assert.equal(r.gems, 0);
-  assert.match(r.final, /No more sign gems today/);
+  assert.equal(await page.evaluate(() => talk.quiz.q.op), 'mul');
+  const wrong = await page.evaluate(() => { const bad = talk.quiz.q.opts.find((v) => v !== talk.quiz.q.ans); const i = talk.quiz.q.opts.indexOf(bad); document.querySelectorAll('#talk-opts button')[i].click(); return { gems: state.gems, note: document.getElementById('talk-note').innerText }; });
+  assert.deepEqual(wrong, { gems: 10, note: 'Not quite. Try another one!' });
+  const right = await page.evaluate(() => { const i = talk.quiz.q.opts.indexOf(talk.quiz.q.ans); document.querySelectorAll('#talk-opts button')[i].click(); return { gems: state.gems, note: document.getElementById('talk-note').innerText, disabled: Array.from(document.querySelectorAll('#talk-opts button')).every((b) => b.disabled) }; });
+  assert.deepEqual(right, { gems: 10, note: 'Correct! Well done.', disabled: true });
 });
 
 test('pickups: walking onto a sparkle takes it once, it is saved, and a full net bag gives a Potion instead', async () => {
@@ -242,18 +214,17 @@ test('pickups: walking onto a sparkle takes it once, it is saved, and a full net
   assert.deepEqual(open, { nets: 1, found: ['meadow-house-net'] }, 'with room in the bag it is a Catch Net');
 });
 
-test('a saved found list and paid signs are repaired: unknown or repeated ids are dropped', async () => {
+test('a saved found list is repaired: unknown or repeated ids are dropped', async () => {
   const r = await page.evaluate(() => {
     const o = (v) => { state.overworld = v; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return JSON.parse(JSON.stringify(state.overworld)); };
     return [
-      o({ map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: ['hollow-home-gem', 'hollow-home-gem', 'nope', 5, null, 'meadow-ore'], signs: { day: '2030-01-01-extra', ids: ['meadow-quiz', 'meadow-quiz', 'x'] } }),
-      o({ map: 'hollow', x: 7, y: 9, found: 'all', signs: 'yes' }),
+      o({ map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: ['hollow-home-gem', 'hollow-home-gem', 'nope', 5, null, 'meadow-ore'] }),
+      o({ map: 'hollow', x: 7, y: 9, found: 'all' }),
       o({ map: 'hollow-home', x: 4, y: 2 })                                                                // Mum's tile: not a place to stand
     ];
   });
   assert.deepEqual(r[0].found, ['hollow-home-gem', 'meadow-ore']);
-  assert.deepEqual(r[0].signs, { day: '2030-01-01', ids: ['meadow-quiz'] });
-  assert.deepEqual([r[1].found, r[1].signs], [[], { day: '', ids: [] }]);
+  assert.deepEqual(r[1].found, []);
   assert.deepEqual([r[2].x, r[2].y], [3, 5]);
 });
 

@@ -120,6 +120,17 @@ test('the Mart opens more items as badges are won, and has no Boss Whistle', asy
   assert.ok(prices.every(Boolean), 'the price on the button is the shop price');
 });
 
+test('the Mart buys back at half price: only what you carry is listed, and the wallet grows', async () => {
+  await toClerk();
+  const r = await page.evaluate(() => {
+    state.gems = 0; state.potions = 0; state.nets = 0; state.items = { revive: 1 }; owMove('up');
+    const rows = Array.from(document.querySelectorAll('#mart-body .mart-row')).filter((x) => /half the price/.test(x.innerText)).length;
+    sellItem('revive'); sellItem('revive'); sellItem('potion');
+    return { rows, gems: state.gems, left: state.items.revive || 0, text: document.getElementById('mart-wallet').innerText };
+  });
+  assert.deepEqual(r, { rows: 1, gems: Math.floor(1500 / 2), left: 0, text: 'You have 750 gems' });
+});
+
 test('buying at the Mart goes through the shop confirmation, which opens on top, and the window shows the new wallet', async () => {
   await toClerk();
   await page.evaluate(() => { state.gems = 1000; state.nets = 0; owMove('up'); });

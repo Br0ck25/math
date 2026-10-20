@@ -1,7 +1,7 @@
 // =====================================================================
 //  PEOPLE, SIGNS AND PICKUPS on the Adventure map. One small text window (#talk-modal) serves every person and sign, with an SVG portrait (never emoji).
 //  A math sign asks one makeMcq question (the same one the Trails use, so a parent's locked types, the grade floor and Study mode all apply).
-//  Wrong answers are free. A right one pays ECON.overworld.signGems once per sign per day, for at most signsPerDay signs a day.
+//  Wrong answers are free. A right one pays nothing: a math sign is practice, as a sign is in Gold.
 // =====================================================================
 let talk = null;
 function talkOpen() { const open = openOverlays(); return !!open.length && open[open.length - 1].id === 'talk-modal'; }
@@ -64,7 +64,7 @@ function renderTalk() {
     const qz = talk.quiz;
     document.getElementById('talk-q').innerHTML = qz.q.html;
     fillOptButtons(document.getElementById('talk-opts'), qz.q.opts, answerSignQuiz);
-    document.getElementById('talk-note').innerText = qz.story ? 'Question ' + qz.round + ' of ' + qz.rounds + '. A wrong answer is free: try again!' : qz.paid ? 'This sign already paid today. Practice is free!' : signsLeft() > 0 ? 'A right answer pays ' + ECON.overworld.signGems + ' gems, once a day.' : 'No more sign gems today, but practice is free!';
+    document.getElementById('talk-note').innerText = qz.story ? 'Question ' + qz.round + ' of ' + qz.rounds + '. A wrong answer is free: try again!' : 'A math sign for practice. A wrong answer is free: try again!';
   }
 }
 function talkChoose(i) { const c = talk && talk.choices && talk.choices[i]; if (c) c.run(); }
@@ -82,19 +82,12 @@ window.addEventListener('keydown', function (e) {
 });
 
 // ----- math signs -----
-function signsToday() {
-  const s = state.overworld.signs;
-  if (s.day !== dayKey()) { s.day = dayKey(); s.ids = []; }
-  return s.ids;
-}
-function signPaid(id) { return signsToday().indexOf(id) !== -1; }
-function signsLeft() { return Math.max(0, ECON.overworld.signsPerDay - signsToday().length); }
 // A story puzzle (a sign with `story`) is a few questions in a row, locked until its Scrambler (`after`) is beaten, and pays a one-time prize.
 function openSignQuiz(sign) {
   const art = worldSprite('t-sign');
   if (sign.story && state.overworld.story.indexOf(sign.story) !== -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.done || 'Everything is in order again. Thank you!'] }); return; }
   if (sign.after && state.overworld.beat.indexOf(sign.after) === -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.locked || 'A Scrambler is guarding this. Beat them first!'] }); return; }
-  talk = { name: 'Math sign', art: art, lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), paid: signPaid(sign.id), done: false, story: sign.story || '', round: 1, rounds: sign.rounds || 1 } };
+  talk = { name: 'Math sign', art: art, lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), done: false, story: sign.story || '', round: 1, rounds: sign.rounds || 1 } };
   showModal('talk-modal', renderTalk);
 }
 function answerSignQuiz(value) {
@@ -106,10 +99,7 @@ function answerSignQuiz(value) {
   soundCorrect(1);
   Array.prototype.forEach.call(document.querySelectorAll('#talk-opts button'), function (b) { b.disabled = true; });
   if (qz.story) { owStoryReward(qz.story); note.innerText = 'All fixed! Thank you!'; return; }
-  if (qz.paid || signsLeft() === 0) { note.innerText = qz.paid ? 'Correct! This sign already paid today.' : 'Correct! No more sign gems today.'; return; }
-  signsToday().push(qz.id);
-  grantGems(ECON.overworld.signGems, 'Correct! +' + ECON.overworld.signGems + ' gems', false);
-  note.innerText = 'Correct! +' + ECON.overworld.signGems + ' gems';
+  note.innerText = 'Correct! Well done.';                           // a math sign is practice: Gold pays nothing for a sign
 }
 
 // ----- pickups: a sparkle on the ground, taken once (saved by id) -----

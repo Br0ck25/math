@@ -47,7 +47,7 @@ const ECON = {
     master: { levels: 3, minLevel: 90 }
   },
   // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
-  overworld: { grassChance: 0.18, repelSteps: 100, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, signGems: 50, signsPerDay: 5,
+  overworld: { grassChance: 0.18, repelSteps: 100, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95,
     // A trainer on the map sees the hero along the way it faces, up to `trainerSight` tiles (a trainer may set its own `sight`).
     trainerSight: 3,
     // Fishing (tap water with the Fishing Rod): this chance of a bite each try; a bite is a normal wild fight with a water buddy.
@@ -57,7 +57,7 @@ const ECON = {
     // The Mart (24l-ow-shops.js) sells these shop items (prices are ECON.items); each opens once you hold `badges` badges. No Boss Whistle: bosses are not met by walking.
     ballMult: { net: 1, greatnet: 1.5, ultranet: 2 }, potionHeal: 40, superPotionHeal: 100, eggEvery: 25, eggPerDay: 8, blackoutShare: 0.5,     // walking: every eggEvery steps count as one answer for an egg, at most eggPerDay a day
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is a Poke Ball, the Great and Ultra Nets multiply the catch value (ballMult), a Potion heals potionHeal HP
-    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'greatnet', badges: 2 }, { type: 'ultranet', badges: 4 }, { type: 'repel', badges: 1 }, { type: 'fullheal', badges: 1 }, { type: 'superpotion', badges: 2 }, { type: 'revive', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes). A math sign pays signGems once a day (at most signsPerDay signs a day); a gem pickup pays pickupGems once.
+    mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'greatnet', badges: 2 }, { type: 'ultranet', badges: 4 }, { type: 'repel', badges: 1 }, { type: 'fullheal', badges: 1 }, { type: 'superpotion', badges: 2 }, { type: 'revive', badges: 3 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes).
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
   held: { cost: { berry: 400, leftovers: 600, claw: 500, lens: 500, charm: 600 }, berryHeal: 10 },
   // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
