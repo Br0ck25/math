@@ -4,33 +4,38 @@
 //  A gym is a few trainer battles (the second one is your rival, Riley) and then a leader, a boss of that type. Trainer buddies cannot be caught.
 // =====================================================================
 const REGIONS = [
-  { id: 'meadow', name: 'Sunny Meadow', icon: '🌼', element: '' },
-  { id: 'ember', name: 'Ember Hills', icon: '🌋', element: 'fire' },
-  { id: 'tide', name: 'Tide Bay', icon: '🌊', element: 'water' },
-  { id: 'grove', name: 'Leaf Grove', icon: '🌳', element: 'nature' },
-  { id: 'volt', name: 'Volt Valley', icon: '⚡', element: 'electric' },
-  { id: 'gloom', name: 'Gloom Marsh', icon: '🌑', element: 'dark' },
-  { id: 'mystic', name: 'Mystic Peak', icon: '🔮', element: 'magic' }
-];
+  { id: 'meadow', name: 'Sunny Meadow', icon: '🌼', element: '', gym: true },
+  { id: 'ember', name: 'Ember Hills', icon: '🌋', element: 'fire', gym: true },
+  { id: 'tide', name: 'Tide Bay', icon: '🌊', element: 'water', gym: true },
+  { id: 'grove', name: 'Leaf Grove', icon: '🌳', element: 'nature', gym: true },
+  { id: 'volt', name: 'Volt Valley', icon: '⚡', element: 'electric', gym: true },
+  { id: 'gloom', name: 'Gloom Marsh', icon: '🌑', element: 'dark', gym: true },
+  { id: 'mystic', name: 'Mystic Peak', icon: '🔮', element: 'magic', gym: true },
+  { id: 'skyreach', name: 'Skyreach', icon: '☁️', element: '', gym: true }
+];   // every land has a gym; a land with no element (the Meadow and Skyreach) has buddies and a gym leader of every type
 const RIVAL = 'Rival Riley';
 // The trainers of each land, in battle order: one before Riley, Riley, one after. The list repeats if a gym has more trainers.
 const GYM_TRAINERS = {
+  meadow: ['Picnicker Daisy', RIVAL, 'Farmer Hazel'],
   ember: ['Scout Mia', RIVAL, 'Ranger Ava'],
   tide:  ['Angler Finn', RIVAL, 'Diver Coral'],
   grove: ['Gardener Fern', RIVAL, 'Ranger Oak'],
   volt:  ['Techie Watt', RIVAL, 'Sparky Zed'],
   gloom: ['Lantern Luna', RIVAL, 'Spooky Sage'],
-  mystic: ['Stargazer Iris', RIVAL, 'Mage Orion']
+  mystic: ['Stargazer Iris', RIVAL, 'Mage Orion'],
+  skyreach: ['Pilot Wren', RIVAL, 'Cloud Rider Kai']
 };
 const KNOWN_TRAINERS = Object.keys(GYM_TRAINERS).reduce(function (all, k) { return all.concat(GYM_TRAINERS[k]); }, ['']);
 function gymTrainer(regionId, step) { const list = GYM_TRAINERS[regionId]; return list[step % list.length]; }
 const GYM_STORY = {
+  meadow: { intro: ['Sunny Meadow is where every journey starts. The gym stands among the flowers.', 'Riley waves: "Let us both win our first badge!"', 'The gym leader is friendly. Show your best math!'], outro: 'The flowers sway happily. The Meadow Badge is yours! Riley grins: "One down, seven to go!"' },
   ember: { intro: ['The Ember Hills glow orange. A gym stands at the top, hot as a campfire!', 'Riley waves: "Race you to the badge, math champ!"', 'Beat the trainers, then the gym leader!'], outro: 'The flames cool down and the Ember Badge is yours! Riley grins: "Next time I will win!"' },
   tide: { intro: ['Waves splash at Tide Bay. The gym floats on the water!', 'Riley is already there: "My buddy loves the sea!"', 'Stay sharp, the tide is rising!'], outro: 'The waves calm down. The Tide Badge shines in your hand! Riley laughs: "You are getting fast!"' },
   grove: { intro: ['Leaf Grove is quiet and green. The gym hides inside a giant tree.', 'Riley whispers: "Nobody beats the trees at counting rings!"', 'Show them your best math!'], outro: 'Leaves rustle happily. You earned the Grove Badge! Riley says: "I am learning from you!"' },
   volt: { intro: ['Sparks hop between the towers of Volt Valley!', 'Riley: "I practiced my speed. Can you keep up?"', 'The gym leader is lightning quick!'], outro: 'The lights flicker and cheer. The Volt Badge is yours! Riley: "Wow, that was electric!"' },
   gloom: { intro: ['Gloom Marsh is foggy and strange, but you are not afraid!', 'Riley: "Stay close. Shadows cannot beat teamwork!"', 'The gym leader waits in the mist.'], outro: 'The fog lifts. The Gloom Badge glimmers! Riley: "You were brave. I am proud to be your rival!"' },
-  mystic: { intro: ['Mystic Peak is at the top of the kingdom, full of floating stars.', 'Riley: "This is the last gym. Do your best!"', 'Magic and math are best friends here.'], outro: 'Stars sparkle all around. The Mystic Badge is yours! Riley hugs the team: "You are the real champion!"' }
+  mystic: { intro: ['Mystic Peak is at the top of the kingdom, full of floating stars.', 'Riley: "One more gym waits in the sky after this. Do your best!"', 'Magic and math are best friends here.'], outro: 'Stars sparkle all around. The Mystic Badge is yours! Riley hugs the team: "You are the real champion!"' },
+  skyreach: { intro: ['Skyreach floats above the clouds. The last gym shines like a second sun.', 'Riley: "This is it! I trained so hard to stand here with you."', 'The gym leader uses every type. Stay sharp!'], outro: 'The clouds part and the Skyreach Badge is yours! Riley smiles: "I did not try to beat you. I tried to keep up. Thank you for the race."' }
 };
 
 // What Riley says in a rematch: the first one, then the others in turn.
@@ -70,14 +75,14 @@ function useSpring() {
 }
 // Up to five store buddies that live in a land, shown before it opens so there is something to look forward to.
 function regionPeek(r) {
-  return storePets.filter(function (p) { return !p.requiresAllStorePets && p.element === r.element; }).slice(0, 5).map(function (p) { return p.icon; }).join(' ');
+  return storePets.filter(function (p) { return !p.requiresAllStorePets && (!r.element || p.element === r.element); }).slice(0, 5).map(function (p) { return p.icon; }).join(' ');
 }
 function regionById(id) { return REGIONS.find(function (r) { return r.id === id; }) || REGIONS[0]; }
 function currentRegion() { return regionById(state.region); }
 function regionLevel(r) { return ECON.map.levels[r.id] || 1; }
 function regionUnlocked(r) { return journeyLevel() >= regionLevel(r); }
 function hasBadge(id) { return state.badges.indexOf(id) !== -1; }
-function gymRegions() { return REGIONS.filter(function (r) { return r.element; }); }
+function gymRegions() { return REGIONS.filter(function (r) { return r.gym; }); }
 
 // ----- picking the foes of a gym -----
 function gymFoeReset() {
@@ -94,7 +99,7 @@ function pickGymFoe() {
   if (state.gym.champ) { pickChampionFoe(); return; }
   const g = state.gym, r = regionById(g.region), mine = getBuddyLevel(state.activePet), bonus = g.rematch ? ECON.map.rematch.levels : 0;
   if (g.step < ECON.map.trainers) {
-    const sp = pick(wildPool().filter(function (p) { return p.element === r.element; }));
+    const sp = pick(wildPool().filter(function (p) { return !r.element || p.element === r.element; }));      // a land with no element has trainers' buddies of every type
     state.wild.id = sp.id;
     state.wild.trainer = gymTrainer(g.region, g.step);
     state.wild.shiny = false;
@@ -102,7 +107,7 @@ function pickGymFoe() {
     markDexSeen(sp.id);
     bossLevel = clamp(mine + rnd(0, 2) + bonus, 1, MAX_LEVEL);
   } else {
-    const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return monstersList[i].element === r.element && !monstersList[i].slays && bossAvailable(i); });
+    const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return (!r.element || monstersList[i].element === r.element) && !monstersList[i].slays && bossAvailable(i); });
     currentMonsterIndex = pick(cands);
     state.currentMonsterIndex = currentMonsterIndex;
     state.wild.id = '';
@@ -137,7 +142,7 @@ function advanceGym(leaderWon) {
   const badgeStars = (ECON.tech && ECON.tech.badgeStars) || 2;
   state.stars = (state.stars || 0) + badgeStars;
   toast('⭐ Earned ' + badgeStars + ' Star Sparks from Gym Badge! (★ ' + state.stars + ')');
-  return { region: r, hall: state.badges.length >= gymRegions().length };       // the sixth badge opens the Champion's Hall
+  return { region: r, hall: state.badges.length >= gymRegions().length };       // the last badge opens the Champion's Hall
 }
 function showBadgeStory(res) {
   if (res.champion) { showChampionStory(res); return; }
@@ -148,7 +153,7 @@ function showBadgeStory(res) {
   }
   const st = GYM_STORY[res.region.id];
   const panels = [{ icon: '🏅', text: st.outro }, { icon: '💎', text: 'Badge reward: +' + ECON.map.badgeGems + ' gems!' }];
-  if (res.hall) panels.push({ icon: '👑', text: "All six badges! The Champion's Hall is open: find it at the top of the Map." });
+  if (res.hall) panels.push({ icon: '👑', text: 'All ' + gymRegions().length + " badges! The Champion's Hall is open: find it at the top of the Map." });
   showStoryModal({ chapter: 'Badge ' + state.badges.length + '/' + gymRegions().length, title: res.region.icon + ' ' + res.region.name + ' Badge!', panels: panels, note: 'Badges: ' + state.badges.length + ' of ' + gymRegions().length, btn: 'Hooray!', cleared: true });
 }
 
@@ -183,7 +188,7 @@ function travelTo(id) {
 function startGym(id) {
   const r = regionById(id);
   const rematch = hasBadge(id);
-  if (!r.element || !regionUnlocked(r) || (rematch && !isChampion()) || state.gym) return;
+  if (!r.gym || !regionUnlocked(r) || (rematch && !isChampion()) || state.gym) return;
   state.region = id;
   markRegionVisited(id);
   state.gym = rematch ? { region: id, step: 0, rematch: true } : { region: id, step: 0 };
@@ -228,18 +233,18 @@ function renderMap() {
     else {
       actions = '<button class="claim-btn" ' + (here ? 'disabled' : '') + ' onclick="travelTo(&quot;' + r.id + '&quot;)">' + (here ? '📍 Here' : 'Travel') + '</button>' +
         '<button class="claim-btn" aria-label="Explore ' + r.name + '" onclick="openTrail(&quot;' + r.id + '&quot;)">' + (trailFinished(r.id) ? '🧭 ✅' : '🧭 Explore') + '</button>';
-      if (r.element) {
+      if (r.gym) {
         if (badge && g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave rematch (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else if (badge) actions += '<span class="map-badge" title="Badge earned">🏅</span>' + (isChampion() ? '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🔁 Rematch</button>' : '');
         else if (g) actions += '<button class="claim-btn" onclick="leaveGym()">Leave gym (' + state.gym.step + '/' + (ECON.map.trainers + 1) + ')</button>';
         else actions += '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startGym(&quot;' + r.id + '&quot;)">🏟️ Gym</button>';
       }
     }
-    let desc = r.element ? 'More ' + r.element + ' buddies · gym leader: a ' + r.element + ' boss' : 'Buddies of every type';
+    let desc = r.element ? 'More ' + r.element + ' buddies · gym leader: a ' + r.element + ' boss' : 'Buddies of every type · gym leader: a boss of any type';
     if (!open) desc += '<div class="map-need" title="Level ' + best + ' of ' + need + '"><i style="width:' + Math.min(100, Math.round(best / need * 100)) + '%"></i></div><div class="map-peek">👀 ' + regionPeek(r) + '</div>';
     const isNext = nextStop === r;
     let trail = '';
-    if (open && r.element) {
+    if (open && r.gym) {
       const nodes = [
         { icon: '🌿', lbl: 'Tall Grass' },
         { icon: '🧒', lbl: gymTrainer(r.id, 0) },
@@ -258,8 +263,6 @@ function renderMap() {
           '<span class="map-node-lbl">' + nd.lbl + '</span></div>';
       });
       trail += '</div>';
-    } else if (open && !r.element && here) {
-      trail = '<div class="map-trail-nodes"><div class="map-step-node active"><div class="map-node-dot"><span class="map-player-token">' + myPet.icon + '</span>🌼</div><span class="map-node-lbl">Meadow Trail</span></div></div>';
     }
     h += '<div class="care-row map-row' + (here ? ' here' : '') + (open ? '' : ' locked') + (isNext ? ' next' : '') + '" style="flex-direction:column; align-items:stretch;"><div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><div><div class="t">' + r.icon + ' ' + r.name + (r.element ? ' <span class="element-pill elem-' + r.element + '">' + r.element + '</span>' : '') + (isNext ? ' <span class="map-next">⭐ Next stop</span>' : '') + '</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>' + trail + '</div>';
   });
@@ -269,15 +272,15 @@ function renderMap() {
     state.storySeen.map = 1;
     saveState();
     showStoryModal({ chapter: 'The Journey', title: '🗺️ The Number Kingdom Map', panels: [
-      { icon: '🗺️', text: 'The Number Kingdom has six lands, one for each type of buddy.' },
+      { icon: '🗺️', text: 'The Number Kingdom has ' + gymRegions().length + ' lands, from the sunny Meadow up to Skyreach in the clouds.' },
       { icon: '🏟️', text: 'Each land has a gym. Beat its trainers and its leader to win a badge!' },
-      { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all six badges to open the Champion\'s Hall!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
+      { icon: '🧢', text: 'Your friendly rival Riley is on the same journey. Collect all ' + gymRegions().length + ' badges to open the Champion\'s Hall!' }], note: 'Lands open as your buddies get stronger.', btn: "Let's go!" });
   }
 }
 // A new region opens when your journey level (your best buddy, held back if the rest of your team is far behind) reaches its level.
 function checkRegionUnlocks() {
   REGIONS.forEach(function (r) {
-    if (!r.element || !regionUnlocked(r) || state.storySeen['open_' + r.id]) return;
+    if (!r.gym || r.id === 'meadow' || !regionUnlocked(r) || state.storySeen['open_' + r.id]) return;       // the Meadow is open from the start
     state.storySeen['open_' + r.id] = 1;
     toast('🗺️ New land open: ' + r.icon + ' ' + r.name + '! Check the Map.');
   });

@@ -2,6 +2,7 @@
 //  ADVENTURE MAPS (plain data; the engine is 24g-ow-engine.js, people are 24k-ow-people.js). One character per tile, every row of a map the same width (tests check it).
 //  A warp is a tile that sends the hero to (tx, ty) of another map: that spot must be walkable and not a warp itself. Doors are walkable tiles with a warp.
 //  `signs` maps "x,y" to the words of a sign tile: a string, or { id, text, quiz: true } for a math sign. `npcs` stand still and are solid.
+//  `gyms` maps "x,y" of a gym door tile ('G') to a land id of REGIONS: stepping on it offers that land's gym.
 //  `objects` are pickups (sparkles) that can be taken once. Tile pictures are art/world/<t>.svg (scripts/world-art.mjs). `grass` tiles can start a wild fight.
 //  `palette` recolours a map (the --w-* variables of the art). Ids of npcs, pickups and quiz signs are saved, so never rename one.
 // =====================================================================
@@ -20,6 +21,7 @@ const OW_TILES = {
   'R': { t: 't-roof', solid: true },
   'W': { t: 't-house-wall', solid: true },
   'D': { t: 't-door' },
+  'G': { t: 't-gym-door' },
   'N': { t: 't-center-sign', solid: true },
   'K': { t: 't-mart-sign', solid: true },
   'f': { t: 't-floor' },
@@ -119,9 +121,9 @@ const OW_MAPS = {
       'T,WNDW,..,WKDW,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
-      'T,RRR,,..,,,,*,T',
-      'T,RRR,,..,,,,,,T',
-      'T,WDW,,..,s,,,,T',
+      'T,RRR,,..,RRR,,T',
+      'T,RRR,,..,RRR,,T',
+      'T,WDW,,..,WGW,,T',
       'T,,,,,,..,,,,,,T',
       'T,,,,,,..,,,,,,T',
       'T,,*,,,..,,,s,,T',
@@ -135,16 +137,16 @@ const OW_MAPS = {
     ],
     npcs: [
       { id: 'meadow-guide', name: 'Guide Ivy', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 5, outfit: 2, style: 1 },
-        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'A gym will stand here too. Gyms ask a buddy to be a little stronger first, so train in the tall grass!'] }
+        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!'] }
     ],
     objects: [
       { id: 'meadow-gem', type: 'pickup', x: 13, y: 7, give: 'gems' },
       { id: 'meadow-ore', type: 'pickup', x: 2, y: 13, give: 'ore' }
     ],
     signs: {
-      '10,9': 'Meadow Gym: not open yet. Come back when your buddies are stronger!',
       '12,12': { id: 'meadow-quiz', text: 'Town quiz! Answer one question.', quiz: true }
     },
+    gyms: { '11,9': 'meadow' },
     palette: { roof: '#4F8FE0', roofD: '#2F6CC0' }
   },
   'meadow-center': owRoom('meadow-center', 'Buddy Center', { to: 'meadow', tx: 4, ty: 5 }, [

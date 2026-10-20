@@ -1,4 +1,4 @@
-// The Champion's Hall: opens after all six badges, six buddies of six types that can swap, a big first reward and a small daily one.
+// The Champion's Hall: opens after every gym badge (and stays open for a Champion), six buddies of six types that can swap, a big first reward and a small daily one.
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { launch, loadWorker, fakeKV, openGame } from './helpers.mjs';
@@ -27,25 +27,27 @@ const beat = () => page.evaluate(async () => {
 });
 const closeStory = () => page.evaluate(() => { document.getElementById('raid-modal').style.display = 'none'; modalDone(); });
 
-test('the Hall is locked until all six badges are won; the map shows why', async () => {
+test('the Hall is locked until every badge is won; the map shows why', async () => {
   const r = await page.evaluate(() => {
     const out = {};
-    state.badges = ALL_5(); startChampion(); out.gym5 = state.gym;
-    openMap(); out.locked = document.querySelector('#map-body .champion-row').className.includes('locked') && document.querySelector('#map-body .champion-row').innerText.includes('5/6'); closeMap();
-    state.badges = ALL_5().concat('mystic'); openMap();
+    state.badges = ALL_7(); startChampion(); out.gym5 = state.gym;
+    openMap(); out.locked = document.querySelector('#map-body .champion-row').className.includes('locked') && document.querySelector('#map-body .champion-row').innerText.includes('7/8'); closeMap();
+    out.keeps = (state.storySeen.champion = 1, startChampion(), state.gym && state.gym.region); state.gym = null; state.storySeen.champion = 0;     // an old Champion keeps the Hall when gyms are added
+    state.badges = gymRegions().map((x) => x.id); openMap();
     const btn = [...document.querySelectorAll('#map-body .champion-row .claim-btn')].map((b) => b.innerText).join();
     closeMap();
     return Object.assign(out, { btn });
-    function ALL_5() { return ['ember', 'tide', 'grove', 'volt', 'gloom']; }
+    function ALL_7() { return gymRegions().map((x) => x.id).slice(0, 7); }
   });
   assert.equal(r.gym5, null);
   assert.equal(r.locked, true);
+  assert.equal(r.keeps, 'champion', 'a Champion keeps the Hall');
   assert.match(r.btn, /Challenge/);
 });
 
 test('Nova has six buddies, one of each type, stronger than yours, that cannot be caught', async () => {
   const r = await page.evaluate(() => {
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; state.buddyXp.dog = xpForLevel(30);
+    state.badges = gymRegions().map((x) => x.id); state.buddyXp.dog = xpForLevel(30);
     const mine = getBuddyLevel(state.activePet), nets = state.nets;
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
     const info = getBossInfo();
@@ -65,7 +67,7 @@ test('Nova has six buddies, one of each type, stronger than yours, that cannot b
 test('Nova swaps a hurt buddy (or one yours beats) for a clearly better one, never too often, and a fallen buddy never returns', async () => {
   const r = await page.evaluate(() => {
     const out = {};
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic'];
+    state.badges = gymRegions().map((x) => x.id);
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
     const pet = getActivePetDisplay(), cur = state.wild.id, max = getBossMaxHp();
     monsterCurrentHp = max; championAfterHit(pet); out.healthy = state.wild.id === cur || championMatchup(cur, pet) === -1;
@@ -91,9 +93,9 @@ test('Nova swaps a hurt buddy (or one yours beats) for a clearly better one, nev
   assert.equal(r.neverFallen, true);
 });
 
-test('beating all six pays the big first reward once: gems, nets, held items, three gear pieces, and the Champion title', async () => {
+test('beating all of Nova\'s six buddies pays the big first reward once: gems, nets, held items, three gear pieces, and the Champion title', async () => {
   await page.evaluate(() => {
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; state.gems = 0; state.nets = 0; state.heldOwned = ['berry']; state.storySeen.champion = 0;
+    state.badges = gymRegions().map((x) => x.id); state.gems = 0; state.nets = 0; state.heldOwned = ['berry']; state.storySeen.champion = 0;
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
   });
   for (let i = 0; i < 5; i++) {
@@ -123,7 +125,7 @@ test('beating all six pays the big first reward once: gems, nets, held items, th
 test('a repeat win pays a little once a day, and no gear again; the map then offers a rematch', async () => {
   const r = await page.evaluate(async () => {
     const out = {};
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; state.storySeen.champion = 1; state.champ = { wins: 1, day: '2000-01-01' };
+    state.badges = gymRegions().map((x) => x.id); state.storySeen.champion = 1; state.champ = { wins: 1, day: '2000-01-01' };
     state.gems = 0; state.nets = 0; state.heldOwned = [];
     state.gym = { region: 'champion', step: 5, champ: Object.assign(freshChampionRun(), { fallen: CHAMPION_TEAM.slice(0, 5) }) };
     state.wild.id = CHAMPION_TEAM[5];
@@ -143,7 +145,7 @@ test('a repeat win pays a little once a day, and no gear again; the map then off
 test('a fight in progress survives a reload with the same buddy, its HP and who has fallen; a broken or unearned save is repaired', async () => {
   const r = await page.evaluate(() => {
     const out = {};
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic'];
+    state.badges = gymRegions().map((x) => x.id);
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
     const c = state.gym.champ, cur = state.wild.id, other = c.team.find((id) => id !== cur);
     c.fallen = [other]; state.gym.step = 1; monsterCurrentHp = 2; c.hp[cur] = 2;
@@ -172,7 +174,7 @@ test('a fight in progress survives a reload with the same buddy, its HP and who 
 
   // a real reload
   await page.evaluate(() => {
-    localStorage.clear(); state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic'];
+    localStorage.clear(); state.badges = gymRegions().map((x) => x.id);
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
     const c = state.gym.champ, cur = state.wild.id; monsterCurrentHp = 2; c.hp[cur] = 2; window.__cur = cur; saveState();
   });
@@ -184,7 +186,7 @@ test('a fight in progress survives a reload with the same buddy, its HP and who 
 
 test('leaving the battle ends it without a reward, and a lost fight costs nothing', async () => {
   const r = await page.evaluate(() => {
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; state.gems = 7;
+    state.badges = gymRegions().map((x) => x.id); state.gems = 7;
     startChampion(); document.getElementById('raid-modal').style.display = 'none'; modalDone();
     leaveGym();
     return { gym: state.gym, gems: state.gems, wins: state.champ.wins, wild: !!state.wild.id };

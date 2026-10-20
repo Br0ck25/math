@@ -17,10 +17,10 @@ export const MAP = [
   [/js\/(12-battle|12b-|13-loot|19-quests)/, ['wild', 'backup', 'feel', 'farm', 'adventure-trainers']],
   [/js\/12[cd]-/, ['moves']],
   [/js\/(13b-wild|24-raids)/, ['wild', 'legend', 'farm']],
-  [/js\/24b-map/, ['map']],
+  [/js\/24b-map/, ['map', 'adventure-gyms']],
   [/js\/24e-trail/, ['trail', 'map']],
   [/js\/24c-legend/, ['legend']],
-  [/js\/24d-champion/, ['champion']],
+  [/js\/24d-champion/, ['champion', 'adventure-gyms']],
   [/js\/20b-tech-tree/, ['tech-tree', 'economy', 'app']],
   [/js\/(25-buddy-hub|25b-held|14-items)/, ['held', 'confirm', 'adventure-shops']],
   [/js\/25d-ranch/, ['ranch', 'held']],
@@ -35,7 +35,7 @@ export const MAP = [
   [/js\/(01-|01b-|05-|97-|97b-|97c-|97d-|97e-|25c-|98-|06-|11-|16-|17-|18-|20-|21-|22-|30-|32-|34-|99-)/, ['speech', 'app', 'ui']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['app', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'art-world']],
+  [/js\/24[g-z]-ow-/, ['overworld', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'art-world']],
   [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
 const FALLBACK = ['app', 'ui'];

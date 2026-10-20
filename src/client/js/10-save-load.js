@@ -85,7 +85,7 @@ const NORMALIZERS = [
     s.badges.forEach(function (b) { if (s.regionsVisited.indexOf(b) === -1) s.regionsVisited.push(b); });
     const g = s.gym;
     const rematch = !!(g && g.rematch === true && s.storySeen.champion && g.region && s.badges.indexOf(g.region) !== -1);     // a rematch is only for Champions, in a land they cleared
-    if (g && isPlainObject(g) && g.region === 'champion' && gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; })) {      // the Champion's Hall needs all six badges
+    if (g && isPlainObject(g) && g.region === 'champion' && (s.storySeen.champion || gymRegions().every(function (r) { return s.badges.indexOf(r.id) !== -1; }))) {      // the Champion's Hall needs every badge (a Champion keeps it)
       const champ = cleanChampionRun(g.champ);
       s.gym = { region: 'champion', step: champ.fallen.length, champ: champ };
     } else if (g && isPlainObject(g) && gymRegions().some(function (r) { return r.id === g.region; }) && (s.badges.indexOf(g.region) === -1 || rematch)) {

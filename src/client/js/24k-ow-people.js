@@ -124,3 +124,16 @@ function owTrainerTalk(npc) {
   openTalk({ name: npc.name, art: art, lines: npc.lines, onClose: owStepBack,
     choices: [{ label: 'Battle!', run: function () { talk.onClose = null; closeTalk(); startTrainerFight(npc); } }] });
 }
+
+// ----- gyms: stepping on a gym door offers that land's gym (the usual gym run on the battle screen: trainers, Riley, then the leader) -----
+function owEnterGym(id) {
+  const r = regionById(id), art = worldSprite('t-gym-door'), name = r.name + ' Gym';
+  const say = function (lines, choices) { openTalk({ name: name, art: art, lines: lines, choices: choices || null, onClose: owStepBack }); };
+  if (state.gym) { say(['A gym run is already going on. Finish it or leave it on the Map first.']); return; }
+  if (!regionUnlocked(r)) { say(['The gym leader smiles: "Come back a little stronger!"', 'Your team is level ' + journeyLevel() + ' and this gym opens at level ' + regionLevel(r) + '. Train in the tall grass and visit again.']); return; }
+  const have = hasBadge(id);
+  if (have && !isChampion()) { say(['You already have the ' + r.name + ' Badge. Well done!', 'Champions can come back for rematches.']); return; }
+  const go = function () { talk.onClose = null; closeTalk(); closeOverworld(); startGym(id); };
+  if (have) { say(['Welcome back, Champion! Want a rematch? The trainers and the leader are stronger now.'], [{ label: 'Rematch!', run: go }]); return; }
+  say(['This is the ' + r.name + ' Gym. Beat ' + ECON.map.trainers + ' trainers, then the gym leader, to win a badge.', 'Losing costs nothing, and you can leave any time. Ready?'], [{ label: 'Enter the gym', run: go }]);
+}

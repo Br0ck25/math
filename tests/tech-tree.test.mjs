@@ -227,10 +227,10 @@ test('trainer titles, collapsible sanctuary sections, and full move names', asyn
     state.buddyXp.dog = xpForLevel(20);
     out.gemDefUnlocked = titleRequirementMet('Gem Defender');
 
-    // Kingdom Explorer (requires visiting all 7 kingdoms)
-    state.regionsVisited = ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom'];
+    // Kingdom Explorer (requires visiting every land)
+    state.regionsVisited = REGIONS.slice(0, -1).map((x) => x.id);
     out.explorerLocked = !titleRequirementMet('Kingdom Explorer');
-    state.regionsVisited.push('mystic');
+    state.regionsVisited.push(REGIONS[REGIONS.length - 1].id);
     out.explorerUnlocked = titleRequirementMet('Kingdom Explorer');
 
     // Buddy Tamer (requires 50 unique buddies)
@@ -292,8 +292,8 @@ test('trainer titles, collapsible sanctuary sections, and full move names', asyn
   assert.match(r.tapToast, /waves happily from the Sanctuary/);
   assert.equal(r.gemDefLocked, true, 'Gem Defender locked at level 19');
   assert.equal(r.gemDefUnlocked, true, 'Gem Defender unlocked at level 20');
-  assert.equal(r.explorerLocked, true, 'Kingdom Explorer locked at 6 lands');
-  assert.equal(r.explorerUnlocked, true, 'Kingdom Explorer unlocked at 7 lands');
+  assert.equal(r.explorerLocked, true, 'Kingdom Explorer locked with one land missing');
+  assert.equal(r.explorerUnlocked, true, 'Kingdom Explorer unlocked at every land');
   assert.equal(r.tamerLocked, true, 'Buddy Tamer locked at 1 buddy');
   assert.equal(r.tamerUnlocked, true, 'Buddy Tamer unlocked at 50 buddies');
   assert.equal(r.arithLocked, true, 'Grand Arithmancer locked at level 59');

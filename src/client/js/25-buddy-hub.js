@@ -139,7 +139,7 @@ const PROFILE_TITLES = [
   { id: 'Rookie Calculator', label: 'Rookie Calculator', icon: '🌱', desc: 'Your starting trainer title', cost: 0, req: 'Starting title' },
   { id: 'Number Knight', label: 'Number Knight', icon: '⚔️', desc: 'Complete all 5 raid chapters', cost: (ECON.profile && ECON.profile.titles && ECON.profile.titles.knight) || 20, req: 'Complete all raids' },
   { id: 'Gem Defender', label: 'Gem Defender', icon: '🛡️', desc: 'Train any buddy to Level 20', cost: (ECON.profile && ECON.profile.titles && ECON.profile.titles.defender) || 45, req: 'Reach Buddy Lv 20' },
-  { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', desc: 'Visit all 7 Number Kingdom lands', cost: (ECON.profile && ECON.profile.titles && ECON.profile.titles.explorer) || 60, req: 'Visit all 7 kingdoms' },
+  { id: 'Kingdom Explorer', label: 'Kingdom Explorer', icon: '🧭', desc: 'Visit all ' + REGIONS.length + ' Number Kingdom lands', cost: (ECON.profile && ECON.profile.titles && ECON.profile.titles.explorer) || 60, req: 'Visit all ' + REGIONS.length + ' kingdoms' },
   { id: 'Buddy Tamer', label: 'Buddy Tamer', icon: '🐾', desc: 'Befriend 50 unique buddies', cost: (ECON.profile && ECON.profile.titles && (ECON.profile.titles.tamer || ECON.profile.titles.dragon)) || 90, req: 'Own 50 unique buddies' },
   { id: 'Grand Arithmancer', label: 'Grand Arithmancer', icon: '👑', desc: 'Train any buddy to Level 60', cost: (ECON.profile && ECON.profile.titles && ECON.profile.titles.arithmancer) || 150, req: 'Reach Buddy Lv 60+' }
 ];
@@ -161,7 +161,7 @@ function titleRequirementMet(id) {
   if (id === 'Rookie Calculator') return true;
   if (id === 'Number Knight') return (state.raidsCleared || 0) >= 5;
   if (id === 'Gem Defender') return getBestLevel() >= 20;
-  if (id === 'Kingdom Explorer') return (typeof getVisitedKingdomsCount === 'function' ? getVisitedKingdomsCount() : 0) >= 7;
+  if (id === 'Kingdom Explorer') return (typeof getVisitedKingdomsCount === 'function' ? getVisitedKingdomsCount() : 0) >= REGIONS.length;
   if (id === 'Buddy Tamer' || id === 'Dragon Tamer') return (typeof getOwnedIds === 'function' ? getOwnedIds().length : 0) >= 50;
   if (id === 'Grand Arithmancer') return getBestLevel() >= 60;
   return false;
@@ -171,7 +171,7 @@ function titleProgress(id) {
   if (id === 'Rookie Calculator') return 'Default';
   if (id === 'Number Knight') return 'Raids: ' + Math.min(5, state.raidsCleared || 0) + '/5';
   if (id === 'Gem Defender') return 'Best Lv: ' + Math.min(20, getBestLevel()) + '/20';
-  if (id === 'Kingdom Explorer') return 'Lands: ' + Math.min(7, typeof getVisitedKingdomsCount === 'function' ? getVisitedKingdomsCount() : 1) + '/7';
+  if (id === 'Kingdom Explorer') return 'Lands: ' + Math.min(REGIONS.length, typeof getVisitedKingdomsCount === 'function' ? getVisitedKingdomsCount() : 1) + '/' + REGIONS.length;
   if (id === 'Buddy Tamer' || id === 'Dragon Tamer') return 'Buddies: ' + Math.min(50, typeof getOwnedIds === 'function' ? getOwnedIds().length : 0) + '/50';
   if (id === 'Grand Arithmancer') return 'Best Lv: ' + Math.min(60, getBestLevel()) + '/60';
   return '';

@@ -18,7 +18,8 @@ const TRAIL_LORE = {
   grove: 'The old trees of Leaf Grove remember every buddy that ever walked here.',
   volt: 'Lightning never strikes the same trail twice in Volt Valley.',
   gloom: 'The fog in Gloom Marsh is thick, but friendly buddies glow in it.',
-  mystic: 'Stars fall here at night. Make a wish after you solve a puzzle!'
+  mystic: 'Stars fall here at night. Make a wish after you solve a puzzle!',
+  skyreach: 'Up here the clouds are soft and the buddies are curious. Count carefully!'
 };
 
 // Partner skills: today's Stone gate wants one element on your team (a Wildcard buddy counts as any).

@@ -1,5 +1,5 @@
 // =====================================================================
-//  THE CHAMPION'S HALL: after all six badges, Champion Nova waits with six buddies, one of each type.
+//  THE CHAMPION'S HALL: after all the gym badges, Champion Nova waits with six buddies, one of each type.
 //  Nova may swap buddies during the fight (a hurt buddy, or one that your buddy beats, steps out for a better one; ECON.map.champion).
 //  Beat all six in a row to win. The first win pays the big reward and makes you Champion; after that a win pays a little once a day.
 //  A fight is a gym run: state.gym = { region: 'champion', step, champ: { team, fallen, hp, swaps, cool, level } }.
@@ -8,7 +8,7 @@ const CHAMPION_NAME = 'Champion Nova';
 const CHAMPION_TEAM = ['phoenix', 'shark', 'lion', 'griffin', 'panther', 'pegasus'];       // fire, water, nature, electric, dark, magic (store buddies, so their ids never change)
 const CHAMPION_LINES = ['Six buddies, six types. Show me what you have got!', 'My team can swap places any time!', 'Every buddy of mine trained for this day!', 'Math is my superpower. Is it yours?', 'I will not go down easy, challenger!'];
 
-function championOpen() { return gymRegions().every(function (r) { return hasBadge(r.id); }); }
+function championOpen() { return isChampion() || gymRegions().every(function (r) { return hasBadge(r.id); }); }       // a Champion keeps the Hall when new gyms are added
 function inChampionBattle() { return !!(state.gym && state.gym.champ); }
 function championAlive() { const c = state.gym.champ; return c.team.filter(function (id) { return c.fallen.indexOf(id) === -1; }); }
 function freshChampionRun() { return { team: CHAMPION_TEAM.slice(), fallen: [], hp: {}, swaps: 0, cool: 0, level: 0 }; }
@@ -124,7 +124,7 @@ function startChampion() {
   const again = state.champ.wins > 0;
   enqueueModal(function () {
     showStoryModal({ chapter: "Champion's Hall", title: '👑 The Champion\'s Hall', panels: [
-      { icon: '🏛️', text: again ? 'Nova is back on the stage: "Let us play again, Champion!"' : 'You walk into a golden hall. Champion Nova waits with a smile: "Six badges! I have been expecting you."' },
+      { icon: '🏛️', text: again ? 'Nova is back on the stage: "Let us play again, Champion!"' : 'You walk into a golden hall. Champion Nova waits with a smile: "All the badges! I have been expecting you."' },
       { icon: '🔄', text: 'Nova has six buddies, one of each type. Nova can swap them at any time, so keep an eye on your matchups!' },
       { icon: '⚔️', text: 'Beat all six buddies in a row to win. If you leave, the fight starts over.' },
       { icon: '💎', text: again ? 'A win pays +' + ECON.map.champion.repeatGems + ' gems once a day.' : 'The first win pays +' + ECON.map.champion.firstGems + ' gems, special gear and more!' }], note: '6 buddies. Nova\'s buddies cannot be caught.', btn: '⚔️ To battle!' });
@@ -136,7 +136,7 @@ function championRowHtml() {
   if (!open) actions = '<span class="map-badge">🔒</span>';
   else if (here) actions = '<button class="claim-btn" onclick="leaveGym()">Leave battle (' + state.gym.step + '/' + CHAMPION_TEAM.length + ')</button>';
   else actions = '<button class="claim-btn" ' + (state.gym ? 'disabled' : '') + ' onclick="startChampion()">' + (wins ? '👑 Rematch' : '👑 Challenge') + '</button>';
-  const desc = !open ? '🔒 Win all six badges first (' + state.badges.length + '/' + gymRegions().length + ')'
+  const desc = !open ? '🔒 Win all ' + gymRegions().length + ' badges first (' + state.badges.length + '/' + gymRegions().length + ')'
     : wins ? 'Six buddies, one of each type · +' + ECON.map.champion.repeatGems + ' 💎 once a day · wins: ' + wins
     : 'Six buddies, one of each type, and Nova swaps them · big reward on your first win';
   return '<div class="care-row map-row champion-row' + (open ? '' : ' locked') + '"><div><div class="t">👑 The Champion\'s Hall</div><div class="d">' + desc + '</div></div><div class="map-actions">' + actions + '</div></div>';

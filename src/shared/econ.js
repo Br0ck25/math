@@ -33,14 +33,14 @@ const ECON = {
   // A spare (a caught buddy you already own) sells for a share of a store buddy's price (at least 1 gem), or a flat amount for a secret one.
   sell: { storeShare: 0.2, secret: 12, legend: 100 },
   // The map: a region unlocks when your best buddy reaches its level; a gym is `trainers` trainer battles and then a leader (a boss of that type).
-  // Winning the gym gives a badge and gems; all six badges make you Champion.
+  // Winning the gym gives a badge and gems; all the gym badges open the Champion's Hall.
   map: {
-    levels: { ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48 },
+    levels: { meadow: 1, ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48, skyreach: 56 },
     trainers: 3, trainerHpMult: 1.2, trainerGems: 4, regionShare: 0.8, badgeGems: 60,
     // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
     // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
     rematch: { levels: 4, gems: 40, perDay: 3 },
-    // The Champion's Hall (24d-champion.js), open once all six badges are won: Champion Nova's six buddies (one of each type), `levels` above your buddy.
+    // The Champion's Hall (24d-champion.js), open once every gym badge is won (a Champion keeps it when gyms are added): Champion Nova's six buddies (one of each type), `levels` above your buddy.
     // Nova swaps a buddy that is below `swapAt` of its HP (or that your buddy beats) for a clearly better one: at most `maxSwaps` times, never again within `cooldown` hits.
     // The first win pays `firstGems`, `nets` Catch Nets, one of each held item and three secret gear pieces (and makes you Champion); after that a win pays `repeatGems` once a day.
     champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50, swapAt: 0.4, maxSwaps: 4, cooldown: 3 }

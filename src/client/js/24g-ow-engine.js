@@ -98,6 +98,8 @@ function owMove(dir) {
   if (pickup) { owCollect(pickup); renderOverworld(); }
   const seer = owTrainerSeeing(here, o.x, o.y);
   if (seer) { owChallenge(seer); return; }
+  const gym = here.gyms && here.gyms[o.x + ',' + o.y];
+  if (gym) { owEnterGym(gym); return; }
   if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
 }
 // Space or Enter: talk to or read what the hero faces.
