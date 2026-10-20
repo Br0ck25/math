@@ -52,7 +52,7 @@ const findLowContrast = () => {
 const WINDOWS = ['openShop', 'openSettings', 'openQuests', 'openCal', 'openBook', 'openHub', 'openParent', 'openReportModal'];
 test('text on the main screen and in every window is readable', async () => {
   const g = await openGame(browser, worker, env, { viewport: { width: 375, height: 700 } });
-  await g.page.evaluate(() => { state.gems = 50; updateStatsUI(); });
+  await g.page.evaluate(() => { document.getElementById('foe-intro').style.transition = 'none'; state.gems = 50; updateStatsUI(); });      // the new-foe banner fades by itself: measure it fully on or fully off, never half way
   const failures = { main: await g.page.evaluate(findLowContrast) };
   for (const fn of WINDOWS) {
     await g.page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => { m.style.display = 'none'; }));
