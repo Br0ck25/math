@@ -16,6 +16,8 @@ function weatherOfBuddy(id) {
 }
 function weatherToday() { return WEATHER[dayHash(dayKey() + 'weather') % WEATHER.length]; }
 // Store buddies (except the Bandit) and secret buddies. Mythic, ultra and boss buddies keep their own special ways of being earned.
+// Which kinds of wild buddy come out when (Gold's wild buddies change with the time of day).
+const TIME_FAVOURS = { morning: ['nature', 'water'], night: ['dark', 'magic'] };
 function wildPool() {
   return storePets.filter(function (p) { return !p.requiresAllStorePets; }).concat(secretCompanions);
 }
@@ -43,6 +45,7 @@ function rollWildSpecies(skip) {
   };
   if (region.element && roll < ECON.map.regionShare) favour([region.element]);                                   // the land you are in: more of its type
   else if (roll >= ECON.map.regionShare && roll < ECON.map.regionShare + ECON.weather.share) weatherPick(today);   // today's weather
+  else if (TIME_FAVOURS[owTimeOfDay()] && Math.random() < 0.3) favour(TIME_FAVOURS[owTimeOfDay()]);               // the time of day: dark and magic buddies come out at night, nature and water ones in the morning
   let sp;
   for (let tries = 0; tries < 5; tries++) {
     sp = pick(Math.random() < ECON.wild.storeShare ? store : secret);

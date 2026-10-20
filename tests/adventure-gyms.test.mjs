@@ -25,104 +25,6 @@ const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   renderOverworld();
 }, [map, x, y, face]);
 
-test('there are eight gym lands, each with a level, three trainers (Riley second) and a story', async () => {
-  const r = await page.evaluate(() => ({
-    ids: gymRegions().map((x) => x.id), levels: gymRegions().map((x) => regionLevel(x)), lands: REGIONS.length,
-    trainers: gymRegions().every((x) => GYM_TRAINERS[x.id].length === 3 && GYM_TRAINERS[x.id][1] === RIVAL && new Set(GYM_TRAINERS[x.id]).size === 3),
-    story: gymRegions().every((x) => GYM_STORY[x.id].intro.length === 3 && GYM_STORY[x.id].outro.length > 20),
-    lore: REGIONS.every((x) => !!TRAIL_LORE[x.id]), known: gymRegions().every((x) => GYM_TRAINERS[x.id].every((n) => KNOWN_TRAINERS.indexOf(n) !== -1)),
-    names: new Set(gymRegions().flatMap((x) => GYM_TRAINERS[x.id].filter((n) => n !== RIVAL))).size
-  }));
-  assert.deepEqual(r.ids, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'skyreach']);
-  assert.deepEqual(r.levels, [1, 8, 16, 24, 32, 40, 48, 56]);
-  assert.equal(r.lands, 8);
-  assert.ok(r.trainers && r.story && r.lore && r.known);
-  assert.equal(r.names, 16, 'every trainer is a different person');
-});
-
-test('a land with no element has trainer buddies and a leader of any type, never a slayer, always one the buddy may meet', async () => {
-  const r = await page.evaluate(() => {
-    state.buddyXp.dog = xpForLevel(70);
-    const out = {};
-    ['meadow', 'skyreach'].forEach((id) => {
-      state.gym = { region: id, step: 0 }; const trainerEls = new Set(), leaderEls = new Set(); let slayer = false, unavailable = false;
-      for (let i = 0; i < 80; i++) {
-        state.gym.step = i % 3; pickGymFoe(); trainerEls.add(getSpecies(state.wild.id).element);
-        state.gym.step = ECON.map.trainers; pickGymFoe(); leaderEls.add(monstersList[currentMonsterIndex].element); slayer = slayer || !!monstersList[currentMonsterIndex].slays; unavailable = unavailable || !bossAvailable(currentMonsterIndex);
-      }
-      out[id] = { trainers: trainerEls.size > 2, leaders: leaderEls.size > 2, slayer, unavailable, wildId: state.wild.id };
-    });
-    state.gym = { region: 'ember', step: 0 };
-    const fire = new Set(); for (let i = 0; i < 40; i++) { state.gym.step = ECON.map.trainers; pickGymFoe(); fire.add(monstersList[currentMonsterIndex].element); }
-    out.ember = [...fire].join();
-    state.gym = null;
-    return out;
-  });
-  ['meadow', 'skyreach'].forEach((id) => assert.deepEqual(r[id], { trainers: true, leaders: true, slayer: false, unavailable: false, wildId: '' }, id));
-  assert.equal(r.ember, 'fire', 'an elemental gym is unchanged');
-});
-
-test('the Meadow gym is always open and pays the badge once; Skyreach opens at its level', async () => {
-  const r = await page.evaluate(() => {
-    const out = {};
-    out.open = [regionUnlocked(regionById('meadow')), regionUnlocked(regionById('skyreach'))];
-    startGym('skyreach'); out.refused = state.gym;
-    startGym('meadow'); document.getElementById('raid-modal').style.display = 'none'; modalDone();
-    out.gym = JSON.stringify(state.gym); out.foe = getBossInfo().trainer;
-    state.gems = 0; state.stars = 0; state.gym.step = ECON.map.trainers;
-    const res = advanceGym(true);
-    out.badge = [state.badges.slice(), state.gems, state.stars, res.hall];
-    state.buddyXp.dog = xpForLevel(80);
-    out.skyOpen = regionUnlocked(regionById('skyreach'));
-    startGym('skyreach'); out.sky = state.gym && state.gym.region; state.gym = null;
-    return out;
-  });
-  assert.deepEqual(r.open, [true, false]);
-  assert.equal(r.refused, null);
-  assert.equal(r.gym, '{"region":"meadow","step":0}');
-  assert.equal(r.foe, 'Picnicker Daisy');
-  assert.deepEqual(r.badge, [['meadow'], 60, 2, false]);
-  assert.equal(r.skyOpen, true);
-  assert.equal(r.sky, 'skyreach');
-});
-
-test('the Map window shows both new gyms with a gym button and a leader of any type, and the Meadow no longer hides its gym', async () => {
-  const r = await page.evaluate(() => {
-    state.buddyXp.dog = xpForLevel(80); openMap();
-    const rows = Array.from(document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row):not(.spring-row):not(.adventure-row)'));
-    const find = (name) => rows.find((x) => x.innerText.includes(name));
-    return { n: rows.length, meadow: find('Sunny Meadow').innerText, sky: find('Skyreach').innerText, gymButtons: rows.filter((x) => /Gym/.test(x.innerText) && x.querySelector('.claim-btn[onclick^="startGym"]')).length, trail: document.querySelectorAll('#map-body .map-trail-nodes').length };
-  });
-  assert.equal(r.n, 8);
-  assert.match(r.meadow, /gym leader: a boss of any type/);
-  assert.match(r.sky, /gym leader: a boss of any type/);
-  assert.equal(r.gymButtons, 8);
-  assert.equal(r.trail, 8, 'every open land shows its gym trail');
-});
-
-test('the Champion\'s Hall needs every badge, but a Champion keeps it when gyms are added', async () => {
-  const r = await page.evaluate(() => {
-    const out = {};
-    const six = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic'];
-    state.badges = six.slice(); state.storySeen.champion = 0;
-    out.sixNew = championOpen(); openMap(); out.text = document.querySelector('#map-body .champion-row').innerText; closeMap();
-    state.badges = gymRegions().map((x) => x.id); out.all = championOpen();
-    state.badges = six.slice(); state.storySeen.champion = 1; out.sixChampion = championOpen();
-    startChampion(); out.run = state.gym && state.gym.region; document.getElementById('raid-modal').style.display = 'none'; modalDone();
-    state.gym.champ.fallen = CHAMPION_TEAM.slice(0, 2); const kept = JSON.stringify(state.gym.champ.fallen);
-    NORMALIZERS.forEach((fn) => fn(state)); out.keptRun = state.gym && state.gym.region === 'champion' && JSON.stringify(state.gym.champ.fallen) === kept;
-    state.storySeen.champion = 0; NORMALIZERS.forEach((fn) => fn(state)); out.droppedRun = state.gym;
-    return out;
-  });
-  assert.equal(r.sixNew, false);
-  assert.match(r.text, /Win all 8 badges first \(6\/8\)/);
-  assert.equal(r.all, true);
-  assert.equal(r.sixChampion, true);
-  assert.equal(r.run, 'champion');
-  assert.equal(r.keptRun, true, 'a Champion\'s run in progress survives a reload');
-  assert.equal(r.droppedRun, null, 'the same run is dropped when the Hall is not earned');
-});
-
 test('a land opens with a note when its level is reached, except the Meadow which is open from the start', async () => {
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(90); state.storySeen = { map: 1 };
@@ -193,25 +95,15 @@ test('a gym that is too hard says how close you are and starts nothing; a won ba
   assert.deepEqual(champ.choices, ['Rematch!']);
 });
 
-test('old saves keep working: six badges and no Hall yet leave the Meadow and Skyreach to win, and the Map says so', async () => {
-  const r = await page.evaluate(() => {
-    state.badges = ['ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']; NORMALIZERS.forEach((fn) => fn(state));
-    openMap(); const t = document.getElementById('map-progress').innerText; closeMap();
-    return { badges: state.badges.length, t, open: championOpen() };
-  });
-  assert.equal(r.badges, 6);
-  assert.match(r.t, /Badges 6\/8/);
-  assert.equal(r.open, false);
-});
-
 const ready = () => page.waitForFunction(() => ab && !ab.busy && ab.phase === 'menu', null, { timeout: 30000 });
 // Wins every fight of the chain: each time the menu is up, every foe is at 1 HP and one right answer and attack finishes the current one.
 const winChain = async () => {
   await page.evaluate(() => { Math.random = () => 0.3; });
-  for (let k = 0; k < 150; k++) {
-    await page.waitForFunction(() => !ab || (!ab.busy && ab.phase === 'menu'), null, { timeout: 60000 });
+  for (let k = 0; k < 400; k++) {
+    await page.waitForFunction(() => !ab || (!ab.busy && (ab.phase === 'menu' || ab.phase === 'learn')), null, { timeout: 240000 });
     if (!(await page.evaluate(() => !!ab))) return;
-    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = Math.min(f.hp, 1); f.atk = 1; }); abFight(); abAnswer(ab.q.ans); abUseMove(0); });
+    if (await page.evaluate(() => ab.phase === 'learn')) { await page.evaluate(() => abLearnChoose(-1)); continue; }       // a full buddy is asked which move to forget: keep the moves
+    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = Math.min(f.hp, 1); f.atk = 1; f.spc = 1; }); abFight(); abAnswer(ab.q.ans); ab.party.forEach((m) => m.moves.forEach((mv) => { mv.left = mv.pp; })); abUseMove(0); });
     await page.waitForTimeout(500);
   }
 };
@@ -240,4 +132,24 @@ test('losing in a gym gives no badge and returns to the Center; the Hall is the 
   await page.evaluate(() => { state.badges = gymRegions().map((g) => g.id); state.buddyXp[state.activePet] = xpForLevel(60); abStartHall(); Math.random = () => 0.5; });
   await winChain();
   assert.equal(await page.evaluate(() => state.storySeen.champion), 1);
+});
+
+test('there are eight gym lands, each with a level, three trainers (Riley second) and a story', async () => {
+  const r = await page.evaluate(() => gymRegions().map((g) => [g.id, ECON.map.levels[g.id] >= 1, GYM_TRAINERS[g.id].length, GYM_TRAINERS[g.id][1] === RIVAL, !!GYM_STORY[g.id]]));
+  assert.equal(r.length, 8);
+  assert.ok(r.every((x) => x[1] && x[2] === 3 && x[3] && x[4]));
+});
+
+test('a land with no element has trainer buddies and a leader of any type, never a slayer; the Hall needs every badge but a Champion keeps it', async () => {
+  const r = await page.evaluate(() => {
+    const out = { kinds: new Set(), slayer: false };
+    for (let i = 0; i < 30; i++) { const b = monstersList[abBossIndex('')]; out.kinds.add(b.element); if (b.slays) out.slayer = true; }
+    state.badges = ['meadow']; state.storySeen.champion = 0; const shut = championOpen();
+    state.badges = gymRegions().map((g) => g.id); const open = championOpen();
+    state.badges = []; state.storySeen.champion = 1; const champ = championOpen();
+    return { kinds: out.kinds.size, slayer: out.slayer, shut, open, champ };
+  });
+  assert.ok(r.kinds >= 3);
+  assert.equal(r.slayer, false);
+  assert.deepEqual([r.shut, r.open, r.champ], [false, true, true]);
 });

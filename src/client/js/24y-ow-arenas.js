@@ -56,7 +56,7 @@ function abStartBoss(npc) {
 
 // ----- the Hall: the Elite Four, then Nova -----
 function abHallRounds() {
-  const mine = getBuddyLevel(state.activePet), rounds = ELITE_FOUR.map(function (e) { return { kind: 'trainer', name: e.name, foes: abTeamOf(e.element, 3, mine) }; });
+  const mine = getBuddyLevel(state.activePet), rounds = ELITE_FOUR.map(function (e) { return { kind: 'trainer', name: e.name, foes: abTeamOf(e.element, 5, mine) }; });
   rounds.push({ kind: 'leader', name: CHAMPION_NAME, foes: CHAMPION_TEAM.map(function (id) { return { id: id, level: clamp(mine + ECON.map.champion.levels, 1, MAX_LEVEL) }; }) });
   return rounds;
 }

@@ -135,7 +135,7 @@ test('the map is tinted by the hour, and the Gizmo clock says the same time of d
   await put('hollow', 7, 9);
   const r = await page.evaluate(() => {
     const real = Date.prototype.getHours, out = {};
-    [[3, 'night'], [9, 'morning'], [14, 'afternoon'], [19, 'evening'], [22, 'night']].forEach(([h, name]) => {
+    [[3, 'night'], [4, 'morning'], [9, 'morning'], [10, 'day'], [17, 'day'], [18, 'night'], [22, 'night']].forEach(([h, name]) => {
       Date.prototype.getHours = () => h; renderOverworld();
       out[h] = [owTimeOfDay() === name, document.getElementById('ow-view').classList.contains('ow-' + name)];
     });
@@ -144,7 +144,7 @@ test('the map is tinted by the hour, and the Gizmo clock says the same time of d
     Date.prototype.getHours = real;
     return out;
   });
-  assert.deepEqual(Object.values(r).flat(), [true, true, true, true, true, true, true, true, true, true, true]);
+  assert.deepEqual(Object.values(r).flat(), new Array(15).fill(true));
 });
 
 test('walking warms an egg: every few steps count as one answer, with a daily cap', async () => {

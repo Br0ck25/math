@@ -1,5 +1,5 @@
 // Bump SCHEMA_VERSION and add a MIGRATIONS entry (10-save-load.js) whenever a saved field changes shape.
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 function defaultProfile() {
   return { title: 'Rookie Calculator', unlockedTitles: ['Rookie Calculator'], frame: 'classic', unlockedFrames: ['classic'], showcase: [] };
 }

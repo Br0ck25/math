@@ -44,13 +44,11 @@ Before writing anything, search `src/` for a helper, constant, pattern or simila
 Use the file map below and the area rules in `.claude/rules/` (they load when you open matching files) instead of exploring. Never read `worker.js`, `package-lock.json` or `art/` (generated or binary). Read only the part of a file you need (offset/limit or grep), not whole big files.
 
 ## Where things live (open the right file first)
-- Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`.
+- Adventure: engine `24g-ow-engine.js`, maps `24h-ow-maps.js` and one file per land `24m-` to `24s-`, story `24t-`, hero and key items `24i-`, bag and team `24j-`, people and signs `24k-`, Center and Mart `24l-`, Gizmo `24u-`, helper people `24v-`, battle data and numbers `24w-`, battle screen `24x-`, gyms/bosses/Hall `24y-`, Menu `24z-`. Art: `art/world` made by `scripts/make-world-art.mjs`.
+- Data: buddies/store/gear/armor `04-data-buddies.js`, secret buddies `04a-`, packs `04b-`, bosses `02-data-core.js`, earned gear `08c-`, gear slots `08b-`. Lands, gyms and badges `24b-map.js`, Hall rewards `24d-`.
 - Rules and numbers: `src/shared/econ.js` (`ECON`, also used by the Worker). Saved state: `03-state.js` (defaults), `10-save-load.js` (migrations, normalizers).
-- Battle: `12-battle.js`, wild `13b-wild.js`, moves `12c-`, status `12d-`, loot `13-loot.js`. Map `24b-`, legend `24c-`, Champion `24d-`, raids `24-`, hub `25-`, held items `25b-`.
-- Practice: generators `07-math-generators.js`, problem flow and keypad `07a-`, difficulty `07b-adaptive.js`, quests `19-`, hints `21-`.
-- Social: tournament `27-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), account `31-`.
-- Parents: controls `03b-`, report `23-`, portal child side `35-`, parent page `35b-`, challenge `36-` (server `15-parents.js`, `16-challenges.js`). Shop `33-`, vault `15-`, cards `26-`, Dex `30-`.
-- Study (trivia mode, school subjects): `38-study.js`, question banks `37*-study-*.js`, `src/shared/study.js`, server `17-study.js`, parent questions `35b-parent-study.js`.
+- Math questions: generators `07-math-generators.js`, difficulty `07b-adaptive.js`, trivia mode `38-study.js` and the banks `37*-study-*.js`, `src/shared/study.js`. Quests `19-`.
+- Meta screens (opened from the Menu): hub `25-`, held items `25b-`, snacks `25c-`, ranch `25d-`, cards `26-`, tournament `27-`, same-room duel `28-`, online duel `29-` (server `20-duels.js`), Dex `30-`, account `31-`, shop `33-`, settings `17-`.
 - Server: accounts `10-`, router and security headers `30-router.js`. Page shell `src/client/index.html`, styles `styles.css`.
 - Tests: one area per file in `tests/`; `node scripts/test-changed.mjs --list` shows which cover your change. Add a row to `MAP` in `scripts/test-changed.mjs` for any new source file.
 
@@ -77,12 +75,12 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Modals: `showModal(id, before)` / `hideModal(id, after)`; give the overlay `data-close="fn"` (tap + Escape) or `data-esc="fn"` (Escape only, for game screens). No per-modal `…OnOverlay` functions.
 - Rewards: `grantGems(n, message, big)` for any payout that celebrates. Costs/rewards/limits live ONLY in `ECON` (`src/shared/econ.js`).
   After changing a number there run `npm run sim`; the economy tests must pass.
-- Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (tournament, duels, vault).
+- Questions: `makeMcq({op, problem, count})` + `fillOptButtons()` for every multiple-choice screen (battles, signs, tournament, duels). Battles use `abQuestion()`.
 - Buddy gear: every accessory has a `slot` (head, face, neck, back, side, aura); positions come only from `GEAR_SLOTS` in `08b-buddy-gear.js` and are used by the battle screen, hub and trading card. Never add per-item pixel offsets in CSS. Armor is the corner badge. New gear needs no CSS.
 - Text safety: `escHtml()` for anything a user typed or the server sent, before it goes into `innerHTML`.
-- Saves: `saveState()` (never `localStorage` directly), `statDay()`/`recordStat()` for parent-report numbers, `addXpTo(id, n)` for buddy XP.
-- Practice difficulty: which type and level the next problem uses is decided only in `07b-adaptive.js` (`pickNextProblem`, `recordAdaptive`, `typeShares`); numbers are in `ECON.adaptive`. Levels follow recent accuracy and speed per type, never the combo streak. Tournaments, duels and the vault use `makeMcq`, which ignores levels on purpose (fair for both players).
-- Stakes: `stakeAllowed()` / `allowedStakes()` (shared with the server). Session-goal pay: `sessionGoalReward()`.
+- Saves: `saveState()` (never `localStorage` directly), `addXpTo(id, n)` for buddy XP.
+- Question difficulty: which type and level the next problem uses is decided only in `07b-adaptive.js` (`pickNextProblem`, `recordAdaptive`, `typeShares`); numbers are in `ECON.adaptive`. Levels follow recent accuracy and speed per type, never the combo streak. Tournaments, duels and the vault use `makeMcq`, which ignores levels on purpose (fair for both players).
+- Stakes: `stakeAllowed()` / `allowedStakes()` (shared with the server).
 - If the same shape of code appears a second time, extract a helper in the right file instead of pasting.
 
 
@@ -90,14 +88,13 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Every new field gets a default in `freshState()` (`03-state.js`). Loaded saves go through `normalizeState()`: add a small function to `NORMALIZERS` for clamping or repairs.
   Never trust data from localStorage or the cloud.
 - If a field changes shape, bump `SCHEMA_VERSION` and add a `MIGRATIONS` entry. Keep saves small (`ECON.save` limits; `pruneState()` trims history).
-- The parent PIN is stored only as a hash (`parentPinHash`). Never store secrets in the save.
+- Never store secrets in the save.
 
 
-## Kids first: safety and play
-- No chat, no free text shown to other players, no sharing of personal data, no tracking or analytics. Player names only.
-- Anything involving other players has a parent switch (`duelsOnline`) and must work when it is off.
-- Stakes may only ever be gems, never levels, XP or buddies. Keep a free option. Losing must never go below zero.
-- Be kind in copy: a missed day pauses, it never punishes; wrong answers explain how, they do not scold.
+## Players and play
+- This is a Pokemon Gold style adventure that stays friendly to young players: no chat, no free text shown to other players, no personal data, no tracking or analytics. Player names only.
+- Stakes in duels and tournaments may only ever be gems, never levels, XP or buddies. Keep a free option. Gems never go below zero.
+- There is no parent dashboard or Practice screen: the Adventure map is the whole game (see `.claude/rules/battles.md`).
 
 
 ## Git
@@ -106,4 +103,4 @@ Search the codebase first. Never write a second copy of something that exists. E
 - Keep commits focused: one feature or fix, with its tests and the rebuilt `worker.js`.
 
 ## Area rules (load automatically when you open matching files)
-`.claude/rules/`: `content.md` (buddies, bosses, gear, art, packs), `battles.md` (wild, bosses, moves, map, Champion), `parents.md`, `server.md`, `ui.md` (layout, phones, accessibility), `tests.md`. If you change an area, read its rule file first if it did not load. Keep numbers like "353 buddies" in the tests, not in prose.
+`.claude/rules/`: `content.md` (buddies, bosses, gear, art, packs), `battles.md` (the Adventure battle, gyms, Hall), `server.md`, `ui.md` (layout, phones, accessibility), `tests.md`. If you change an area, read its rule file first if it did not load. Keep numbers like "353 buddies" in the tests, not in prose.

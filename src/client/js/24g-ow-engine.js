@@ -99,10 +99,10 @@ function renderOverworld() {
   document.getElementById('ow-gizmo-btn').style.display = hasKeyItem('gizmo') ? '' : 'none';
 }
 
-// The hour of the day on this device: the map is tinted, and the Gizmo's clock says it.
+// The time of day on this device, with Gold's hours (morning 4-10, day 10-18, night 18-4): the map is tinted, wild buddies change, and the Gizmo's clock says it.
 function owTimeOfDay() {
   const h = new Date().getHours();
-  return h < 6 ? 'night' : h < 12 ? 'morning' : h < 18 ? 'afternoon' : h < 21 ? 'evening' : 'night';
+  return h >= 4 && h < 10 ? 'morning' : h >= 10 && h < 18 ? 'day' : 'night';
 }
 // Walking warms an egg: every eggEvery steps count as one correct answer, at most eggPerDay a day.
 function owWalkEgg() {

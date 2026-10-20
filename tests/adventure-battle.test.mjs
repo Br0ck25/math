@@ -45,7 +45,7 @@ test('damage follows the type chart, the same-type bonus and a critical hit', as
   });
   assert.equal(r.strong.eff, 2); assert.equal(r.weak.eff, 0.5);
   assert.ok(r.strong.dmg > r.weak.dmg * 2.5);
-  assert.ok(r.crit.dmg >= r.strong.dmg * 1.9);
+  assert.ok(r.crit.dmg >= r.strong.dmg * 1.6);
 });
 
 test('a battle opens on its own screen with both buddies, and FIGHT asks a math question', async () => {

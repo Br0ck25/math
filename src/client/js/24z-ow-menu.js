@@ -8,6 +8,7 @@ const MENU_ITEMS = [
 ];
 function openMenu() {
   showModal('menu-modal', function () {
+    updateStatsUI();
     document.getElementById('menu-body').innerHTML = '<div class="menu-grid">' + MENU_ITEMS.filter(function (m) { return m[1] !== 'openGizmo' || hasKeyItem('gizmo'); }).map(function (m) {
       return '<button type="button" class="ab-btn" onclick="menuGo(\'' + m[1] + '\')">' + m[0] + '</button>';
     }).join('') + '</div>';

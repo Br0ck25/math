@@ -169,7 +169,7 @@ function abUseMove(i) {
   if (ab.phase !== 'moves' || mv.left <= 0) return;
   if (i >= 0) { mv.left -= 1; abSavePp(me); }
   ab.phase = 'busy';
-  const fm = pick(foe.moves), mp = mv.pri || 0, fp = fm.pri || 0;
+  const fm = abPickMove(foe, me), mp = mv.pri || 0, fp = fm.pri || 0;
   const first = mp !== fp ? mp > fp : abSpeed(me) !== abSpeed(foe) ? abSpeed(me) > abSpeed(foe) : Math.random() < 0.5;
   const mine = function (next) { abStrike(me, foe, mv, abFoeFainted, next); }, theirs = function (next) { abStrike(foe, me, fm, abMeFainted, next); };
   if (first) mine(function () { theirs(abEndRound); }); else theirs(function () { mine(abEndRound); });
@@ -194,7 +194,7 @@ function abStrike(att, def, mv, down, next) {
 // One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
 function abHit(att, def, mv, down, next) {
   if (Math.random() * 100 >= mv.acc) { abSteps([[att.name + "'s attack missed!", null, 900]]); next(); return; }
-  const crit = Math.random() < 1 / 16, r = abDamage(att, def, mv, crit);
+  const crit = Math.random() < AB_CRIT, r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     def.hp = Math.max(0, def.hp - r.dmg);
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
@@ -206,13 +206,20 @@ function abHit(att, def, mv, down, next) {
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
   abSteps([['', function () {
     if (def.hp <= 0) { down(); return; }
-    if (mv.status && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(1, 3); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
+    if (mv.status && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(2, 7); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
     next();
   }, 0]]);
 }
 
 // ----- the foe's turn (when you did not attack: a wrong answer, an item, a swap) -----
-function abFoeTurn() { abStrike(abFoe(), abMe(), pick(abFoe().moves), abMeFainted, abEndRound); }
+function abFoeTurn() { abStrike(abFoe(), abMe(), abPickMove(abFoe(), abMe()), abMeFainted, abEndRound); }
+// The foe's move: a wild buddy picks any. A trainer's buddy usually takes the move that should do the most damage (power, accuracy, type luck and the same-type bonus) and sometimes tries another.
+function abPickMove(foe, me) {
+  if (ab.kind === 'wild' || Math.random() < 0.2) return pick(foe.moves);
+  const score = function (m) { const rel = getTypeRelation(m.type, me.type); return m.power * (m.acc / 100) * (rel === 1 ? 2 : rel === -1 ? 0.5 : 1) * (m.type === foe.type ? 1.5 : 1); };
+  const best = Math.max.apply(null, foe.moves.map(score));
+  return pick(foe.moves.filter(function (m) { return score(m) === best; }));
+}
 // After both have acted: burn and poison hurt a little, then the menu (or a faint).
 function abEndRound() {
   abSteps([['', function () {
@@ -228,9 +235,9 @@ function abBackToMenu() { abSteps([abMenuStep()]); saveState(); }
 
 // ----- a faint -----
 function abFoeFainted() {
-  const foe = abFoe(), trainer = ab.kind !== 'wild', xp = abXpYield(foe, trainer), part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
+  const foe = abFoe(), trainer = ab.kind !== 'wild', part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
   abSteps([[foe.name + ' fainted!', null, 1000]]);
-  const each = Math.max(1, Math.floor(xp / Math.max(1, part.length)));
+  const each = abXpYield(foe, trainer, part.length);
   part.forEach(function (id) {
     const mon = ab.party.find(function (m) { return m.id === id; });
     abSteps([[mon.name + ' gained ' + each + ' Exp. Points!', function () {
@@ -317,7 +324,7 @@ function abThrowNet() {
   const foe = abFoe(), chance = abCatchChance(foe), got = Math.random() < chance;
   state.nets -= 1; ab.phase = 'busy';
   abSteps([['You threw a Catch Net!', null, 1000]]);
-  const shakes = got ? 3 : rnd(0, 2);
+  const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe)));
   for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); }, 700]]);
   if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', null, 1100]]); abFoeTurn(); return; }
   abSteps([['Gotcha! ' + foe.name + ' was caught!', function () { ab.caught = true; soundCatchSuccess(); abKeepCaught(foe); }, 1300], ['', function () { abFinish('caught'); }, 0]]);
@@ -373,10 +380,11 @@ function abFinish(result) {
     a.after.forEach(function (fn) { fn(); });
     if (result === 'lose') {
       state.advHp = {};
+      state.gems = Math.floor(state.gems * (1 - ECON.overworld.blackoutShare));                  // Gold: you lose half your money
       o.map = o.center.map; o.x = o.center.x; o.y = o.center.y; o.face = 'down'; owTrail = null;
     }
     showAdventureWindow();
-    if (result === 'lose') openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, your buddies got very tired.', 'They rested at the Buddy Center and feel great again. Ready to try again?'] });
+    if (result === 'lose') openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, you blacked out! You dropped half your gems.', 'Your buddies were taken to the Buddy Center and feel great again. Ready to try again?'] });
     else if (result === 'win' && a.onWin) a.onWin();
     else if (result === 'win' && a.npc) {
       if (o.beat.indexOf(a.npc.id) === -1) o.beat.push(a.npc.id);

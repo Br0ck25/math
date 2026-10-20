@@ -297,7 +297,18 @@ function normalizeState() {
 
 // Upgrades for saves written by older versions, oldest first. `old` is the raw parsed save.
 const MIGRATIONS = {
-  0: function (old) { migrateState(old); }   // saves from before schema versions existed (old solve-count system)
+  0: function (old) { migrateState(old); },   // saves from before schema versions existed (old solve-count system)
+  // The experience curve became Gold's (level cubed): every buddy keeps its level, with the experience that level now needs.
+  1: function (old) {
+    const oldNeed = function (L) { return L <= 1 ? 0 : Math.floor(2.4 * Math.pow(L, 2.3)); };
+    if (!isPlainObject(old.buddyXp)) return;
+    Object.keys(old.buddyXp).forEach(function (id) {
+      const xp = Number(old.buddyXp[id]) || 0;
+      let L = 1;
+      while (L < MAX_LEVEL && xp >= oldNeed(L + 1)) L++;
+      old.buddyXp[id] = L * L * L;
+    });
+  }
 };
 function migrateSave(old) {
   for (let v = parseInt(old.v, 10) || 0; v < SCHEMA_VERSION; v++) if (MIGRATIONS[v]) MIGRATIONS[v](old);

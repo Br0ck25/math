@@ -2,7 +2,8 @@
 //  BUDDIES: LEVELS, XP, EVOLUTION LINES  (Pokémon style)
 // =====================================================================
 const MAX_LEVEL = 100;
-function xpForLevel(L) { return L <= 1 ? 0 : Math.floor(2.4 * Math.pow(L, 2.3)); }
+// Gold's Medium Fast growth: a buddy needs level cubed experience in all.
+function xpForLevel(L) { return L <= 1 ? 0 : L * L * L; }
 function levelFromXp(xp) {
   let L = 1;
   while (L < MAX_LEVEL && xp >= xpForLevel(L + 1)) L++;

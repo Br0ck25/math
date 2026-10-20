@@ -163,7 +163,7 @@ test('a grass fight is not a trainer fight: a win does not mark anyone beaten', 
   assert.deepEqual(r, { o: { kind: 'wild', npc: null }, beat: 0 });
 });
 
-test('when the whole team faints in a trainer battle, the hero wakes at the last Buddy Center with everyone rested and no gems lost', async () => {
+test('when the whole team faints in a trainer battle, the hero wakes at the last Buddy Center with everyone rested and half the gems lost', async () => {
   await startPia();
   await menu();
   await page.evaluate(() => { state.overworld.center = { map: 'meadow', x: 4, y: 5 }; state.gems = 40; ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); abFoe().level = 40; Math.random = () => 0.3; abFight(); abAnswer(ab.q.ans + 999); });
@@ -171,8 +171,8 @@ test('when the whole team faints in a trainer battle, the hero wakes at the last
   await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
   const r = await page.evaluate(() => ({ pos: [state.overworld.map, state.overworld.x, state.overworld.y, state.overworld.face], beat: state.overworld.beat.length, hp: JSON.stringify(state.advHp), gems: state.gems, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-name').innerText, words: document.getElementById('talk-text').innerText }));
   assert.deepEqual(r.pos, ['meadow', 4, 5, 'down']);
-  assert.deepEqual([r.beat, r.hp, r.gems, r.ow, r.talk], [0, '{}', 40, 'flex', 'Buddy Center']);
-  assert.match(r.words, /very tired/);
+  assert.deepEqual([r.beat, r.hp, r.gems, r.ow, r.talk], [0, '{}', 20, 'flex', 'Buddy Center'], 'half the gems are lost, as in Gold');
+  assert.match(r.words, /blacked out/);
   assert.deepEqual(errors, []);
 });
 

@@ -29,8 +29,8 @@ const wait = (ms) => page.waitForTimeout(ms);
 const win = () => page.evaluate(async () => {
   if (typeof ab !== 'undefined' && ab) {
     Math.random = () => 0.3;                                                                          // every move lands, no status, no critical hit
-    const ready = async () => { for (let i = 0; i < 300 && ab && !(ab.phase === 'menu' && !ab.busy); i++) await new Promise((res) => setTimeout(res, 100)); };
-    for (let k = 0; k < 12 && ab; k++) { await ready(); if (!ab) break; ab.foes.forEach((f) => { f.atk = 1; }); abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); await new Promise((res) => setTimeout(res, 300)); }
+    const ready = async () => { for (let i = 0; i < 300 && ab && !(ab.phase === 'menu' && !ab.busy); i++) { if (ab.phase === 'learn' && !ab.busy) abLearnChoose(-1); await new Promise((res) => setTimeout(res, 100)); } };
+    for (let k = 0; k < 12 && ab; k++) { await ready(); if (!ab) break; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); ab.party.forEach((m) => m.moves.forEach((mv) => { mv.left = mv.pp; })); abUseMove(0); await new Promise((res) => setTimeout(res, 300)); }
     for (let i = 0; i < 300 && ab; i++) await new Promise((res) => setTimeout(res, 100));
     return;
   }
@@ -162,7 +162,7 @@ test('the hideout in Gloom Marsh: a door in the rocks, two Scramblers, then Boss
 
 test('winning against Boss Scramble pays the story prize once, and the boss is gone', async () => {
   await put('gloom-hideout', 4, 3, 'up');
-  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; state.gems = 0; });
+  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; state.gems = 0; state.buddyXp[state.activePet] = xpForLevel(30); });
   await page.evaluate(() => owMove('up'));                                                                // 4,3 -> 4,2: the boss at 4,1 is next to the hero: a bump talks
   await page.evaluate(() => owMove('up'));
   await page.click('#talk-next').catch(() => {});
@@ -179,7 +179,7 @@ test('winning against Boss Scramble pays the story prize once, and the boss is g
   assert.match(r.talk, /my numbers|Counting is more fun|all back in order/i);
 });
 
-test('when the team faints against the boss, the hero wakes at the last Center with nothing lost and the boss still waiting', async () => {
+test('when the team faints against the boss, the hero wakes at the last Center with half the gems lost and the boss still waiting', async () => {
   await put('gloom-hideout', 4, 3, 'up');
   await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; owMove('up'); owMove('up'); });
   await page.click('#talk-next').catch(() => {});
@@ -189,7 +189,7 @@ test('when the team faints against the boss, the hero wakes at the last Center w
   await page.waitForFunction(() => !ab, null, { timeout: 30000 });
   const r = await page.evaluate(() => ({ pos: [state.overworld.map, state.overworld.x, state.overworld.y], gems: state.gems, beat: state.overworld.beat.includes('gloom-boss'), boss: !!owNpcAt(OW_MAPS['gloom-hideout'], 4, 1) }));
   assert.deepEqual(r.pos, ['gloom', 4, 5]);
-  assert.deepEqual([r.gems, r.beat, r.boss], [40, false, true]);
+  assert.deepEqual([r.gems, r.beat, r.boss], [20, false, true]);
 });
 
 test('Riley tells the truth in Skyreach once you hold its badge: four lines, then she is gone; after the Champion a different Riley is there', async () => {

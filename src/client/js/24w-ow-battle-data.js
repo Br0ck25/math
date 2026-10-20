@@ -51,11 +51,11 @@ function abShape(seed, element) {
   let h = 7;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 1000003;
   const off = function (k) { return Math.floor(h / Math.pow(21, k)) % 21 - 10; };
-  return { hp: off(0) + (element === 'nature' ? 6 : 0), atk: off(1), def: off(2) + (element === 'nature' ? 4 : 0), spd: off(3) + (AB_SPEED_LEAN[element] || 0) };
+  return { hp: off(0) + (element === 'nature' ? 6 : 0), atk: off(1), def: off(2) + (element === 'nature' ? 4 : 0), spd: off(3) + (AB_SPEED_LEAN[element] || 0), spc: off(4) };
 }
 function abBuild(id, name, icon, element, type, base, level, hp, pp, chosen) {
   const sh = abShape(id || name, element), stat = function (b) { return Math.floor(2 * Math.max(10, b) * level / 100); }, max = stat(base + sh.hp) + level + 10;
-  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp, chosen) };
+  return { id: id, name: name, icon: icon, element: element, type: type, level: level, max: max, hp: hp === undefined ? max : clamp(hp, 0, max), atk: stat(base + sh.atk) + 5, def: stat(base + sh.def) + 5, spd: stat(base + sh.spd) + 5, spc: stat(base + sh.spc) + 5, base: base, status: '', sleep: 0, moves: abMoveList(element, level, type, pp, chosen) };
 }
 function abMon(id, level, hp, pp, chosen) {
   const sp = getSpecies(id), stage = getFormIndex(sp, level);
@@ -70,21 +70,40 @@ function abBossMon(index, level) {
 function abFoeMon(f) { return f.boss !== undefined ? abBossMon(f.boss, f.level) : abMon(f.id, f.level); }
 // One of your buddies, with the HP it has left.
 function abPartyMon(id) { return abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); }
-// Gold's damage formula: level, power and Attack against Defense, then same-type bonus, type effectiveness, a critical hit and a little luck.
+// Gold's damage formula, step by step. Normal moves are physical (Attack against Defense); every other type is special (Special against Special), as in Gold.
+// A burn halves a physical Attack. A critical hit doubles the damage before the +2; then the same-type bonus, type effectiveness and luck follow, each rounded down.
+const AB_CRIT = 17 / 256;
 function abDamage(att, def, move, crit) {
-  const rel = getTypeRelation(move.type, def.type), eff = rel === 1 ? 2 : rel === -1 ? 0.5 : 1, stab = move.type === att.type ? 1.5 : 1;
-  const base = Math.floor(Math.floor((Math.floor(2 * att.level / 5) + 2) * move.power * att.atk * (att.status === 'burn' ? 0.5 : 1) / def.def) / 50) + 2;
-  const luck = (217 + Math.floor(Math.random() * 39)) / 255;
-  return { dmg: Math.max(1, Math.floor(base * stab * eff * (crit ? 2 : 1) * luck)), eff: eff };
+  const special = move.type !== 'normal';
+  let A = special ? att.spc : att.atk, D = special ? def.spc : def.def;
+  if (!special && att.status === 'burn') A = Math.floor(A / 2);
+  if (A > 255 || D > 255) { A = Math.floor(A / 4); D = Math.floor(D / 4); }
+  A = Math.max(1, A); D = Math.max(1, D);
+  const rel = getTypeRelation(move.type, def.type), eff = rel === 1 ? 2 : rel === -1 ? 0.5 : 1;
+  let d = Math.floor(Math.floor((Math.floor(2 * att.level / 5) + 2) * move.power * A / D) / 50);
+  if (crit) d *= 2;
+  d = Math.min(d, 997) + 2;
+  if (move.type === att.type && move.type !== 'normal') d = Math.floor(d * 3 / 2);
+  d = eff === 2 ? d * 2 : eff === 0.5 ? Math.floor(d / 2) : d;
+  d = Math.floor(d * (217 + Math.floor(Math.random() * 39)) / 255);
+  return { dmg: Math.max(1, d), eff: eff };
 }
-// Experience for beating a foe (a trainer's buddies give half as much again).
-function abXpYield(foe, trainer) { return Math.max(1, Math.floor(foe.base * foe.level / 12 * (trainer ? 1.5 : 1))); }
+// Experience for beating a foe, for each buddy that fought: the foe's base experience shared by the fighters, times its level over seven (a trainer's buddies give half as much again).
+function abXpYield(foe, trainer, fighters) { return Math.max(1, Math.floor(Math.floor(foe.base / Math.max(1, fighters)) * foe.level / 7 * (trainer ? 1.5 : 1))); }
 // The level a wild buddy has on this land: a little above where the land's gym opens.
 function abWildLevel() { return clamp((ECON.map.levels[state.region] || 1) + rnd(1, 3), 2, MAX_LEVEL); }
-// Catching: Gold's rule. A weaker foe is easier (and one that is asleep, burned or the like even more), and rarer buddies are harder. Returns 0 to 1.
-function abCatchChance(foe) {
+// Catching, Gold's rule: the species' catch rate (a Catch Net is worth a Great Ball) shrinks with the foe's HP, a sleeping foe adds 10, and the net holds if a 0-255 roll is at most that. Returns 0 to 1.
+function abCatchA(foe) {
   const sp = getSpecies(foe.id);
-  const rate = sp.legend ? 3 : !isStoreBuddy(sp) ? 30 : sp.cost < 150 ? 200 : sp.cost < 800 ? 120 : 45;
-  const a = Math.floor((3 * foe.max - 2 * foe.hp) * rate * ECON.overworld.netBonus * (foe.status ? 1.5 : 1) / (3 * foe.max));
-  return Math.min(1, a / 255);
+  const rate = Math.min(255, Math.floor((sp.legend ? 3 : !isStoreBuddy(sp) ? 45 : sp.cost < 150 ? 255 : sp.cost < 800 ? 120 : 45) * ECON.overworld.netBonus));
+  const a = Math.max(1, Math.floor(rate * (3 * foe.max - 2 * foe.hp) / (3 * foe.max))) + (foe.status === 'sleep' ? 10 : 0);
+  return Math.min(255, a);
+}
+function abCatchChance(foe) { return (abCatchA(foe) + 1) / 256; }
+// How many times the net shakes before it breaks free: each check passes more often when the catch value is high.
+function abShakes(a) {
+  const pass = (63 + (a - 1) * 192 / 254) / 255;
+  let n = 0;
+  while (n < 3 && Math.random() < pass) n++;
+  return n;
 }

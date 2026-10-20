@@ -69,7 +69,7 @@ function gizmoTravel(id) {
 function gizmoClockHtml() {
   const w = weatherToday(), part = owTimeOfDay();
   return '<div class="gizmo-row"><div><b>Weather today</b><div class="d">' + escHtml(w.name) + ': ' + escHtml(w.text) + ' in the tall grass.</div></div></div>' +
-    '<div class="gizmo-row"><div><b>Time of day</b><div class="d">It is ' + part + '.</div></div></div>' +
+    '<div class="gizmo-row"><div><b>Time of day</b><div class="d">It is ' + (part === 'day' ? 'daytime' : part) + '.</div></div></div>' +
     '<div class="gizmo-row"><div><b>Shake trees</b><div class="d">Each tree gives a rare buddy once a day. Come back tomorrow for a new one.</div></div></div>';
 }
 
