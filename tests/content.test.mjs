@@ -308,18 +308,16 @@ test('boss buddies: ordinary strength, own shop section, boss card progress, and
   assert.doesNotMatch(r.progress, /Beaten x5/);
 });
 
-test('Jimothy the raccoon is a free store buddy with his own picture: one tap adopts him, no gems, no confirm window', async () => {
+test('the shop no longer sells buddies, armor or gear: only owned or earnable pieces are listed', async () => {
   const r = await inPage(() => {
-    const sp = storePets.find((p) => p.id === 'jimothy');
-    state.gems = 0; state.unlockedPets = ['dog']; state.swapUsed = true;
-    renderShopPets();
-    const label = document.getElementById('pet-grid').textContent.includes('Free');
-    const before = state.gems;
-    selectOrBuyPet(sp);
-    const out = { free: sp.cost === 0, owned: state.unlockedPets.indexOf('jimothy') !== -1, gems: state.gems - before, confirm: !!document.getElementById('confirm-modal') && !document.getElementById('confirm-modal').classList.contains('hidden') && document.getElementById('confirm-modal').style.display === 'flex', picture: !!BUDDY_ART.jimothy && String(sp.icon).indexOf('<img') === 0, label };
-    return out;
+    state.gems = 9999; state.unlockedPets = ['dog']; state.unlockedArmor = ['none']; state.unlockedAccessories = [];
+    rerenderShop();
+    const cards = document.getElementById('pet-grid').children.length;
+    const paid = armorList.find((a) => !a.earn && a.cost > 0 && state.unlockedArmor.indexOf(a.id) === -1);
+    if (paid) selectOrBuyArmor(paid);
+    return { cards, gems: state.gems, owned: state.unlockedArmor.indexOf(paid && paid.id) !== -1 };
   });
-  assert.deepEqual({ free: r.free, owned: r.owned, gems: r.gems, confirm: r.confirm, picture: r.picture, label: r.label }, { free: true, owned: true, gems: 0, confirm: false, picture: true, label: true });
+  assert.deepEqual(r, { cards: 1, gems: 9999, owned: false });
 });
 
 test('every buddy and boss has its own favorite food; Janie, Papaw and Amber keep theirs; the Bandit likes cat treats', async () => {

@@ -1,15 +1,6 @@
 // =====================================================================
 //  SANCTUARY (shop)
 // =====================================================================
-function hasUnlockedAllOtherStorePets() {
-  return storePets.filter(function (p) { return !p.requiresAllStorePets; })
-    .every(function (p) { return state.unlockedPets.indexOf(p.id) !== -1; });
-}
-function getUnownedStorePetsCount() {
-  const others = storePets.filter(function (p) { return !p.requiresAllStorePets; });
-  return { owned: others.filter(function (p) { return state.unlockedPets.indexOf(p.id) !== -1; }).length, total: others.length };
-}
-
 function fillBuddyTotals() {
   document.getElementById('store-total-count').innerText = storePets.length;
   document.getElementById('store-owned-count').innerText = storePets.filter(function (p) { return state.unlockedPets.indexOf(p.id) !== -1; }).length;
@@ -31,7 +22,7 @@ function closeShop() { hideModal('shop-modal', updateStatsUI); }
 function renderArmor() {
   const container = document.getElementById('armor-grid');
   container.innerHTML = '';
-  armorList.forEach(function (ar) {
+  armorList.filter(function (ar) { return ar.earn || state.unlockedArmor.indexOf(ar.id) !== -1; }).forEach(function (ar) {
     const isUnlocked = state.unlockedArmor.indexOf(ar.id) !== -1;
     const isEquipped = state.activeArmor === ar.id;
     const card = document.createElement('div');
@@ -69,20 +60,12 @@ function confirmBuy() {
   if (go) go();
 }
 
-function selectOrBuyArmor(ar, confirmed) {
+function selectOrBuyArmor(ar) {
   const owned = state.unlockedArmor.indexOf(ar.id) !== -1;
   if (!owned) {
-    if (ar.earn) { soundWrong(); toast('🔒 Earn it: ' + ar.earn.text); return; }
-    if (state.gems < ar.cost) {
-      soundWrong();
-      toast(`You need ${ar.cost - state.gems} more 💎 Gems for ${ar.name}!`);
-      return;
-    }
-    if (!confirmed) { askBuy({ icon: ar.icon, name: ar.name, cost: ar.cost, note: 'Body armor: +' + ar.hp + ' HP' }, function () { selectOrBuyArmor(ar, true); }); return; }
-    state.gems -= ar.cost;
-    state.unlockedArmor.push(ar.id);
-    soundLevelUp();
-    launchConfetti();
+    soundWrong();
+    if (ar.earn) toast('🔒 Earn it: ' + ar.earn.text);
+    return;
   } else {
     soundClick();
   }
@@ -100,7 +83,7 @@ function selectOrBuyArmor(ar, confirmed) {
 function renderAccessories() {
   const container = document.getElementById('accessories-grid');
   container.innerHTML = '';
-  accessoriesList.forEach(function (acc) {
+  accessoriesList.filter(function (acc) { return acc.earn || state.unlockedAccessories.indexOf(acc.id) !== -1; }).forEach(function (acc) {
     const isUnlocked = state.unlockedAccessories.indexOf(acc.id) !== -1;
     const isEquipped = state.activeAccessory === acc.id;
     const card = document.createElement('div');
@@ -116,25 +99,13 @@ function renderAccessories() {
   });
 }
 
-function selectOrBuyAccessory(acc, confirmed) {
+function selectOrBuyAccessory(acc) {
   if (state.unlockedAccessories.indexOf(acc.id) !== -1) {
     state.activeAccessory = acc.id;
     soundClick();
-  } else if (acc.earn) {
-    soundWrong();
-    toast('🔒 Earn it: ' + acc.earn.text);
-  } else if (state.gems >= acc.cost && !confirmed) {
-    askBuy({ icon: acc.icon, name: acc.name, cost: acc.cost, note: 'Gear for your buddy' }, function () { selectOrBuyAccessory(acc, true); });
-    return;
-  } else if (state.gems >= acc.cost) {
-    state.gems -= acc.cost;
-    state.unlockedAccessories.push(acc.id);
-    state.activeAccessory = acc.id;
-    soundLevelUp();
-    launchConfetti();
   } else {
     soundWrong();
-    toast(`You need ${acc.cost - state.gems} more 💎 Gems to unlock ${acc.name}!`);
+    if (acc.earn) toast('🔒 Earn it: ' + acc.earn.text);
   }
   saveState();
   renderAccessories();
@@ -196,47 +167,10 @@ function equipPet(id) {
 function renderShopPets() {
   const container = document.getElementById('pet-grid');
   container.innerHTML = '';
-  const otherStats = getUnownedStorePetsCount();
-  const allOthersOwned = hasUnlockedAllOtherStorePets();
-
-  storePets.forEach(function (pet) {
-    const owned = state.unlockedPets.indexOf(pet.id) !== -1;
-    const lockedBandit = pet.requiresAllStorePets && !allOthersOwned && !owned;
-    container.appendChild(makePetCard(pet, {
-      owned: owned,
-      statusText: lockedBandit ? `🔒 Needs All ${otherStats.total} (${otherStats.owned}/${otherStats.total})` : (pet.cost ? `💎 ${pet.cost}` : '🎁 Free'),
-      statusColor: lockedBandit ? '#94a3b8' : '#f59e0b',
-      onclick: function () { selectOrBuyPet(pet); }
-    }));
+  storePets.filter(function (pet) { return state.unlockedPets.indexOf(pet.id) !== -1; }).forEach(function (pet) {
+    container.appendChild(makePetCard(pet, { owned: true, onclick: function () { equipPet(pet.id); } }));
   });
-}
-
-function selectOrBuyPet(pet, confirmed) {
-  if (state.unlockedPets.indexOf(pet.id) !== -1) { equipPet(pet.id); return; }
-
-  if (pet.requiresAllStorePets && !hasUnlockedAllOtherStorePets()) {
-    const s = getUnownedStorePetsCount();
-    soundWrong();
-    toast(`Adopt all ${s.total} other Store Buddies first! (${s.owned}/${s.total})`);
-    return;
-  }
-  if (state.gems < pet.cost) {
-    soundWrong();
-    toast(`You need ${pet.cost - state.gems} more 💎 Gems to adopt ${pet.name}!`);
-    return;
-  }
-  if (!confirmed && pet.cost) { askBuy({ icon: pet.icon, name: pet.name, cost: pet.cost, note: 'A new ' + pet.element + ' buddy for your collection' }, function () { selectOrBuyPet(pet, true); }); return; }
-  state.gems -= pet.cost;
-  grantBuddy(pet.id);
-  state.unlockedPets.push(pet.id);
-  checkEarnedGear();
-  const fights = joinTeamIfRoom(pet.id);                                             // a new buddy joins the team if there is room
-  soundLevelUp();
-  launchConfetti();
-  toast(`${pet.name} joined your team at Lv ${getBuddyLevel(pet.id)}!` + (fights ? '' : ' Your team is full: choose who it replaces, or leave it in your collection.'));
-  saveState();
-  rerenderShop();
-  if (getTeam().indexOf(pet.id) === -1) openReplaceModal(pet.id);          // the team is full: offer to swap it in
+  if (!container.children.length) container.innerHTML = '<div class="empty-note">Catch buddies in the wild, hatch eggs or win them to fill your team.</div>';
 }
 
 // Fills "<name>-pet-grid" with the owned buddies of a short list and "<name>-found-count" / "<name>-total-count" with the totals.
