@@ -2052,3 +2052,28 @@ progress.progress-ring::-moz-progress-bar { background: transparent; }
 .w-sprite { display: block; width: 100%; height: 100%; }
 .w-hero { position: relative; display: block; width: 100%; height: 100%; }
 .w-hero .w-sprite { position: absolute; inset: 0; }
+
+/* The Adventure map (24g-ow-engine.js): the tile view, the hero and buddy on top, the D-pad and the way back from a fight. */
+.ow-view { position: relative; display: grid; grid-template-columns: repeat(var(--ow-n, 9), minmax(0, 1fr)); width: min(100%, 52dvh); aspect-ratio: 1; margin: 0 auto; background: var(--bg-dark); border: 3px solid var(--card-border); border-radius: 10px; overflow: hidden; touch-action: manipulation; }
+.ow-cell { display: block; min-width: 0; aspect-ratio: 1; overflow: hidden; }
+.ow-cell .w-sprite { width: calc(100% + 1px); height: calc(100% + 1px); }     /* a pixel of overlap hides the seams between tiles */
+.ow-actor { position: absolute; width: calc(100% / var(--ow-n, 9)); aspect-ratio: 1; pointer-events: none; }
+.ow-actor .ow-buddy { width: 80%; height: 80%; margin: 10%; object-fit: contain; }
+.ow-pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(2, 50px); gap: 6px; justify-content: center; margin-top: 10px; }
+.ow-key { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border-radius: 12px; background: var(--card-border); border: 2px solid var(--text-muted); cursor: pointer; touch-action: manipulation; }
+.ow-key:active { background: var(--primary); }
+.ow-key svg { width: 26px; height: 26px; fill: var(--text); stroke: var(--bg-dark); stroke-width: 2; stroke-linejoin: round; }
+.ow-key.up { grid-column: 2; grid-row: 1; }
+.ow-key.left { grid-column: 1; grid-row: 2; }
+.ow-key.down { grid-column: 2; grid-row: 2; }
+.ow-key.right { grid-column: 3; grid-row: 2; }
+.ow-key.left svg { transform: rotate(-90deg); }
+.ow-key.down svg { transform: rotate(180deg); }
+.ow-key.right svg { transform: rotate(90deg); }
+.ow-hint { margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); }
+.ow-back-chip { flex: none; white-space: nowrap; min-height: 44px; padding: 4px 12px; border-radius: 999px; border: 2px solid var(--success); background: var(--bg-dark); color: var(--text); font-weight: 800; font-size: 0.78rem; cursor: pointer; }
+.adventure-row { align-items: center; }
+.ow-row-icon { width: 36px; height: 36px; flex: none; border-radius: 8px; overflow: hidden; }
+.ow-row-text { flex: 1; min-width: 0; text-align: left; }
+@media (max-height: 640px) { .ow-hint { display: none; } }
+.map-row.adventure-row { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }

@@ -306,6 +306,12 @@ const NORMALIZERS = [
   },
   function readAloud(s) {
     s.readAloud = s.readAloud === true;
+  },
+  function overworld(s) {
+    const o = isPlainObject(s.overworld) ? s.overworld : {};
+    const map = OW_MAPS[o.map] || OW_MAPS[OW_START.map];
+    const spot = owWalkable(map, o.x, o.y) ? { x: o.x, y: o.y } : map.start;     // a hero that is not on a walkable tile (a bad or old save) goes back to the start
+    s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down', fight: o.fight === true };
   }
 ];
 function normalizeState() {

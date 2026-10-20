@@ -82,6 +82,7 @@ function freshState() {
     techUnlocked: [],                                // tech node ids unlocked in the Tree of Knowledge
     techSolves: 0,                                   // correct answers toward the next Star Spark
     readAloud: false,                                // whether math and study problems are read aloud
+    overworld: { map: 'hollow', x: 7, y: 9, face: 'down', fight: false },   // the Adventure map (24g-ow-engine.js): where the hero stands, and whether the current wild fight began on a walk (a win then returns to the map)
   };
 }
 

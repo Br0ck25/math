@@ -45,6 +45,8 @@ const ECON = {
     // The first win pays `firstGems`, `nets` Catch Nets, one of each held item and three secret gear pieces (and makes you Champion); after that a win pays `repeatGems` once a day.
     champion: { levels: 2, firstGems: 500, nets: 3, repeatGems: 50, swapAt: 0.4, maxSwaps: 4, cooldown: 3 }
   },
+  // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
+  overworld: { grassChance: 0.18, graceSteps: 4, saveEvery: 5 },
   // The daily rare: once a day, after you beat `after` wild buddies, a golden buddy shows up as a wild buddy: tougher (HP x hpMult), `catchMult` times easier to catch (never above `catchMax`), and it pays `gems`.
   daily: { after: 3, hpMult: 1.5, catchMult: 4, catchMax: 0.6, gems: 20 },
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.

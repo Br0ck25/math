@@ -29,8 +29,8 @@ test('the map lists seven lands; the others open by level and travelling to a lo
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row):not(.spring-row)').length;
-    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row)').length;
+    const rows = document.querySelectorAll('#map-body .map-row:not(.legend-row):not(.champion-row):not(.spring-row):not(.adventure-row)').length;
+    const locked = document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row):not(.adventure-row)').length;
     const text = document.getElementById('map-body').innerText;
     travelTo('tide'); const refused = state.region;
     travelTo('ember'); const ok = state.region;
@@ -339,7 +339,7 @@ test('locked lands show how close you are and who lives there, and only the next
   const r = await page.evaluate(() => {
     state.buddyXp.dog = xpForLevel(10);
     openMap();
-    const locked = Array.from(document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row)'));
+    const locked = Array.from(document.querySelectorAll('#map-body .map-row.locked:not(.legend-row):not(.champion-row):not(.spring-row):not(.adventure-row)'));
     return {
       next: locked.filter((el) => el.classList.contains('next')).length,
       nextText: (locked.find((el) => el.classList.contains('next')) || {}).innerText || '',

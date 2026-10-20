@@ -218,7 +218,7 @@ function renderMap() {
   const best = journeyLevel(), total = gymRegions().length;
   const myPet = getActivePetDisplay();
   document.getElementById('map-progress').innerText = '🏅 Badges ' + state.badges.length + '/' + total + ' · 📍 ' + currentRegion().name + (state.storySeen.champion ? ' · 🏆 Champion' : '') + ' · ' + weatherToday().icon + ' ' + weatherToday().name;
-  let h = '<div class="map-board">' + championRowHtml() + legendRowHtml() + springRowHtml();
+  let h = '<div class="map-board">' + adventureRowHtml() + championRowHtml() + legendRowHtml() + springRowHtml();
   const nextStop = REGIONS.find(function (r) { return !regionUnlocked(r); });
   REGIONS.forEach(function (r) {
     const open = regionUnlocked(r), here = state.region === r.id, g = state.gym && state.gym.region === r.id;
