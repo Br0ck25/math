@@ -26,12 +26,20 @@ function abStart(opts) {
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
+    abWipe();
     const intro = abIntro();
     abRender();
     abSteps(intro);
-    abSteps([['Go! ' + abMe().name + '!', function () { ab.introMe = false; abRender(); }, 800], abMenuStep()]);
+    abSteps([['Go! ' + abMe().name + '!', function () { ab.introMe = false; abRender(); soundBuddyCry(abMe().id); }, 800], abMenuStep()]);
   });
   return true;
+}
+// The start of a fight, as in Gold: the screen is wiped in from black bars (wild) or from the middle out (trainers). Reduced motion skips it.
+function abWipe() {
+  const c = document.querySelector('#ab-modal .ab-content');
+  if (!c || motionReduced()) return;
+  c.classList.remove('ab-wipe-wild', 'ab-wipe-trainer'); void c.offsetWidth;
+  c.classList.add(ab.kind === 'wild' ? 'ab-wipe-wild' : 'ab-wipe-trainer');
 }
 function abLoadRound() {
   ab.party.forEach(function (m) { m.stg = {}; });                       // stat stages last one fight round
@@ -44,9 +52,9 @@ function abLoadRound() {
 function abSeen() { const f = abFoe(); if (f.id) markDexSeen(f.id); }
 // Gold shows the people first: you from behind, and the trainer in front of the foe's buddy until it is sent out.
 function abIntro() {
-  if (ab.kind === 'wild') return [['A wild ' + abFoe().name + ' appeared!', null, 1100]];
+  if (ab.kind === 'wild') return [['A wild ' + abFoe().name + ' appeared!', function () { soundBuddyCry(abFoe().id); }, 1100]];
   ab.introFoe = true;
-  return [[ab.name + ' wants to battle!', function () { abRender(); }, 1300], [ab.name + ' sent out ' + abFoe().name + '!', function () { ab.introFoe = false; abRender(); }, 1000]];
+  return [[ab.name + ' wants to battle!', function () { abRender(); }, 1300], [ab.name + ' sent out ' + abFoe().name + '!', function () { ab.introFoe = false; abRender(); soundBuddyCry(abFoe().id); }, 1000]];
 }
 // A look for a trainer with no map person (a gym trainer): fixed by the name.
 function abTrainerLook() {

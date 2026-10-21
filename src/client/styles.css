@@ -965,3 +965,9 @@ body.trivia .math-only { display: none; }
 /* A dark cave: only a circle around the hero is lit (wider with the Night Lamp) */
 .ow-view.ow-dark { position: relative; }
 .ow-view.ow-dark::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle at 50% 50%, transparent var(--dark-r, 120px), rgba(2, 6, 23, 0.94) calc(var(--dark-r, 120px) + 70px)); }
+
+/* The start of a fight: bars sweep away (wild) or the picture opens from the middle (trainers) */
+@keyframes abWipeWild { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+@keyframes abWipeTrainer { from { clip-path: circle(0 at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
+#ab-modal .ab-content.ab-wipe-wild { animation: abWipeWild 0.7s steps(8, end); }
+#ab-modal .ab-content.ab-wipe-trainer { animation: abWipeTrainer 0.9s ease-in; }

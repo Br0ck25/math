@@ -1089,3 +1089,14 @@ test('Fly and Dig: a turn charging out of reach (the foe misses), then the strik
   });
   assert.deepEqual(r, { charged: true, missed: true, struck: true, tm: true, none: true, sick: true, cured: true, caught: true });
 });
+
+test('a fight opens with a wipe (bars for wild buddies, a circle for trainers) and the buddies cry as they appear', async () => {
+  const r = await ev(() => {
+    const cries = []; const real = soundBuddyCry; soundBuddyCry = (id) => cries.push(id);
+    const out = {}; state.hero.made = true; openAdventure();
+    abStart({ kind: 'wild', foes: [{ id: 'fox', level: 5 }] });
+    out.wild = document.querySelector('#ab-modal .ab-content').classList.contains('ab-wipe-wild') || motionReduced();
+    return new Promise((res) => { setTimeout(() => { out.cried = cries.includes('fox') && cries.length >= 2; soundBuddyCry = real; res(out); }, 4000); });
+  });
+  assert.deepEqual(r, { wild: true, cried: true });
+});

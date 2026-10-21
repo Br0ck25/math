@@ -21,7 +21,7 @@ Math answers drive every attack; six types not seventeen; no DVs or stat experie
 7. **(Partly done: Mum's savings and Dex "Found on" areas.) Pokégear and menus.** Pokérus done (rare after a wild win, double Exp. for four days). Still no no phone-number gifts from non-trainers, no Mystery Gift. The Menu is flatter than Gold's start menu.
 8. **Mini-games:** (Card Flip done) one slot machine and Card Flip; no Unown puzzle, no second Safari or Tower mode.
 9. **Trainer and gym feel.** Gold gyms have puzzles (switches, ice, mazes, tracks); ours are a chain of trainers then a leader. Trainers have no classes with distinct teams beyond our hand-written ones, and no double battles (Gold II has none either).
-10. **Sound and animation.** (Per-area music done.) no battle transitions or Pokémon cries; attack effects are typed CSS only.
+10. **Sound and animation.** (Per-area music done.) battle wipes and cries done; attack effects are typed CSS only.
 11. **Town shape.** Towns are still one family of plan (Center, Mart, house, gym in slots); Gold towns differ more, and its connected maps scroll with no screen change.
 
 ## Suggested next three
