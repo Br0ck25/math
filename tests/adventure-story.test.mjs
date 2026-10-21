@@ -58,8 +58,9 @@ test('the story data is sound: known beats, prizes only for real beats, every ne
 });
 
 test('Riley meets you on Route 1: a "!", her words, a battle through the trainer path, and she is gone afterwards', async () => {
-  await put('route1', 7, 21, 'up');
-  await page.evaluate(() => owMove('up'));
+  const stand = await page.evaluate(() => { const n = OW_MAPS.route1.npcs.find((p) => p.id === 'route1-riley'), d = OW_STEP[n.face]; return { x: n.x + d[0] * 2, y: n.y + d[1] * 2, back: { left: 'right', right: 'left', up: 'down', down: 'up' }[n.face] }; });
+  await put('route1', stand.x, stand.y, stand.back);
+  await page.evaluate((b) => owMove(b), stand.back);
   await wait(300);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Rival Riley');
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /I am Riley/);
@@ -68,7 +69,8 @@ test('Riley meets you on Route 1: a "!", her words, a battle through the trainer
   await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
   assert.deepEqual(await page.evaluate(() => [ab.name, ab.npc.id]), ['Rival Riley', 'route1-riley']);
   await win();
-  const r = await page.evaluate(() => ({ beat: state.overworld.beat.slice(), words: document.getElementById('talk-text').innerText, here: !!owNpcAt(OW_MAPS.route1, 10, 20), drawn: document.querySelectorAll('.ow-npc').length, ow: document.getElementById('overworld-modal').style.display }));
+  await page.evaluate(() => { window.__R = OW_MAPS.route1.npcs.find((p) => p.id === 'route1-riley'); });
+  const r = await page.evaluate(() => ({ beat: state.overworld.beat.slice(), words: document.getElementById('talk-text').innerText, here: !!owNpcAt(OW_MAPS.route1, window.__R.x, window.__R.y), drawn: document.querySelectorAll('.ow-npc').length, ow: document.getElementById('overworld-modal').style.display }));
   assert.deepEqual(r.beat, ['route1-riley']);
   assert.match(r.words, /See you at the gyms/);
   assert.equal(r.here, false, 'she is gone');
@@ -77,11 +79,11 @@ test('Riley meets you on Route 1: a "!", her words, a battle through the trainer
 
 test('Riley is only on Route 4 once you hold the Tide Badge, and on Route 6 after the Volt Badge; before that the road is empty and walkable', async () => {
   const r = await page.evaluate(() => {
-    const at = (map, x, y) => !!owNpcAt(OW_MAPS[map], x, y);
-    state.badges = ['meadow', 'ember']; const before = [at('route4', 10, 6), at('route6', 10, 5), owWalkable(OW_MAPS.route4, 10, 6)];
-    state.badges = ['meadow', 'ember', 'tide']; const tide = [at('route4', 10, 6), at('route6', 10, 5)];
-    state.badges = ['meadow', 'ember', 'tide', 'grove', 'volt']; const volt = [at('route4', 10, 6), at('route6', 10, 5)];
-    state.overworld.beat = ['route4-riley', 'route6-riley']; const gone = [at('route4', 10, 6), at('route6', 10, 5)];
+    const R = (map) => OW_MAPS[map].npcs.find((n) => n.id === map + '-riley'), at = (map) => !!owNpcAt(OW_MAPS[map], R(map).x, R(map).y);
+    state.badges = ['meadow', 'ember']; const before = [at('route4'), at('route6'), owWalkable(OW_MAPS.route4, R('route4').x, R('route4').y)];
+    state.badges = ['meadow', 'ember', 'tide']; const tide = [at('route4'), at('route6')];
+    state.badges = ['meadow', 'ember', 'tide', 'grove', 'volt']; const volt = [at('route4'), at('route6')];
+    state.overworld.beat = ['route4-riley', 'route6-riley']; const gone = [at('route4'), at('route6')];
     return { before, tide, volt, gone };
   });
   assert.deepEqual(r.before, [false, false, true]);

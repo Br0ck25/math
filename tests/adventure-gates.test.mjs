@@ -18,6 +18,7 @@ beforeEach(async () => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; });
 });
+const treeSpot = () => page.evaluate(() => { const k = Object.keys(OW_MAPS.route1.trees)[0].split(',').map(Number); window.__T = nextTo('route1', k[0], k[1]); return window.__T; });
 const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   state.overworld.map = m; state.overworld.x = px; state.overworld.y = py; state.overworld.face = f;
   if (document.getElementById('overworld-modal').style.display !== 'flex') openAdventure();
@@ -116,20 +117,20 @@ test('every kind of gate blocks with its own kind hint until the charm is held, 
 });
 
 test('the Route 1 nook is behind thorny bushes: closed without the Trim Charm, open with the Meadow badge, with two gifts inside', async () => {
-  await put('route1', 4, 2, 'left');
-  const blocked = await page.evaluate(() => { owMove('left'); return { x: state.overworld.x, text: document.getElementById('talk-text').innerText }; });
-  assert.equal(blocked.x, 4);
+  const gem = await page.evaluate(() => OW_MAPS.route1.objects.find((o) => o.id === 'route1-nook-gem'));
+  await put('route1', gem.x, gem.y + 2, 'up');                              // the bush is the tile between the road side and the gifts
+  const blocked = await page.evaluate((y) => { owMove('up'); return { y: state.overworld.y, text: document.getElementById('talk-text').innerText }; }, gem.y);
+  assert.equal(blocked.y, gem.y + 2);
   assert.match(blocked.text, /Trim Charm from the Sunny Meadow Gym/);
   await page.evaluate(() => { closeTalk(); state.badges = ['meadow']; state.potions = 0; state.nets = 0; });
   const r = await page.evaluate(() => {
-    owMove('left'); owMove('left'); owMove('up');                       // (3,2) the bush, (2,2), (2,1) the net
-    const net = state.nets; owMove('left');                              // (1,1) the gems
-    return { pos: [state.overworld.x, state.overworld.y], net, gems: state.potions, found: state.overworld.found.slice() };
+    owMove('up'); owMove('up'); const gems = state.potions; owMove('up');                  // the bush, the Potion, then the net
+    return { pos: [state.overworld.x, state.overworld.y], net: state.nets, gems, found: state.overworld.found.slice() };
   });
-  assert.deepEqual(r.pos, [1, 1]);
+  assert.deepEqual(r.pos, [gem.x, gem.y - 1]);
   assert.equal(r.net, 1);
   assert.equal(r.gems, 1, 'a Potion in the nook');
-  assert.deepEqual(r.found, ['route1-nook-net', 'route1-nook-gem']);
+  assert.deepEqual(r.found.sort(), ['route1-nook-gem', 'route1-nook-net']);
 });
 
 test('the main road never needs a charm: with every road open and no charm, every map, gym door, person and trainer can be reached; only side goods wait', async () => {
@@ -230,7 +231,7 @@ test('a fished buddy is beaten like any wild buddy: the map comes back and the n
 });
 
 test('a shake tree drops a rare buddy once a day: the same one all day, never a cheap one, and each tree on its own', async () => {
-  await put('route1', 11, 5, 'right');
+  const T = await treeSpot(); await put('route1', T.x, T.y, T.face);
   const r = await page.evaluate(() => {
     const out = {};
     out.same = shakeSpecies('route1-tree').id === shakeSpecies('route1-tree').id;
@@ -239,7 +240,7 @@ test('a shake tree drops a rare buddy once a day: the same one all day, never a 
     for (let d = 1; d <= 12; d++) { dayKey = function () { return '2031-01-' + String(d).padStart(2, '0'); }; picks.add(shakeSpecies('route1-tree').id); }
     dayKey = real; out.varies = picks.size > 3;
     const want = shakeSpecies('route1-tree').id;
-    owMove('right');
+    owMove(__T.face);
     out.first = { text: document.getElementById('talk-text').innerText, fight: !!ab, shaken: state.overworld.shaken.ids.slice() };
     closeTalk();
     out.fight = { on: !!ab, id: ab.foes[0].id, want, ow: document.getElementById('overworld-modal').style.display };
@@ -254,16 +255,16 @@ test('a shake tree drops a rare buddy once a day: the same one all day, never a 
 });
 
 test('shaking again the same day gives nothing, tomorrow it works again, and another tree is separate', async () => {
-  await put('route1', 11, 5, 'right');
+  const T = await treeSpot(); await put('route1', T.x, T.y, T.face);
   const r = await page.evaluate(() => {
     const out = {};
-    owMove('right'); closeTalk(); ab = null; document.getElementById('ab-modal').style.display = 'none'; document.getElementById('overworld-modal').style.display = 'flex';
-    state.overworld.map = 'route1'; state.overworld.x = 11; state.overworld.y = 5; state.overworld.face = 'right'; renderOverworld();
-    owMove('right');
+    owMove(__T.face); closeTalk(); ab = null; document.getElementById('ab-modal').style.display = 'none'; document.getElementById('overworld-modal').style.display = 'flex';
+    state.overworld.map = 'route1'; state.overworld.x = __T.x; state.overworld.y = __T.y; state.overworld.face = __T.face; renderOverworld();
+    owMove(__T.face);
     out.again = { text: document.getElementById('talk-text').innerText, fight: !!ab };
     closeTalk();
     state.overworld.shaken.day = '1999-01-01';
-    owMove('right');
+    owMove(__T.face);
     out.tomorrow = document.getElementById('talk-text').innerText; closeTalk();
     ab = null; document.getElementById('ab-modal').style.display = 'none'; document.getElementById('overworld-modal').style.display = 'flex';
     state.overworld.map = 'hollow'; state.overworld.x = 13; state.overworld.y = 6; state.overworld.face = 'right'; renderOverworld();

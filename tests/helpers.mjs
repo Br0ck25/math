@@ -48,6 +48,39 @@ export async function openGame(browser, worker, env, opts = {}) {
     try { if (!localStorage.getItem('math_quest_save')) localStorage.setItem('math_quest_save', JSON.stringify({ v: 1, currentMonsterIndex: 0, bossLevel: 5, recentBossTypes: ['fire'] })); } catch (e) { /* no storage */ }
   });
   if (!opts.adventureBoot) await page.addInitScript(() => { window.__noAdventureBoot = true; });      // the game starts on the Adventure map; most tests are about the main screen
+  // Routes are laid out from blocks, so tests ask the map where to stand: window.grassSpot(map) is the tile just below two tall-grass tiles in a column that no trainer can see.
+  await page.addInitScript(() => {
+    window.nextTo = function (id, x, y) {                          // a walkable tile beside (x, y) and the way to face it
+      const m = OW_MAPS[id];
+      for (const [dx, dy, face] of [[0, 1, 'up'], [0, -1, 'down'], [-1, 0, 'right'], [1, 0, 'left']]) if (owWalkable(m, x + dx, y + dy) && !owNpcAt(m, x + dx, y + dy)) return { x: x + dx, y: y + dy, face };
+      return null;
+    };
+    window.sightStand = function (mapId, npcId) {                  // two tiles from the trainer along its line of sight, and the way to face to step into it
+      const n = OW_MAPS[mapId].npcs.find((p) => p.id === npcId), d = OW_STEP[n.face];
+      return { x: n.x + d[0] * 2, y: n.y + d[1] * 2, back: { left: 'right', right: 'left', up: 'down', down: 'up' }[n.face] };
+    };
+    window.classicRoute1 = function () {                           // Route 1 as it was drawn by hand: tests of trainer sight and battles need known tiles
+      const m = OW_MAPS.route1;
+      m.rows = ['TTTTTT..TTTTTT', 'T,,T,,..,,,,,T', 'T,,g,,..,,,,,T', 'TTT"",..,,**,T', 'T,,"",..,,**,T', 'T,,,,,..,,,,YT', 'T,,,,,..""",,T', 'T,,,,,..""",,T', 'T,,,,,..""",,T', 'T,,,,,..,,,,,T', 'T""",,..,,,,,T', 'T""",,..,,,,,T',
+        'T""",,..,,b,,T', 'T,,,,,..,,,,,T', 'T,,*,,..,,,,,T', 'T,,,,,..""",,T', 'T,,,,,..""",,T', 'T,,,,,..,,,,,T', 'T,"",,..,,,,,T', 'T,"",,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'TTTTTT..TTTTTT'];
+      const at = { 'route1-pia': [3, 9, 'right'], 'route1-leo': [10, 14, 'left'], 'route1-riley': [10, 20, 'left'] };
+      m.npcs = m.npcs.filter((n) => at[n.id]); m.npcs.forEach((n) => { [n.x, n.y, n.face] = at[n.id]; });
+      m.objects = [{ id: 'route1-berries', type: 'pickup', x: 11, y: 9, give: 'berry' }, { id: 'route1-nook-gem', type: 'pickup', x: 1, y: 1, give: 'gems' }, { id: 'route1-nook-net', type: 'pickup', x: 2, y: 1, give: 'net' }];
+      m.trees = { '12,5': 'route1-tree' }; m.warps = m.warps.filter((w) => w.y === 0 || w.y === 23);
+    };
+    window.grassSpot = function (id) {                              // a walkable tile with two tall-grass tiles in a line from it (face to step into them; back to step out), seen by no trainer
+      const m = OW_MAPS[id || 'route1'];
+      for (let y = 1; y < m.rows.length - 2; y++) for (let x = 1; x < 13; x++) for (const [dx, dy, face, back] of [[0, -1, 'up', 'down'], [0, 1, 'down', 'up'], [-1, 0, 'left', 'right'], [1, 0, 'right', 'left']]) {
+        const cells = [[x, y], [x + dx, y + dy], [x + 2 * dx, y + 2 * dy]];
+        if (cells.some(([cx, cy]) => !m.rows[cy] || !OW_TILES[m.rows[cy].charAt(cx)])) continue;
+        if (owTileAt(m, cells[0][0], cells[0][1]).grass || !owWalkable(m, x, y) || !owTileAt(m, cells[1][0], cells[1][1]).grass || !owTileAt(m, cells[2][0], cells[2][1]).grass) continue;
+        if (cells.some(([cx, cy]) => owTrainerSeeing(m, cx, cy) || owNpcAt(m, cx, cy) || owWarpAt(m, cx, cy))) continue;
+        return { x, y, face, back };
+      }
+      return null;
+    };
+
+  });
   if (opts.init) await page.addInitScript(opts.init);          // runs before the game loads
   if (opts.fast) {
     await page.addInitScript(() => {

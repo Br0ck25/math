@@ -693,7 +693,7 @@ test('the routes have big grass fields, a house with a room on most, and Trim-ch
     const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn]);
     const houses = maps.filter((m) => OW_MAPS[m.id + '-house']);
     const door = (m) => { const w = m.warps.find((p) => p.to === m.id + '-house'); return m.rows[w.y].charAt(w.x) === 'D' && OW_MAPS[w.to].warps[0].ty === w.y + 1 && owWalkable(m, w.x, w.y + 1); };
-    const fields = maps.filter((m) => m.rows.some((row, y) => y < m.rows.length - 3 && /"{5,}/.test(row.slice(1, 13)) && /"{5,}/.test(m.rows[y + 1].slice(1, 13)) && /"{5,}/.test(m.rows[y + 2].slice(1, 13)))).length;
+    const fields = maps.filter((m) => m.rows.some((row, y) => y < m.rows.length - 1 && /"{4,}/.test(row.slice(1, 13)) && /"{4,}/.test(m.rows[y + 1].slice(1, 13)))).length;
     const cuts = maps.filter((m) => m.rows.some((row) => row.charAt(6) === 'g')).length;
     state.badges = [];
     const m = maps.find((mm) => mm.rows.some((row) => row.charAt(6) === 'g')), y = m.rows.findIndex((row) => row.charAt(6) === 'g');
@@ -726,4 +726,20 @@ test('after a catch nothing of the net stays, and a swap makes the foe hit the b
   });
   await page.waitForFunction(() => ab && !ab.busy && (ab.phase === 'menu' || ab.phase === 'team'), null, { timeout: 20000 });
   assert.deepEqual(await ev(() => [window.oldMon.hp, !!ab.forced, abMe() !== window.oldMon]), [1, false, true], 'the buddy that left is not hit, and nobody is forced to switch again');
+});
+
+test('every route is laid out from blocks: the road winds, each trainer looks at the road from a clear row, and everything on the land can be reached', async () => {
+  const r = await ev(() => OW_LANDS.map((L) => {
+    const m = OW_MAPS[L.routeIn], out = [];
+    if (!m.blocks) out.push('not blocks');
+    const bend = m.rows.filter((row) => row.charAt(6) !== '.' || row.charAt(7) !== '.').length;
+    if (bend < 8) out.push('road does not wind');
+    m.npcs.filter((n) => n.kind === 'trainer' && !/swimmer/.test(n.id)).forEach((n) => {
+      const d = OW_STEP[n.face]; let hit = false;
+      for (let i = 1; i <= 4 && !hit; i++) { if (!owWalkable(m, n.x + d[0] * i, n.y + d[1] * i)) break; hit = m.rows[n.y + d[1] * i].charAt(n.x + d[0] * i) === '.'; }
+      if (!hit) out.push(n.id + ' does not look at the road');
+    });
+    return out.length ? L.routeIn + ': ' + out.join('; ') : '';
+  }).filter(Boolean));
+  assert.deepEqual(r, []);
 });

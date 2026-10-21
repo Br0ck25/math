@@ -78,11 +78,11 @@ test('the safe steps after opening the map, then a grass step can start a fight 
   const r = await page.evaluate(() => {
     ECON.overworld.graceSteps = 2; ECON.overworld.grassChance = 1;
     hideModal('overworld-modal'); openAdventure();
-    state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
+    state.overworld.map = 'route1'; const sp = grassSpot(); state.overworld.x = sp.x; state.overworld.y = sp.y; state.overworld.face = sp.face;
     const log = [];
-    owMove('up'); log.push(!!ab);                                                       // (3,4) tall grass, safe step 1
-    owMove('up'); log.push(!!ab);                                                       // (3,3) tall grass, safe step 2
-    owMove('down'); log.push(!!ab);                                                     // (3,4) tall grass: now the fight begins
+    owMove(sp.face); log.push(!!ab);                                                    // tall grass, safe step 1
+    owMove(sp.face); log.push(!!ab);                                                    // tall grass, safe step 2
+    owMove(sp.back); log.push(!!ab);                                                     // (3,4) tall grass: now the fight begins
     return { log, foe: ab.foes[0].id, shut: document.getElementById('overworld-modal').style.display, screen: document.getElementById('ab-modal').style.display };
   });
   assert.deepEqual(r.log, [false, false, true]);
@@ -105,10 +105,10 @@ test('winning a walk fight brings the map back at the same tile, and it does not
   await open();
   const r = await page.evaluate(async () => {
     ECON.overworld.grassChance = 1; owSafe = 0;
-    state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; state.overworld.face = 'up';
+    state.overworld.map = 'route1'; const sp = grassSpot(); state.overworld.x = sp.x; state.overworld.y = sp.y; state.overworld.face = sp.face;
     const since = state.wild.since;
     state.buddyXp[state.activePet] = xpForLevel(12);
-    owMove('up');
+    owMove(sp.face);
     const fought = !!ab;
     const at = { x: state.overworld.x, y: state.overworld.y, map: state.overworld.map };
     await new Promise((res) => setTimeout(res, 1500));
@@ -127,8 +127,8 @@ test('a caught buddy joins you and the map comes back', async () => {
   await open();
   const r = await page.evaluate(async () => {
     ECON.overworld.grassChance = 1; owSafe = 0;
-    state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5;
-    owMove('up');
+    state.overworld.map = 'route1'; const sp = grassSpot(); state.overworld.x = sp.x; state.overworld.y = sp.y; state.overworld.face = sp.face;
+    owMove(sp.face);
     const id = ab.foes[0].id;
     state.unlockedPets = ['dog']; state.unlockedSecrets = []; state.nets = 1;
     await new Promise((res) => setTimeout(res, 1500));
@@ -144,8 +144,8 @@ test('RUN leaves a walk fight with no penalty and the map comes back', async () 
   await open();
   const r = await page.evaluate(async () => {
     ECON.overworld.grassChance = 1; owSafe = 0;
-    state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5;
-    owMove('up');
+    state.overworld.map = 'route1'; const sp = grassSpot(); state.overworld.x = sp.x; state.overworld.y = sp.y; state.overworld.face = sp.face;
+    owMove(sp.face);
     const started = !!ab, gems = state.gems, level = getBuddyLevel(state.activePet);
     await new Promise((res) => setTimeout(res, 1500));
     Math.random = () => 0;                                              // the escape roll succeeds
@@ -227,7 +227,7 @@ for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
 
 test('the battle screen fits 320x568 with every menu button reachable', async () => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await page.evaluate(() => { ECON.overworld.graceSteps = 0; ECON.overworld.grassChance = 1; openAdventure(); state.overworld.map = 'route1'; state.overworld.x = 3; state.overworld.y = 5; owMove('up'); });
+  await page.evaluate(() => { ECON.overworld.graceSteps = 0; ECON.overworld.grassChance = 1; openAdventure(); state.overworld.map = 'route1'; const sp = grassSpot(); state.overworld.x = sp.x; state.overworld.y = sp.y; state.overworld.face = sp.face; owMove(sp.face); });
   await page.waitForFunction(() => ab && ab.phase === 'menu', null, { timeout: 15000 });
   const r = await page.evaluate(() => {
     const bs = [...document.querySelectorAll('#ab-panel button')].map((b) => b.getBoundingClientRect());

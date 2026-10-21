@@ -115,20 +115,25 @@ test('an old save that already has a later badge walks through the road without 
 });
 
 test('Route 2 has two trainers that see the path, a shake tree, and a nook behind thorny bushes', async () => {
-  await put('route2', 6, 17, 'up');
-  await page.evaluate(() => owMove('up'));                                                              // (6,16): Hiker Brick at 3,16 looks right
+  const st = await page.evaluate(() => sightStand('route2', 'route2-brick'));
+  await put('route2', st.x, st.y, st.back);
+  await page.evaluate((b) => owMove(b), st.back);                                                         // Hiker Brick looks at the road
   await page.waitForTimeout(300);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Hiker Brick');
   await page.click('#talk-next');
+  await page.evaluate(() => closeTalk());
+  const gem = await page.evaluate(() => OW_MAPS.route2.objects.find((o) => o.id === 'route2-nook-gem'));
+  await put('route2', gem.x, gem.y + 2, 'up');
   const r = await page.evaluate(() => {
-    state.overworld.x = 10; state.overworld.y = 19; state.overworld.face = 'right'; state.badges = []; renderOverworld();
-    owMove('right'); const blocked = document.getElementById('talk-text').innerText; closeTalk();
-    state.badges = ['meadow']; renderOverworld(); owMove('right'); owMove('right');
-    return { blocked, pos: [state.overworld.x, state.overworld.y], tree: Object.values(OW_MAPS.route2.trees) };
+    state.badges = []; renderOverworld();
+    owMove('up'); const blocked = document.getElementById('talk-text').innerText; closeTalk();
+    state.badges = ['meadow']; renderOverworld(); owMove('up'); owMove('up');
+    return { blocked, pos: [state.overworld.x, state.overworld.y], tree: Object.values(OW_MAPS.route2.trees), trainers: OW_MAPS.route2.npcs.filter((n) => !/swimmer/.test(n.id)).length };
   });
   assert.match(r.blocked, /Trim Charm/);
-  assert.deepEqual(r.pos, [12, 19]);
+  assert.deepEqual(r.pos, [gem.x, gem.y]);
   assert.deepEqual(r.tree, ['route2-tree']);
+  assert.equal(r.trainers, 2);
 });
 
 test('Ember Hills: its gym door explains the level, the steam nook waits for the Steam Boots, and the Center remembers the town', async () => {
@@ -160,8 +165,9 @@ test('the Ember gym opens at its level and starts the fire gym run with the firs
 });
 
 test('a reload in the middle of a trainer battle leaves the trainer unbeaten and nothing stuck', async () => {
-  await put('route2', 6, 17, 'up');
-  await page.evaluate(() => owMove('up'));
+  const st = await page.evaluate(() => sightStand('route2', 'route2-brick'));
+  await put('route2', st.x, st.y, st.back);
+  await page.evaluate((b) => owMove(b), st.back);
   await page.waitForTimeout(300);
   await page.click('#talk-choices button');
   await page.reload();
@@ -216,11 +222,11 @@ test('Tide Bay: the road from Ember Hills opens with the Ember Badge, Route 3 tu
     owMove('up');
     const gate = [state.overworld.map, state.overworld.x, state.overworld.y, state.region];
     let water = 0; for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'water') water++;
-    return { gate, water, trainers: OW_MAPS.route3.npcs.filter((n) => !/swimmer/.test(n.id)).map((n) => n.face + '@' + n.x), tide: OW_MAPS.tide.rows.slice(13, 15) };
+    return { gate, water, trainers: OW_MAPS.route3.npcs.filter((n) => !/swimmer/.test(n.id)).length, tide: OW_MAPS.tide.rows.slice(13, 15) };
   });
   assert.deepEqual(r.gate, ['route3', 6, 22, 'tide']);
   assert.ok(r.water > 40, 'mostly water buddies: ' + r.water + ' of 80');
-  assert.deepEqual(r.trainers, ['left@10', 'right@3'], 'the route is the mirror of Route 2, so its trainers stand the other way round');
+  assert.equal(r.trainers, 2);
   assert.ok(r.tide.every((row) => /~~T$/.test(row)));
 });
 

@@ -16,7 +16,7 @@ beforeEach(async () => {
   await page.reload();
   errors.length = 0;
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.buddyXp[state.activePet] = xpForLevel(12); });
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.buddyXp[state.activePet] = xpForLevel(12); classicRoute1(); });
 });
 const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   state.overworld.map = m; state.overworld.x = px; state.overworld.y = py; state.overworld.face = f;
