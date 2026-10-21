@@ -163,6 +163,12 @@ test('the pack: Super Potion heals more, Full Heal cures a status, Revive wakes 
   const hy = await ev(() => { const me = abMe(); me.hp = 1; me.max = Math.max(me.max, 300); state.items.hyperpotion = 1; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('hyperpotion'); return [me.hp > 150, state.items.hyperpotion || 0]; });
   assert.deepEqual(hy, [true, 0]);
   await menu();
+  const mx1 = await ev(() => { const me = abMe(); me.hp = 1; me.status = 'burn'; state.items.maxpotion = 1; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('maxpotion'); return me; });
+  await menu();
+  const mx2 = await ev(() => { const me = abMe(); const first = [me.hp >= me.max * 0.8, me.status, state.items.maxpotion || 0]; me.hp = 1; state.items.fullrestore = 1; ab.phase = 'pack'; abUseItem('fullrestore'); return first; });
+  await menu();
+  const mx3 = await ev(() => { const me = abMe(); return [me.hp >= me.max * 0.8, me.status, state.items.fullrestore || 0]; });
+  assert.deepEqual([mx2, mx3], [[true, 'burn', 0], [true, '', 0]], 'Max Potion heals everything but not the burn; Full Restore does both');
   const run = await ev(() => {
     const out = []; for (let k = 1; k <= 12; k++) { ab.runs = 0; const spd = abMe().spd, fs = abFoe().spd; out.push([k]); }
     const f = (runs) => Math.floor(abMe().spd * 32 / Math.max(1, Math.floor(abFoe().spd / 4) % 256)) + 30 * runs;

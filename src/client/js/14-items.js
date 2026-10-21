@@ -17,6 +17,8 @@ const ITEM_LOOKS = {
   ether: ['🧪', 'Ether', 'Restores 10 PP to one move in a battle'],
   ppup: ['⬆️', 'PP Up', 'Raises a move\'s PP for good (see the Stats tab, up to three times)'],
   escaperope: ['🪢', 'Escape Rope', 'Takes you back to the last Buddy Center (use it from the Bag)'],
+  maxpotion: ['💗', 'Max Potion', 'Heals all of a buddy\'s HP in a battle'],
+  fullrestore: ['💗', 'Full Restore', 'Heals all of a buddy\'s HP in a battle and cures a status'],
   hyperpotion: ['💗', 'Hyper Potion', 'Heals ' + ECON.overworld.hyperPotionHeal + ' HP in a battle and cures a status'],
   superpotion: ['💗', 'Super Potion', 'Heals ' + ECON.overworld.superPotionHeal + ' HP in a battle and cures a status'],
   fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
