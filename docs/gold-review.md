@@ -28,3 +28,13 @@ Math answers drive every attack; six types not seventeen; no DVs or stat experie
 1. A cave generator with a Flash-style dark floor (item 1).
 2. A Surf charm and a water crossing (item 2).
 3. A set of utility moves: weather, a charge move, Protect and Rest (item 3).
+
+## Second pass (after the items above)
+Checked by searching the code for each feature; "not found" means no match in `src/client/js`.
+1. **Move variety is now the biggest battle gap.** Moves are one Normal line, four tiers per type, six stat moves and about a dozen TMs. Not found: status-only moves (Thunder Wave, Sleep Powder, Toxic, Confuse Ray), flinch, Leech Seed, Counter, Thief, Mean Look, Hidden Power, Perish Song, Curse, Encore, Spikes, OHKO moves. **Step:** a dozen of these as TMs and learnset slots, with the effects in `abHit`/`abUtil`.
+2. **Held items:** eight (Berry, Leftovers, Quick Claw, Scope Lens, Focus Band, Lucky Egg, Amulet Coin, Smoke Ball). Not found: type-power items (Charcoal, Mystic Water...), King's Rock, Exp. Share, Everstone, Bright Powder.
+3. **Surf as real travel.** Water is for fishing, bridges and one stone crossing per pond; there is no sea to cross, so no route that is only reachable by water (Gold's Routes 19 to 21, Cianwood, Whirl Islands).
+4. **Nicknames and the Name Rater.** `nickname` appears only in two files and there is no rater.
+5. **Gym mechanics beyond the riddle and sky** (switches, ice, mazes) and a different team style per trainer class.
+6. **Set pieces:** Red Gyarados at the Lake of Rage, the Slowpoke Well, Ho-Oh and Lugia quests. Not found as such; roaming legends and the sleepers stand in for some.
+7. **Still deliberately out:** Mystery Gift and linking (no sharing between players), seamless scrolling maps and wider towns (too many hard-coded edges).
