@@ -224,7 +224,7 @@ const NORMALIZERS = [
     const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
     s.stoned = st;
     s.coins = asInt(s.coins, 0, 9999, 0);
-    const sf = isPlainObject(s.safari) ? s.safari : {}; s.safari = { active: sf.active === true, steps: asInt(sf.steps, 0, ECON.safari.steps, 0), balls: asInt(sf.balls, 0, ECON.safari.balls, 0) };
+    const sf = isPlainObject(s.safari) ? s.safari : {}; s.safari = { active: sf.active === true, steps: asInt(sf.steps, 0, ECON.safari.steps, 0), balls: asInt(sf.balls, 0, ECON.safari.balls, 0), night: sf.night === true };
     if (!s.safari.active || s.overworld.map !== 'safari-zone') { s.safari.active = false; if (s.overworld.map === 'safari-zone') { s.overworld.map = 'thistle-gate'; s.overworld.x = 3; s.overworld.y = 5; } }
     const tw = isPlainObject(s.tower) ? s.tower : {}; s.tower = { day: typeof tw.day === 'string' ? tw.day.slice(0, 10) : '', best: asInt(tw.best, 0, 14, 0), longDay: typeof tw.longDay === 'string' ? tw.longDay.slice(0, 10) : '' };
     const ph = isPlainObject(s.phone) ? s.phone : {}; s.phone = { gift: typeof ph.gift === 'string' ? ph.gift.slice(0, 10) : '', day: typeof ph.day === 'string' ? ph.day.slice(0, 10) : '', ready: typeof ph.ready === 'string' ? ph.ready.slice(0, 40) : '', known: (Array.isArray(ph.known) ? ph.known : []).filter(function (x) { return typeof x === 'string'; }).slice(0, 80).map(function (x) { return x.slice(0, 40); }) };

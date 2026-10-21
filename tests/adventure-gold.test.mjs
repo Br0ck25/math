@@ -1195,3 +1195,18 @@ test('towns have more landscape: orchards, fenced paddocks and boulder fields ap
   });
   assert.ok(r >= 3, 'fenced paddocks stand in several towns');
 });
+
+test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
+  const r = await ev(() => {
+    state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};
+    const warden = OW_MAPS['thistle-gate'].npcs.find((n) => n.kind === 'safari');
+    OW_SERVICES.safari(warden); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(1);
+    out.paid = [state.gems, state.safari.active, state.safari.night, state.safari.balls, state.safari.steps];
+    out.kinds = [...new Set(Array.from({ length: 60 }, () => safariPick().element))].sort().join();
+    safariEnd('done'); out.after = [state.safari.active, state.safari.night]; closeTalk();
+    state.safari = { active: false, steps: 0, balls: 0, night: 'yes' }; NORMALIZERS.forEach((fn) => fn(state)); out.norm = state.safari.night;
+    return out;
+  });
+  assert.deepEqual(r, { paid: [200, true, true, 20, 300], kinds: r.kinds, after: [false, false], norm: false });
+  assert.ok(/^(dark|dark,magic|magic)$/.test(r.kinds), 'only dark and magic buddies at night: ' + r.kinds);
+});

@@ -5,7 +5,7 @@
 function safariActive() { return !!state.safari.active; }
 function safariEnd(why) {
   const s = state.safari, was = s.active;
-  s.active = false; s.steps = 0; s.balls = 0;
+  s.active = false; s.steps = 0; s.balls = 0; s.night = false;
   const o = state.overworld; o.map = 'thistle-gate'; o.x = 3; o.y = 5; owTrail = null; saveState();
   if (was && owOpen()) { renderOverworld(); openTalk({ name: 'Safari Warden', art: worldSprite('t-gym-door'), lines: [why] }); }
 }
@@ -17,7 +17,7 @@ function owSafariStep() {
 }
 // The buddy that shows up: the rarer kinds, as the zone's own.
 function safariPick() {
-  const pool = wildPool().filter(function (p) { return !isStoreBuddy(p) || p.cost >= 800; });
+  const night = wildPool().filter(function (p) { return p.element === 'dark' || p.element === 'magic'; }), pool = state.safari.night && night.length ? night : wildPool().filter(function (p) { return !isStoreBuddy(p) || p.cost >= 800; });
   return pick(pool);
 }
 function abSafariFlees() { const s = ab.safari; return Math.random() < (s.rock > 0 ? 0.35 : s.bait > 0 ? 0.05 : 0.15); }
@@ -41,15 +41,19 @@ function abSafariBall() {
 function abSafariBait() { ab.phase = 'busy'; ab.safari.bait = 3; ab.safari.rock = 0; abSteps([['You threw some bait at ' + abFoe().name + '.', null, 1000]]); abSafariTurn(); }
 function abSafariRock() { ab.phase = 'busy'; ab.safari.rock = 3; ab.safari.bait = 0; abSteps([['You threw a rock at ' + abFoe().name + '!', null, 1000]]); abSafariTurn(); }
 OW_SERVICES.safari = function (npc) {
-  const art = heroSprite(heroLookColors(npc.look), 'down', 0), s = state.safari;
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0);
   openTalk({ name: npc.name, art: art, lines: ['Welcome to the Safari Zone! For ' + ECON.safari.fee + ' gems you get ' + ECON.safari.balls + ' Safari Balls and ' + ECON.safari.steps + ' steps.', 'You cannot fight in there. Throw bait, rocks and balls instead. The rare buddies live here.'],
-    choices: [{ label: 'Pay ' + ECON.safari.fee + ' gems', run: function () {
-      closeTalk();
-      if (state.gems < ECON.safari.fee) { soundWrong(); toast('You need ' + ECON.safari.fee + ' gems.'); return; }
-      state.gems -= ECON.safari.fee; s.active = true; s.steps = ECON.safari.steps; s.balls = ECON.safari.balls;
-      const o = state.overworld; o.map = 'safari-zone'; o.x = 10; o.y = 14; o.face = 'up'; owTrail = null; saveState(); updateStatsUI(); renderOverworld();
-    } }] });
+    choices: [{ label: 'Pay ' + ECON.safari.fee + ' gems', run: function () { safariPay(false); } },
+      { label: 'Night Walk: ' + ECON.safari.night.fee + ' gems', run: function () { safariPay(true); } }] });
 };
+// A paid visit: the day walk, or the Night Walk (dark and magic buddies only).
+function safariPay(night) {
+  const c = night ? ECON.safari.night : ECON.safari, s = state.safari;
+  closeTalk();
+  if (state.gems < c.fee) { soundWrong(); toast('You need ' + c.fee + ' gems.'); return; }
+  state.gems -= c.fee; s.active = true; s.steps = c.steps; s.balls = c.balls; s.night = night;
+  const o = state.overworld; o.map = 'safari-zone'; o.x = 10; o.y = 14; o.face = 'up'; owTrail = null; saveState(); updateStatsUI(); renderOverworld();
+}
 OW_MAPS['thistle-gate'] = owRoom('thistle-gate', 'Safari Gate', { to: 'thistle', tx: 1, ty: 6 }, [
   { id: 'thistle-warden', kind: 'safari', name: 'Warden Fern', x: 3, y: 2, face: 'down', look: { skin: 3, hair: 4, outfit: 2, style: 0 }, lines: ['The Safari Zone.'] }
 ], [], OW_ROOM_ROWS);

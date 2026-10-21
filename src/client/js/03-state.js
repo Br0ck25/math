@@ -13,7 +13,7 @@ function freshState() {
     genders: {},                                     // buddy id -> 'm' or 'f': the gender it was caught with
     happy: {},                                       // buddy id -> friendship 0-255 (wins, levels and walks raise it)
     fromTrade: {},                                   // buddy id -> 1 when it came from a Trader: it disobeys above the level its badges allow
-    safari: { active: false, steps: 0, balls: 0 },   // a visit to the Safari Zone
+    safari: { active: false, steps: 0, balls: 0, night: false },   // a visit to the Safari Zone
     coins: 0,                                        // Game Corner coins
     tower: { day: '', best: 0, longDay: '' },                      // the Battle Tower: the day of the last prize and the best streak
     phone: { day: '', ready: '', known: [], gift: '' },                   // the trainer who called today for a rematch (24vh-ow-phone.js)

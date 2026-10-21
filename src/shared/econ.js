@@ -86,7 +86,7 @@ const ECON = {
   // Rematch calls (24vh-ow-phone.js): the trainer who called is `levels` above the land.
   phone: { levels: 4 },
   // The Safari Zone (24vk-ow-safari.js): a visit costs `fee` gems and gives `balls` Safari Balls and `steps` steps.
-  safari: { fee: 500, balls: 30, steps: 500 },
+  safari: { fee: 500, balls: 30, steps: 500, night: { fee: 800, balls: 20, steps: 300 } },      // the Night Walk: dearer and shorter, but only dark and magic buddies live there
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
   virus: { odds: 0.01, days: 4, mult: 2 },                                                // Gold's Pokérus: a rare catch after a wild win; the sick buddy earns `mult` times the Exp. for `days` days, then is cured for good
