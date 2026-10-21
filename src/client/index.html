@@ -7,7 +7,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0f172a" />
   <link rel="manifest" href="/manifest.json" />
-  <title>Math Quest - Gem Defender</title>
+  <title>Buddymon</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="apple-touch-icon" href="/icon.svg" />
   <style>
 {{CSS}}
 </style>
@@ -46,6 +48,19 @@
 
   <!-- Drawing Pad (docked above the keypad so you can write, then type the answer) -->
 
+
+  <!-- Trivia subjects -->
+  <div class="modal-overlay" id="study-modal" data-close="closeStudyHome">
+    <div class="modal-content">
+      <h2 style="font-size: 1.3rem;">🎓 Subjects</h2>
+      <div class="settings-hint">Tick the subjects you want. None ticked means all of them.</div>
+      <div class="settings-label">Grade</div>
+      <div class="grade-grid" id="study-levels"></div>
+      <div class="settings-label">Subjects</div>
+      <div class="grade-grid" id="study-subjects"></div>
+      <button class="key-btn submit-btn" style="width: 100%; padding: 8px; margin-top: 10px; height: 44px; font-size:1rem;" onclick="closeStudyHome()">Done</button>
+    </div>
+  </div>
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settings-modal" data-close="closeSettings">

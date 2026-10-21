@@ -47,10 +47,29 @@ function owWindRoute(mapId, i) {
     return m.warps.some(function (w) { return Math.abs(w.x - x) <= 1 && Math.abs(w.y - y) <= 1; }) || (m.npcs || []).concat(m.objects || []).some(function (p) { return p.x === x && p.y === y; }) || keys.indexOf(x + ',' + y) !== -1;
   };
   let side = i % 2;
+  const walls = [];
   for (let y = 4; y < n - 4; y += 3) {
-    if (Math.abs(y - m.start.y) < 3 || (m.npcs || []).some(function (p) { return Math.abs(p.y - y) <= 1; })) continue;
+    if (/[^,."*T_]/.test(m.rows[y].slice(1, 13)) || Math.abs(y - m.start.y) < 3 || (m.npcs || []).some(function (p) { return Math.abs(p.y - y) <= 1; })) continue;
     for (let x = 1; x <= 12; x++) if ((side ? x < 10 : x > 3) && ',.*"'.indexOf(m.rows[y].charAt(x)) !== -1 && !busy(x, y)) owSetTile(mapId, x, y, 'T');
-    side = 1 - side;
+    for (let x = 1; x <= 12; x++) if ((side ? x >= 10 : x <= 3) && ',.*'.indexOf(m.rows[y].charAt(x)) !== -1 && !busy(x, y)) owSetTile(mapId, x, y, 'd');      // the gap is bare dirt
+    walls.push({ y: y, side: side }); side = 1 - side;
+  }
+  return walls;
+}
+// A pond cut into one wall (on the side that is blocked): a one-tile bridge from the north shore leads to a dirt islet with a swimmer and a find, so the far side of the water holds a person.
+function owLake(mapId, i, walls) {
+  const m = OW_MAPS[mapId], busy = function (x, y) { return m.warps.some(function (w) { return Math.abs(w.x - x) <= 1 && Math.abs(w.y - y) <= 1; }) || (m.npcs || []).concat(m.objects || []).some(function (p) { return p.x === x && p.y === y; }) || Object.keys(m.signs || {}).concat(Object.keys(m.trees || {})).indexOf(x + ',' + y) !== -1; };
+  for (let k = 0; k < walls.length; k++) {
+    const w = walls[k], west = w.side === 1, x0 = west ? 1 : 8, cx = west ? 3 : 10, ok = [];
+    let fits = w.y >= 3 && w.y + 2 < m.rows.length - 3;      // the lake stops a row short of the next wall, whose gap is on this side
+    for (let y = w.y - 1; fits && y <= w.y + 1; y++) for (let x = x0; x < x0 + 5; x++) if (',".*T'.indexOf(m.rows[y].charAt(x)) === -1 || busy(x, y)) fits = false;
+    if (!fits || ',"*.d'.indexOf(m.rows[w.y - 2].charAt(cx)) === -1 || busy(cx, w.y - 2)) continue;
+    for (let y = w.y - 1; y <= w.y + 1; y++) for (let x = x0; x < x0 + 5; x++) owSetTile(mapId, x, y, '~');
+    owSetTile(mapId, cx, w.y - 1, 'B'); owSetTile(mapId, cx, w.y, 'd');      // the find lies on the bridge, so it never sits behind the swimmer
+    const folk = OW_SIDE_FOLK[(i + 3) % OW_SIDE_FOLK.length];
+    m.npcs.push({ id: mapId + '-swimmer', kind: 'trainer', name: 'Swimmer ' + folk[0].split(' ')[1], x: cx, y: w.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });
+    m.objects = (m.objects || []).concat([{ id: mapId + '-islet', type: 'pickup', x: cx, y: w.y - 1, give: i % 2 ? 'net' : 'gems' }]);
+    return;
   }
 }
-OW_LANDS.forEach(function (L, i) { owWindRoute(L.routeIn, i); });
+OW_LANDS.forEach(function (L, i) { owLake(L.routeIn, i, owWindRoute(L.routeIn, i)); });

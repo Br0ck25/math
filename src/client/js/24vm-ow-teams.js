@@ -49,3 +49,5 @@ const GYM_TEAMS = {
   cross:    [[['lion', 85]], [['shark', 86], ['phoenix', 86], ['pegasus', 86]], [['gorilla', 87], ['wolf', 86]]],
   summit:   [[['griffin', 90]], [['pegasus', 91], ['phoenix', 91], ['wolf', 91]], [['gorilla', 92], ['lion', 91], ['shark', 92]]]
 };
+// The swimmers on each route's pond islet fight with the side-path trainer's buddies (a swimmer is a trainer of the same level).
+OW_LANDS.forEach(function (L) { const t = OW_TEAMS[L.routeIn + '-side-folk']; if (t) OW_TEAMS[L.routeIn + '-swimmer'] = t.map(function (b) { return [b[0], b[1]]; }); });

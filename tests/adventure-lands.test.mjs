@@ -216,7 +216,7 @@ test('Tide Bay: the road from Ember Hills opens with the Ember Badge, Route 3 tu
     owMove('up');
     const gate = [state.overworld.map, state.overworld.x, state.overworld.y, state.region];
     let water = 0; for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'water') water++;
-    return { gate, water, trainers: OW_MAPS.route3.npcs.map((n) => n.face + '@' + n.x), tide: OW_MAPS.tide.rows.slice(13, 15) };
+    return { gate, water, trainers: OW_MAPS.route3.npcs.filter((n) => !/swimmer/.test(n.id)).map((n) => n.face + '@' + n.x), tide: OW_MAPS.tide.rows.slice(13, 15) };
   });
   assert.deepEqual(r.gate, ['route3', 6, 22, 'tide']);
   assert.ok(r.water > 40, 'mostly water buddies: ' + r.water + ' of 80');

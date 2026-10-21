@@ -28,6 +28,8 @@ const OW_TILES = {
   '.': { t: 't-path' },
   '*': { t: 't-flower' },
   '_': { t: 't-sand' },
+  'd': { t: 't-dirt' },
+  'B': { t: 't-bridge' },
   '~': { t: 't-water', solid: true, water: true },
   'Y': { t: 't-tree-shake', solid: true },
   'T': { t: 't-tree', solid: true },

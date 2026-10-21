@@ -53,8 +53,8 @@ function owTrainerSeeing(map, x, y) {
     const d = OW_STEP[n.face], sight = n.sight || ECON.overworld.trainerSight;
     for (let i = 1; i <= sight; i++) {
       const cx = n.x + d[0] * i, cy = n.y + d[1] * i;
-      if (cx === x && cy === y) return true;
       if (!owWalkable(map, cx, cy) || owNpcAt(map, cx, cy)) return false;
+      if (cx === x && cy === y) return true;
     }
     return false;
   }) || null;

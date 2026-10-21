@@ -117,6 +117,10 @@ async function route(request, env, ctx) {
       });
     }
 
+    if (url.pathname === "/icon.svg") {
+      return new Response(ICON_SVG, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
+    }
+
     if (url.pathname === "/sw.js") {
       return new Response(SW, {
         headers: {

@@ -943,3 +943,21 @@ body.trivia .math-only { display: none; }
 .gm-dimtxt { fill: #f8fafc; stroke: none; }
 .gm-label { font: 800 3px sans-serif; fill: #14532d; }
 .gm-me { fill: #ef4444; stroke: #fff; stroke-width: 0.9; }
+
+/* Answer choices in a fight: a 2x2 grid with room between the buttons (one column for long answers) */
+.ab-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 8px 0; }
+.ab-opts.long-opts { grid-template-columns: minmax(0, 1fr); }
+.ab-opts .vault-btn { width: 100%; min-height: 52px; margin: 0; white-space: normal; overflow-wrap: break-word; }
+
+/* The Catch Net's flight: a ball arcs from you to the foe, the foe shrinks into it, the ball rocks, then it clicks shut or the foe bursts out */
+.ab-net { position: absolute; z-index: 5; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 3px solid #1e293b; background: linear-gradient(#ef4444 0 46%, #1e293b 46% 54%, #f8fafc 54%); box-shadow: 0 2px 0 rgba(0,0,0,.25); pointer-events: none; left: 72%; top: 34%; animation: abNetToss 0.65s cubic-bezier(.3,.6,.5,1) both; }
+.ab-net.k-greatnet { background: linear-gradient(#3b82f6 0 46%, #1e293b 46% 54%, #f8fafc 54%); }
+.ab-net.k-ultranet { background: linear-gradient(#facc15 0 46%, #1e293b 46% 54%, #f8fafc 54%); }
+.ab-net.ab-rock { animation: abNetRock 0.6s ease-in-out; }
+@keyframes abNetToss { 0% { left: 24%; top: 62%; transform: rotate(0) scale(.8); } 50% { left: 50%; top: 14%; transform: rotate(360deg) scale(1); } 100% { left: 72%; top: 34%; transform: rotate(720deg) scale(1); } }
+@keyframes abNetRock { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-28deg); } 75% { transform: rotate(28deg); } }
+.ab-sucked { animation: abSuck 0.35s ease-in forwards; }
+.ab-burst { animation: abBurst 0.5s ease-out; }
+@keyframes abSuck { to { transform: scale(0.05); opacity: 0; } }
+@keyframes abBurst { from { transform: scale(0.2); opacity: 0; filter: brightness(3); } to { transform: scale(1); opacity: 1; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .ab-net, .ab-sucked, .ab-burst { animation-duration: 0.01s; } }

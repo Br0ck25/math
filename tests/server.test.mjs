@@ -17,7 +17,7 @@ const questions = (n = 5) => Array.from({ length: n }, (_, i) => {
 
 test('every response carries the security headers', async () => {
   const { c } = await setup();
-  for (const path of ['/', '/api/status', '/manifest.json', '/sw.js']) {
+  for (const path of ['/', '/api/status', '/manifest.json', '/icon.svg', '/sw.js']) {
     const r = await c(path, 'GET');
     assert.match(r.headers.get('content-security-policy'), /default-src 'none'/, path);
     assert.equal(r.headers.get('x-content-type-options'), 'nosniff', path);
@@ -122,4 +122,15 @@ test('duel API: decline, block and the hourly limit', async () => {
   let last;
   for (let i = 0; i < 31; i++) last = await c('/api/duel/create', 'POST', { to: 'carol', stake: 0, qs: questions() }, 'alice');
   assert.equal(last.status, 429);
+});
+
+test('the app is called Buddymon and installs with an icon served by the Worker', async () => {
+  const res = (path) => worker.fetch(new Request('http://localhost' + path), { MATH_KV: fakeKV() }, {});
+  const man = await (await res('/manifest.json')).json();
+  assert.equal(man.name, 'Buddymon');
+  assert.ok(man.icons.some((i) => i.src === '/icon.svg' && i.purpose === 'maskable'));
+  const icon = await res('/icon.svg');
+  assert.equal(icon.headers.get('content-type'), 'image/svg+xml');
+  assert.match(await icon.text(), /^<svg /);
+  assert.match(await (await res('/')).text(), /<title>Buddymon<\/title>[\s\S]*rel="icon"/);
 });

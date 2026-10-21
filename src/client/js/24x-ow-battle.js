@@ -172,9 +172,11 @@ function abRecordAnswer(ok) {
   if (ok) return;
   if (q.kind === 'challenge') state.adapt.calm[q.op] = true; else state.adapt.easy[q.op] = true;       // after a miss the next one is a gentler warm-up
 }
-function abFight() { ab.q = abQuestion(); ab.phase = 'question'; abRender(); speakCurrentProblem(); }
+function abFight() { if (!ab.q || ab.q.done) ab.q = abQuestion();      // Back and Fight again keeps the same question until it is answered
+   ab.phase = 'question'; abRender(); speakCurrentProblem(); }
 function abAnswer(v) {
   if (ab.phase !== 'question') return;
+  ab.q.done = true;
   const right = v === ab.q.ans;
   abRecordAnswer(right);
   if (!right) {
@@ -465,11 +467,21 @@ function abThrowNet(kind) {
   const ball = ECON.overworld.ballMult[kind], foe = abFoe(), chance = abCatchChance(foe, ball), got = Math.random() < chance;
   if (kind === 'net') state.nets -= 1; else { state.items[kind] -= 1; if (!state.items[kind]) delete state.items[kind]; }
   ab.phase = 'busy';
-  abSteps([['You threw a ' + ITEM_LOOKS[kind][1] + '!', null, 1000]]);
+  abSteps([['You threw a ' + ITEM_LOOKS[kind][1] + '!', function () { abNetFx('toss', kind); }, 1300]]);
   const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe, ball)));
-  for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); }, 700]]);
-  if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', null, 1100]]); abFoeTurn(); return; }
+  for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); abNetFx('wobble'); }, 700]]);
+  if (!got) { abSteps([['Oh no! ' + foe.name + ' broke free!', function () { abNetFx('free'); }, 1100]]); abFoeTurn(); return; }
   abSteps([['Gotcha! ' + foe.name + ' was caught!', function () { ab.caught = true; soundCatchSuccess(); abKeepCaught(foe); }, 1300], ['', function () { abFinish('caught'); }, 0]]);
+}
+// The net's flight (Gold's ball): it arcs from you to the foe, the foe is drawn inside, the ball rocks once per shake, then it either clicks shut or the foe bursts out.
+function abNetFx(step, kind) {
+  const foeEl = document.getElementById('ab-foe-icon'); if (!foeEl) return;
+  const field = foeEl.parentNode;
+  if (step === 'toss') {
+    const ball = document.createElement('div'); ball.className = 'ab-net k-' + kind; field.appendChild(ball); ab.netEl = ball;
+    setTimeout(function () { foeEl.classList.add('ab-sucked'); }, 650);
+  } else if (ab.netEl && step === 'wobble') { const b = ab.netEl; b.classList.remove('ab-rock'); void b.offsetWidth; b.classList.add('ab-rock'); }
+  else if (ab.netEl && step === 'free') { ab.netEl.remove(); ab.netEl = null; foeEl.classList.remove('ab-sucked'); foeEl.classList.add('ab-burst'); setTimeout(function () { foeEl.classList.remove('ab-burst'); }, 700); }
 }
 // The caught buddy joins you (or becomes a spare if you already own one). The same rules as a catch on the Practice screen.
 function abKeepCaught(foe) {
@@ -477,7 +489,8 @@ function abKeepCaught(foe) {
   if (foe.shiny) state.shinies[sp.id] = 1;
   if (sp.id === legendOfWeek().id) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! A Trader may want it.'); }
-  else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
+  else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); state.buddyXp[sp.id] = xpForLevel(foe.level);      // Gold: a caught buddy keeps the level it had in the fight
+    (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
   saveState();
 }
 function abRun() {

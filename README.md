@@ -1,4 +1,4 @@
-# Math Quest
+# Buddymon
 
 A math game for kids: solve problems to power up a buddy, beat bosses and raids, collect cards, and duel friends.
 

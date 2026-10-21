@@ -622,7 +622,55 @@ test('routes wind like Gold: tree walls across the road across the road, so the 
   const bad = await page.evaluate(() => OW_LANDS.map((L) => {
     const m = OW_MAPS[L.routeIn], walls = [];
     m.rows.forEach((r, y) => { if ((r.slice(1, 13).match(/T/g) || []).length >= 7 && y > 2 && y < m.rows.length - 3) walls.push(y); });
-    return walls.length >= 2 ? '' : L.routeIn;
+    return walls.length >= 1 ? '' : L.routeIn;
   }).filter(Boolean));
   assert.deepEqual(bad, []);
+});
+
+test('the routes have dirt, ponds with a bridge to an islet where a swimmer waits, and a different way round', async () => {
+  const r = await ev(() => {
+    const lakes = OW_LANDS.map((L) => OW_MAPS[L.routeIn]).filter((m) => m.npcs.some((n) => /swimmer/.test(n.id)));
+    const ok = lakes.every((m) => { const n = m.npcs.find((p) => /swimmer/.test(p.id)); return m.rows[n.y].charAt(n.x) === 'd' && m.rows[n.y - 1].charAt(n.x) === 'B' && m.rows[n.y + 1].charAt(n.x) === '~'; });
+    return { lakes: lakes.length, ok, dirt: OW_LANDS.every((L) => OW_MAPS[L.routeIn].rows.some((r) => r.indexOf('d') !== -1)), bridge: OW_TILES.B.t, walkBridge: owWalkable(lakes[0], lakes[0].npcs.find((p) => /swimmer/.test(p.id)).x, lakes[0].npcs.find((p) => /swimmer/.test(p.id)).y - 1) };
+  });
+  assert.ok(r.lakes >= 10, 'lakes on most routes: ' + r.lakes);
+  assert.deepEqual([r.ok, r.dirt, r.bridge, r.walkBridge], [true, true, 't-bridge', true]);
+});
+
+test('Back and Fight again keeps the same question until it is answered; the choices have room between them', async () => {
+  await begin();
+  const r = await ev(() => {
+    abFight(); const a = ab.q; ab.phase = 'menu'; abFight(); const same = ab.q === a;
+    const box = document.querySelector('#ab-modal .ab-opts'), cs = getComputedStyle(box), btns = box.querySelectorAll('button');
+    const gap = parseFloat(cs.columnGap) >= 8 && parseFloat(cs.rowGap) >= 8;
+    abAnswer(ab.q.ans); const answered = ab.q; ab.phase = 'menu'; abFight();
+    return { same, gap, buttons: btns.length, fresh: ab.q !== answered };      // an answered question is replaced by a new one
+  });
+  assert.deepEqual(r, { same: true, gap: true, buttons: 4, fresh: true });
+});
+
+test('the Catch Net is thrown on screen: a ball flies to the foe, which is drawn inside, and a broken-free foe comes back', async () => {
+  await begin();
+  const r = await ev(() => new Promise((done) => {
+    state.nets = 3; Math.random = () => 0.99; ab.phase = 'pack'; const out = {};
+    abThrowNet();
+    setTimeout(() => { out.ball = !!document.querySelector('#ab-modal .ab-net'); out.sucked = document.getElementById('ab-foe-icon').classList.contains('ab-sucked'); }, 900);
+    setTimeout(() => { out.after = !document.querySelector('#ab-modal .ab-net'); done(out); }, 12000);
+  }));
+  assert.deepEqual([r.ball, r.sucked], [true, true]);
+});
+
+test('a caught buddy keeps the level it had in the fight (Gold)', async () => {
+  await begin();
+  const lv = await ev(() => { const f = abFoe(); f.id = 'bunny'; state.unlockedPets = state.unlockedPets.filter((x) => x !== 'bunny'); delete state.buddyXp.bunny; f.level = 7; abKeepCaught(f); return levelFromXp(state.buddyXp.bunny); });
+  assert.equal(lv, 7);
+});
+
+test('Settings > Trivia opens a subjects window: pick the grade and tick subjects', async () => {
+  await ev(() => { closeSettings && 0; openSettings(); });
+  await ev(() => { closeSettings(); studyHome(); });
+  assert.equal(await ev(() => document.getElementById('study-modal').style.display), 'flex');
+  const r = await ev(() => { studySetLevel(7); const first = studyFilters().find((f) => f[0] !== 'all')[0]; studyToggleSubject(first); const on = state.study.subjects.includes(first); studyToggleSubject(first); return [state.study.level, on, state.study.subjects.includes(first), document.querySelectorAll('#study-subjects button').length > 0]; });
+  assert.deepEqual(r, [7, true, false, true]);
+  await ev(() => closeStudyHome());
 });

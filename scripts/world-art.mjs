@@ -3,7 +3,7 @@
 // scripts/make-world-art.mjs writes each entry to art/world/<id>.svg.
 export const INK = '#1E293B';
 const PAL = {
-  grass: '#86D06A', grassD: '#5FB04C', path: '#E8D3A0', pathD: '#CDB27A', water: '#5BB8F0', waterL: '#B6E3FA', sand: '#F3E3A5', sandD: '#DCC57E',
+  dirt: '#B98B5B', dirtD: '#8F6540', grass: '#86D06A', grassD: '#5FB04C', path: '#E8D3A0', pathD: '#CDB27A', water: '#5BB8F0', waterL: '#B6E3FA', sand: '#F3E3A5', sandD: '#DCC57E',
   rock: '#94A3B8', rockD: '#64748B', leaf: '#3FA05A', leafD: '#2C7A43', wood: '#A16207', floor: '#EADFC2', floorD: '#D3C39B', wall: '#C9B58A', roof: '#DC5A4A', roofD: '#B2402F'
 };
 // style="fill:var(--w-grass,#86D06A)": presentation attributes cannot hold var(), a style attribute can.
@@ -25,6 +25,8 @@ const TILE_BODIES = {
   't-flower': rect(0, 0, 100, 100, 'grass') + tuft(70, 30, 'grassD') + tuft(20, 84, 'grassD') + flower(24, 30, '#F472B6') + flower(60, 62, '#FDE047') + flower(78, 24, '#FFFFFF') + flower(30, 74, '#FFFFFF'),
   't-water': rect(0, 0, 100, 100, 'water') + [[18, 28], [60, 18], [36, 62], [76, 74]].map((w) =>
     '<path d="M' + w[0] + ' ' + w[1] + 'q8 -9 16 0t16 0" fill="none" ' + stroke('waterL', 4) + ' stroke-linecap="round"/>').join(''),
+  't-dirt': rect(0, 0, 100, 100, 'dirt') + dot(22, 28, 5, 'dirtD') + dot(68, 22, 4, 'dirtD') + dot(46, 58, 6, 'dirtD') + dot(82, 72, 5, 'dirtD') + dot(16, 82, 4, 'dirtD'),
+  't-bridge': rect(0, 0, 100, 100, 'water') + '<rect x="14" y="0" width="72" height="100" ' + fill('wood') + ' ' + outline + '/>' + [14, 38, 62, 86].map((y) => '<path d="M14 ' + y + 'h72" stroke="' + INK + '" stroke-width="3"/>').join(''),
   't-sand': rect(0, 0, 100, 100, 'sand') + dot(24, 24, 3, 'sandD') + dot(70, 36, 3, 'sandD') + dot(44, 70, 4, 'sandD') + dot(84, 84, 3, 'sandD') + dot(12, 66, 3, 'sandD'),
   't-tree': rect(0, 0, 100, 100, 'grass') + '<rect x="42" y="62" width="16" height="30" rx="3" ' + fill('wood') + ' ' + outline + '/>' +
     '<circle cx="50" cy="40" r="32" ' + fill('leaf') + ' ' + outline + '/><circle cx="38" cy="32" r="8" ' + fill('grass') + '/><path d="M60 48q8 -4 10 -12" fill="none" ' + stroke('leafD', 4) + ' stroke-linecap="round"/>',
