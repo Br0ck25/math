@@ -702,3 +702,13 @@ test('the routes have big grass fields, a house with a room on most, and Trim-ch
   });
   assert.deepEqual(r, { houses: true, doors: true, fields: true, cuts: true, shut: false, open: true });
 });
+
+test('past the top or bottom edge of a route the map shows the next town, lined up with where the warp lands', async () => {
+  const r = await ev(() => OW_LANDS.map((L) => {
+    const m = OW_MAPS[L.routeIn], up = m.warps.find((w) => w.y === 0), down = m.warps.find((w) => w.y === m.rows.length - 1);
+    const above = owBeyond(m, up.x, -1), below = owBeyond(m, down.x, m.rows.length), nu = OW_MAPS[up.to], nd = OW_MAPS[down.to];
+    return !!above && !!below && above.t === owTileAt(nu, up.tx, up.ty - 1) && below.t === owTileAt(nd, down.tx, down.ty + 1) && above.style === owPaletteCss(nu.palette);
+  }));
+  assert.deepEqual(r.filter((ok) => !ok), []);
+  assert.equal(await ev(() => owBeyond(OW_MAPS.route1, 6, 5)), null, 'only past an edge');
+});

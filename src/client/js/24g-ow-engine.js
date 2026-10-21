@@ -81,6 +81,15 @@ function owFollowerHtml() {
   const art = BUDDY_ART[state.activePet];
   return art ? '<img class="ow-buddy" alt="" src="' + art + '">' : worldSprite('o-paw', 'ow-buddy');
 }
+// What lies past the top or bottom edge of a map: the tile of the neighbour that the edge warp leads to, lined up so that stepping through the warp does not move the view
+// (route y -1 is the town's row ty - 1). Returns the tile and the neighbour's colours, or null when the edge has no way on.
+function owBeyond(map, x, y) {
+  const n = map.rows.length, edge = y < 0 ? 0 : n - 1, w = (y < 0 || y >= n) && map.warps.filter(function (p) { return p.y === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
+  if (!w) return null;
+  const nm = OW_MAPS[w.to], nx = clamp(x + w.tx - w.x, 0, nm.rows[0].length - 1), ny = clamp(w.ty + (y - w.y), 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
+  return t ? { t: t, style: owPaletteCss(nm.palette) } : null;
+}
+function owPaletteCss(palette) { return Object.keys(palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + palette[k]; }).join(';'); }
 function renderOverworld() {
   const o = state.overworld, map = OW_MAPS[o.map], g = owGrid(), hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
   const inView = function (x, y) { return Math.abs(x - o.x) <= hx && Math.abs(y - o.y) <= hy; };
@@ -88,8 +97,9 @@ function renderOverworld() {
   for (let vy = 0; vy < g.rows; vy++) {
     for (let vx = 0; vx < g.cols; vx++) {
       const x = o.x - hx + vx, y = o.y - hy + vy;
-      const t = owTileAt(map, x, y) || owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1));      // past the edge the border carries on (trees, walls), never black
-      h += '<span class="ow-cell">' + (t ? worldSprite(t.t) : '') + '</span>';
+      const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
+      const shown = t || (beyond && beyond.t) || owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1));
+      h += '<span class="ow-cell"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
     }
   }
   (map.objects || []).forEach(function (ob) {
@@ -102,7 +112,7 @@ function renderOverworld() {
   });
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
   h += owActorHtml('ow-hero', hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
-  view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + Object.keys(map.palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + map.palette[k]; }).join(';');
+  view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
   view.className = 'ow-view ow-' + owTimeOfDay();
   view.setAttribute('aria-label', map.name + ' map');
