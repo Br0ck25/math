@@ -45,6 +45,7 @@ function freshState() {
     badges: [],                                      // gym badges: region ids
     rematch: { day: '', lands: [], wins: 0 },        // Champion rematches: the lands paid today, and how many rematches were won in all
     champ: { wins: 0, master: 0, day: '', masterDay: '' },                     // the Champion's Hall: wins in all, and the day of the last paid win
+    mom: { save: false, bank: 0 },                   // Mum's savings: whether she keeps half of each prize, and the gems she holds
     legend: { week: -1, caught: false, ids: [] },             // the roaming legend: this week's number and whether you caught it
     gym: null,                                       // a gym run in progress: { region, step } (the Champion's Hall also has `champ`, see 24d-champion.js)
     storySeen: {},                                   // one-time story beats already shown

@@ -57,7 +57,7 @@ function abLearnset(id, element, type) {
 const AB_TMS = {
   doubleedge: { name: 'Double-Edge', el: '', type: 'normal', power: 120, acc: 100, pp: 15, recoil: true },
   fireblast: { name: 'Fire Blast', el: 'fire', power: 110, acc: 85, pp: 5 }, surf: { name: 'Surf', el: 'water', power: 95, acc: 100, pp: 15 },
-  solarbeam: { name: 'Solar Beam', el: 'nature', power: 120, acc: 100, pp: 10 }, thunder: { name: 'Thunder', el: 'electric', power: 110, acc: 70, pp: 10 },
+  solarbeam: { name: 'Solar Beam', el: 'nature', power: 120, acc: 100, pp: 10, charge: true }, thunder: { name: 'Thunder', el: 'electric', power: 110, acc: 70, pp: 10 },
   shadowball: { name: 'Shadow Ball', el: 'dark', power: 80, acc: 100, pp: 15 }, psychic: { name: 'Psychic', el: 'magic', power: 90, acc: 100, pp: 10 },
   hyperbeam: { name: 'Hyper Beam', el: '', type: 'normal', power: 150, acc: 90, pp: 5 },
   // utility moves (Gold's Rain Dance, Sunny Day, Protect and Rest): `util` is handled by abUtil in 24x-ow-battle.js

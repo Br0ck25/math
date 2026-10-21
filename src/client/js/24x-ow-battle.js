@@ -199,10 +199,10 @@ function abAnswer(v) {
 function abObeyLevel() { return Math.min(100, 10 + 10 * state.badges.length); }
 function abDisobeys(m) { return !!state.fromTrade[m.id] && m.level > abObeyLevel() && Math.random() < 0.5; }
 function abUseMove(i) {
-  const me = abMe(), foe = abFoe(), mv = i < 0 ? AB_STRUGGLE : me.moves[i];
-  if (ab.phase !== 'moves' || mv.left <= 0) return;
+  const me = abMe(), foe = abFoe(), forced = me.charging, mv = forced || (i < 0 ? AB_STRUGGLE : me.moves[i]);      // a move being charged is used next turn whatever is picked
+  if (ab.phase !== 'moves' || (!forced && mv.left <= 0)) return;
   if (abDisobeys(me)) { ab.phase = 'busy'; abSteps([[me.name + ' is loafing around.', null, 1100]]); abFoeTurn(); return; }
-  if (i >= 0) { mv.left -= 1; abSavePp(me); }
+  if (i >= 0 && !forced) { mv.left -= 1; abSavePp(me); }
   ab.phase = 'busy';
   const fm = abPickMove(foe, me), mp = mv.pri || 0, fp = fm.pri || 0;
   const claw = me.held === 'claw' && Math.random() < 60 / 256;                                        // a Quick Claw sometimes goes first
@@ -296,6 +296,8 @@ function abUtil(att, def, mv, next) {
 }
 function abHit(att, def, mv, down, next) {
   if (mv.util) { abUtil(att, def, mv, next); return; }
+  if (mv.charge && !att.charging && !(mv.id === 'solarbeam' && ab.weather && ab.weather.k === 'sun')) { att.charging = mv; abSteps([[att.name + ' is gathering power!', null, 1100]]); next(); return; }      // two-turn moves: charge now, hit next turn (Solar Beam skips the charge in the sun)
+  att.charging = null;
   att.pn = 0;
   if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
@@ -325,6 +327,7 @@ function abHit(att, def, mv, down, next) {
 function abFoeTurn() { abStrike(abFoe(), abMe(), abPickMove(abFoe(), abMe()), abMeFainted, abEndRound); }
 // The foe's move: a wild buddy picks any. A trainer's buddy usually takes the move that should do the most damage (power, accuracy, type luck and the same-type bonus) and sometimes tries another.
 function abPickMove(foe, me) {
+  if (foe.charging) return foe.charging;
   if (ab.kind === 'wild' || Math.random() < 0.2) return pick(foe.moves);
   const score = function (m) { const rel = getTypeRelation(m.type, me.type); return m.power * (m.acc / 100) * (rel === 1 ? 2 : rel === -1 ? 0.5 : 1) * (m.type === foe.type ? 1.5 : 1); };
   const best = Math.max.apply(null, foe.moves.map(score));
@@ -419,7 +422,7 @@ function abMeFainted() {
 function abSwitch(i) {
   const mon = ab.party[i];
   if (ab.phase !== 'team' || mon.hp <= 0 || i === ab.cur) return;
-  const forced = ab.forced, old = abMe();
+  const forced = ab.forced, old = abMe(); old.charging = null;
   ab.phase = 'busy'; ab.forced = false;
   abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; old.stg = {}; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
   if (forced) abBackToMenu(); else abSteps([['', abFoeTurn, 0]]);      // the foe strikes whoever came in, so it is worked out after the swap
@@ -538,7 +541,7 @@ function abPrize(round) {
 function abRoundWon() {
   const round = ab.rounds[ab.r], prize = ab.kind === 'wild' ? 0 : abPrize({ kind: ab.kind, base: round.base, foes: ab.foes }) * (ab.party.some(function (m) { return m.held === 'amulet'; }) ? 2 : 1);
   if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
-  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) grantGems(prize, ab.name + ' paid you ' + prize + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
+  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) { const kept = momKeeps(prize); grantGems(prize - kept, ab.name + ' paid you ' + prize + ' gems!' + (kept ? ' Mum saved ' + kept + '.' : ''), false); } }, ab.kind === 'wild' ? 0 : 1300]];
 }
 // A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy. Run once the battle screen is gone (their windows open above the map).
 function abBossBeaten(idx, level) {

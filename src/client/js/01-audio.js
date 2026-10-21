@@ -220,22 +220,44 @@ const BGM_MELODY = [
   523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 392.0
 ];
 
+// Area music (Gold's per-place tunes): the tune, its speed and its voice follow where you are: a fight, a cave, a room, a town or the open road.
+const BGM_TUNES = {
+  route:  { notes: BGM_MELODY, ms: 280, wave: 'triangle', vol: 0.035 },
+  town:   { notes: [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25, 523.25, 659.25, 587.33, 739.99, 880.0, 739.99, 587.33, 739.99, 880.0, 987.77], ms: 250, wave: 'triangle', vol: 0.035 },
+  room:   { notes: [392.0, 493.88, 587.33, 493.88, 392.0, 440.0, 523.25, 440.0, 349.23, 440.0, 523.25, 440.0, 392.0, 329.63, 392.0, 293.66], ms: 340, wave: 'sine', vol: 0.04 },
+  cave:   { notes: [220.0, 261.63, 329.63, 261.63, 220.0, 196.0, 220.0, 261.63, 246.94, 293.66, 369.99, 293.66, 246.94, 220.0, 196.0, 164.81], ms: 420, wave: 'triangle', vol: 0.045 },
+  battle: { notes: [392.0, 466.16, 392.0, 349.23, 392.0, 466.16, 523.25, 466.16, 440.0, 523.25, 440.0, 392.0, 440.0, 523.25, 587.33, 523.25], ms: 190, wave: 'square', vol: 0.02 }
+};
+let bgmCtx = 'route';
+function bgmContext() {
+  try {
+    if (typeof ab !== 'undefined' && ab) return 'battle';
+    const m = typeof OW_MAPS !== 'undefined' && state && state.overworld && OW_MAPS[state.overworld.map];
+    if (!m) return 'route';
+    if (m.dark) return 'cave';
+    if (m.room) return 'room';
+    return m.rows.length <= 20 && /^[a-z]+$/.test(m.id) && typeof owTowns === 'function' && owTowns().indexOf(m.id) !== -1 ? 'town' : 'route';
+  } catch (e) { return 'route'; }
+}
 function stepBgm() {
   if (!bgmOn || isMuted) return;
   initAudio();
+  const ctx = bgmContext();
+  if (ctx !== bgmCtx) { bgmCtx = ctx; bgmStep = 0; if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = setInterval(stepBgm, BGM_TUNES[ctx].ms); } }
+  const tune = BGM_TUNES[bgmCtx];
   try {
-    const freq = BGM_MELODY[bgmStep % BGM_MELODY.length];
+    const freq = tune.notes[bgmStep % tune.notes.length];
     bgmStep++;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'triangle';
+    osc.type = tune.wave;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.035, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+    gain.gain.setValueAtTime(tune.vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + tune.ms / 1000 * 0.8);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.start();
-    osc.stop(audioCtx.currentTime + 0.23);
+    osc.stop(audioCtx.currentTime + tune.ms / 1000 * 0.82);
   } catch (e) {}
 }
 
@@ -244,7 +266,7 @@ function toggleMusic() {
   if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
   if (bgmOn && !isMuted) {
     stepBgm();
-    bgmTimer = setInterval(stepBgm, 280);
+    bgmCtx = bgmContext(); bgmTimer = setInterval(stepBgm, BGM_TUNES[bgmCtx].ms);
   }
   const btn = document.getElementById('music-icon');
   if (btn) btn.innerText = bgmOn ? '🎵' : '🔕';

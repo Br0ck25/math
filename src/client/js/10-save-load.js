@@ -105,6 +105,10 @@ const NORMALIZERS = [
     Object.keys(s.shinies || {}).forEach(function (id) { if (s.shinies[id] && owned.indexOf(id) !== -1) shiny[id] = 1; });
     s.shinies = shiny;
   },
+  function mom(s) {
+    const m = isPlainObject(s.mom) ? s.mom : {};
+    s.mom = { save: m.save === true, bank: asInt(m.bank, 0, 999999, 0) };
+  },
   function legend(s) {
     const l = s.legend;
     l.week = asInt(l.week, -1, 1e6, -1);

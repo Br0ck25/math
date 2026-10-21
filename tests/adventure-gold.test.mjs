@@ -977,3 +977,75 @@ test('three legends roam each week, each on its own route, and a caught one stop
   });
   assert.deepEqual(r, { distinct: 3, all: 3, second: false, third: 1, ids: ['a', 'b'] });
 });
+
+test('Mum saves half of each prize while she is asked to, and gives the savings back; a bad save is repaired', async () => {
+  const r = await ev(() => {
+    const mum = OW_MAPS['hollow-home'].npcs.find((n) => n.id === 'hollow-mum-savings'), out = {};
+    state.mom = { save: false, bank: 0 }; out.off = momKeeps(100);
+    OW_SERVICES.mum(mum); document.querySelectorAll('#talk-choices button')[0].click(); out.on = state.mom.save;
+    out.kept = momKeeps(101); out.bank = state.mom.bank;
+    state.gems = 0; OW_SERVICES.mum(mum); document.querySelectorAll('#talk-choices button')[1].click(); out.gems = state.gems; out.empty = state.mom.bank;
+    state.mom = { save: 'yes', bank: -5 }; normalizeState(state); out.fixed = [state.mom.save, state.mom.bank];
+    return out;
+  });
+  assert.deepEqual(r, { off: 0, on: true, kept: 50, bank: 50, gems: 50, empty: 0, fixed: [false, 0] });
+});
+
+test('the Buddy Dex says where a wild buddy is found, by route name', async () => {
+  const r = await ev(() => ({ route2: bookAreas('tiger'), none: bookAreas('nobody-here'), inHand: Object.keys(OW_WILD_HAND).filter((k) => OW_WILD_HAND[k].day.includes('tiger')).length > 0 }));
+  assert.equal(r.none, 'Found in the wild');
+  assert.equal(r.inHand, /^Found on /.test(r.route2));
+});
+
+test('a two-turn move (Solar Beam) charges for a turn, hits the next, and skips the charge in the sun', async () => {
+  await begin();
+  const r = await ev(() => {
+    Math.random = () => 0.3; const me = abMe(), foe = abFoe(), sb = abTmMove('solarbeam', me.element, me.type); sb.left = 9; me.moves[0] = sb;
+    const hp0 = foe.hp; abHit(me, foe, sb, () => {}, () => {}); const charged = [!!me.charging, foe.hp === hp0];
+    abHit(me, foe, sb, () => {}, () => {}); const hit = [me.charging === null, true];
+    me.charging = null; ab.weather = { k: 'sun', n: 5 }; abHit(me, foe, sb, () => {}, () => {}); ab.weather = null;
+    return { charged, hit, sun: me.charging === null };
+  });
+  assert.deepEqual([r.charged, r.hit, r.sun], [[true, true], [true, true], true]);
+});
+
+test('a sleeping buddy blocks the way to the last find of a cave floor; the Radio Card tune wakes it and it leaves', async () => {
+  const r = await ev(() => {
+    const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn + '-cave2']).filter((m) => m && m.npcs.some((n) => n.kind === 'sleeper'));
+    const m = maps[0], n = m.npcs.find((p) => p.kind === 'sleeper');
+    state.overworld.story = []; state.keyItems = []; OW_SERVICES.sleeper(n); const asleep = document.getElementById('talk-text').innerText; closeTalk();
+    const there = !!owNpcAt(m, n.x, n.y);
+    state.keyItems = ['radio-card']; OW_SERVICES.sleeper(n); closeTalk();
+    return { many: maps.length >= 6, asleep: /fast asleep/.test(asleep), there, gone: !owNpcAt(m, n.x, n.y), saved: state.overworld.story.includes(n.story), known: owIds('story').includes(n.story) };
+  });
+  assert.deepEqual(r, { many: true, asleep: true, there: true, gone: true, saved: true, known: true });
+});
+
+test('Card Flip at the Game Corner: three coins to flip two of six cards; a pair pays 13, about 87 coins back in 100 over many plays', async () => {
+  const r = await ev(() => {
+    const npc = OW_MAPS['spark-corner'].npcs[0]; state.coins = 10; const real = Math.random; Math.random = () => 0.5;
+    owCornerFlip(npc); const first = document.querySelectorAll('#talk-choices button').length; document.querySelectorAll('#talk-choices button')[0].click();
+    const second = document.querySelectorAll('#talk-choices button').length; document.querySelectorAll('#talk-choices button')[0].click();
+    const after = state.coins; Math.random = real;
+    let paid = 0, wins = 0, n = 20000, a = 12345; const rnd = () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+    for (let i = 0; i < n; i++) { Math.random = rnd; const f = shuffled(['a', 'a', 'b', 'b', 'c', 'c']); paid += 3; if (f[0] === f[1]) { wins++; paid -= CORNER_FLIP_WIN; } }
+    state.coins = 0; owCornerFlip(npc); const poor = document.getElementById('talk-text').innerText;
+    return { first, second, coinsChanged: after !== 10, rtp: 1 - paid / (3 * n), poor };
+  });
+  assert.deepEqual([r.first, r.second], [6, 5]);
+  assert.ok(r.rtp > 0.8 && r.rtp < 0.95, 'return to player ' + r.rtp);
+  assert.match(r.poor, /need 3 coins/);
+});
+
+test('the music follows the place: a tune for fights, caves, rooms, towns and the open road, each 16 notes with its own speed', async () => {
+  const r = await ev(() => {
+    const out = {}; state.overworld.map = 'route2'; out.route = bgmContext();
+    state.overworld.map = 'ember'; out.town = bgmContext(); state.overworld.map = 'ember-center'; out.room = bgmContext();
+    state.overworld.map = 'route2-cave1'; out.cave = bgmContext();
+    const real = ab; ab = { fake: true }; out.battle = bgmContext(); ab = real;
+    out.tunes = Object.keys(BGM_TUNES).every((k) => BGM_TUNES[k].notes.length === 16 && BGM_TUNES[k].ms > 100);
+    out.speeds = new Set(Object.keys(BGM_TUNES).map((k) => BGM_TUNES[k].ms)).size;
+    return out;
+  });
+  assert.deepEqual(r, { route: 'route', town: 'town', room: 'room', cave: 'cave', battle: 'battle', tunes: true, speeds: 5 });
+});

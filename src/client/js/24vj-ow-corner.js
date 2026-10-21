@@ -17,6 +17,7 @@ function owCornerTalk(npc, lines) {
   openTalk({ name: npc.name, art: art, lines: lines, choices: [
     { label: 'Buy 50 coins (1000 gems)', run: function () { closeTalk(); if (state.gems < 1000) { soundWrong(); toast('You need 1000 gems.'); return; } state.gems -= 1000; state.coins = Math.min(9999, state.coins + 50); saveState(); updateStatsUI(); me(); } },
     { label: 'Play the slots (3 coins)', run: function () { closeTalk(); owCornerPlay(npc, ['Three alike pay: 7 = 300, bell = 150, cherry = 30, fish = 18, star = 12. A cherry on the first reel gives 2 back.']); } },
+    { label: 'Card Flip (3 coins)', run: function () { closeTalk(); owCornerFlip(npc); } },
     { label: 'Prizes', run: function () { closeTalk(); owCornerPrizes(npc); } }
   ] });
 }
@@ -32,6 +33,27 @@ function owCornerPlay(npc, lines) {
     } },
     { label: 'Done', run: function () { closeTalk(); owCornerTalk(npc, ['Welcome to the Game Corner!']); } }
   ] });
+}
+// Gold's Card Flip, small: six face-down cards hide three pairs; flip two, and if they match you win 13 coins (about 87 back for every 100 played).
+const CORNER_FLIP_WIN = 13;
+function owCornerFlip(npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0);
+  if (state.coins < 3) { soundWrong(); owCornerTalk(npc, ['You need 3 coins to flip cards. Buy some!']); return; }
+  state.coins -= 3; saveState();
+  const faces = shuffled(['star', 'star', 'bell', 'bell', 'cherry', 'cherry']);
+  const pick = function (first) {
+    const open = [0, 1, 2, 3, 4, 5].filter(function (k) { return k !== first; });
+    openTalk({ name: npc.name, art: art, lines: [first === undefined ? 'Six cards, three pairs. Flip two that match! Pick the first card.' : 'Card ' + (first + 1) + ' is a ' + faces[first] + '. Pick the second card.'], choices: open.map(function (k) {
+      return { label: 'Card ' + (k + 1), run: function () {
+        closeTalk();
+        if (first === undefined) { pick(k); return; }
+        const won = faces[k] === faces[first];
+        if (won) { state.coins = Math.min(9999, state.coins + CORNER_FLIP_WIN); saveState(); soundCoinChirp(); }
+        owCornerTalk(npc, [faces[first] + ' and ' + faces[k] + (won ? '! A pair! +' + CORNER_FLIP_WIN + ' coins!' : '. No pair.') + ' You have ' + state.coins + ' coins.']);
+      } };
+    }) });
+  };
+  pick();
 }
 function owCornerPrizes(npc) {
   const art = heroSprite(heroLookColors(npc.look), 'down', 0);

@@ -145,7 +145,7 @@ function renderBook() {
     };
     // one section per pack; the card look is unchanged (rarity badge, bond, evolution stars)
     const tierHint = function (sp) {
-      return storePets.indexOf(sp) !== -1 ? 'Found in the wild' : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
+      return storePets.indexOf(sp) !== -1 ? bookAreas(sp.id) : (sp.ultra ? 'Rarest of all...' : sp.bossBuddy ? 'Beat it 3x as Alpha' : (sp.mythic ? 'Ultra rare boss rescue' : 'Rescued from bosses'));
     };
     buddyPacks().forEach(function (g) {
       h += sec(g.pack.icon + ' ' + g.pack.name, g.members, tierHint);
@@ -169,6 +169,11 @@ function renderBook() {
     h += '</div>';
   }
   body.innerHTML = h;
+}
+// Gold's Pokedex area page: the routes where a buddy lives in the grass (from the hand-written wild lists), by name.
+function bookAreas(id) {
+  const where = Object.keys(OW_WILD_HAND).filter(function (k) { const t = OW_WILD_HAND[k]; return ['morning', 'day', 'night'].some(function (p) { return t[p].indexOf(id) !== -1; }); }).map(function (k) { return OW_MAPS[k] ? OW_MAPS[k].name : k; });
+  return where.length ? 'Found on ' + where.slice(0, 3).join(', ') + (where.length > 3 ? '...' : '') : 'Found in the wild';
 }
 function openBook() { showModal('book-modal', renderBook); }
 function closeBook() { hideModal('book-modal', updateStatsUI); }
