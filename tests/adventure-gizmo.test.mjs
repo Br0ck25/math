@@ -157,7 +157,8 @@ test('the Map Card is not given to you: Guide Ivy gives it after her tour, and w
   await page.evaluate(() => gizmoTravel('hollow'));
   assert.equal(await page.evaluate(() => state.overworld.map), 'meadow');
   await page.evaluate(() => { closeGizmo(); });
-  await meet('meadow', 6, 11);
+  const guide = await page.evaluate(() => where.npc('meadow', 'meadow-guide'));
+  await meet('meadow', guide.x, guide.y);
   assert.ok(await page.evaluate(() => hasKeyItem('map-card')));
   await page.evaluate(() => { closeTalk(); openGizmo(); });
   assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map').length), 1);

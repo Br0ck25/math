@@ -174,8 +174,9 @@ test('Route 1 leads to Meadow Town, which is painted in its own colours, and bac
 });
 
 test('a math sign is practice: wrong answers are free, a right one pays nothing, and the question follows the types the child may be asked', async () => {
-  await put('meadow', 12, 13, 'up');
-  await page.evaluate(() => { state.gems = 10; state.enabledOps = ['mul']; owMove('up'); });
+  const S = await page.evaluate(() => { const p = where.sign('meadow', 'meadow-quiz'); return (window.__S = nextTo('meadow', p.x, p.y)); });
+  await put('meadow', S.x, S.y, S.face);
+  await page.evaluate(() => { state.gems = 10; state.enabledOps = ['mul']; owMove(__S.face); });
   assert.equal(await shown('talk-modal'), true);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Math sign');
   assert.equal(await page.evaluate(() => document.querySelectorAll('#talk-opts button').length), 3);
@@ -229,17 +230,19 @@ test('a saved found list is repaired: unknown or repeated ids are dropped', asyn
 });
 
 test('Guide Ivy greets the hero in Meadow Town', async () => {
-  await put('meadow', 7, 11, 'left');
-  await page.evaluate(() => owMove('left'));
+  const S = await page.evaluate(() => { const p = where.npc('meadow', 'meadow-guide'); return (window.__S = nextTo('meadow', p.x, p.y)); });
+  await put('meadow', S.x, S.y, S.face);
+  await page.evaluate(() => owMove(__S.face));
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Guide Ivy');
 });
 
 for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
   test('the text window and a math sign fit a ' + w + 'x' + h + ' phone, with tap targets of 44px', async () => {
     await page.setViewportSize({ width: w, height: h });
-    await put('meadow', 12, 13, 'up');
+    const S = await page.evaluate(() => { const p = where.sign('meadow', 'meadow-quiz'); return (window.__S = nextTo('meadow', p.x, p.y)); });
+    await put('meadow', S.x, S.y, S.face);
     const r = await page.evaluate(() => {
-      owMove('up');
+      owMove(__S.face);
       const c = document.querySelector('#talk-modal .modal-content').getBoundingClientRect();
       const btns = Array.from(document.querySelectorAll('#talk-opts button, #talk-next')).map((b) => { const q = b.getBoundingClientRect(); return [q.width, q.height, q.bottom <= innerHeight]; });
       return { inside: c.left >= 0 && c.right <= innerWidth && c.bottom <= innerHeight, scroll: document.documentElement.scrollWidth <= innerWidth, btns };

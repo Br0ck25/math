@@ -50,7 +50,8 @@ test('every gym door on a map is on a gym tile, and every gym tile has a land wi
 });
 
 test('stepping on the Meadow gym door offers the gym; Enter starts the gym run on the battle screen with the first trainer', async () => {
-  await put('meadow', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('meadow')));
+  await put('meadow', G.x, G.y + 1, 'up');
   await page.evaluate(() => owMove('up'));
   assert.equal(await shown('talk-modal'), true);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Sunny Meadow Gym');
@@ -70,27 +71,29 @@ test('stepping on the Meadow gym door offers the gym; Enter starts the gym run o
 });
 
 test('Not now at the gym door steps the hero back out, and a gym run in progress is explained, not restarted', async () => {
-  await put('meadow', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('meadow')));
+  await put('meadow', G.x, G.y + 1, 'up');
   await page.evaluate(() => owMove('up'));
   await page.click('#talk-next');
   await page.click('#talk-next');
   assert.equal(await shown('talk-modal'), false);
-  assert.deepEqual(await page.evaluate(() => [state.overworld.x, state.overworld.y, state.gym]), [11, 10, null]);
+  assert.deepEqual(await page.evaluate(() => [state.overworld.x, state.overworld.y, state.gym]), [G.x, G.y + 1, null]);
   const r = await page.evaluate(() => { state.gym = { region: 'ember', step: 1 }; owMove('up'); const t = document.getElementById('talk-text').innerText; const gym = JSON.stringify(state.gym); state.gym = null; return { t, gym }; });
   assert.match(r.t, /already going on/);
   assert.equal(r.gym, '{"region":"ember","step":1}');
 });
 
 test('a gym that is too hard says how close you are and starts nothing; a won badge is a kind note; a Champion may rematch', async () => {
-  await put('meadow', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('meadow')));
+  await put('meadow', G.x, G.y + 1, 'up');
   const hard = await page.evaluate(() => { ECON.map.levels.meadow = 50; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length, gym: state.gym }; ECON.map.levels.meadow = 1; closeTalk(); return out; });
   assert.match(hard.t, /Come back a little stronger/);
   assert.deepEqual([hard.choices, hard.gym], [0, null]);
   await page.click('#talk-next').catch(() => {});
-  const done = await page.evaluate(() => { state.overworld.x = 11; state.overworld.y = 10; state.overworld.face = 'up'; renderOverworld(); state.badges = ['meadow']; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length }; closeTalk(); return out; });
+  const done = await page.evaluate(() => { state.overworld.x = __G.x; state.overworld.y = __G.y + 1; state.overworld.face = 'up'; renderOverworld(); state.badges = ['meadow']; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: document.querySelectorAll('#talk-choices button').length }; closeTalk(); return out; });
   assert.match(done.t, /already have the Sunny Meadow Badge/);
   assert.equal(done.choices, 0);
-  const champ = await page.evaluate(() => { state.overworld.x = 11; state.overworld.y = 10; state.overworld.face = 'up'; renderOverworld(); state.storySeen.champion = 1; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText) }; document.querySelector('#talk-choices button').click(); out.gym = JSON.stringify(state.gym); return out; });
+  const champ = await page.evaluate(() => { state.overworld.x = __G.x; state.overworld.y = __G.y + 1; state.overworld.face = 'up'; renderOverworld(); state.storySeen.champion = 1; owMove('up'); const out = { t: document.getElementById('talk-text').innerText, choices: Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText) }; document.querySelector('#talk-choices button').click(); out.gym = JSON.stringify(state.gym); return out; });
   assert.match(champ.t, /Welcome back, Champion/);
   assert.deepEqual(champ.choices, ['Rematch!']);
 });

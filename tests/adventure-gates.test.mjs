@@ -168,9 +168,10 @@ test('the main road never needs a charm: with every road open and no charm, ever
 });
 
 test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', async () => {
-  await put('meadow', 12, 13, 'left');
+  const S = await page.evaluate(() => { const n = OW_MAPS.meadow.npcs.find((p) => p.id === 'meadow-fisher'); return (window.__S = nextTo('meadow', n.x, n.y)); });
+  await put('meadow', S.x, S.y, S.face);
   const r = await page.evaluate(() => {
-    owMove('left');
+    owMove(__S.face);
     const first = document.getElementById('talk-text').innerText;
     document.getElementById('talk-next').click();
     const second = document.getElementById('talk-text').innerText;
@@ -178,7 +179,7 @@ test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', as
     const third = document.getElementById('talk-text').innerText;
     const has = hasKeyItem('fishing-rod'), saved = JSON.parse(localStorage.getItem('math_quest_save')).keyItems.slice();
     closeTalk();
-    owMove('left');
+    owMove(__S.face);
     const again = document.getElementById('talk-text').innerText;
     closeTalk();
     return { first, second, third, has, saved, again, keys: state.keyItems.slice() };
@@ -193,20 +194,21 @@ test('Fisher Gil gives the Fishing Rod once; after that he says how to fish', as
 });
 
 test('without the rod the pond only suggests one; with it a try may bite (a normal wild fight with a water buddy) or not', async () => {
-  await put('meadow', 12, 14, 'right');
-  const noRod = await page.evaluate(() => { owMove('right'); const t = document.getElementById('talk-text').innerText; closeTalk(); return { t, fight: !!ab }; });
+  const W = await page.evaluate(() => (window.__W = waterSpot('meadow')));
+  await put('meadow', W.x, W.y, W.face);
+  const noRod = await page.evaluate(() => { owMove(__W.face); const t = document.getElementById('talk-text').innerText; closeTalk(); return { t, fight: !!ab }; });
   assert.match(noRod.t, /calm and clear/);
   assert.equal(noRod.fight, false);
   const nibble = await page.evaluate(() => {
     state.keyItems = ['fishing-rod'];
     const real = Math.random; Math.random = () => 0.99;
-    owMove('right'); Math.random = real;
+    owMove(__W.face); Math.random = real;
     return { fight: !!ab, toast: document.getElementById('toast').innerText, ow: document.getElementById('overworld-modal').style.display };
   });
   assert.deepEqual([nibble.fight, nibble.toast, nibble.ow], [false, 'No bite. Try again!', 'flex']);
   const bite = await page.evaluate(() => {
     const real = Math.random; Math.random = () => 0;
-    owMove('right'); Math.random = real;
+    owMove(__W.face); Math.random = real;
     return { fight: !!ab, kind: ab.kind, element: ab.foes[0].element, ow: document.getElementById('overworld-modal').style.display, screen: document.getElementById('ab-modal').style.display };
   });
   assert.deepEqual([bite.fight, bite.kind, bite.element, bite.screen], [true, 'wild', 'water', 'flex']);
@@ -214,10 +216,11 @@ test('without the rod the pond only suggests one; with it a try may bite (a norm
 });
 
 test('a fished buddy is beaten like any wild buddy: the map comes back and the next foe waits', async () => {
-  await put('meadow', 12, 14, 'right');
+  const W = await page.evaluate(() => (window.__W = waterSpot('meadow')));
+  await put('meadow', W.x, W.y, W.face);
   const r = await page.evaluate(async () => {
     state.keyItems = ['fishing-rod']; state.buddyXp[state.activePet] = xpForLevel(12);
-    const real = Math.random; Math.random = () => 0; owMove('right'); Math.random = real;
+    const real = Math.random; Math.random = () => 0; owMove(__W.face); Math.random = real;
     const since = state.wild.since;
     while (!(ab.phase === 'menu' && !ab.busy)) await new Promise((res) => setTimeout(res, 100));
     abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0);
@@ -227,7 +230,7 @@ test('a fished buddy is beaten like any wild buddy: the map comes back and the n
   assert.equal(r.ow, 'flex');
   assert.equal(r.fight, false);
   assert.deepEqual(r.since[0], r.since[1]);
-  assert.deepEqual(r.pos, ['meadow', 12, 14]);
+  assert.deepEqual(r.pos, ['meadow', W.x, W.y]);
 });
 
 test('a shake tree drops a rare buddy once a day: the same one all day, never a cheap one, and each tree on its own', async () => {

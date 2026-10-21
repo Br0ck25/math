@@ -137,24 +137,28 @@ test('Route 2 has two trainers that see the path, a shake tree, and a nook behin
 });
 
 test('Ember Hills: its gym door explains the level, the steam nook waits for the Steam Boots, and the Center remembers the town', async () => {
-  await put('ember', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('ember')));
+  await put('ember', G.x, G.y + 1, 'up');
   const gym = await page.evaluate(() => { owMove('up'); return { name: document.getElementById('talk-name').innerText, text: document.getElementById('talk-text').innerText, gym: state.gym }; });
   assert.equal(gym.name, 'Ember Hills Gym');
   assert.match(gym.text, /Come back a little stronger/);
   assert.equal(gym.gym, null);
   await page.evaluate(() => closeTalk());
-  await put('ember', 4, 13, 'left');
-  const nook = await page.evaluate(() => { state.badges = []; owMove('left'); const t = document.getElementById('talk-text').innerText; closeTalk(); return t; });
+  const gate = await page.evaluate(() => { const rows = OW_MAPS.ember.rows; for (let y = 0; y < rows.length; y++) { const x = rows[y].search(/[hgjklqz]/); if (x !== -1) return { x, y }; } });
+  await put('ember', gate.x, gate.y + 1, 'up');
+  const nook = await page.evaluate(() => { state.badges = []; owMove('up'); const t = document.getElementById('talk-text').innerText; closeTalk(); return t; });
   assert.match(nook, /Steam Boots from the Ember Hills Gym/);
-  await page.evaluate(() => { state.badges = ['meadow', 'ember']; state.overworld.x = 4; state.overworld.y = 13; renderOverworld(); owMove('left'); owMove('left'); });
-  assert.deepEqual(await page.evaluate(() => [state.overworld.x, state.overworld.y]), [2, 13]);
+  await page.evaluate(() => { state.badges = ['meadow', 'ember']; renderOverworld(); owMove('up'); owMove('up'); });
+  assert.deepEqual(await page.evaluate(() => [state.overworld.x, state.overworld.y]), [gate.x, gate.y - 1]);
   await put('ember-center', 3, 2, 'up');
   await page.evaluate(() => owMove('up'));
-  assert.deepEqual(await page.evaluate(() => state.overworld.center), { map: 'ember', x: 4, y: 5 });
+  const door = await page.evaluate(() => where.door('ember', 'ember-center'));
+  assert.deepEqual(await page.evaluate(() => state.overworld.center), { map: 'ember', x: door.x, y: door.y + 1 });
 });
 
 test('the Ember gym opens at its level and starts the fire gym run with the first trainer', async () => {
-  await put('ember', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('ember')));
+  await put('ember', G.x, G.y + 1, 'up');
   await page.evaluate(() => { state.buddyXp.dog = xpForLevel(20); owMove('up'); });
   await page.click('#talk-next');
   await page.click('#talk-choices button');
@@ -222,12 +226,12 @@ test('Tide Bay: the road from Ember Hills opens with the Ember Badge, Route 3 tu
     owMove('up');
     const gate = [state.overworld.map, state.overworld.x, state.overworld.y, state.region];
     let water = 0; for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'water') water++;
-    return { gate, water, trainers: OW_MAPS.route3.npcs.filter((n) => !/swimmer/.test(n.id)).length, tide: OW_MAPS.tide.rows.slice(13, 15) };
+    return { gate, water, trainers: OW_MAPS.route3.npcs.filter((n) => !/swimmer/.test(n.id)).length, tide: OW_MAPS.tide.rows.some((row) => row.includes('~')) };
   });
   assert.deepEqual(r.gate, ['route3', 6, 22, 'tide']);
   assert.ok(r.water > 40, 'mostly water buddies: ' + r.water + ' of 80');
   assert.equal(r.trainers, 2);
-  assert.ok(r.tide.every((row) => /~~T$/.test(row)));
+  assert.ok(r.tide, 'a pond in Tide Bay');
 });
 
 test('all sixteen gym lands have a town, in story order, chained by roads: each town\'s exit leads to the next route and opens with its own badge (the Champion opens the way beyond Skyreach)', async () => {
@@ -264,7 +268,8 @@ test('all sixteen gym lands have a town, in story order, chained by roads: each 
 });
 
 test('Skyreach ends the first journey: no charm nook of its own, its gym needs level 56, and its road leads on to the Champion\'s Walk', async () => {
-  await put('skyreach', 11, 10, 'up');
+  const G = await page.evaluate(() => (window.__G = where.gym('skyreach')));
+  await put('skyreach', G.x, G.y + 1, 'up');
   const r = await page.evaluate(() => {
     const L = OW_LANDS[7];
     owMove('up');

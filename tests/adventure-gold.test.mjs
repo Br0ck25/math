@@ -744,14 +744,14 @@ test('every route is laid out from blocks: the road winds, each trainer looks at
   assert.deepEqual(r, []);
 });
 
-test('towns are dressed, each its own: paths from every door to the road, flowers, and different stamps from town to town', async () => {
+test('towns are laid out from blocks, each its own: buildings in different slots, a path from every door to the road, and a cross street', async () => {
   const r = await ev(() => {
     const towns = OW_LANDS.map((L) => OW_MAPS[L.town]);
     const lane = towns.every((m) => m.warps.filter((w) => OW_MAPS[w.to] && m.rows[w.y].charAt(w.x) === 'D').every((w) => owWalkable(m, w.x, w.y + 1)));
     const lanes = towns.filter((m) => m.rows.some((row, y) => y > 3 && /\.{6,}/.test(row.slice(1, 15)) && y < m.rows.length - 2)).length;
     const looks = new Set(towns.map((m) => m.rows.join('/'))).size;
-    const stamped = towns.filter((m) => /[~_]|b{2,}|d/.test(m.rows.slice(10).join('')) || /T/.test(m.rows.slice(11, 14).map((row) => row.slice(8, 11)).join(''))).length;
-    return { lane, lanes: lanes >= 12, looks: looks === towns.length, stamped: stamped >= 8 };
+    const doorsets = new Set(towns.map((m) => m.warps.filter((w) => OW_MAPS[w.to] && m.rows[w.y].charAt(w.x) === 'D').map((w) => w.x + ',' + w.y).join('|'))).size;
+    return { lane, lanes: lanes >= 12, looks: looks === towns.length, blocks: towns.every((m) => m.blocks) && doorsets >= 12 };
   });
-  assert.deepEqual(r, { lane: true, lanes: true, looks: true, stamped: true });
+  assert.deepEqual(r, { lane: true, lanes: true, looks: true, blocks: true });
 });

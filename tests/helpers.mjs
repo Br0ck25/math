@@ -68,6 +68,18 @@ export async function openGame(browser, worker, env, opts = {}) {
       m.objects = [{ id: 'route1-berries', type: 'pickup', x: 11, y: 9, give: 'berry' }, { id: 'route1-nook-gem', type: 'pickup', x: 1, y: 1, give: 'gems' }, { id: 'route1-nook-net', type: 'pickup', x: 2, y: 1, give: 'net' }];
       m.trees = { '12,5': 'route1-tree' }; m.warps = m.warps.filter((w) => w.y === 0 || w.y === 23);
     };
+    window.waterSpot = function (id) {                              // a walkable tile beside water and the way to face it
+      const m = OW_MAPS[id];
+      for (let y = 1; y < m.rows.length - 1; y++) for (let x = 1; x < m.rows[0].length - 1; x++) if (m.rows[y].charAt(x) === '~') { const s = nextTo(id, x, y); if (s && !owWarpAt(m, s.x, s.y)) return Object.assign(s, { wx: x, wy: y }); }
+      return null;
+    };
+    window.where = {                                               // towns are laid out from blocks, so tests ask where things are
+      door: (id, to) => { const w = OW_MAPS[id].warps.find((p) => p.to === to); return { x: w.x, y: w.y }; },
+      gym: (id) => { const k = Object.keys(OW_MAPS[id].gyms)[0].split(',').map(Number); return { x: k[0], y: k[1] }; },
+      npc: (id, npc) => { const n = OW_MAPS[id].npcs.find((p) => p.id === npc); return { x: n.x, y: n.y }; },
+      object: (id, obj) => { const o = OW_MAPS[id].objects.find((p) => p.id === obj); return { x: o.x, y: o.y }; },
+      sign: (id, signId) => { const k = Object.keys(OW_MAPS[id].signs).find((p) => OW_MAPS[id].signs[p].id === signId || OW_MAPS[id].signs[p].story === signId); const p = k.split(',').map(Number); return { x: p[0], y: p[1] }; }
+    };
     window.grassSpot = function (id) {                              // a walkable tile with two tall-grass tiles in a line from it (face to step into them; back to step out), seen by no trainer
       const m = OW_MAPS[id || 'route1'];
       for (let y = 1; y < m.rows.length - 2; y++) for (let x = 1; x < 13; x++) for (const [dx, dy, face, back] of [[0, -1, 'up', 'down'], [0, 1, 'down', 'up'], [-1, 0, 'left', 'right'], [1, 0, 'right', 'left']]) {

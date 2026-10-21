@@ -104,8 +104,10 @@ test('Riley and the Ace trainers are a little stronger than a normal trainer (le
 
 for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide-ferry', 20, 5, 12, [7, 13]], ['volt', 'volt-zag', 'volt-blackout', 25, 5, 12, [7, 13]]]) {
   test('the ' + map + ' puzzle: a Scrambler guards it, then three questions in a row (wrong answers free) fix it once', async () => {
-    await put(map, start[0], start[1], 'up');
-    await page.evaluate(() => owMove('up'));                                                              // into the Scrambler\'s sight
+    await page.evaluate((m) => { window.__map = m; }, map);
+    const st = await page.evaluate((z) => sightStand(window.__map, z), zig);
+    await put(map, st.x, st.y, st.back);
+    await page.evaluate((b) => owMove(b), st.back);                                                       // into the Scrambler\'s sight
     await wait(300);
     assert.match(await page.evaluate(() => document.getElementById('talk-name').innerText), /Scrambler/);
     await page.click('#talk-next');
@@ -113,12 +115,13 @@ for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide
     await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
     assert.deepEqual(await page.evaluate(() => [ab.npc.id]), [zig]);
     await page.evaluate(() => { ab = null; document.getElementById('ab-modal').style.display = 'none'; state.overworld.beat = []; });
-    await put(map, sx, sy + 1, 'up');
-    const locked = await page.evaluate(() => { owMove('up'); const t = document.getElementById('talk-text').innerText; closeTalk(); return t; });
+    const S = await page.evaluate((id) => { const p = where.sign(window.__map, id); return (window.__S = nextTo(window.__map, p.x, p.y)); }, story);
+    await put(map, S.x, S.y, S.face);
+    const locked = await page.evaluate(() => { owMove(__S.face); const t = document.getElementById('talk-text').innerText; closeTalk(); return t; });
     assert.match(locked, /Scrambler named/);
     await page.evaluate((id) => { state.overworld.beat = [id]; state.gems = 0; }, zig);                  // beaten
     const r = await page.evaluate(async (sid) => {
-      owMove('up');
+      owMove(__S.face);
       const out = { notes: [document.getElementById('talk-note').innerText] };
       const answer = (good) => { const q = talk.quiz.q, pick = good ? q.ans : q.opts.find((v) => v !== q.ans); document.querySelectorAll('#talk-opts button')[q.opts.indexOf(pick)].click(); };
       answer(false); out.wrong = [document.getElementById('talk-note').innerText, state.gems, talk.quiz.round];
@@ -128,8 +131,8 @@ for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide
       answer(true);
       out.after = [state.gems, state.overworld.story.slice(), document.getElementById('talk-note').innerText, Array.from(document.querySelectorAll('#talk-opts button')).every((b) => b.disabled)];
       closeTalk();
-      owMove('up'); out.again = document.getElementById('talk-text').innerText; closeTalk();
-      owMove('up'); out.gemsAfterAgain = state.gems;
+      owMove(__S.face); out.again = document.getElementById('talk-text').innerText; closeTalk();
+      owMove(__S.face); out.gemsAfterAgain = state.gems;
       return out;
     }, story);
     assert.match(r.notes[0], /Question 1 of 3/);
@@ -194,28 +197,30 @@ test('when the team faints against the boss, the hero wakes at the last Center w
 
 test('Riley tells the truth in Skyreach once you hold its badge: four lines, then she is gone; after the Champion a different Riley is there', async () => {
   const r = await page.evaluate(() => {
-    const at = (x, y) => !!owNpcAt(OW_MAPS.skyreach, x, y);
-    state.badges = ['meadow']; const early = [at(9, 11), at(9, 10)];
-    state.badges = gymRegions().map((g) => g.id); const withBadge = [at(9, 11), at(9, 10)];
-    state.storySeen.champion = 1; const champ = [at(9, 11), at(9, 10)];
+    const a = where.npc('skyreach', 'skyreach-riley'), b = where.npc('skyreach', 'skyreach-riley-after'), at = (p) => !!owNpcAt(OW_MAPS.skyreach, p.x, p.y);
+    state.badges = ['meadow']; const early = [at(a), at(b)];
+    state.badges = gymRegions().map((g) => g.id); const withBadge = [at(a), at(b)];
+    state.storySeen.champion = 1; const champ = [at(a), at(b)];
     state.storySeen.champion = 0;
     return { early, withBadge, champ };
   });
   assert.deepEqual(r.early, [false, false]);
   assert.deepEqual(r.withBadge, [true, false]);
   assert.deepEqual(r.champ, [true, true]);
-  await put('skyreach', 10, 11, 'left');
-  const lines = await page.evaluate(() => { state.badges = gymRegions().map((g) => g.id); renderOverworld(); owMove('left'); const out = []; for (let i = 0; i < 4; i++) { out.push(document.getElementById('talk-text').innerText); if (i < 3) document.getElementById('talk-next').click(); } return out; });
+  const RS = await page.evaluate(() => { const p = where.npc('skyreach', 'skyreach-riley'); window.__R = p; return (window.__S = nextTo('skyreach', p.x, p.y)); });
+  await put('skyreach', RS.x, RS.y, RS.face);
+  const lines = await page.evaluate(() => { state.badges = gymRegions().map((g) => g.id); renderOverworld(); owMove(__S.face); const out = []; for (let i = 0; i < 4; i++) { out.push(document.getElementById('talk-text').innerText); if (i < 3) document.getElementById('talk-next').click(); } return out; });
   assert.match(lines[0], /Skyreach Badge/);
   assert.match(lines[1], /not to beat you/);
   assert.match(lines[2], /Thank you, partner/);
   assert.match(lines[3], /Champion's Walk/);
   await page.click('#talk-next');
-  const after = await page.evaluate(() => ({ story: state.overworld.story.slice(), here: !!owNpcAt(OW_MAPS.skyreach, 9, 11), gems: state.gems }));
+  const after = await page.evaluate(() => ({ story: state.overworld.story.slice(), here: !!owNpcAt(OW_MAPS.skyreach, __R.x, __R.y), gems: state.gems }));
   assert.deepEqual([after.story, after.here], [['riley-reveal'], false]);
   await page.evaluate(() => { state.storySeen.champion = 1; renderOverworld(); });
-  await put('skyreach', 10, 10, 'left');
-  await page.evaluate(() => owMove('left'));
+  const AS = await page.evaluate(() => { const p = where.npc('skyreach', 'skyreach-riley-after'); return (window.__S = nextTo('skyreach', p.x, p.y)); });
+  await put('skyreach', AS.x, AS.y, AS.face);
+  await page.evaluate(() => owMove(__S.face));
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /so proud of you/);
 });
 
@@ -276,9 +281,10 @@ test('saved story beats are repaired: only the real ones, once each', async () =
 for (const [w, h] of [[320, 568], [420, 800]]) {
   test('the puzzle and the Hall door fit a ' + w + 'x' + h + ' phone with 44px answers', async () => {
     await page.setViewportSize({ width: w, height: h });
-    await put('tide', 5, 13, 'up');
+    const S = await page.evaluate(() => { const p = where.sign('tide', 'tide-ferry'); return (window.__S = nextTo('tide', p.x, p.y)); });
+    await put('tide', S.x, S.y, S.face);
     const r = await page.evaluate(() => {
-      state.overworld.beat = ['tide-zig']; owMove('up');
+      state.overworld.beat = ['tide-zig']; owMove(__S.face);
       const c = document.querySelector('#talk-modal .modal-content').getBoundingClientRect();
       const btns = Array.from(document.querySelectorAll('#talk-opts button, #talk-next')).map((b) => { const q = b.getBoundingClientRect(); return q.width >= 44 && q.height >= 44 && q.bottom <= innerHeight; });
       return { inside: c.left >= 0 && c.right <= innerWidth && c.bottom <= innerHeight && document.documentElement.scrollWidth <= innerWidth, btns };
