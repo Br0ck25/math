@@ -687,3 +687,18 @@ test('a ledge can be hopped down over but never climbed, and routes have thick t
   });
   assert.deepEqual(r, { many: true, hopped: true, blockedUp: true, thick: true });
 });
+
+test('the routes have big grass fields, a house with a room on most, and Trim-charm shortcuts through the tree walls', async () => {
+  const r = await ev(() => {
+    const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn]);
+    const houses = maps.filter((m) => OW_MAPS[m.id + '-house']);
+    const door = (m) => { const w = m.warps.find((p) => p.to === m.id + '-house'); return m.rows[w.y].charAt(w.x) === 'D' && OW_MAPS[w.to].warps[0].ty === w.y + 1 && owWalkable(m, w.x, w.y + 1); };
+    const fields = maps.filter((m) => m.rows.some((row, y) => y < m.rows.length - 3 && /"{5,}/.test(row.slice(1, 13)) && /"{5,}/.test(m.rows[y + 1].slice(1, 13)) && /"{5,}/.test(m.rows[y + 2].slice(1, 13)))).length;
+    const cuts = maps.filter((m) => m.rows.some((row) => row.charAt(6) === 'g')).length;
+    state.badges = [];
+    const m = maps.find((mm) => mm.rows.some((row) => row.charAt(6) === 'g')), y = m.rows.findIndex((row) => row.charAt(6) === 'g');
+    const shut = owWalkable(m, 6, y); state.badges = ['meadow']; const open = owWalkable(m, 6, y);
+    return { houses: houses.length >= 10, doors: houses.every(door), fields: fields >= 10, cuts: cuts >= 8, shut, open };
+  });
+  assert.deepEqual(r, { houses: true, doors: true, fields: true, cuts: true, shut: false, open: true });
+});

@@ -167,8 +167,9 @@ const OW_MAPS = {
       { x: 3, y: 9, to: 'meadow-house', tx: 3, ty: 5 }, { x: 4, y: 4, to: 'meadow-center', tx: 3, ty: 5 }, { x: 12, y: 4, to: 'meadow-mart', tx: 3, ty: 5 }
     ],
     npcs: [
-      { id: 'meadow-guide', name: 'Guide Ivy', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 5, outfit: 2, style: 1 },
-        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!', 'The road north to Ember Hills opens when you win the Meadow Badge.'] }
+      { id: 'meadow-guide', kind: 'gift', gift: 'map-card', name: 'Guide Ivy', x: 6, y: 11, face: 'right', look: { skin: 2, hair: 5, outfit: 2, style: 1 },
+        lines: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!', 'The road north to Ember Hills opens when you win the Meadow Badge.', 'Here, take this Map Card for your Gizmo. It shows where you have been and lets you travel back.'],
+        after: ['Welcome to Meadow Town! I show new explorers around.', 'The Buddy Center has a heart on its sign. Resting buddies get better there, and your first rest each day is free.', 'The Mart has a coin on its sign. It sells more things as you win badges.', 'The gym on the right is the Meadow Gym. It is the first one, so step through its door when you feel ready!', 'The road north to Ember Hills opens when you win the Meadow Badge.'] }
       ,
       { id: 'meadow-fisher', kind: 'gift', gift: 'fishing-rod', name: 'Fisher Gil', x: 11, y: 13, face: 'right', look: { skin: 2, hair: 1, outfit: 5, style: 0 },
         lines: ['Ahoy! The pond here is full of water buddies.', 'I am too old to chase them. Take my old Fishing Rod!'],

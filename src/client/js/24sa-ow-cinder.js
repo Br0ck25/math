@@ -2,7 +2,7 @@
 //  LAND PASS: Cinder Mesa. Route 8 leads in from Skyreach (the road opens once you are Champion); the town has a Buddy Center, a Mart, a house and the Cinder Mesa Gym, and a nook that opens with the .
 //  Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js. Generated in the same shape as the other land files.
 // =====================================================================
-const OW_CINDER_PALETTE = { grass: '#C9A27A', grassD: '#B08658', leaf: '#8A5A3C', leafD: '#6A3F28', path: '#E6D2B5', pathD: '#C9B08C', roof: '#C8452B', roofD: '#9B2E1B', water: '#4A7FA0' };
+const OW_CINDER_PALETTE = { grass: '#A8BC68', grassD: '#869E4C', leaf: '#5E8A3A', leafD: '#436A2A', path: '#E6D2B5', pathD: '#C9B08C', roof: '#C8452B', roofD: '#9B2E1B', water: '#4A7FA0' };
 function owRoom_cinder(id, name, exit, npcs, objects, rows) { return Object.assign(owRoom(id, name, exit, npcs, objects, rows), { region: 'cinder', palette: OW_CINDER_PALETTE }); }
 Object.assign(OW_MAPS, {
   route8: {

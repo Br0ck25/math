@@ -64,6 +64,7 @@ function gizmoNodeOf(mapId) {
   return { id: byRegion ? byRegion.town : 'hollow' };
 }
 function gizmoMapHtml() {
+  if (!hasKeyItem('map-card')) return '<p class="d" style="margin:10px 0">The Gizmo has no map yet. Guide Ivy in Meadow Town gives you a Map Card after her tour of the town.</p>';
   const o = state.overworld, here = gizmoNodeOf(o.map), seen = function (id) { return o.seen.indexOf(id) !== -1 || id === here.id; };
   const towns = ['hollow'].concat(OW_LANDS.map(function (L) { return L.town; })), line = [];
   for (let i = 1; i < towns.length; i++) {
@@ -89,7 +90,7 @@ function gizmoMapHtml() {
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.
 function gizmoTravel(id) {
   const m = OW_MAPS[id], o = state.overworld;
-  if (!m || owTowns().indexOf(id) === -1 || o.seen.indexOf(id) === -1 ) return;
+  if (!hasKeyItem('map-card') || !m || owTowns().indexOf(id) === -1 || o.seen.indexOf(id) === -1 ) return;
   o.map = id; o.x = m.start.x; o.y = m.start.y; o.face = 'down';
   owTrail = null;
   owSetRegion(m);

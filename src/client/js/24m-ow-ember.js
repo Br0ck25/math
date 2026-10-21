@@ -2,7 +2,7 @@
 //  LAND PASS: Ember Hills. Route 2 leads in from Meadow Town (the road opens with the Meadow Badge); the town has a Buddy Center, a Mart, a house, the Ember Gym and a
 //  rocky nook that opens with the Steam Boots (the charm of the Ember Badge). Data only: the rules are in 24g-ow-engine.js and 24k-ow-people.js.
 // =====================================================================
-const OW_EMBER_PALETTE = { grass: '#C29A5E', grassD: '#9A7440', leaf: '#8E5A2A', leafD: '#6B3F1A', path: '#D6BE98', pathD: '#B09468', roof: '#D9622B', roofD: '#A8431A' };
+const OW_EMBER_PALETTE = { grass: '#93BF5E', grassD: '#6F9E44', leaf: '#4A8836', leafD: '#336528', path: '#D6BE98', pathD: '#B09468', roof: '#D9622B', roofD: '#A8431A' };
 function owEmberRoom(id, name, exit, npcs, objects, rows) { return Object.assign(owRoom(id, name, exit, npcs, objects, rows), { region: 'ember', palette: OW_EMBER_PALETTE }); }
 Object.assign(OW_MAPS, {
   route2: {

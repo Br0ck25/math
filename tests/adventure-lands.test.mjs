@@ -39,7 +39,7 @@ test('every land with a town has what a town needs: a gym door, a Center and a M
       need(OW_MAPS[L.center].npcs.some((n) => n.kind === 'nurse'), 'a nurse');
       need(OW_MAPS[L.mart].npcs.some((n) => n.kind === 'clerk'), 'a clerk');
       need((OW_MAPS[L.house].npcs || []).length >= 1, 'someone in the house');
-      need(town.npcs.length >= 1 && town.npcs.some((n) => !n.kind), 'a person who talks');
+      need(town.npcs.length >= 1 && town.npcs.some((n) => !n.kind || n.kind === 'gift'), 'a person who talks');
       need(Object.values(town.signs || {}).some((s) => s.quiz), 'a quiz sign');
       need(town.warps.filter((w) => w.to === L.center || w.to === L.mart || w.to === L.house).length === 3, 'doors to the Center, Mart and house');
       need(L.land === 'meadow' || (town.palette && Object.keys(town.palette).length >= 4), 'its own colours');

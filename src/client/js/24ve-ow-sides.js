@@ -88,4 +88,47 @@ function owLandscape(mapId, i) {
     if (ok) { for (let x = sides[s]; x < sides[s] + 4; x++) owSetTile(mapId, x, y, 'v'); return; }
   }
 }
-OW_LANDS.forEach(function (L, i) { owLandscape(L.routeIn, i); });
+
+// ----- stamps (our version of Gold's blocks): big grass fields, a house with a door and a room, and Cut-tree shortcuts through the tree walls -----
+function owNear(m, x, y, r) {
+  const keys = Object.keys(m.signs || {}).concat(Object.keys(m.trees || {}));
+  return m.warps.some(function (w) { return Math.abs(w.x - x) <= r && Math.abs(w.y - y) <= r; }) || (m.npcs || []).concat(m.objects || []).some(function (p) { return Math.abs(p.x - x) <= r && Math.abs(p.y - y) <= r; }) || keys.some(function (k) { const p = k.split(',').map(Number); return Math.abs(p[0] - x) <= r && Math.abs(p[1] - y) <= r; });
+}
+// The first rectangle (scanning from the top) of plain grass that nothing stands on (or within `margin` tiles of).
+function owFindSpot(m, w, h, from, margin, allow) {
+  for (let y = from; y + h < m.rows.length - 2; y++) for (let x = 1; x + w <= 13; x++) {
+    let ok = true;
+    for (let yy = y; ok && yy < y + h; yy++) for (let xx = x; ok && xx < x + w; xx++) if (yy < 1 || yy >= m.rows.length - 1 || xx < 1 || xx > 12 || (allow || ',').indexOf(m.rows[yy].charAt(xx)) === -1 || owNear(m, xx, yy, margin)) ok = false;
+    if (ok) return { x: x, y: y };
+  }
+  return null;
+}
+const OW_HOUSE_FOLK = [['Berry Grower Pat', 'I grow berries behind the house. Nobody ever stops by!'], ['Old Lady Mae', 'Come in, come in. The kettle is on.'], ['Hiker Tom', 'I rest here between climbs. Take a break!'], ['Kid Dot', 'This is my grandma\'s house. She is out walking.']];
+function owRouteHouse(mapId, i) {
+  const m = OW_MAPS[mapId], spot = owFindSpot(m, 3, 3, 3 + (i * 3) % 7, 0), id = mapId + '-house';
+  if (!spot) return;
+  const x = spot.x, y = spot.y, folk = OW_HOUSE_FOLK[i % OW_HOUSE_FOLK.length];
+  [[0, 'R'], [1, 'R'], [2, 'R']].forEach(function (p) { owSetTile(mapId, x + p[0], y, p[1]); });
+  owSetTile(mapId, x, y + 1, 'W'); owSetTile(mapId, x + 1, y + 1, 'D'); owSetTile(mapId, x + 2, y + 1, 'W');
+  m.warps.push({ x: x + 1, y: y + 1, to: id, tx: 3, ty: 5 });
+  OW_MAPS[id] = Object.assign(owRoom(id, m.name + ' house', { to: mapId, tx: x + 1, ty: y + 2 }, [{ id: id + '-folk', name: folk[0], x: 4, y: 2, face: 'down', look: { skin: (i + 1) % 6, hair: (i * 2) % 8, outfit: (i + 4) % 8, style: i % 4 }, lines: [folk[1]] }],
+    [{ id: id + '-gift', type: 'pickup', x: 1, y: 4, give: i % 2 ? 'gems' : 'net' }]), { region: m.region, palette: m.palette });
+}
+function owGrassFields(mapId, i) {
+  const m = OW_MAPS[mapId];
+  [[6, 4], [5, 3], [5, 3], [4, 3]].forEach(function (sz) {
+    const spot = owFindSpot(m, sz[0], sz[1], 1, 0, ',*');
+    if (spot) for (let y = spot.y; y < spot.y + sz[1]; y++) for (let x = spot.x; x < spot.x + sz[0]; x++) owSetTile(mapId, x, y, '"');
+  });
+}
+// A tree in the middle of a tree wall that the Trim charm clears: a second, shorter way through (the zigzag stays open without it).
+function owCutShortcuts(mapId) {
+  const m = OW_MAPS[mapId]; let made = 0;
+  for (let y = 3; y < m.rows.length - 3 && made < 2; y++) {
+    const r = m.rows[y];
+    if (r.charAt(6) !== 'T' || r.charAt(7) !== 'T' || ',."*d'.indexOf(m.rows[y - 1].charAt(6)) === -1 || ',."*d'.indexOf(m.rows[y + 1].charAt(6)) === -1 || owNear(m, 6, y, 1)) continue;
+    owSetTile(mapId, 6, y, 'g'); made++; y += 4;
+  }
+}
+OW_LANDS.forEach(function (L, i) { owRouteHouse(L.routeIn, i); owGrassFields(L.routeIn, i); });
+OW_LANDS.forEach(function (L, i) { owLandscape(L.routeIn, i); owCutShortcuts(L.routeIn); });

@@ -16,7 +16,7 @@ beforeEach(async () => {
   await page.reload();
   errors.length = 0;
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; });
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.keyItems = ['map-card']; });
 });
 const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   state.overworld.map = m; state.overworld.x = px; state.overworld.y = py; state.overworld.face = f;
@@ -148,4 +148,17 @@ test('walking warms an egg: every few steps count as one answer, with a daily ca
     return { capped, same: o.walk.n === n };
   });
   assert.deepEqual(r, { capped: 3, same: true });
+});
+
+test('the Map Card is not given to you: Guide Ivy gives it after her tour, and without it the Gizmo map is empty and cannot travel', async () => {
+  await page.evaluate(() => { state.keyItems = []; grantKeyItem('gizmo'); state.overworld.seen = ['hollow', 'meadow']; state.overworld.map = 'meadow'; owSetRegion(OW_MAPS.meadow); openGizmo(); });
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map').length), 0);
+  assert.match(await page.evaluate(() => document.getElementById('gizmo-body').innerText), /Guide Ivy/);
+  await page.evaluate(() => gizmoTravel('hollow'));
+  assert.equal(await page.evaluate(() => state.overworld.map), 'meadow');
+  await page.evaluate(() => { closeGizmo(); });
+  await meet('meadow', 6, 11);
+  assert.ok(await page.evaluate(() => hasKeyItem('map-card')));
+  await page.evaluate(() => { closeTalk(); openGizmo(); });
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map').length), 1);
 });
