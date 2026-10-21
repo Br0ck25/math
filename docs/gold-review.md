@@ -31,7 +31,7 @@ Math answers drive every attack; six types not seventeen; no DVs or stat experie
 
 ## Second pass (after the items above)
 Checked by searching the code for each feature; "not found" means no match in `src/client/js`.
-1. **Move variety is now the biggest battle gap.** Moves are one Normal line, four tiers per type, six stat moves and about a dozen TMs. Not found: status-only moves (Thunder Wave, Sleep Powder, Toxic, Confuse Ray), flinch, Leech Seed, Counter, Thief, Mean Look, Hidden Power, Perish Song, Curse, Encore, Spikes, OHKO moves. **Step:** a dozen of these as TMs and learnset slots, with the effects in `abHit`/`abUtil`.
+1. **(Partly done: Thunder Wave, Sleep Powder, Toxic, Confuse Ray, Leech Seed and Headbutt flinch, as Game Corner TMs; foes do not use them yet.) Move variety is now the biggest battle gap.** Moves are one Normal line, four tiers per type, six stat moves and about a dozen TMs. Not found: status-only moves (Thunder Wave, Sleep Powder, Toxic, Confuse Ray), flinch, Leech Seed, Counter, Thief, Mean Look, Hidden Power, Perish Song, Curse, Encore, Spikes, OHKO moves. **Step:** a dozen of these as TMs and learnset slots, with the effects in `abHit`/`abUtil`.
 2. **Held items:** eight (Berry, Leftovers, Quick Claw, Scope Lens, Focus Band, Lucky Egg, Amulet Coin, Smoke Ball). Not found: type-power items (Charcoal, Mystic Water...), King's Rock, Exp. Share, Everstone, Bright Powder.
 3. **Surf as real travel.** Water is for fishing, bridges and one stone crossing per pond; there is no sea to cross, so no route that is only reachable by water (Gold's Routes 19 to 21, Cianwood, Whirl Islands).
 4. **Nicknames and the Name Rater.** `nickname` appears only in two files and there is no rater.

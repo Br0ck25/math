@@ -241,6 +241,8 @@ const AB_STATUS_TEXT = { burn: 'was burned!', poison: 'was poisoned!', paralysis
 // One side attacks: asleep or paralyzed it may lose the turn, otherwise "X used Y!" and the hit. `down` runs if the target faints, `next` if not.
 function abStrike(att, def, mv, down, next) {
   abSteps([['', function () {
+    if (att.flinched) { att.flinched = false; abNow([[att.name + ' flinched!', null, 900], ['', next, 0]]); return; }
+    att.moved = true;
     if (att.status === 'sleep') {
       if (att.sleep > 0) { att.sleep -= 1; abNow([[att.name + ' is fast asleep.', null, 900], ['', next, 0]]); return; }
       att.status = ''; abNow([[att.name + ' woke up!', null, 800]]);
@@ -308,6 +310,20 @@ function abUtil(att, def, mv, next) {
   }
   next();
 }
+// Gold's status-only moves (Thunder Wave, Sleep Powder, Toxic, Confuse Ray) and Leech Seed: they can miss, and fail on a buddy that already has the condition.
+function abInflict(att, def, mv, next) {
+  const miss = Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100;
+  if (miss) { abSteps([[att.name + "'s attack missed!", null, 900]]); next(); return; }
+  if (mv.seed) {
+    if (def.seeded || def.element === 'nature') abSteps([['But it failed!', null, 900]]);
+    else abSteps([[def.name + ' was seeded!', function () { def.seeded = true; }, 1000]]);
+  } else if (mv.inflict === 'confusion') {
+    if (def.conf > 0) abSteps([['But it failed!', null, 900]]);
+    else abSteps([[def.name + ' ' + AB_STATUS_TEXT.confusion, function () { def.conf = rnd(2, 5) + 1; }, 1000]]);
+  } else if (def.status) abSteps([['But it failed!', null, 900]]);
+  else abSteps([[def.name + ' ' + AB_STATUS_TEXT[mv.inflict], function () { def.status = mv.inflict; def.sleep = rnd(2, 7); }, 1000]]);
+  next();
+}
 function abHit(att, def, mv, down, next) {
   if (mv.util) { abUtil(att, def, mv, next); return; }
   if (mv.charge && !att.charging && !(mv.id === 'solarbeam' && ab.weather && ab.weather.k === 'sun')) { att.charging = mv; abSteps([[att.name + (mv.vanish ? (mv.id === 'dig' ? ' dug underground!' : ' flew up high!') : ' is gathering power!'), null, 1100]]); next(); return; }      // two-turn moves: charge now, hit next turn (Solar Beam skips the charge in the sun)
@@ -316,6 +332,7 @@ function abHit(att, def, mv, down, next) {
   if (def.charging && def.charging.vanish) { abSteps([[def.name + ' is out of reach!', null, 900]]); next(); return; }
   if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
+  if (mv.inflict || mv.seed) { abInflict(att, def, mv, next); return; }
   if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
@@ -332,6 +349,7 @@ function abHit(att, def, mv, down, next) {
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
   abSteps([['', function () {
     if (def.hp <= 0) { down(); return; }
+    if (mv.flinch && !def.moved && Math.random() * 100 < mv.flinch) def.flinched = true;
     if (mv.status === 'confusion' && !(def.conf > 0) && Math.random() < AB_STATUS_CHANCE) { def.conf = rnd(2, 5) + 1; abNow([[def.name + ' ' + AB_STATUS_TEXT.confusion, null, 1000]]); }
     else if (mv.status && mv.status !== 'confusion' && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(2, 7); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
     next();
@@ -357,6 +375,11 @@ function abEndRound() {
     [abFoe(), abMe()].forEach(function (m) {
       if (m.hp > 0 && (m.status === 'burn' || m.status === 'poison')) list.push([m.name + ' is hurt by its ' + (m.status === 'burn' ? 'burn' : 'poison') + '!', function () { m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.max / 8))); if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; }, 900]);
     });
+    [abFoe(), abMe()].forEach(function (m) {
+      const other = m === abMe() ? abFoe() : abMe();
+      if (m.seeded && m.hp > 0 && other.hp > 0) list.push([m.name + "'s health is sapped by Leech Seed!", function () { const d = Math.max(1, Math.floor(m.max / 8)); m.hp = Math.max(0, m.hp - d); other.hp = Math.min(other.max, other.hp + d); [m, other].forEach(function (x) { if (ab.party.indexOf(x) !== -1) state.advHp[x.id] = x.hp; }); }, 900]);
+    });
+    ab.party.concat(ab.foes).forEach(function (m) { m.flinched = false; m.moved = false; });
     if (ab.weather) { ab.weather.n -= 1; if (ab.weather.n <= 0) { const k = ab.weather.k; list.push([k === 'rain' ? 'The rain stopped.' : 'The sunlight faded.', function () { ab.weather = null; }, 900]); } }
     ab.party.concat(ab.foes).forEach(function (m) { m.protect = false; });
     list.push(['', function () { if (abFoe().hp <= 0) abFoeFainted(); else if (abMe().hp <= 0) abMeFainted(); else abBackToMenu(); }, 0]);
@@ -449,7 +472,7 @@ function abMeFainted() {
 function abSwitch(i) {
   const mon = ab.party[i];
   if (ab.phase !== 'team' || mon.hp <= 0 || i === ab.cur) return;
-  const forced = ab.forced, old = abMe(); old.charging = null;
+  const forced = ab.forced, old = abMe(); old.charging = null; old.seeded = false;
   ab.phase = 'busy'; ab.forced = false;
   abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; old.stg = {}; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
   if (forced) abBackToMenu(); else abSteps([['', abFoeTurn, 0]]);      // the foe strikes whoever came in, so it is worked out after the swap

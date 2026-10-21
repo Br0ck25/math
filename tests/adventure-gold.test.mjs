@@ -1226,3 +1226,22 @@ test("Prof. Pi rates your Dex: a prize at each quarter caught, once each, and a 
   });
   assert.deepEqual(r, { few: true, first: true, once: true, all: true, done: true, clamped: 4 });
 });
+
+test('status moves and Leech Seed: Thunder Wave, Sleep Powder, Toxic and Confuse Ray give their condition (and fail on a second), Leech Seed saps HP each round, Headbutt can make a slower foe flinch', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 12 }] });
+    const me = abMe(), foe = abFoe(), out = {}, real = Math.random; Math.random = () => 0.3;
+    const drain = () => { for (let i = 0; i < 40 && ab.queue.length; i++) { const st = ab.queue.shift(); st[1] && st[1](); } ab.queue = []; };
+    const use = (id, who, tgt) => abHit(who, tgt, abTmMove(id, who.element, who.type), () => {}, () => {});
+    foe.element = 'fire';
+    ['thunderwave', 'sleeppowder', 'toxic'].forEach((id, i) => { foe.status = ''; use(id, me, foe); drain(); out[id] = foe.status; });
+    foe.status = 'burn'; use('toxic', me, foe); out.failed = foe.status === 'burn';
+    foe.conf = 0; use('confuseray', me, foe); drain(); out.conf = foe.conf > 0;
+    ab.queue = []; foe.hp = foe.max; me.hp = Math.max(1, me.max - 20); use('leechseed', me, foe); drain(); out.seeded = !!foe.seeded;
+    ab.queue = []; const f0 = foe.hp, m0 = me.hp; abEndRound(); drain(); out.sapped = foe.hp < f0 && me.hp > m0;
+    ab.queue = []; Math.random = () => 0.1; foe.moved = false; foe.flinched = false; use('headbutt', me, foe); drain(); out.flinch = foe.flinched;
+    Math.random = real; out.tms = ['thunderwave', 'headbutt'].every((id) => CORNER_PRIZES.some((p) => p[0] === id));
+    return out;
+  });
+  assert.deepEqual(r, { thunderwave: 'paralysis', sleeppowder: 'sleep', toxic: 'poison', failed: true, conf: true, seeded: true, sapped: true, flinch: true, tms: true });
+});
