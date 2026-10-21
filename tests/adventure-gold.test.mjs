@@ -1133,3 +1133,13 @@ test('the ruin signs in every fourth cave: four answers in a row pay one Evoluti
   });
   assert.deepEqual(r, { n: true, stone: 1, saved: true, again: true, known: true });
 });
+
+test('the Whirlpool Charm (Skyreach badge) opens the nook gates of the second journey, which Trim used to', async () => {
+  const r = await ev(() => {
+    const far = OW_LANDS.filter((L) => !L.charm && L.nook.length && L.land !== 'skyreach');
+    const chars = far.map((L) => OW_MAPS[L.routeIn].rows.join('').includes('y') ? 'y' : '-');
+    state.badges = []; const none = hasKeyItem('whirl'); state.badges = ['skyreach']; const have = hasKeyItem('whirl');
+    return { many: far.length >= 6, chars: [...new Set(chars)].join(), none, have };
+  });
+  assert.deepEqual(r, { many: true, chars: 'y', none: false, have: true });
+});

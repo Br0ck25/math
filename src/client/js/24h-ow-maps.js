@@ -19,9 +19,10 @@ const OW_GATES = {
   vines:  { badge: 'grove',   name: 'Vine Gloves',  text: 'Climb tall walls of vines.',           closed: 't-gate-vines',  open: 't-open-vines',  hint: 'A wall of vines is in the way. Vine Gloves from the Leaf Grove Gym would help you climb!' },
   switch: { badge: 'volt',    name: 'Switch Key',   text: 'Flips switches that lower barriers.',  closed: 't-gate-switch', open: 't-open-switch', hint: 'A barrier blocks the path. A Switch Key from the Volt Valley Gym could lower it!' },
   lamp:   { badge: 'gloom',   name: 'Night Lamp',   text: 'Lights up thick fog.',                 closed: 't-gate-lamp',   open: 't-grass',       hint: 'The fog is too thick to see through. A Night Lamp from the Gloom Marsh Gym would light the way!' },
-  stars:  { badge: 'mystic',  name: 'Star Steps',   text: 'Walk on floating stars.',              closed: 't-gate-stars',  open: 't-open-stars',  hint: 'There is a gap in the sky path. Star Steps from the Mystic Peak Gym would carry you across!' }
+  stars:  { badge: 'mystic',  name: 'Star Steps',   text: 'Walk on floating stars.',              closed: 't-gate-stars',  open: 't-open-stars',  hint: 'There is a gap in the sky path. Star Steps from the Mystic Peak Gym would carry you across!' },
+  whirl:  { badge: 'skyreach', name: 'Whirlpool Charm', text: 'Rides over swirling whirlpools.',    closed: 't-gate-whirl',  open: 't-open-whirl',  hint: 'A whirlpool spins here. A Whirlpool Charm from the Skyreach Gym would carry you through!' },
 };
-const OW_GATE_CHARS = { g: 'trim', h: 'steam', j: 'water', k: 'vines', l: 'switch', q: 'lamp', z: 'stars' };
+const OW_GATE_CHARS = { g: 'trim', h: 'steam', j: 'water', k: 'vines', l: 'switch', q: 'lamp', z: 'stars', y: 'whirl' };
 const OW_TILES = {
   ',': { t: 't-grass' },
   '"': { t: 't-tall-grass', grass: true },

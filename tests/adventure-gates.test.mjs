@@ -27,7 +27,7 @@ const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
 const shown = (id) => page.evaluate((i) => document.getElementById(i).style.display === 'flex', id);
 const wait = (ms) => page.waitForTimeout(ms);
 
-test('seven charms, one per badge except Skyreach, each with a picture for the charm, the closed gate and the open gate', async () => {
+test('eight charms, one per badge, each with a picture for the charm, the closed gate and the open gate', async () => {
   const r = await page.evaluate(() => {
     mountWorldArt();
     const ids = Object.keys(OW_GATES), has = (x) => !!document.getElementById('w-' + x);
@@ -40,12 +40,12 @@ test('seven charms, one per badge except Skyreach, each with a picture for the c
       skyreach: KEY_ITEMS.some((k) => k.badge === 'skyreach')
     };
   });
-  assert.deepEqual(r.ids, ['trim', 'steam', 'water', 'vines', 'switch', 'lamp', 'stars']);
-  assert.deepEqual(r.badges, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic']);
-  assert.equal(r.distinct, 7);
+  assert.deepEqual(r.ids, ['trim', 'steam', 'water', 'vines', 'switch', 'lamp', 'stars', 'whirl']);
+  assert.deepEqual(r.badges, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'skyreach']);
+  assert.equal(r.distinct, 8);
   assert.ok(r.real && r.charmArt && r.gateArt && r.tileArt && r.hints);
-  assert.equal(r.chars, 'g,h,j,k,l,q,z');
-  assert.equal(r.skyreach, false);
+  assert.equal(r.chars, 'g,h,j,k,l,q,y,z');
+  assert.equal(r.skyreach, true);
 });
 
 test('a charm is yours while you hold its badge: old saves have theirs, nothing is stored, and it cannot be handed out', async () => {
@@ -62,8 +62,8 @@ test('a charm is yours while you hold its badge: old saves have theirs, nothing 
     out.kept = state.keyItems.slice();
     return out;
   });
-  assert.deepEqual(r.none, [false, false, false, false, false, false, false]);
-  assert.deepEqual(r.two, [true, false, true, false, false, false, false]);
+  assert.deepEqual(r.none, [false, false, false, false, false, false, false, false]);
+  assert.deepEqual(r.two, [true, false, true, false, false, false, false, false]);
   assert.equal(r.grant, false);
   assert.deepEqual(r.stored, []);
   assert.equal(r.stars, true);
@@ -82,7 +82,7 @@ test('winning a badge tells about its charm; the Bag shows the charms you hold',
   assert.match(r.bag, /Steam Boots/);
   assert.doesNotMatch(r.bag, /Trim Charm/);
   const sky = await page.evaluate(() => { abGymWon('skyreach', false); return talk.lines.join(' '); });
-  assert.doesNotMatch(sky, /also get the/, 'Skyreach has no charm');
+  assert.match(sky, /Whirlpool Charm/, 'Skyreach gives the Whirlpool Charm');
 });
 
 test('every kind of gate blocks with its own kind hint until the charm is held, then is walkable and drawn open', async () => {
@@ -305,7 +305,7 @@ for (const [w, h] of [[320, 568], [420, 800]]) {
       return { hint, bag: b.left >= 0 && b.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth, arts: document.querySelectorAll('#bag-body .bag-key-art').length };
     });
     assert.ok(r.hint && r.bag);
-    assert.equal(r.arts, 7, 'the seven charms (this hero has no other key items)');
+    assert.equal(r.arts, 8, 'the eight charms (this hero has no other key items)');
     await page.setViewportSize({ width: 1280, height: 720 });
   });
 }
