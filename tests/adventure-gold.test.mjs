@@ -1164,3 +1164,15 @@ test('the Tower Marathon: fourteen trainers (the second seven four levels strong
   });
   assert.deepEqual(r, { n: 14, names: 14, stronger: true, first: 1, again: 1, best: 14, short: 7 });
 });
+
+test('friend calls: whoever gave you a key item rings once a day with a small gift to take', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; state.keyItems = ['gizmo']; state.phone.gift = '';
+    const none = phoneFriend() === null; state.keyItems = ['gizmo', 'bicycle', 'fishing-rod', 'itemfinder', 'map-card'];
+    const f = phoneFriend(); const html = gizmoCallsHtml(); const btn = /Take the gift/.test(html);
+    const potions = state.potions, nets = state.nets, ap = state.items.apricorn || 0; phoneClaim();
+    const gained = state.potions > potions || state.nets > nets || (state.items.apricorn || 0) > ap;
+    return { none, named: !!f, btn, gained, done: phoneFriend() === null, saved: JSON.parse(localStorage.getItem('math_quest_save')).phone.gift === dayKey(), noBtn: !/Take the gift/.test(gizmoCallsHtml()) };
+  });
+  assert.deepEqual(r, { none: true, named: true, btn: true, gained: true, done: true, saved: true, noBtn: true });
+});

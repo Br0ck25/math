@@ -109,7 +109,7 @@ function gizmoClockHtml() {
 
 function gizmoCallsHtml() {
   return GIZMO_CALLS.filter(function (c) { return c.when(); }).map(function (c) {
-    return '<div class="gizmo-row"><div><b>' + escHtml(c.from) + '</b><div class="d">' + escHtml(c.dyn ? c.dyn() : c.text) + '</div></div></div>';
+    return '<div class="gizmo-row"><div><b>' + escHtml(c.from) + '</b><div class="d">' + escHtml(c.dyn ? c.dyn() : c.text) + '</div></div>' + (c.claim ? '<button type="button" class="claim-btn" onclick="phoneClaim()">Take the gift</button>' : '') + '</div>';
   }).join('');
 }
 

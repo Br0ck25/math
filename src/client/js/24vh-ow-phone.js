@@ -28,3 +28,25 @@ GIZMO_CALLS.push({ from: 'Trainer call', text: '', when: function () { return !!
   const c = phoneCaller();
   return c.npc.name + ': "I have been training since our battle! Meet me on ' + OW_MAPS[c.map].name + ' for a rematch!"';
 } });
+
+// Friends who are not trainers (Gold's Gina, Wade and the rest): everyone who gave you a key item has your number, and once a day one of them calls with a small gift to take.
+const PHONE_FRIENDS = [
+  { key: 'fishing-rod', name: 'Fisher Gil', text: 'The fish are biting! I kept a Potion for you.', give: 'potion' },
+  { key: 'bicycle', name: 'Cyclist Ray', text: 'I found a Catch Net on my ride. It is yours!', give: 'net' },
+  { key: 'itemfinder', name: 'Dowser Fen', text: 'My rod twitched over an Apricorn. Take it!', give: 'apricorn' },
+  { key: 'map-card', name: 'Guide Ivy', text: 'I packed a Potion in case you get lost.', give: 'potion' }
+];
+function phoneFriend() {
+  const list = PHONE_FRIENDS.filter(function (f) { return hasKeyItem(f.key); });
+  return state.phone.gift !== dayKey() && list.length ? list[dayHash('friend' + dayKey()) % list.length] : null;
+}
+function phoneClaim() {
+  const f = phoneFriend();
+  if (!f) return;
+  state.phone.gift = dayKey();
+  if (f.give === 'net' && state.nets < maxNets()) state.nets += 1;
+  else if (f.give === 'apricorn') state.items.apricorn = Math.min(99, (state.items.apricorn || 0) + 1);
+  else state.potions = Math.min(99, state.potions + 1);                                    // also instead of a net when the net bag is full
+  soundCoinChirp(); saveState(); updateStatsUI(); toast(f.name + ' sent a gift!'); if (typeof renderGizmo === 'function') renderGizmo();
+}
+GIZMO_CALLS.push({ from: 'Friend call', text: '', claim: true, when: function () { return !!phoneFriend(); }, dyn: function () { const f = phoneFriend(); return f.name + ': "' + f.text + '"'; } });
