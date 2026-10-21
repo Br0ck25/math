@@ -20,7 +20,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { safari: opts.safari || null, tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -102,7 +102,12 @@ function abPanel() {
   const p = document.getElementById('ab-panel'), m = abMe();
   p.innerHTML = '';
   p.className = 'ab-panel ' + ab.phase;
-  if (ab.phase === 'menu') {
+  if (ab.phase === 'menu' && ab.safari) {
+    p.appendChild(abBtn('BALL <small>x' + state.safari.balls + '</small>', abSafariBall, '', state.safari.balls < 1));
+    p.appendChild(abBtn('BAIT', abSafariBait));
+    p.appendChild(abBtn('ROCK', abSafariRock));
+    p.appendChild(abBtn('RUN', abRun));
+  } else if (ab.phase === 'menu') {
     p.appendChild(abBtn('FIGHT', abFight));
     p.appendChild(abBtn('PACK', function () { ab.phase = 'pack'; abRender(); }));
     p.appendChild(abBtn('BUDDY', function () { ab.forced = false; ab.phase = 'team'; abRender(); }));
@@ -530,6 +535,7 @@ function abFinish(result) {
       o.map = o.center.map; o.x = o.center.x; o.y = o.center.y; o.face = 'down'; owTrail = null;
     }
     showAdventureWindow();
+    if (a.safari && state.safari.active && state.safari.balls < 1) { safariEnd('You are out of Safari Balls. Please come back to the gate.'); }
     if (result === 'lose' && !a.tower) openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, you blacked out! You dropped half your gems.', 'Your buddies were taken to the Buddy Center and feel great again. Ready to try again?'] });
     else if (result === 'win' && a.onWin) a.onWin();
     else if (result === 'win' && a.npc) {

@@ -217,8 +217,10 @@ const NORMALIZERS = [
     const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
     s.stoned = st;
     s.coins = asInt(s.coins, 0, 9999, 0);
+    const sf = isPlainObject(s.safari) ? s.safari : {}; s.safari = { active: sf.active === true, steps: asInt(sf.steps, 0, ECON.safari.steps, 0), balls: asInt(sf.balls, 0, ECON.safari.balls, 0) };
+    if (!s.safari.active || s.overworld.map !== 'safari-zone') { s.safari.active = false; if (s.overworld.map === 'safari-zone') { s.overworld.map = 'thistle-gate'; s.overworld.x = 3; s.overworld.y = 5; } }
     const tw = isPlainObject(s.tower) ? s.tower : {}; s.tower = { day: typeof tw.day === 'string' ? tw.day.slice(0, 10) : '', best: asInt(tw.best, 0, 7, 0) };
-    const ph = isPlainObject(s.phone) ? s.phone : {}; s.phone = { day: typeof ph.day === 'string' ? ph.day.slice(0, 10) : '', ready: typeof ph.ready === 'string' ? ph.ready.slice(0, 40) : '' };
+    const ph = isPlainObject(s.phone) ? s.phone : {}; s.phone = { day: typeof ph.day === 'string' ? ph.day.slice(0, 10) : '', ready: typeof ph.ready === 'string' ? ph.ready.slice(0, 40) : '', known: (Array.isArray(ph.known) ? ph.known : []).filter(function (x) { return typeof x === 'string'; }).slice(0, 80).map(function (x) { return x.slice(0, 40); }) };
     const ct = s.contest; s.contest = isPlainObject(ct) && typeof ct.day === 'string' ? { day: ct.day.slice(0, 10), balls: asInt(ct.balls, 0, 99, 0), best: isPlainObject(ct.best) ? { name: String(ct.best.name || '').slice(0, 30), score: asInt(ct.best.score, 0, 9999, 0) } : null, done: ct.done === true } : null;
     const ft = {}; Object.keys(isPlainObject(s.fromTrade) ? s.fromTrade : {}).forEach(function (id) { if (getSpecies(id) && s.fromTrade[id]) ft[id] = 1; }); s.fromTrade = ft;
     const hap = {}; Object.keys(isPlainObject(s.happy) ? s.happy : {}).forEach(function (id) { if (s.unlockedPets.concat(s.unlockedSecrets).indexOf(id) !== -1) hap[id] = clamp(Math.floor(Number(s.happy[id])) || 0, 0, 255); });

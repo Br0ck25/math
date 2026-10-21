@@ -396,16 +396,17 @@ test('the Lighthouse quest: the Keeper needs the Secret Potion, Healer Mei only 
 
 test('phone calls: a trainer you beat calls for a rematch once a day, is back on the map, fights stronger and pays again, and then waits for tomorrow', async () => {
   const r = await ev(() => {
-    state.overworld.beat = []; state.phone = { day: '', ready: '' };
+    state.overworld.beat = []; state.phone = { day: '', ready: '', known: [] };
     const none = phoneReady();
-    state.overworld.beat = ['route1-pia']; state.phone = { day: '', ready: '' };
+    state.overworld.beat = ['route1-pia']; state.phone = { day: '', ready: '', known: [] }; const sameDay = phoneReady();
+    state.phone = { day: '1999-01-01', ready: '', known: ['route1-pia'] };
     const id = phoneReady(), npc = OW_MAPS.route1.npcs.find((n) => n.id === id);
-    const out = { none, id, active: !!npc && owNpcActive(npc), call: GIZMO_CALLS.some((c) => c.from === 'Trainer call' && c.when() && /rematch/.test(c.dyn())) };
+    const out = { none, sameDay, id, active: !!npc && owNpcActive(npc), call: GIZMO_CALLS.some((c) => c.from === 'Trainer call' && c.when() && /rematch/.test(c.dyn())) };
     out.sees = !!owTrainerSeeing(OW_MAPS.route1, npc.x + OW_STEP[npc.face][0], npc.y + OW_STEP[npc.face][1]);
     startTrainerFight(npc); out.rematch = ab.rematch; out.level = ab.foes[0].level > abWildLevel() + 1;
     return out;
   });
-  assert.deepEqual(r, { none: '', id: 'route1-pia', active: true, call: true, sees: true, rematch: true, level: true });
+  assert.deepEqual(r, { none: '', sameDay: '', id: 'route1-pia', active: true, call: true, sees: true, rematch: true, level: true });
   await ev(() => { state.gems = 0; Math.random = () => 0.3; });
   for (let k = 0; k < 20; k++) {
     await page.waitForFunction(() => !ab || (!ab.busy && (ab.phase === 'menu' || ab.phase === 'learn')), null, { timeout: 60000 });
@@ -460,6 +461,43 @@ test('the Game Corner: 50 coins cost 1000 gems, a spin costs 3 and pays about 90
   assert.equal(r.door, true);
   assert.ok(r.rtp > 0.8 && r.rtp < 1, 'the slots pay back ' + r.rtp);
   assert.deepEqual([r.bought, r.prize, r.poor], [[500, 50], [1, 2000], [0, 100]]);
+});
+
+test('the Safari Zone: 500 gems for 30 Safari Balls and 500 steps, no fighting (ball, bait, rock, run), a catch is kept, and the visit ends when the steps or the balls run out', async () => {
+  const r = await ev(() => {
+    const warden = OW_MAPS['thistle-gate'].npcs[0], out = { door: OW_MAPS.thistle.warps.some((w) => w.to === 'thistle-gate') };
+    state.gems = 700; state.hero.made = true; openAdventure(); OW_SERVICES.safari(warden); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    out.paid = [state.gems, state.safari.active, state.safari.balls, state.safari.steps, state.overworld.map];
+    owSafariStep(); owSafariStep(); out.steps = state.safari.steps;
+    ECON.overworld.grassChance = 1; owSafe = 0; state.repelSteps = 0;
+    startAdventureFight(); out.fight = !!ab && !!ab.safari;
+    return out;
+  });
+  assert.deepEqual(r, { door: true, paid: [200, true, 30, 500, 'safari-zone'], steps: 498, fight: true });
+  await menu();
+  const p = await ev(() => [...document.querySelectorAll('#ab-panel button')].map((b) => b.innerText.replace(/\s+/g, ' ')).join('|'));
+  assert.match(p, /BALL x30\|BAIT\|ROCK\|RUN/);
+  const cat = await ev(() => { state.unlockedPets = ['dog']; state.unlockedSecrets = []; const id = ab.foes[0].id; Math.random = () => 0; ab.foes[0].hp = ab.foes[0].max; abSafariBall(); return id; });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  const k = await ev((id) => [getOwnedIds().includes(id), state.safari.balls], cat);
+  assert.deepEqual(k, [true, 29]);
+  await page.waitForFunction(() => document.getElementById('overworld-modal').style.display === 'flex');
+  const end = await ev(() => { state.safari.steps = 1; state.overworld.map = 'safari-zone'; owSafariStep(); return [state.safari.active, state.overworld.map]; });
+  assert.deepEqual(end, [false, 'thistle-gate']);
+  const norm = await ev(() => { state.safari = { active: true, steps: 9999, balls: -3 }; state.overworld.map = 'meadow'; NORMALIZERS.forEach((fn) => fn(state)); return [state.safari.active, state.safari.steps, state.safari.balls]; });
+  assert.deepEqual(norm, [false, 500, 0]);
+});
+
+test('the Radio Tower takeover: a door in Spark City (Spark Badge), two Scramblers on each of two floors, Boss Static on the third, an Evolution Stone and the Gizmo news once he is beaten', async () => {
+  const r = await ev(() => {
+    const out = { road: OW_MAPS.spark.roads['15,6'], floors: [1, 2, 3].map((n) => OW_MAPS['spark-tower-' + n].npcs.length), boss: OW_MAPS['spark-tower-3'].npcs[0].kind };
+    state.badges = []; const closed = !owWalkable(OW_MAPS.spark, 15, 6); state.badges = ['spark']; out.gate = [closed, owWalkable(OW_MAPS.spark, 15, 6)];
+    state.items = {}; state.overworld.story = []; out.news0 = GIZMO_CALLS.some((c) => c.from === 'Radio news' && /Radio Tower/.test(c.text) && c.when());
+    owStoryReward('radio-tower'); owStoryReward('radio-tower'); out.stone = state.items.stone || 0; out.news = GIZMO_CALLS.some((c) => c.from === 'Radio news' && /Radio Tower/.test(c.text) && c.when());
+    const up = OW_MAPS['spark-tower-1'].warps.some((w) => w.to === 'spark-tower-2'), down = OW_MAPS['spark-tower-3'].warps.some((w) => w.to === 'spark-tower-2'); out.stairs = up && down;
+    return out;
+  });
+  assert.deepEqual(r, { road: 'spark', floors: [2, 2, 1], boss: 'boss', gate: [true, true], news0: false, stone: 1, news: true, stairs: true });
 });
 
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {

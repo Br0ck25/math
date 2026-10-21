@@ -141,7 +141,7 @@ function owMove(dir) {
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, nx, ny);
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
-  owWalkEgg(); owDaycareStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
+  owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
   if (warp) return;
@@ -231,6 +231,12 @@ function showAdventureWindow() {
 function startAdventureFight(sp, levelBonus) {
   if (ab) return;
   owRelease();
+  if (state.overworld.map === 'safari-zone' && !sp) {                       // the Safari Zone: its own rare buddies, no fighting
+    if (!safariActive()) return;
+    const w = safariPick();
+    abStart({ kind: 'wild', safari: { bait: 0, rock: 0 }, foes: [{ id: w.id, level: clamp(abWildLevel() + rnd(0, 2), 2, MAX_LEVEL), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
+    return;
+  }
   if (state.overworld.map === 'meadow-park' && !sp) {                       // the park: wild buddies only during the contest, and only while there are Park Balls
     if (!contestActive() || state.contest.balls < 1) return;
     const w = rollWildSpecies([]);
@@ -260,7 +266,12 @@ function owStoryDone(id) {
   saveState();
   return true;
 }
-function owStoryReward(id) { owStoryDone(id); }          // a story beat pays no money in Gold: only trainers do (abPrize)
+// A story beat pays no money in Gold (only trainers do, abPrize); a few hand over an item the first time (OW_STORY_ITEMS).
+function owStoryReward(id) {
+  if (!owStoryDone(id)) return;
+  const it = OW_STORY_ITEMS[id];
+  if (it) { state.items[it] = Math.min(99, (state.items[it] || 0) + 1); saveState(); toast('You got an Evolution Stone!'); }
+}
 // One step back the way the hero came (it faces where it was walking), if that tile is free.
 function owStepBack() {
   const o = state.overworld, m = OW_MAPS[o.map], d = OW_STEP[OW_OPPOSITE[o.face]], bx = o.x + d[0], by = o.y + d[1];

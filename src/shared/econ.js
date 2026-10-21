@@ -85,6 +85,8 @@ const ECON = {
   contest: { days: [2, 4, 6], balls: 20, ranks: [600, 450, 300] },
   // Rematch calls (24vh-ow-phone.js): the trainer who called is `levels` above the land.
   phone: { levels: 4 },
+  // The Safari Zone (24vk-ow-safari.js): a visit costs `fee` gems and gives `balls` Safari Balls and `steps` steps.
+  safari: { fee: 500, balls: 30, steps: 500 },
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
   items: { potion: 300, net: 200, greatnet: 600, ultranet: 1200, repel: 350, superpotion: 700, fullheal: 600, revive: 1500, elixir: 1500, xattack: 500, xdefend: 550, xspeed: 350, maxrepel: 700, stone: 2100, ether: 1200, ppup: 9800, escaperope: 550 },

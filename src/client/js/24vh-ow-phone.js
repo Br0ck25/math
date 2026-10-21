@@ -1,6 +1,6 @@
 // =====================================================================
 //  PHONE CALLS (Gold's trainer rematches): every route trainer you beat has your number. Once a day one of them calls the Gizmo, says it trained hard and waits where you fought it.
-//  Beat it again (stronger, ECON.phone.levels above the land) and it pays its prize again. state.phone = { day, ready }.
+//  Beat it again (stronger, ECON.phone.levels above the land) and it pays its prize again. state.phone = { day, ready, known } (known: the trainers beaten before today, so nobody calls on the day you beat them).
 // =====================================================================
 const OW_PHONE_MAP = /^route\d+(-side)?$|^skyroad(-side)?$/;
 function phoneTrainers() {
@@ -15,9 +15,11 @@ function phoneTrainers() {
 function phoneReady() {
   const p = state.phone, list = phoneTrainers();
   if (p.ready && !list.some(function (t) { return t.npc.id === p.ready; })) p.ready = '';
-  if (p.day !== dayKey()) {
+  if (p.day !== dayKey()) {                                                       // a new day: someone who had your number since an earlier day may call
     p.day = dayKey();
-    if (!p.ready && list.length) p.ready = list[dayHash('phone' + dayKey()) % list.length].npc.id;
+    const known = list.filter(function (t) { return p.known.indexOf(t.npc.id) !== -1; });
+    if (!p.ready && known.length) p.ready = known[dayHash('phone' + dayKey()) % known.length].npc.id;
+    p.known = list.map(function (t) { return t.npc.id; });
   }
   return p.ready;
 }
