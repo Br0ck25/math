@@ -58,7 +58,7 @@ test('stepping on the Meadow gym door offers the gym; Enter starts the gym run o
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Beat 3 trainers/);
   await page.click('#talk-next');
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Losing costs nothing/);
-  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Enter the gym']);
+  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Enter the gym', 'Solve the gym puzzle']);
   await page.click('#talk-choices button');
   await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
   const r = await page.evaluate(() => ({ gym: state.gym, rounds: ab.rounds.map((x) => x.kind), first: ab.name, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-modal').style.display }));

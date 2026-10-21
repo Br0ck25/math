@@ -1100,3 +1100,21 @@ test('a fight opens with a wipe (bars for wild buddies, a circle for trainers) a
   });
   assert.deepEqual(r, { wild: true, cried: true });
 });
+
+test('the gym puzzle: three right answers (wrong ones are free) let you past the first trainer of a first-time gym', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = {};
+    owEnterGym('meadow'); talkNext(); out.choices = [...document.querySelectorAll('#talk-choices button')].map((b) => b.innerText);
+    talk.onClose = null; closeTalk();
+    const full = abGymRounds('meadow', false).length;
+    let seen = null; const real = abStart; abStart = (o) => { seen = o; return true; };
+    owGymPuzzle('meadow', 'Meadow Gym');
+    for (let i = 0; i < 3; i++) {
+      const wrong = talk.quiz.q.opts.find((o) => o !== talk.quiz.q.ans); answerSignQuiz(wrong); if (i === 0) out.free = talk.quiz.round === 1;
+      answerSignQuiz(talk.quiz.q.ans);
+    }
+    out.done = talk.quiz.done; closeTalk();
+    return new Promise((res) => setTimeout(() => { abStart = real; out.skipped = seen && seen.rounds.length === full - 1; res(out); }, 600));
+  });
+  assert.deepEqual(r, { choices: ['Enter the gym', 'Solve the gym puzzle'], free: true, done: true, skipped: true });
+});

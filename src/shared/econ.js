@@ -35,7 +35,7 @@ const ECON = {
   // Winning the gym gives a badge and gems; all the gym badges open the Champion's Hall.
   map: {
     levels: { meadow: 1, ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48, skyreach: 56, cinder: 60, coral: 64, thistle: 68, spark: 72, dusk: 76, prism: 80, cross: 85, summit: 90 },
-    trainers: 3, regionShare: 0.8,
+    trainers: 3, puzzleRounds: 3, regionShare: 0.8,
     // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
     // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
     rematch: { levels: 4 },
