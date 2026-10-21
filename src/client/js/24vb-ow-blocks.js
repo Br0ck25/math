@@ -84,6 +84,8 @@ function owBlockRoute(L, i, attempt) {
     const o = objects[k]; if (/nook/.test(o.id)) continue;
     const s = take(open()); if (!s) return null; o.x = s[0]; o.y = s[1]; mark(s[0], s[1]);
   }
+  const hide = take(open()); if (!hide) return null;                                                      // a hidden find (Itemfinder) in the open, away from the others
+  mark(hide[0], hide[1]); objects.push({ id: L.routeIn + '-hidden', type: 'pickup', hidden: true, x: hide[0], y: hide[1], give: i % 2 ? 'net' : 'gems' });
   // the nook: a gate in a tree wall with two finds behind it
   const nookObjs = objects.filter(function (o) { return /nook/.test(o.id); });
   if (nookObjs.length) {

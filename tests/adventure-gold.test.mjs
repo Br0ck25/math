@@ -814,3 +814,19 @@ test('a person or find in the next map shows past the edge, where you will meet 
   });
   assert.deepEqual(r, [r[0], r[0] + 1, r[0]]);
 });
+
+test('the special nets: Level Net by level ratio, Fast Net on faster foes, Lure Net on fished ones, Friend Net makes a friend', async () => {
+  await begin();
+  const r = await ev(() => {
+    const me = abMe(), foe = abFoe(), out = {};
+    me.level = 40; foe.level = 10; out.level = abNetMult('levelnet', foe);
+    foe.level = 30; out.level2 = abNetMult('levelnet', foe); foe.level = 50; out.level3 = abNetMult('levelnet', foe);
+    foe.spd = me.spd + 5; out.fast = abNetMult('fastnet', foe); foe.spd = me.spd - 5; out.slow = abNetMult('fastnet', foe);
+    ab.fished = false; out.lure = abNetMult('lurenet', foe); ab.fished = true; out.lure2 = abNetMult('lurenet', foe);
+    state.nets = 0; state.items.friendnet = 1; state.unlockedPets = state.unlockedPets.filter((x) => x !== foe.id); delete state.buddyXp[foe.id]; delete state.happy[foe.id]; foe.hp = 1; Math.random = () => 0; ab.phase = 'pack'; abThrowNet('friendnet');
+    return out;
+  });
+  assert.deepEqual(r, { level: 8, level2: 2, level3: 1, fast: 4, slow: 1, lure: 1, lure2: 3 });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  assert.equal(await ev(() => happyOf('fox')), 200);
+});

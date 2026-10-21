@@ -181,3 +181,26 @@ test('the Radio Card is won with a five-question quiz at the Radio Tower; withou
   assert.deepEqual([r.rounds, r.tile, r.has, r.again], [5, 's', true, false]);
   assert.doesNotMatch(r.tips, /not tuned/);
 });
+
+test('Cyclist Ray in Volt Valley gives the Bicycle once, and a held direction then steps faster than with the Running Shoes', async () => {
+  const before = await page.evaluate(() => { state.keyItems = ['running-shoes']; return owStepMs(); });
+  await meet('volt-house', 5, 2);
+  const r = await page.evaluate(() => ({ has: hasKeyItem('bicycle'), ms: owStepMs(), shoe: ECON.overworld.shoeMs, again: grantKeyItem('bicycle') }));
+  assert.equal(before, await page.evaluate(() => ECON.overworld.shoeMs));
+  assert.deepEqual([r.has, r.ms < r.shoe, r.again], [true, true, false]);
+});
+
+test('Dowser Fen gives the Itemfinder, and with it hidden finds sparkle within three tiles and can be picked up', async () => {
+  await meet('ember-house', 5, 2);
+  const r = await page.evaluate(() => {
+    const has = hasKeyItem('itemfinder'), h = OW_MAPS.route1.objects.find((o) => o.id === 'route1-hidden');
+    openAdventure(); state.overworld.map = 'route1'; state.overworld.x = h.x; state.overworld.y = h.y + 1; state.overworld.found = [];
+    const near = !!owPickupAt(OW_MAPS.route1, h.x, h.y);
+    state.overworld.x = Math.min(12, h.x + 5); state.overworld.y = Math.min(21, h.y + 5);
+    const far = !!owPickupAt(OW_MAPS.route1, h.x, h.y);
+    state.keyItems = []; state.overworld.x = h.x; state.overworld.y = h.y + 1;
+    const without = !!owPickupAt(OW_MAPS.route1, h.x, h.y);
+    return { has, near, far, without, hidden: OW_LANDS.every((L) => OW_MAPS[L.routeIn].objects.some((o) => o.hidden)) };
+  });
+  assert.deepEqual(r, { has: true, near: true, far: false, without: false, hidden: true });
+});

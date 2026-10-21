@@ -59,7 +59,12 @@ function owTrainerSeeing(map, x, y) {
     return false;
   }) || null;
 }
-function owPickupAt(map, x, y) { return (map.objects || []).find(function (o) { return o.type === 'pickup' && o.x === x && o.y === y && state.overworld.found.indexOf(o.id) === -1; }) || null; }
+// A find that is still there; a hidden one only shows (and can be picked up) while the hero holds the Itemfinder and is within three tiles (Gold's Itemfinder).
+function owPickupShows(o) {
+  if (state.overworld.found.indexOf(o.id) !== -1) return false;
+  return !o.hidden || (hasKeyItem('itemfinder') && Math.abs(o.x - state.overworld.x) + Math.abs(o.y - state.overworld.y) <= 3);
+}
+function owPickupAt(map, x, y) { return (map.objects || []).find(function (o) { return o.type === 'pickup' && o.x === x && o.y === y && owPickupShows(o); }) || null; }
 function owWarpAt(map, x, y) { return map.warps.find(function (w) { return w.x === x && w.y === y; }) || null; }
 function owOpen() {
   const open = openOverlays(), top = open[open.length - 1];
@@ -114,7 +119,7 @@ function renderOverworld() {
     }
   }
   (map.objects || []).forEach(function (ob) {
-    if (ob.type === 'pickup' && o.found.indexOf(ob.id) === -1 && inView(ob.x, ob.y)) h += owActorHtml('ow-pickup', ob.x - o.x + hx, ob.y - o.y + hy, g, worldSprite('o-sparkle'));
+    if (ob.type === 'pickup' && owPickupShows(ob) && inView(ob.x, ob.y)) h += owActorHtml('ow-pickup', ob.x - o.x + hx, ob.y - o.y + hy, g, worldSprite('o-sparkle'));
   });
   (map.npcs || []).forEach(function (np) {
     if (!owNpcActive(np)) return;
@@ -193,11 +198,13 @@ function owGrassStep() {
   return Math.random() < ECON.overworld.grassChance;
 }
 // The D-pad: press to step, hold to keep walking. A keyboard "click" (no pointer) steps once.
+// How often a held direction steps: walking, with the Running Shoes, or on the Bicycle (Gold's fastest way on foot).
+function owStepMs() { return hasKeyItem('bicycle') ? ECON.overworld.bikeMs : hasKeyItem('running-shoes') ? ECON.overworld.shoeMs : ECON.overworld.holdMs; }
 function owHold(dir) {
   owPointerUsed = true;
   owRelease();
   owMove(dir);
-  owHoldTimer = setTimeout(function () { owHoldTimer = setInterval(function () { owMove(dir); }, hasKeyItem('running-shoes') ? ECON.overworld.shoeMs : ECON.overworld.holdMs); }, 260);
+  owHoldTimer = setTimeout(function () { owHoldTimer = setInterval(function () { owMove(dir); }, owStepMs()); }, 260);
 }
 function owRelease() { clearTimeout(owHoldTimer); clearInterval(owHoldTimer); owHoldTimer = null; }
 function owClick(dir) { if (owPointerUsed) { owPointerUsed = false; return; } owMove(dir); }
@@ -255,7 +262,7 @@ function showAdventureWindow() {
 
 // ----- a fight that begins on a walk: the Adventure battle screen (24x-ow-battle.js, 24y-ow-arenas.js) -----
 // `sp` (optional): the buddy that appears (fishing, a shaken tree); otherwise the usual wild pick.
-function startAdventureFight(sp, levelBonus) {
+function startAdventureFight(sp, levelBonus, fished) {
   if (ab) return;
   owRelease();
   if (state.overworld.map === 'safari-zone' && !sp) {                       // the Safari Zone: its own rare buddies, no fighting
@@ -274,7 +281,7 @@ function startAdventureFight(sp, levelBonus) {
   const route = sp ? null : owRollRoute(state.overworld.map);
   if (route) { abStart({ kind: 'wild', foes: [{ id: route.id, level: route.level, shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] }); return; }
   sp = sp || rollWildSpecies([]);
-  abStart({ kind: 'wild', foes: [{ id: sp.id, level: clamp(abWildLevel() + (levelBonus || 0), 2, MAX_LEVEL), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
+  abStart({ kind: 'wild', fished: !!fished, foes: [{ id: sp.id, level: clamp(abWildLevel() + (levelBonus || 0), 2, MAX_LEVEL), shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] });
 }
 // A trainer on the map battles through the gym-trainer path (uncatchable, pays ECON.map.trainerGems), one buddy of the land's mix, near the buddy's level.
 function startTrainerFight(npc) {

@@ -75,3 +75,5 @@ function owTeach(pet, m, i) {
   saveState();
   openTalk({ name: 'Move set', art: worldSprite('k-badge-case'), lines: [i < pet.moves.length ? pet.name + ' forgot ' + pet.moves[i].name + ' and learned ' + m.name + '!' : pet.name + ' learned ' + m.name + '!'] });
 }
+owAddNpc('volt-house', { id: 'volt-cyclist', kind: 'gift', gift: 'bicycle', name: 'Cyclist Ray', x: 5, y: 2, face: 'down', look: { skin: 2, hair: 6, outfit: 3, style: 2 }, lines: ['I ride all day through Volt Valley!', 'You walk everywhere? Take my spare Bicycle!'], after: ['Hold a direction on the map to ride. Ride safe!'] });
+owAddNpc('ember-house', { id: 'ember-dowser', kind: 'gift', gift: 'itemfinder', name: 'Dowser Fen', x: 5, y: 2, face: 'down', look: { skin: 1, hair: 3, outfit: 6, style: 0 }, lines: ['I find things that nobody sees!', 'Take my Itemfinder. Hidden finds sparkle when you are close.'], after: ['Walk about and watch for sparkles. Some finds hide on every route!'] });

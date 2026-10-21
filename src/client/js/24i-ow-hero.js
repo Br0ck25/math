@@ -10,6 +10,8 @@ const HERO_NAMES = ['Sam', 'Alex', 'Jamie', 'Casey', 'Taylor', 'Morgan', 'Skye',
 const HERO_NAME_MAX = 10;
 const KEY_ITEMS = [
   { id: 'badge-case', name: 'Badge Case', text: 'Keeps the gym badges you win.', art: 'k-badge-case' },
+  { id: 'itemfinder', name: 'Itemfinder', text: 'Finds things that are hidden: they sparkle when you are within three tiles. Dowser Fen in Ember Hills gives it.', art: 'k-gizmo' },
+  { id: 'bicycle', name: 'Bicycle', text: 'Hold a direction on the map to ride, faster than the Running Shoes. Cyclist Ray in Volt Valley gives it.', art: 'k-shoes' },
   { id: 'running-shoes', name: 'Running Shoes', text: 'Hold a direction on the map to walk faster.', art: 'k-shoes' },
   { id: 'fishing-rod', name: 'Fishing Rod', text: 'Tap the water on the map to fish. It becomes a Good Rod with 3 badges and a Super Rod for the Champion.', art: 'k-rod' },
   { id: 'secret-potion', name: 'Secret Potion', text: 'A medicine for a sick buddy. Take it to the Lighthouse Keeper in Tide Bay.', art: 'k-badge-case' },

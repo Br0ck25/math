@@ -22,7 +22,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { safari: opts.safari || null, tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { fished: !!opts.fished, safari: opts.safari || null, tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -137,7 +137,7 @@ function abPanel() {
     const carry = [['fullrestore', 'Full Restore', function () { return m.hp >= m.max && !m.status; }], ['maxpotion', 'Max Potion', function () { return m.hp >= m.max; }], ['hyperpotion', 'Hyper Potion', function () { return m.hp >= m.max && !m.status; }], ['superpotion', 'Super Potion', function () { return m.hp >= m.max && !m.status; }], ['fullheal', 'Full Heal', function () { return !m.status && !(m.conf > 0); }], ['revive', 'Revive', function () { return !ab.party.some(function (x) { return x.hp <= 0; }); }],
       ['elixir', 'Elixir', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }], ['xattack', 'X Attack', function () { return abStage(m, 'atk') >= 6; }], ['xdefend', 'X Defend', function () { return abStage(m, 'def') >= 6; }], ['xspeed', 'X Speed', function () { return abStage(m, 'spd') >= 6; }], ['ether', 'Ether', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }]];
     carry.forEach(function (c) { if (state.items[c[0]]) p.appendChild(abBtn(c[1] + ' <small>x' + state.items[c[0]] + '</small>', function () { if (c[0] === 'ether') { ab.phase = 'ether'; abRender(); } else abUseItem(c[0]); }, '', c[2]())); });
-    ['greatnet', 'ultranet'].forEach(function (k) { if (state.items[k]) p.appendChild(abBtn(ITEM_LOOKS[k][1] + ' <small>x' + state.items[k] + '</small>', function () { abThrowNet(k); }, '', !wild)); });
+    ['greatnet', 'ultranet', 'levelnet', 'fastnet', 'lurenet', 'friendnet'].forEach(function (k) { if (state.items[k]) p.appendChild(abBtn(ITEM_LOOKS[k][1] + ' <small>x' + state.items[k] + '</small>', function () { abThrowNet(k); }, '', !wild)); });
     p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back'));
   } else if (ab.phase === 'ether') {
     m.moves.forEach(function (mv, i) { p.appendChild(abBtn('<b>' + escHtml(mv.name) + '</b><small>PP ' + mv.left + '/' + mv.pp + '</small>', function () { abUseEther(i); }, 'ab-move t-' + mv.type, mv.left >= mv.pp)); });
@@ -472,9 +472,10 @@ function abThrowNet(kind) {
   kind = kind || 'net';
   const have = kind === 'net' ? state.nets : (state.items[kind] || 0);
   if (ab.kind !== 'wild' || have < 1) return;
-  const ball = ECON.overworld.ballMult[kind], foe = abFoe(), chance = abCatchChance(foe, ball), got = Math.random() < chance;
+  const foe = abFoe(), ball = abNetMult(kind, foe), chance = abCatchChance(foe, ball), got = Math.random() < chance;
   if (kind === 'net') state.nets -= 1; else { state.items[kind] -= 1; if (!state.items[kind]) delete state.items[kind]; }
   ab.phase = 'busy';
+  ab.lastNet = kind;
   abSteps([['You threw a ' + ITEM_LOOKS[kind][1] + '!', function () { abNetFx('toss', kind); }, 1300]]);
   const shakes = got ? 3 : Math.min(2, abShakes(abCatchA(foe, ball)));
   for (let k = 0; k < shakes; k++) abSteps([['...', function () { soundCatchWobble(k); abNetFx('wobble'); }, 700]]);
@@ -497,7 +498,7 @@ function abKeepCaught(foe) {
   if (foe.shiny) state.shinies[sp.id] = 1;
   if (sp.id === legendOfWeek().id) legendState().caught = true;
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! A Trader may want it.'); }
-  else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); state.buddyXp[sp.id] = xpForLevel(foe.level);      // Gold: a caught buddy keeps the level it had in the fight
+  else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); state.buddyXp[sp.id] = xpForLevel(foe.level); if (ab.lastNet === 'friendnet') addHappy(sp.id, 200 - happyOf(sp.id));      // Gold: a caught buddy keeps the level it had in the fight
     (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
   saveState();
 }

@@ -197,6 +197,14 @@ function abCatchA(foe, ball) {
   const a = Math.max(1, Math.floor(rate * (3 * foe.max - 2 * foe.hp) / (3 * foe.max))) + (foe.status === 'sleep' || foe.status === 'freeze' ? 10 : 0);
   return Math.min(255, a);
 }
+// The special nets (Gold's Level, Fast, Lure and Friend Balls): how much each multiplies the catch value of this foe.
+function abNetMult(kind, foe) {
+  const me = abMe();
+  if (kind === 'levelnet') return me.level >= foe.level * 4 ? 8 : me.level >= foe.level * 2 ? 4 : me.level > foe.level ? 2 : 1;
+  if (kind === 'fastnet') return foe.spd > me.spd ? 4 : 1;
+  if (kind === 'lurenet') return ab.fished ? 3 : 1;
+  return ECON.overworld.ballMult[kind];
+}
 function abCatchChance(foe, ball) { return (abCatchA(foe, ball) + 1) / 256; }
 // How many times the net shakes before it breaks free: each check passes more often when the catch value is high.
 function abShakes(a) {

@@ -177,7 +177,7 @@ function owFish() {
   if (Math.random() >= R.bite) { toast('No bite. Try again!'); return; }
   const water = wildPool().filter(function (p) { return p.element === 'water'; });
   const fit = water.filter(function (p) { return rod === 0 ? isStoreBuddy(p) && p.cost < 150 : rod === 1 ? isStoreBuddy(p) : true; });          // Old Rod: the everyday ones; Good: every store buddy; Super: the rare ones too
-  startAdventureFight(pick(fit.length ? fit : water), R.level);
+  startAdventureFight(pick(fit.length ? fit : water), R.level, true);
 }
 
 // ----- shake trees: once a day each, a rare buddy falls out (the same one all day, a different one tomorrow) -----

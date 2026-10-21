@@ -111,8 +111,9 @@ test('the Mart opens more items as badges are won, and has no Boss Whistle', asy
   assert.match(none[0].text, /Potion/);
   assert.match(none[1].text, /Catch Net/);
   assert.match(none[2].text, /Great Net/);
-  assert.match(none[4].text, /Repel/);
-  assert.match(none[4].text, /Opens with 1 badge/);
+  const repel = none.find((r) => /^Repel/.test(r.text));
+  assert.ok(repel, 'a Repel row');
+  assert.match(repel.text, /Opens with 1 badge/);
   assert.ok(none.some((r) => /Elixir/.test(r.text)) && none.some((r) => /Evolution Stone/.test(r.text)) && none.some((r) => /X Attack/.test(r.text)) && none.some((r) => /Max Repel/.test(r.text)));
   assert.deepEqual(none.map((r) => r.buttons), need.map((n) => (n > 0 ? 0 : 1)), 'a locked item has nothing to buy');
   assert.ok(none.every((r) => !/Whistle/.test(r.text)));
