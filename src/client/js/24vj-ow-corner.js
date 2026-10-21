@@ -48,7 +48,7 @@ function owCornerPrizes(npc) {
 OW_SERVICES.corner = function (npc) { owCornerTalk(npc, ['Welcome to the Game Corner! Coins are 50 for 1000 gems.']); };
 OW_MAPS['spark-corner'] = owRoom('spark-corner', 'Game Corner', { to: 'spark', tx: 1, ty: 6 }, [
   { id: 'spark-corner-clerk', kind: 'corner', name: 'Clerk Jackie', x: 3, y: 2, face: 'down', look: { skin: 2, hair: 6, outfit: 1, style: 2 }, lines: ['The Game Corner.'] }
-], [], OW_ROOM_ROWS);
+], [], ['wwwwwwwwwwww', 'wHHHfHHHHHHw', 'wffffffffffw', 'wffffffffffw', 'wHfHfHfHfHfw', 'wffffffffffw', 'wPfffffffffw', 'wffffffffffw', 'wffffffffffw', 'wwwwwmwwwwww']);      // a row of slot machines
 OW_MAPS['spark-corner'].region = 'spark'; OW_MAPS['spark-corner'].palette = OW_SPARK_PALETTE;
 owSetTile('spark', 0, 6, '.');
-OW_MAPS.spark.warps.push({ x: 0, y: 6, to: 'spark-corner', tx: 3, ty: 5 });
+OW_MAPS.spark.warps.push({ x: 0, y: 6, to: 'spark-corner', tx: 5, ty: 8 });

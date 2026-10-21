@@ -847,3 +847,13 @@ test('the way past the second trainer on a route is free (he watches the grass, 
   assert.deepEqual(r.rooms, [[10, 12, true], [10, 12, true], [10, 12, true], [10, 12, true]]);
   assert.deepEqual(r.mat, [5, 9, 8]);
 });
+
+test('every room is big and furnished: the Center has a pink floor, houses wooden floors, the tower floors, hideouts, Game Corner and Safari Gate are 12 wide too', async () => {
+  const r = await ev(() => ({
+    center: OW_MAPS['ember-center'].rows.join('').includes('p'), house: OW_MAPS['ember-house'].rows.join('').includes('o'),
+    sizes: ['spark-tower-1', 'spark-tower-2', 'spark-tower-3', 'gloom-hideout', 'dusk-hideout', 'spark-corner', 'thistle-gate'].map((id) => OW_MAPS[id].rows[0].length + 'x' + OW_MAPS[id].rows.length),
+    exits: ['spark-tower-1', 'gloom-hideout', 'spark-corner'].map((id) => { const m = OW_MAPS[id]; return OW_MAPS[id].rows[m.warps[0].y].charAt(m.warps[0].x) === 'm' && owWalkable(m, m.start.x, m.start.y); }),
+    inTown: [['spark', 'spark-corner'], ['spark', 'spark-tower-1'], ['thistle', 'thistle-gate'], ['gloom', 'gloom-hideout']].map(([t, to]) => { const w = OW_MAPS[t].warps.find((p) => p.to === to), s = OW_MAPS[to].start; return w.tx === s.x && w.ty === s.y; })
+  }));
+  assert.deepEqual(r, { center: true, house: true, sizes: ['12x10', '12x10', '12x10', '12x10', '12x10', '12x10', '12x10'], exits: [true, true, true], inTown: [true, true, true, true] });
+});

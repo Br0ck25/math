@@ -58,7 +58,7 @@ OW_MAPS['thistle-gate'].region = 'thistle'; OW_MAPS['thistle-gate'].palette = OW
 OW_MAPS['safari-zone'] = {
   id: 'safari-zone', name: 'Safari Zone', region: 'thistle', start: { x: 10, y: 14 }, palette: OW_THISTLE_PALETTE,
   rows: (function () { const g = []; for (let y = 0; y < 16; y++) { let r = ''; for (let x = 0; x < 21; x++) r += y === 0 || x === 0 || x === 20 || (y === 15 && x !== 10) ? 'T' : y === 15 ? '.' : (y === 14 && x === 10) || ((y + x) % 9 === 0 && y % 3 === 0) ? ',' : (x % 6 === 3 && y % 5 === 2) ? 'T' : '"'; g.push(r); } return g; })(),
-  warps: [{ x: 10, y: 15, to: 'thistle-gate', tx: 3, ty: 5 }], npcs: [], objects: [], trees: {}, signs: {}
+  warps: [{ x: 10, y: 15, to: 'thistle-gate', tx: 5, ty: 8 }], npcs: [], objects: [], trees: {}, signs: {}
 };
 owSetTile('thistle', 0, 6, '.');
-OW_MAPS.thistle.warps.push({ x: 0, y: 6, to: 'thistle-gate', tx: 3, ty: 5 });
+OW_MAPS.thistle.warps.push({ x: 0, y: 6, to: 'thistle-gate', tx: 5, ty: 8 });

@@ -16,12 +16,12 @@ OW_MAPS.spark.signs['5,12'] = { id: 'spark-clock', text: 'The big clock! All its
 
 // The hideout in Duskhollow: a door in the rocks, two Scramblers, and their new boss.
 owSetTile('dusk', 14, 6, 'D');
-OW_MAPS.dusk.warps.push({ x: 14, y: 6, to: 'dusk-hideout', tx: 4, ty: 7 });
+OW_MAPS.dusk.warps.push({ x: 14, y: 6, to: 'dusk-hideout', tx: 4, ty: 8 });
 Object.assign(OW_MAPS, {
   'dusk-hideout': {
-    id: 'dusk-hideout', name: 'Scrambler Lair', region: 'dusk', start: { x: 4, y: 7 }, palette: OW_DUSK_PALETTE,
-    rows: ['wwwwwwwww', 'wSfffffSw', 'wfffffffw', 'wfrrrrrfw', 'wfffffffw', 'wfrrrrrfw', 'wfffffffw', 'wfffffffw', 'wwwwmwwww'],
-    warps: [{ x: 4, y: 8, to: 'dusk', tx: 14, ty: 7 }],
+    id: 'dusk-hideout', name: 'Scrambler Lair', room: true, region: 'dusk', start: { x: 4, y: 8 }, palette: OW_DUSK_PALETTE,
+    rows: ['wwwwwwwwwwww', 'wSfffffSQQHw', 'wfffffffffPw', 'wfrrrrrffffw', 'wffffffffffw', 'wfrrrrrffffw', 'wffffffffffw', 'wffffffffffw', 'wffffffffffw', 'wwwwmwwwwwww'],
+    warps: [{ x: 4, y: 9, to: 'dusk', tx: 14, ty: 7 }],
     npcs: [
       { id: 'dusk-fib', kind: 'trainer', name: 'Scrambler Fib', x: 2, y: 5, face: 'right', look: OW_SCRAMBLER_LOOK, lines: ['Shh! This is the new lair! Nobody finds us here!'], win: ['Oh no! Do not tell Boss Jumble!'] },
       { id: 'dusk-dot', kind: 'trainer', name: 'Scrambler Dot', x: 6, y: 3, face: 'left', look: { skin: 1, hair: 6, outfit: 7, style: 0 }, lines: ['Stop right there! The boss is busy!'], win: ['Alright, go on. Be kind to the boss!'] },

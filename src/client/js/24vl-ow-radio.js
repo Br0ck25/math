@@ -6,7 +6,7 @@ OW_STORY.push('radio-tower', 'radio-quiz');
 const OW_STORY_ITEMS = { 'radio-tower': 'stone' };
 const OW_STORY_KEYS = { 'radio-quiz': 'radio-card' };                  // a story beat that hands over a key item the first time                  // a story beat that hands over an item the first time
 (function () {
-  const stairs = function (up, down) { return ['wwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'w', 'wffffffw', 'wfrrrrfw', 'wffffffw', 'wffffffw', 'wwwmwwww']; };
+  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fQQHw', 'wffffffffffw', 'wfrrrrffEEfw', 'wfrrrrfffffw', 'wffffffffffw', 'wPfffffffPfw', 'wffffffffffw', 'wffffffffffw', 'wwwwwmwwwwww']; };
   const look = OW_SCRAMBLER_LOOK;
   const floor = function (n, up, down, npcs) {
     const m = owRoom('spark-tower-' + n, 'Radio Tower, floor ' + n, { to: 'spark', tx: 14, ty: 6 }, npcs, [], stairs(up, down));
@@ -31,6 +31,6 @@ const OW_STORY_KEYS = { 'radio-quiz': 'radio-card' };                  // a stor
     locked: 'The quiz counter is guarded by a Scrambler named Zam. Beat him first!', done: 'You already have your Radio Card. Enjoy the tips on the Gizmo radio!' };
   owSetTile('spark', 15, 6, 'x');
   OW_MAPS.spark.roads = Object.assign(OW_MAPS.spark.roads || {}, { '15,6': 'spark' });
-  OW_MAPS.spark.warps.push({ x: 15, y: 6, to: 'spark-tower-1', tx: 3, ty: 5 });
+  OW_MAPS.spark.warps.push({ x: 15, y: 6, to: 'spark-tower-1', tx: 5, ty: 8 });
 })();
 GIZMO_CALLS.push({ from: 'Radio news', text: 'Good news from Spark City: the Radio Tower is back on the air, and every number it reads out is right again!', when: function () { return state.overworld.story.indexOf('radio-tower') !== -1; } });

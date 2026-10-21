@@ -34,12 +34,12 @@ OW_MAPS.volt.signs['5,12'] = { id: 'volt-panel', text: 'The power panel! The wir
 
 // The hideout in Gloom Marsh: a door in the rocks, two Scramblers, and their boss (a boss from the boss list, a little above your buddy).
 owSetTile('gloom', 14, 6, 'D');
-OW_MAPS.gloom.warps.push({ x: 14, y: 6, to: 'gloom-hideout', tx: 4, ty: 7 });
+OW_MAPS.gloom.warps.push({ x: 14, y: 6, to: 'gloom-hideout', tx: 4, ty: 8 });
 Object.assign(OW_MAPS, {
   'gloom-hideout': {
-    id: 'gloom-hideout', name: 'Scrambler Hideout', region: 'gloom', start: { x: 4, y: 7 }, palette: OW_GLOOM_PALETTE,
-    rows: ['wwwwwwwww', 'wSfffffSw', 'wfffffffw', 'wfrrrrrfw', 'wfffffffw', 'wfrrrrrfw', 'wfffffffw', 'wfffffffw', 'wwwwmwwww'],
-    warps: [{ x: 4, y: 8, to: 'gloom', tx: 14, ty: 7 }],
+    id: 'gloom-hideout', name: 'Scrambler Hideout', room: true, region: 'gloom', start: { x: 4, y: 8 }, palette: OW_GLOOM_PALETTE,
+    rows: ['wwwwwwwwwwww', 'wSfffffSQQHw', 'wfffffffffPw', 'wfrrrrrffffw', 'wffffffffffw', 'wfrrrrrffffw', 'wffffffffffw', 'wffffffffffw', 'wffffffffffw', 'wwwwmwwwwwww'],
+    warps: [{ x: 4, y: 9, to: 'gloom', tx: 14, ty: 7 }],
     npcs: [
       { id: 'gloom-pix', kind: 'trainer', name: 'Scrambler Pix', x: 2, y: 5, face: 'right', look: OW_SCRAMBLER_LOOK, lines: ['Shh! This is the secret hideout! How did you find it?'], win: ['Oh no! Please do not tell Boss Scramble!'] },
       { id: 'gloom-dab', kind: 'trainer', name: 'Scrambler Dab', x: 6, y: 3, face: 'left', look: { skin: 1, hair: 6, outfit: 7, style: 0 }, lines: ['Halt! No one gets past me to see the boss!'], win: ['Alright, alright. You may pass. Be nice to the boss!'] },

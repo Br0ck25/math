@@ -153,8 +153,8 @@ for (const [map, zig, story, gems, sx, sy, start] of [['tide', 'tide-zig', 'tide
 test('the hideout in Gloom Marsh: a door in the rocks, two Scramblers, then Boss Scramble, a real boss from the boss list', async () => {
   await put('gloom', 14, 7, 'up');
   await page.evaluate(() => owMove('up'));
-  assert.deepEqual(await page.evaluate(() => [state.overworld.map, state.overworld.x, state.overworld.y, document.getElementById('ow-title').innerText]), ['gloom-hideout', 4, 7, 'Scrambler Hideout']);
-  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; owMove('up'); owMove('up'); owMove('up'); });       // walk up the middle: the boss sees you at 4,4
+  assert.deepEqual(await page.evaluate(() => [state.overworld.map, state.overworld.x, state.overworld.y, document.getElementById('ow-title').innerText]), ['gloom-hideout', 4, 8, 'Scrambler Hideout']);
+  await page.evaluate(() => { state.overworld.beat = ['gloom-pix', 'gloom-dab']; owMove('up'); owMove('up'); owMove('up'); owMove('up'); });       // walk up the middle: the boss sees you at 4,4
   await wait(300);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Boss Scramble');
   await page.click('#talk-next');

@@ -49,6 +49,8 @@ const OW_TILES = {
   'w': { t: 't-wall', solid: true },
   'C': { t: 't-counter', solid: true },
   'S': { t: 't-shelf', solid: true },
+  'p': { t: 't-floor-pink' },
+  'o': { t: 't-floor-wood' },
   'e': { t: 't-bed', solid: true },
   'E': { t: 't-table', solid: true },
   'P': { t: 't-plant', solid: true },
@@ -60,8 +62,8 @@ const OW_TILES = {
 // A small room: the mat in the bottom wall is the way out (see owRoom()).
 Object.keys(OW_GATE_CHARS).forEach(function (c) { OW_TILES[c] = { t: OW_GATES[OW_GATE_CHARS[c]].closed, solid: true, gate: OW_GATE_CHARS[c] }; });
 // Rooms are 12 wide and 10 tall, like Gold's: the people stand in the upper left (the nurse and the clerk behind a counter gap at x 3), the mat is the way out.
-const OW_ROOM_ROWS = ['wwwwwwwwwwww', 'wfffffffSSPw', 'wffffffffffw', 'wfrrrrffEEfw', 'wfrrrrfffffw', 'wffffffffffw', 'weefffffffPw', 'weeffffffffw', 'wffffffffffw', 'wwwwwmwwwwww'];
-const OW_CENTER_ROWS = ['wwwwwwwwwwww', 'wHfffffffQSw', 'wCCfCCCCCCCw', 'wffffffffffw', 'wffffffffffw', 'wPfffffffffw', 'wfffrrrrfffw', 'wfffrrrrfffw', 'wPffffffffPw', 'wwwwwmwwwwww'];
+const OW_ROOM_ROWS = ['wwwwwwwwwwww', 'wfffffffSSPw', 'wffffffffffw', 'wfrrrrffEEfw', 'wfrrrrfffffw', 'wffffffffffw', 'weefffffffPw', 'weeffffffffw', 'wffffffffffw', 'wwwwwmwwwwww'].map(function (r) { return r.replace(/f/g, 'o'); });      // wooden floor
+const OW_CENTER_ROWS = ['wwwwwwwwwwww', 'wHfffffffQSw', 'wCCfCCCCCCCw', 'wffffffffffw', 'wffffffffffw', 'wPfffffffffw', 'wfffrrrrfffw', 'wfffrrrrfffw', 'wPffffffffPw', 'wwwwwmwwwwww'].map(function (r) { return r.replace(/f/g, 'p'); });      // pink floor
 const OW_MART_ROWS = ['wwwwwwwwwwww', 'wSSSSSSSSSSw', 'wffffffffffw', 'wCCfCCCCCCCw', 'wffffffffffw', 'wSSffffffSSw', 'wffffffffffw', 'wSSffffffSSw', 'wffffffffffw', 'wwwwwmwwwwww'];
 function owRoom(id, name, exit, npcs, objects, rows) {
   rows = rows || OW_ROOM_ROWS;
