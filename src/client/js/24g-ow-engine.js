@@ -100,7 +100,7 @@ function owPaletteCss(palette) { return Object.keys(palette || {}).map(function 
 function owFruitDay() {
   const o = state.overworld, today = dayKey();
   if (o.fruitDay === today) return;
-  const bushes = owIds('pickup').filter(function (id) { return /-berries$/.test(id); });
+  const bushes = owIds('pickup').filter(function (id) { return /-(berries|apricorns)$/.test(id); });
   o.found = o.found.filter(function (id) { return bushes.indexOf(id) === -1; });
   o.fruitDay = today;
 }

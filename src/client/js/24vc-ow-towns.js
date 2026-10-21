@@ -5,15 +5,16 @@
 //  The edge columns at rows 4-8 are kept as they were: the side games (24vf and later) and the hideout doors cut their gaps there.
 //  A town that cannot be laid out in a few tries keeps its hand-written rows. Runs after the route blocks (24vb) and before the side games.
 // =====================================================================
-const OW_TOWN_SLOTS = { TL: [2, 2], TR: [10, 2], ML: [2, 7], MR: [10, 7], BL: [2, 11], BR: [10, 11] };      // the left column of the slot and the top row of the roof
+const OW_TOWN_SLOTS = { TL: [2, 2], TR: [10, 2], ML: [2, 7], MR: [10, 7], BL: [2, 11], BR: [10, 11], XL: [2, 15], XR: [10, 15] };      // the left column of the slot and the top row of the roof
 function owBuildTown(L, i, attempt) {
-  const m = OW_MAPS[L.town], rnd = owRng(L.town, 100 + attempt), old = m.rows, W = 16, H = 16;
+  const m = OW_MAPS[L.town], rnd = owRng(L.town, 100 + attempt), old = m.rows, W = 16, H = L.town === 'meadow' ? 16 : [16, 18, 20][i % 3];                  // towns differ in height: the first stays small, the others are 16, 18 or 20 tall
   const g = []; for (let y = 0; y < H; y++) { g.push([]); for (let x = 0; x < W; x++) g[y].push(','); }
-  for (let x = 0; x < W; x++) { g[0][x] = old[0].charAt(x); g[H - 1][x] = old[H - 1].charAt(x); }
+  for (let x = 0; x < W; x++) { g[0][x] = old[0].charAt(x); g[H - 1][x] = old[old.length - 1].charAt(x); }
   for (let y = 1; y < H - 1; y++) [0, 1, 14, 15].forEach(function (x) { g[y][x] = y >= 4 && y <= 8 ? old[y].charAt(x) : 'T'; });
   for (let y = 1; y < H - 1; y++) { g[y][7] = '.'; g[y][8] = '.'; }
   for (let x = 2; x <= 13; x++) { g[5][x] = '.'; g[6][x] = '.'; }
-  const names = Object.keys(OW_TOWN_SLOTS).sort(function () { return rnd() - 0.5; });
+  const slotNames = ['TL', 'TR', 'ML', 'MR', 'BL', 'BR'].concat(H === 20 ? ['XL', 'XR'] : []), extra = H === 18 ? ['XL', 'XR'] : [];
+  const names = slotNames.sort(function () { return rnd() - 0.5; });
   const roles = [['center', 4], ['mart', 4], ['house', 3], ['gym', 3]], doors = {}, used = {};
   const mark = function (x, y) { used[x + ',' + y] = 1; }, ents = {}, entNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (ents[(x + dx) + ',' + (y + dy)]) return true; return false; }, usedNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (used[(x + dx) + ',' + (y + dy)]) return true; return false; };
   roles.forEach(function (r, k) {
@@ -50,7 +51,7 @@ function owBuildTown(L, i, attempt) {
     grove: [3, 3, function (x, y) { return y < 2 || x === 1 ? 'T' : '*'; }],
     plaza: [3, 3, function (x, y) { return (x === 0 || x === 2) && (y === 0 || y === 2) ? '*' : 'd'; }]
   };
-  const pool = Object.keys(STAMPS), free = names.slice(4);
+  const pool = Object.keys(STAMPS), free = names.slice(4).concat(extra);
   let water = null;
   free.forEach(function (slot, k) {
     const sx = OW_TOWN_SLOTS[slot][0], sy = OW_TOWN_SLOTS[slot][1], pick = k === 0 && (/tide|coral/.test(L.land) || m.npcs.some(function (n) { return /fisher/.test(n.id); })) ? 'pond' : pool[Math.floor(rnd() * pool.length)], st = STAMPS[pick];
@@ -59,11 +60,12 @@ function owBuildTown(L, i, attempt) {
     if (!s) return;
     for (let y = 0; y < sw[1]; y++) for (let x = 0; x < sw[0]; x++) { g[s[1] + y][s[0] + x] = sw[2](x, y); mark(s[0] + x, s[1] + y); if (sw[2](x, y) === '~') water = [s[0] + x, s[1] + y]; }
   });
+  if (!water && (/tide|coral/.test(L.land) || m.npcs.some(function (n) { return /fisher/.test(n.id); }))) return null;      // a harbour town and the fisher's town must have water
   // people, signs and finds: on plain ground near the road, never on a lane row or beside another
-  const lanes = { 5: 1, 6: 1, 10: 1, 14: 1 };
+  const lanes = { 5: 1, 6: 1, 10: 1, 14: 1, 18: 1 };
   const cells = []; for (let y = 1; y < H - 1; y++) for (let x = 2; x < W - 2; x++) if (plain(x, y) && !lanes[y] && x !== 7 && x !== 8) cells.push([x, y]);
-  const place = function (score) {
-    const ok = cells.filter(function (c) { return plain(c[0], c[1]) && !entNear(c[0], c[1]); });
+  const place = function (score, pred) {
+    const ok = cells.filter(function (c) { return plain(c[0], c[1]) && !entNear(c[0], c[1]) && (!pred || pred(c)); });
     if (!ok.length) return null;
     let best = null, bs = Infinity; ok.forEach(function (c) { const s = score(c) + rnd() * 0.5; if (s < bs) { bs = s; best = c; } });
     mark(best[0], best[1]); ents[best[0] + ',' + best[1]] = 1; return best;
@@ -73,6 +75,7 @@ function owBuildTown(L, i, attempt) {
   for (let k = 0; k < npcs.length; k++) {
     const n = npcs[k]; let c;
     if (n.id === L.town + '-fisher' && water) c = place(function (cc) { return Math.abs(cc[0] - water[0]) + Math.abs(cc[1] - water[1]); });
+    else if (n.kind === 'trainer') c = place(station, function (cc) { const s = cc[0] < 7 ? 1 : -1, d = (cc[0] < 7 ? 7 : 8) - cc[0] > 0 ? 7 - cc[0] : cc[0] - 8; if (d > 4) return false; for (let t = 1; t <= d; t++) if (solid(at(cc[0] + s * t, cc[1]))) return false; return true; });      // a trainer looks at the road along a clear row
     else c = place(station);
     if (!c) return null; n.x = c[0]; n.y = c[1]; n.face = c[0] < 7 ? 'right' : 'left';
   }
@@ -82,7 +85,7 @@ function owBuildTown(L, i, attempt) {
   for (let y = 1; y < H - 1; y++) for (let x = 2; x < W - 2; x++) if (plain(x, y) && !lanes[y] && x !== 7 && x !== 8 && !entNear(x, y) && rnd() < 0.12) g[y][x] = '*';
   // everything must be reachable on foot from the start, as before
   const flood = function (gateOpen) {
-    const seen = {}, q = [[m.start.x, m.start.y]]; seen[m.start.x + ',' + m.start.y] = 1;
+    const seen = {}, q = [[7, H - 3]]; seen[7 + ',' + (H - 3)] = 1;
     const walk = function (x, y) { return x >= 0 && x < W && y >= 0 && y < H && (!solid(at(x, y)) || (gateOpen && at(x, y) === gateChar)) && !npcs.some(function (n) { return n.x === x && n.y === y; }); };
     while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { const x = c[0] + d[0], y = c[1] + d[1]; if (!seen[x + ',' + y] && walk(x, y)) { seen[x + ',' + y] = 1; q.push([x, y]); } }); }
     return seen;
@@ -97,6 +100,10 @@ function owDressTown(L, i) {
   const m = OW_MAPS[L.town]; let r = null;
   for (let attempt = 0; attempt < 60 && !r; attempt++) r = owBuildTown(L, i, attempt);
   if (!r) return;
+  const H = r.rows.length;
+  m.start = { x: 7, y: H - 3 };
+  m.warps.forEach(function (w) { if (w.y === 15 && OW_MAPS[w.to] && w.x >= 7 && w.x <= 8) w.y = H - 1; });                                  // the way back down moves with the bottom edge
+  OW_MAPS[L.routeIn].warps.forEach(function (w) { if (w.to === L.town && w.y === 0) w.ty = H - 2; });
   m.rows = r.rows; m.npcs = r.npcs; m.objects = r.objects; m.signs = r.signs; m.blocks = true;
   const rooms = { center: L.center, mart: L.mart, house: L.house };
   m.warps = m.warps.filter(function (w) { return [L.center, L.mart, L.house].indexOf(w.to) === -1; });

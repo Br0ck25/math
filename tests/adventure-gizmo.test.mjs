@@ -204,3 +204,23 @@ test('Dowser Fen gives the Itemfinder, and with it hidden finds sparkle within t
   });
   assert.deepEqual(r, { has: true, near: true, far: false, without: false, hidden: true });
 });
+
+test('Apricorn trees grow back daily and Kurt makes a special net from two of them', async () => {
+  await meet('grove-house', 6, 2);
+  await page.evaluate(() => closeTalk());
+  const r = await page.evaluate(() => {
+    const bush = OW_MAPS.route1.objects.find((o) => o.id === 'route1-apricorns'), real = dayKey;
+    dayKey = () => '2031-03-01'; renderOverworld(); state.items = {}; state.overworld.found = [];
+    owCollect(bush); const one = state.items.apricorn, gone = !owPickupAt(OW_MAPS.route1, bush.x, bush.y);
+    dayKey = () => '2031-03-02'; renderOverworld(); const back = !!owPickupAt(OW_MAPS.route1, bush.x, bush.y);
+    dayKey = real;
+    const npc = OW_MAPS['grove-house'].npcs.find((n) => n.id === 'grove-kurt');
+    state.items.apricorn = 1; OW_SERVICES.kurt(npc); document.querySelectorAll('#talk-choices button')[0].click();
+    const short = [state.items.apricorn, state.items.levelnet || 0, document.getElementById('talk-text').innerText];
+    state.items.apricorn = 5; OW_SERVICES.kurt(npc); document.querySelectorAll('#talk-choices button')[2].click();
+    return { one, gone, back, short, made: [state.items.apricorn, state.items.lurenet] };
+  });
+  assert.deepEqual([r.one, r.gone, r.back], [1, true, true]);
+  assert.match(r.short[2], /You need 2 Apricorns/);
+  assert.deepEqual([r.short[0], r.short[1], r.made], [1, 0, [3, 1]]);
+});

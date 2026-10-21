@@ -47,7 +47,7 @@ const ECON = {
     master: { levels: 3, minLevel: 90 }
   },
   // The Adventure map (24g-ow-engine.js): after a fight, `graceSteps` steps in tall grass are safe, then each grass step starts a wild fight with chance `grassChance`.
-  overworld: { grassChance: 0.18, repelSteps: 100, maxRepelSteps: 250, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, bikeMs: 60,
+  overworld: { grassChance: 0.18, repelSteps: 100, maxRepelSteps: 250, graceSteps: 4, saveEvery: 5, holdMs: 150, shoeMs: 95, bikeMs: 60, kurtApricorns: 2,
     // A trainer on the map sees the hero along the way it faces, up to `trainerSight` tiles (a trainer may set its own `sight`).
     trainerSight: 3,
     // Fishing (tap water with the Fishing Rod): this chance of a bite each try; a bite is a normal wild fight with a water buddy.
@@ -90,7 +90,7 @@ const ECON = {
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
   vitamins: { max: 10, hp: 3, stat: 2 },                                                  // Gold's vitamins: each raises one stat for good, up to `max` of each kind per buddy (+hp max HP, +stat points)
-  items: { potion: 300, net: 200, greatnet: 600, ultranet: 1200, levelnet: 400, fastnet: 400, lurenet: 400, friendnet: 400, repel: 350, superpotion: 700, hyperpotion: 1200, hpup: 9800, protein: 9800, iron: 9800, carbos: 9800, calcium: 9800, maxpotion: 2500, fullrestore: 3000, fullheal: 600, antidote: 100, burnheal: 250, iceheal: 250, awakening: 250, parlyzheal: 200, revive: 1500, elixir: 1500, xattack: 500, xdefend: 550, xspeed: 350, maxrepel: 700, stone: 2100, ether: 1200, ppup: 9800, escaperope: 550 },
+  items: { potion: 300, net: 200, greatnet: 600, ultranet: 1200, levelnet: 400, fastnet: 400, lurenet: 400, friendnet: 400, repel: 350, superpotion: 700, hyperpotion: 1200, hpup: 9800, protein: 9800, iron: 9800, carbos: 9800, calcium: 9800, maxpotion: 2500, fullrestore: 3000, fullheal: 600, antidote: 100, burnheal: 250, iceheal: 250, awakening: 250, parlyzheal: 200, revive: 1500, maxrevive: 4000, apricorn: 0, elixir: 1500, xattack: 500, xdefend: 550, xspeed: 350, maxrepel: 700, stone: 2100, ether: 1200, ppup: 9800, escaperope: 550 },
   duel: { roomXp: 8, roomRewardedPerDay: 10, stakes: [0, 5, 10, 25], stakeCoverage: 2, questions: 10, ttlDays: 3, maxPerHour: 30 },
   // Adaptive practice (see 07b-adaptive.js). Levels are per math type: -1 easier, 0 normal (the parent's grade), +1 challenge.
   adaptive: {

@@ -857,3 +857,27 @@ test('every room is big and furnished: the Center has a pink floor, houses woode
   }));
   assert.deepEqual(r, { center: true, house: true, sizes: ['12x10', '12x10', '12x10', '12x10', '12x10', '12x10', '12x10'], exits: [true, true, true], inTown: [true, true, true, true] });
 });
+
+test('a Max Revive wakes a resting buddy with all its HP', async () => {
+  await begin();
+  await ev(() => {
+    if (!ab.party.some((x) => x !== abMe())) ab.party.push(Object.assign({}, abMe(), { id: 'ghost', name: 'Ghost', hp: 0, moves: abMe().moves.map((m) => Object.assign({}, m)) }));
+    const down = ab.party.find((x) => x !== abMe()); down.hp = 0; window.__down = down;
+    state.items.maxrevive = 1; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('maxrevive');
+  });
+  await menu();
+  assert.equal(await ev(() => __down.hp === __down.max && __down.max > 0), true);
+});
+
+test('towns differ in height (16, 18 or 20), and the road into each still lands on its bottom gap and the way back leads to the route', async () => {
+  const r = await ev(() => {
+    const towns = OW_LANDS.map((L) => ({ L, m: OW_MAPS[L.town], route: OW_MAPS[L.routeIn] }));
+    const heights = new Set(towns.map((t) => t.m.rows.length));
+    const ok = towns.every(({ L, m, route }) => {
+      const up = route.warps.find((w) => w.to === L.town && w.y === 0), down = m.warps.find((w) => w.to === L.routeIn);
+      return up.ty === m.rows.length - 2 && owWalkable(m, up.tx, up.ty) && down.y === m.rows.length - 1 && m.start.y === m.rows.length - 3 && owWalkable(m, m.start.x, m.start.y);
+    });
+    return { heights: [...heights].sort(), ok };
+  });
+  assert.deepEqual(r, { heights: [16, 18, 20], ok: true });
+});

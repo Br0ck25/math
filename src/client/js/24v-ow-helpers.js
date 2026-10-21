@@ -77,3 +77,18 @@ function owTeach(pet, m, i) {
 }
 owAddNpc('volt-house', { id: 'volt-cyclist', kind: 'gift', gift: 'bicycle', name: 'Cyclist Ray', x: 5, y: 2, face: 'down', look: { skin: 2, hair: 6, outfit: 3, style: 2 }, lines: ['I ride all day through Volt Valley!', 'You walk everywhere? Take my spare Bicycle!'], after: ['Hold a direction on the map to ride. Ride safe!'] });
 owAddNpc('ember-house', { id: 'ember-dowser', kind: 'gift', gift: 'itemfinder', name: 'Dowser Fen', x: 5, y: 2, face: 'down', look: { skin: 1, hair: 3, outfit: 6, style: 0 }, lines: ['I find things that nobody sees!', 'Take my Itemfinder. Hidden finds sparkle when you are close.'], after: ['Walk about and watch for sparkles. Some finds hide on every route!'] });
+// Kurt (Gold's Apricorn ball maker): two Apricorns from the route trees make one special net.
+const KURT_NETS = [['levelnet', 'Level Net'], ['fastnet', 'Fast Net'], ['lurenet', 'Lure Net'], ['friendnet', 'Friend Net']];
+OW_SERVICES.kurt = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), cost = ECON.overworld.kurtApricorns;
+  openTalk({ name: npc.name, art: art, lines: ['I make special nets from Apricorns. ' + cost + ' Apricorns make one. You have ' + (state.items.apricorn || 0) + '.'], choices: KURT_NETS.map(function (n) {
+    return { label: n[1], run: function () {
+      closeTalk();
+      if ((state.items.apricorn || 0) < cost) { soundWrong(); openTalk({ name: npc.name, art: art, lines: ['You need ' + cost + ' Apricorns. Shake the trees on the routes!'] }); return; }
+      state.items.apricorn -= cost; if (!state.items.apricorn) delete state.items.apricorn;
+      state.items[n[0]] = Math.min(99, (state.items[n[0]] || 0) + 1); saveState();
+      openTalk({ name: npc.name, art: art, lines: ['Here is your ' + n[1] + '!'] });
+    } };
+  }) });
+};
+owAddNpc('grove-house', { id: 'grove-kurt', kind: 'kurt', name: 'Kurt', x: 6, y: 2, face: 'down', look: { skin: 2, hair: 2, outfit: 5, style: 0 }, lines: ['I make nets.'] });

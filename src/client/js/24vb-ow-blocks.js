@@ -88,6 +88,8 @@ function owBlockRoute(L, i, attempt) {
     const o = objects[k]; if (/nook/.test(o.id)) continue;
     const s = take(open()); if (!s) return null; o.x = s[0]; o.y = s[1]; mark(s[0], s[1]);
   }
+  const apr = take(open()); if (!apr) return null;                                                        // an Apricorn tree (Kurt makes nets from them)
+  mark(apr[0], apr[1]); objects.push({ id: L.routeIn + '-apricorns', type: 'pickup', x: apr[0], y: apr[1], give: 'apricorn' });
   const hide = take(open()); if (!hide) return null;                                                      // a hidden find (Itemfinder) in the open, away from the others
   mark(hide[0], hide[1]); objects.push({ id: L.routeIn + '-hidden', type: 'pickup', hidden: true, x: hide[0], y: hide[1], give: i % 2 ? 'net' : 'gems' });
   // the nook: a gate in a tree wall with two finds behind it

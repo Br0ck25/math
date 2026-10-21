@@ -21,6 +21,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Vitamins and berry bushes:** HP Up, Protein, Iron, Carbos and Calcium (Mart, 5 badges) raise one stat of one buddy for good, up to ten of each (Stats tab); the berry bush on each route grows back every day.
 - **Special nets, Bicycle, Itemfinder:** the Level Net (x2/x4/x8 by level), Fast Net (x4 on faster foes), Lure Net (x3 on fished ones) and Friend Net (a caught buddy starts as a good friend) are sold from 3-4 badges; Cyclist Ray in Volt Valley gives the Bicycle (faster hold-to-walk) and Dowser Fen in Ember Hills the Itemfinder, which shows a hidden find on every route within three tiles.
 - **Rooms:** the house, Buddy Center and Mart rooms are 12 x 10 (pink floor in the Center, wood in houses, a patterned rug; the Radio Tower floors, hideouts, Game Corner and Safari Gate too) with a bed, table, plants, a healing machine, a PC and shelves, and black around them as in Gold; the second trainer on a route watches the grass, so the road can be passed without a battle (the first one watches the road, as Gold's do).
+- **Apricorns, Kurt and Max Revive:** an Apricorn tree on every route grows back daily; Kurt in Leaf Grove's house turns two Apricorns into a Level, Fast, Lure or Friend Net; the Max Revive is a Game Corner prize. Towns are 16, 18 or 20 tall.
 - **Seamless edges:** past the top or bottom of a route the map shows the next town in its own colours, lined up with where the edge warp lands, with that map's people and finds. The towns are still hand-written rows joined by warps, not Gold's blocks with connections.
 - **Forced grass:** every route has a band of tall grass across the whole road, so there is no way past without stepping on it (Repel helps).
 - **Items:** Ether, PP Up (up to three times a move) and Escape Rope are in.
@@ -39,7 +40,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Stats:** a fixed build per kind (hand-tuned for about 40), no hidden DVs, no stat experience.
 
 ## Still missing
-0. **From the pret/pokegold item list:** Max Revive (Gold's marts do not sell it) and Kurt's Apricorn balls (the special nets are sold in Marts instead).
+0. **From the pret/pokegold item list:** nothing from the pret item list that a mart sells (Max Revive is a Game Corner prize, as in Gold).
 1. **Wild lists and teams written for every place:** all sixteen routes now have hand-written wild tables, and every route and side-path trainer and every gym trainer has a hand-written team. Gym leaders are fixed per land but drawn from the boss list, and learnsets are generated per kind.
 2. **More side games:** only one game of each kind exists (one slot machine, one Safari field, one Tower mode).
 3. **Seventeen types and the abilities of later games** are outside Gold anyway.

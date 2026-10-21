@@ -36,6 +36,8 @@ const ITEM_LOOKS = {
   awakening: ['💊', 'Awakening', 'Wakes a sleeping buddy in a battle'],
   parlyzheal: ['💊', 'Parlyz Heal', 'Cures paralysis in a battle'],
   fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
+  maxrevive: ['✨', 'Max Revive', 'Wakes a resting buddy in a battle with all its HP'],
+  apricorn: ['🍑', 'Apricorn', 'Kurt makes special nets from them'],
   revive: ['✨', 'Revive', 'Wakes a resting buddy in a battle with half its HP'],
   repel: ['🧴', 'Repel', 'No wild buddies in the grass for ' + ECON.overworld.repelSteps + ' steps']
 };
