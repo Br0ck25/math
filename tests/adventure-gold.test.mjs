@@ -740,7 +740,7 @@ test('every route is laid out from blocks: the road winds, each trainer looks at
     if (!m.blocks) out.push('not blocks');
     const bend = m.rows.filter((row) => row.charAt(6) !== '.' || row.charAt(7) !== '.').length;
     if (bend < 8) out.push('road does not wind');
-    m.npcs.filter((n) => n.kind === 'trainer' && !/swimmer/.test(n.id)).forEach((n) => {
+    m.npcs.filter((n) => n.kind === 'trainer' && !/swimmer/.test(n.id)).slice(0, 1).forEach((n) => {
       const d = OW_STEP[n.face]; let hit = false;
       for (let i = 1; i <= 4 && !hit; i++) { if (!owWalkable(m, n.x + d[0] * i, n.y + d[1] * i)) break; hit = m.rows[n.y + d[1] * i].charAt(n.x + d[0] * i) === '.'; }
       if (!hit) out.push(n.id + ' does not look at the road');
@@ -829,4 +829,21 @@ test('the special nets: Level Net by level ratio, Fast Net on faster foes, Lure 
   assert.deepEqual(r, { level: 8, level2: 2, level3: 1, fast: 4, slow: 1, lure: 1, lure2: 3 });
   await page.waitForFunction(() => !ab, null, { timeout: 30000 });
   assert.equal(await ev(() => happyOf('fox')), 200);
+});
+
+test('the way past the second trainer on a route is free (he watches the grass, not the road), and rooms are big like Gold\'s', async () => {
+  const r = await ev(() => {
+    const bad = OW_LANDS.map((L) => {
+      const m = OW_MAPS[L.routeIn], t = m.npcs.filter((n) => n.kind === 'trainer' && !/swimmer|riley/.test(n.id))[1];
+      if (!t) return '';
+      for (let y = 0; y < m.rows.length; y++) for (let x = 0; x < m.rows[0].length; x++) if (m.rows[y].charAt(x) === '.' && (owTrainerSeeing(m, x, y) || {}).id === t.id) return L.routeIn + ' sees the road';
+      return '';
+    }).filter(Boolean);
+    const rooms = ['meadow-house', 'meadow-center', 'meadow-mart', 'hollow-home'].map((id) => [OW_MAPS[id].rows.length, OW_MAPS[id].rows[0].length, OW_MAPS[id].rows.join('').match(/[SPQHCEe]/g).length > 8]);
+    const mat = OW_MAPS['meadow-center'].warps[0];
+    return { bad, rooms, mat: [mat.x, mat.y, OW_MAPS['meadow-center'].start.y] };
+  });
+  assert.deepEqual(r.bad, []);
+  assert.deepEqual(r.rooms, [[10, 12, true], [10, 12, true], [10, 12, true], [10, 12, true]]);
+  assert.deepEqual(r.mat, [5, 9, 8]);
 });

@@ -49,16 +49,24 @@ const OW_TILES = {
   'w': { t: 't-wall', solid: true },
   'C': { t: 't-counter', solid: true },
   'S': { t: 't-shelf', solid: true },
+  'e': { t: 't-bed', solid: true },
+  'E': { t: 't-table', solid: true },
+  'P': { t: 't-plant', solid: true },
+  'Q': { t: 't-pc', solid: true },
+  'H': { t: 't-machine', solid: true },
   'r': { t: 't-rug' },
   'm': { t: 't-mat' }
 };
 // A small room: the mat in the bottom wall is the way out (see owRoom()).
 Object.keys(OW_GATE_CHARS).forEach(function (c) { OW_TILES[c] = { t: OW_GATES[OW_GATE_CHARS[c]].closed, solid: true, gate: OW_GATE_CHARS[c] }; });
-const OW_ROOM_ROWS = ['wwwwwwww', 'wSffffSw', 'wffffffw', 'wfrrrrfw', 'wffffffw', 'wffffffw', 'wwwmwwww'];
-const OW_CENTER_ROWS = ['wwwwwwww', 'wfffffSw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wfrrrrfw', 'wwwmwwww'];
-const OW_MART_ROWS = ['wwwwwwww', 'wSSSSSSw', 'wffffffw', 'wCCfCCCw', 'wffffffw', 'wffffffw', 'wwwmwwww'];
+// Rooms are 12 wide and 10 tall, like Gold's: the people stand in the upper left (the nurse and the clerk behind a counter gap at x 3), the mat is the way out.
+const OW_ROOM_ROWS = ['wwwwwwwwwwww', 'wfffffffSSPw', 'wffffffffffw', 'wfrrrrffEEfw', 'wfrrrrfffffw', 'wffffffffffw', 'weefffffffPw', 'weeffffffffw', 'wffffffffffw', 'wwwwwmwwwwww'];
+const OW_CENTER_ROWS = ['wwwwwwwwwwww', 'wHfffffffQSw', 'wCCfCCCCCCCw', 'wffffffffffw', 'wffffffffffw', 'wPfffffffffw', 'wfffrrrrfffw', 'wfffrrrrfffw', 'wPffffffffPw', 'wwwwwmwwwwww'];
+const OW_MART_ROWS = ['wwwwwwwwwwww', 'wSSSSSSSSSSw', 'wffffffffffw', 'wCCfCCCCCCCw', 'wffffffffffw', 'wSSffffffSSw', 'wffffffffffw', 'wSSffffffSSw', 'wffffffffffw', 'wwwwwmwwwwww'];
 function owRoom(id, name, exit, npcs, objects, rows) {
-  return { id: id, name: name, region: 'meadow', start: { x: 3, y: 5 }, rows: rows || OW_ROOM_ROWS, warps: [{ x: 3, y: 6, to: exit.to, tx: exit.tx, ty: exit.ty }], npcs: npcs || [], objects: objects || [], signs: {} };
+  rows = rows || OW_ROOM_ROWS;
+  const mat = Math.max(0, rows[rows.length - 1].indexOf('m')), my = rows.length - 1;                    // the mat in the bottom wall is the way out
+  return { id: id, name: name, room: true, region: 'meadow', start: { x: mat, y: my - 1 }, rows: rows, warps: [{ x: mat, y: my, to: exit.to, tx: exit.tx, ty: exit.ty }], npcs: npcs || [], objects: objects || [], signs: {} };
 }
 const OW_MAPS = {
   hollow: {
@@ -80,7 +88,7 @@ const OW_MAPS = {
     ],
     warps: [
       { x: 7, y: 0, to: 'route1', tx: 6, ty: 22 }, { x: 8, y: 0, to: 'route1', tx: 7, ty: 22 },
-      { x: 4, y: 4, to: 'hollow-home', tx: 3, ty: 5 }, { x: 11, y: 8, to: 'hollow-house', tx: 3, ty: 5 }
+      { x: 4, y: 4, to: 'hollow-home', tx: 5, ty: 8 }, { x: 11, y: 8, to: 'hollow-house', tx: 5, ty: 8 }
     ],
     npcs: [],
     objects: [],

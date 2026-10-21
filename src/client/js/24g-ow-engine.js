@@ -89,6 +89,7 @@ function owFollowerHtml() {
 // What lies past the top or bottom edge of a map: the tile of the neighbour that the edge warp leads to, lined up so that stepping through the warp does not move the view
 // (route y -1 is the town's row ty - 1). Returns the tile and the neighbour's colours, or null when the edge has no way on.
 function owBeyond(map, x, y) {
+  if (map.room) return null;                                                                              // inside a building nothing shows past the wall
   const n = map.rows.length, edge = y < 0 ? 0 : n - 1, w = (y < 0 || y >= n) && map.warps.filter(function (p) { return p.y === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
   if (!w) return null;
   const nm = OW_MAPS[w.to], nx = clamp(x + w.tx - w.x, 0, nm.rows[0].length - 1), ny = clamp(w.ty + (y - w.y), 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
@@ -113,7 +114,7 @@ function renderOverworld() {
     for (let vx = 0; vx < g.cols; vx++) {
       const x = o.x - hx + vx, y = o.y - hy + vy;
       const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
-      const shown = t || (beyond && beyond.t) || owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1));
+      const shown = t || (beyond && beyond.t) || (map.room ? null : owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1)));      // a room is surrounded by black, as in Gold
       h += '<span class="ow-cell"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
       if (beyond) farActors.push([beyond, vx, vy]);
     }

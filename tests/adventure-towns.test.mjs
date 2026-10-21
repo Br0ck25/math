@@ -151,7 +151,7 @@ test('a door leads into a room and the mat leads out, to the tile south of the d
   await put('hollow', 4, 5, 'up');
   await page.evaluate(() => owMove('up'));
   let o = await state_();
-  assert.deepEqual([o.map, o.x, o.y], ['hollow-home', 3, 5]);
+  assert.deepEqual([o.map, o.x, o.y], ['hollow-home', 5, 8]);
   assert.equal(await page.evaluate(() => document.getElementById('ow-title').innerText), 'Home');
   assert.equal(await page.evaluate(() => { ECON.overworld.grassChance = 1; owSafe = 0; owMove('up'); owMove('down'); owMove('down'); return !!ab; }), false);
   o = await state_();
@@ -226,7 +226,7 @@ test('a saved found list is repaired: unknown or repeated ids are dropped', asyn
   });
   assert.deepEqual(r[0].found, ['hollow-home-gem', 'meadow-ore']);
   assert.deepEqual(r[1].found, []);
-  assert.deepEqual([r[2].x, r[2].y], [3, 5]);
+  assert.deepEqual([r[2].x, r[2].y], [5, 8]);
 });
 
 test('Guide Ivy greets the hero in Meadow Town', async () => {

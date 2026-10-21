@@ -72,6 +72,10 @@ function owBlockRoute(L, i, attempt) {
         const x = xr + s * dx; if (done || x < 1 || x > 12 || roadAt(x, y) || !ground(x, y)) return;
         for (let t = 1; t < dx; t++) if (!walk(xr + s * t, y)) return;
         n.x = x; n.y = y; n.face = s < 0 ? 'right' : 'left'; mark(x, y); done = true;
+        if (k === 1 && !/riley/.test(n.id)) {                                               // the second trainer watches the grass, not the road: the way past him is free (a battle only if you walk up and talk)
+          const clear = function (dy) { for (let t = 1; t <= 3; t++) { if (!walk(x, y + dy * t)) return true; if (roadAt(x, y + dy * t)) return false; } return true; };
+          n.face = clear(1) ? 'down' : clear(-1) ? 'up' : ''; if (!n.face) { done = false; delete used[x + ',' + y]; }
+        }
       }); }); });
     }
     if (!done) return null;
