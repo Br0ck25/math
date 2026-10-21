@@ -94,7 +94,7 @@ test('Riley and the Ace trainers are a little stronger than a normal trainer (le
   const r = await page.evaluate(() => {
     state.region = 'meadow';
     const lv = (npc) => { const d = []; for (let i = 0; i < 24; i++) { ab = null; startTrainerFight(npc); d.push(Math.min(...ab.foes.map((f) => f.level))); ab = null; } return d; };
-    const riley = lv(owNpcById('walk-riley')), ace = lv(owNpcById('walk-joule')), plain = lv(owNpcById('route2-brick'));
+    const riley = lv(owNpcById('walk-riley')), ace = lv(owNpcById('walk-joule')), plain = lv({ id: 'plain-test', name: 'Plain', kind: 'trainer' });
     return { rileyMin: Math.min(...riley), aceMin: Math.min(...ace), plainMax: Math.max(...plain), rb: owNpcById('walk-riley').levelBonus, ab: owNpcById('walk-joule').levelBonus };
   });
   assert.ok(r.rileyMin >= 2 + r.rb && r.aceMin >= 2 + r.ab && r.plainMax <= 5, JSON.stringify(r));

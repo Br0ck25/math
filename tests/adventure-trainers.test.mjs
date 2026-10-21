@@ -74,7 +74,7 @@ test('Battle! starts a trainer battle on the battle screen: the trainer sends ou
   await startPia();
   await menu();
   const r = await page.evaluate(() => ({ kind: ab.kind, name: ab.name, npc: ab.npc.id, foes: ab.foes.length, gym: state.gym, map: document.getElementById('overworld-modal').style.display, screen: document.getElementById('ab-modal').style.display, talk: document.getElementById('talk-modal').style.display }));
-  assert.deepEqual(r, { kind: 'trainer', name: 'Scout Pia', npc: 'route1-pia', foes: 1, gym: null, map: 'none', screen: 'flex', talk: 'none' });
+  assert.deepEqual(r, { kind: 'trainer', name: 'Scout Pia', npc: 'route1-pia', foes: 2, gym: null, map: 'none', screen: 'flex', talk: 'none' });
   assert.deepEqual(errors, []);
 });
 
@@ -86,8 +86,15 @@ test('a trainer sends out more buddies as you win badges', async () => {
 test('winning pays the prize money, marks the trainer beaten, and brings the map back with the trainer\'s words', async () => {
   await startPia();
   await menu();
-  const gems = await page.evaluate(() => { state.gems = 0; return state.gems; }), lvl = await page.evaluate(() => abFoe().level);
-  await page.evaluate(() => { abFoe().hp = 1; abFight(); abAnswer(ab.q.ans); abUseMove(0); });
+  const gems = await page.evaluate(() => { state.gems = 0; return state.gems; }), lvl = await page.evaluate(() => ab.foes[ab.foes.length - 1].level);
+  await page.evaluate(() => { Math.random = () => 0.3; });
+  for (let k = 0; k < 10; k++) {
+    await page.waitForFunction(() => !ab || (!ab.busy && (ab.phase === 'menu' || ab.phase === 'learn')), null, { timeout: 30000 });
+    if (!(await page.evaluate(() => !!ab))) break;
+    if (await page.evaluate(() => ab.phase === 'learn')) { await page.evaluate(() => abLearnChoose(-1)); continue; }
+    await page.evaluate(() => { ab.foes.forEach((f) => { f.hp = 1; f.atk = 1; f.spc = 1; }); abFight(); abAnswer(ab.q.ans); abUseMove(0); });
+    await page.waitForTimeout(300);
+  }
   await over();
   await page.waitForFunction(() => document.getElementById('talk-modal').style.display === 'flex');
   const r = await page.evaluate(() => ({ gems: state.gems, beat: state.overworld.beat.slice(), ow: document.getElementById('overworld-modal').style.display, name: document.getElementById('talk-name').innerText, words: document.getElementById('talk-text').innerText, pos: [state.overworld.map, state.overworld.x, state.overworld.y] }));

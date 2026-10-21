@@ -255,6 +255,8 @@ function startTrainerFight(npc) {
   owRelease();
   if (npc.kind === 'boss') { abStartBoss(npc); return; }
   const rematch = phoneReady() === npc.id, foes = [], n = clamp(1 + Math.floor(state.badges.length / 3) + (rematch ? 1 : 0), 1, 3), lvl = abWildLevel() + (npc.levelBonus || 0) + (rematch ? ECON.phone.levels : 0);
+  const team = OW_TEAMS[npc.id];
+  if (team) { abStart({ kind: 'trainer', name: npc.name, npc: npc, rematch: rematch, foes: team.map(function (t) { return { id: t[0], level: clamp(t[1] + (rematch ? ECON.phone.levels : 0), 2, MAX_LEVEL) }; }) }); return; }
   for (let i = 0; i < n; i++) foes.push({ id: rollWildSpecies(foes.map(function (f) { return f.id; })).id, level: clamp(lvl + rnd(0, 1), 2, MAX_LEVEL) });     // a trainer's buddies are a little above the land's wild ones
   abStart({ kind: 'trainer', name: npc.name, npc: npc, foes: foes, rematch: rematch });
 }

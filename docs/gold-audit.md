@@ -9,7 +9,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Money:** only trainers pay; Marts buy items back at half price; math signs are practice and pay nothing. Prize = class base x level of the last buddy (ordinary trainers 16, leaders, Elite Four, Champion and Master 100). Wild buddies, level-ups, badges and story beats pay nothing.
 - **World:** towns, routes, caves-as-nooks, gyms (trainers then leader), eight badges, charms standing in for HM gates, Elite Four then Champion, a second journey with eight more gyms and a final master, Buddy Centers that heal for free, Marts with stock that grows with badges, Day Care with eggs, trade NPCs, a trade evolution, roaming legend, shiny buddies, time of day, shake trees, fishing rods (Old, Good, Super), Repel, Gizmo (map, clock, calls, tips), Dex with seen and caught, rival fights.
 - **Moves:** every kind has its own learnset (two moves at the start, about ten by level 50, a new one every 6 to 8 levels), six stat moves with Gold's stages, and TMs: each gym leader gives one and a Move Tutor teaches it (an element TM only to buddies of that type).
-- **Wild tables:** every route and side path has its own five kinds with set odds (30, 30, 20, 15, 5), a level range around the route's level that rises route by route, and morning, day and night variants.
+- **Wild tables:** every route and side path has its own hand-written five kinds with set odds (30, 30, 20, 15, 5), a level range around the route's level that rises route by route, and morning, day and night variants.
 - **Friendship and obedience:** wins, levels and walks raise a buddy's friendship (a faint lowers it) and four kinds evolve when it is high; a buddy from a Trader disobeys above the level its badges allow (10 plus 10 a badge); eggs can pass a parent's TM move.
 - **Forced grass:** every route has a band of tall grass across the whole road, so there is no way past without stepping on it (Repel helps).
 - **Items:** Ether, PP Up (up to three times a move) and Escape Rope are in.
@@ -28,6 +28,6 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Stats:** a fixed build per kind (hand-tuned for about 40), no hidden DVs, no stat experience.
 
 ## Still missing
-1. **Hand-written content for the far journey:** the first journey's eight routes have hand-written wild tables; the eight far routes and all trainer teams are generated from fixed rules, and learnsets are generated per kind.
+1. **Wild lists and teams written for every place:** all sixteen routes now have hand-written wild tables, and every route and side-path trainer and every gym trainer has a hand-written team. Gym leaders are fixed per land but drawn from the boss list, and learnsets are generated per kind.
 2. **More side games:** only one game of each kind exists (one slot machine, one Safari field, one Tower mode).
 3. **Seventeen types and the abilities of later games** are outside Gold anyway.

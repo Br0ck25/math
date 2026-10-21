@@ -12,18 +12,22 @@ function abTeamOf(element, n, level) {
   for (let i = 0; i < n; i++) { let sp = pick(pool); for (let t = 0; t < 4 && out.some(function (f) { return f.id === sp.id; }); t++) sp = pick(pool); out.push({ id: sp.id, level: clamp(level + rnd(0, 1), 2, MAX_LEVEL) }); }
   return out;
 }
-function abBossIndex(element) {
+// A boss of the element for a story fight; with a `salt` (a gym's land id) it is always the same one, so a gym keeps its leader.
+function abBossIndex(element, salt) {
   const cands = monstersList.map(function (_, i) { return i; }).filter(function (i) { return (!element || monstersList[i].element === element) && !monstersList[i].slays && bossAvailable(i); });
-  return pick(cands);
+  if (!salt) return pick(cands);
+  let h = 3; for (let i = 0; i < salt.length; i++) h = (h * 31 + salt.charCodeAt(i)) % 10007;
+  return cands[h % cands.length];
 }
 
 // ----- gyms -----
 function abGymRounds(id, rematch) {
-  const r = regionById(id), base = (ECON.map.levels[id] || 1) + (rematch ? ECON.map.rematch.levels : 0), rounds = [];
-  for (let s = 0; s < ECON.map.trainers; s++) rounds.push({ kind: 'trainer', name: gymTrainer(id, s), foes: abTeamOf(r.element, s === ECON.map.trainers - 1 ? 2 : 1, base + s) });
-  const boss = abBossIndex(r.element), lvl = base + 2;
+  const r = regionById(id), up = rematch ? ECON.map.rematch.levels : 0, teams = GYM_TEAMS[id], rounds = [];
+  const mons = function (team, plus) { return team.map(function (t) { return { id: t[0], level: clamp(t[1] + up + (plus || 0), 2, MAX_LEVEL) }; }); };
+  for (let s = 0; s < ECON.map.trainers; s++) rounds.push({ kind: 'trainer', name: gymTrainer(id, s), foes: mons(teams[s % teams.length]) });
+  const boss = abBossIndex(r.element, id), lvl = (ECON.map.levels[id] || 1) + up + 3;
   markBossSeen(boss);
-  rounds.push({ kind: 'leader', bossIdx: boss, bossLevel: lvl + 1, name: monstersList[boss].name, foes: [{ boss: boss, level: lvl + 1 }].concat(abTeamOf(r.element, 2, lvl)) });
+  rounds.push({ kind: 'leader', bossIdx: boss, bossLevel: lvl, name: monstersList[boss].name, foes: [{ boss: boss, level: lvl }].concat(mons(teams[teams.length - 1], 1)) });
   return rounds;
 }
 // The gym door was opened (owEnterGym): a fresh chain, a badge at the end.

@@ -272,7 +272,7 @@ test('each route has its own wild table: five kinds with set odds, levels around
     out.night = t.night.join() !== t.day.join();
     const seen = new Set(); let lo = 99, hi = 0; for (let i = 0; i < 400; i++) { const x = owRollRoute('route3'); seen.add(x.id); lo = Math.min(lo, x.level); hi = Math.max(hi, x.level); }
     out.kinds = seen.size <= 5; out.levels = lo >= (t.lo !== undefined ? t.lo : t.center - 1) && hi <= (t.hi !== undefined ? t.hi : t.center + 1) + 1;
-    out.hand = Object.keys(OW_WILD_HAND).every((k) => ['day', 'morning', 'night'].every((p) => OW_WILD_HAND[k][p].length === 5 && OW_WILD_HAND[k][p].every((id) => getSpecies(id)))) && Object.keys(OW_WILD_HAND).length === 8;
+    out.hand = Object.keys(OW_WILD_HAND).every((k) => ['day', 'morning', 'night'].every((p) => OW_WILD_HAND[k][p].length === 5 && OW_WILD_HAND[k][p].every((id) => getSpecies(id)))) && Object.keys(OW_WILD_HAND).length === 16 && OW_LANDS.every((L) => OW_WILD_HAND[L.routeIn]);
     out.side = owWildTable('route3-side').center === t.center + 1; out.town = owWildTable('meadow');
     return out;
   });
@@ -498,6 +498,38 @@ test('the Radio Tower takeover: a door in Spark City (Spark Badge), two Scramble
     return out;
   });
   assert.deepEqual(r, { road: 'spark', floors: [2, 2, 1], boss: 'boss', gate: [true, true], news0: false, stone: 1, news: true, stairs: true });
+});
+
+test('every route and side-path trainer has a hand-written team of two or three real kinds at levels that fit the route, and a rematch makes it stronger', async () => {
+  const r = await ev(() => {
+    const out = { missing: [], bad: [], far: [] };
+    Object.keys(OW_MAPS).filter((k) => /^route\d+(-side)?$|^skyroad(-side)?$/.test(k)).forEach((k) => OW_MAPS[k].npcs.forEach((n) => {
+      if (n.kind !== 'trainer' || n.name === RIVAL) return;
+      const t = OW_TEAMS[n.id]; if (!t) { out.missing.push(n.id); return; }
+      const hand = OW_WILD_HAND[k.replace(/-side$/, '')];
+      if (t.length < 1 || t.length > 3 || !t.every((m) => getSpecies(m[0]) && m[1] >= hand.lv[0] - 1 && m[1] <= hand.lv[1] + 2)) out.bad.push(n.id);
+    }));
+    const pia = OW_MAPS.route1.npcs.find((n) => n.id === 'route1-pia');
+    state.overworld.beat = ['route1-pia']; state.phone = { day: '1999-01-01', ready: '', known: ['route1-pia'] };
+    startTrainerFight(pia); out.team = ab.foes.map((f) => f.id + f.level).join(); out.rematch = ab.rematch;
+    return out;
+  });
+  assert.deepEqual(r, { missing: [], bad: [], far: [], team: 'dog7,bunny8', rematch: true });
+});
+
+test('gyms are hand-written: every land has three trainer teams of real kinds around its level, the same leader every time, and a rematch is four levels up', async () => {
+  const r = await ev(() => {
+    const out = { lands: allGymRegions().length, bad: [], same: true, up: true };
+    allGymRegions().forEach((g) => {
+      const t = GYM_TEAMS[g.id], base = ECON.map.levels[g.id];
+      if (!t || t.length !== 3 || !t.every((team) => team.every((m) => getSpecies(m[0]) && m[1] >= base - 1 && m[1] <= base + 4))) out.bad.push(g.id);
+      const a = abGymRounds(g.id, false), b = abGymRounds(g.id, false), c = abGymRounds(g.id, true);
+      if (a[3].bossIdx !== b[3].bossIdx || a[1].name !== RIVAL || a.length !== 4) out.same = false;
+      if (c[0].foes[0].level !== a[0].foes[0].level + ECON.map.rematch.levels) out.up = false;
+    });
+    return out;
+  });
+  assert.deepEqual(r, { lands: 16, bad: [], same: true, up: true });
 });
 
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
