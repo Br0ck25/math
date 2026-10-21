@@ -198,6 +198,7 @@ const NORMALIZERS = [
     s.ppUp = pu;
     const vit = {}; Object.keys(isPlainObject(s.vitamins) ? s.vitamins : {}).slice(0, 400).forEach(function (id) { if (!isPlainObject(s.vitamins[id])) return; vit[id.slice(0, 24)] = {}; VITAMINS.forEach(function (v) { const n = clamp(Math.floor(Number(s.vitamins[id][v[1]])) || 0, 0, ECON.vitamins.max); if (n) vit[id.slice(0, 24)][v[1]] = n; }); });
     s.vitamins = vit;
+    const vir = {}; Object.keys(isPlainObject(s.virus) ? s.virus : {}).slice(0, 400).forEach(function (id) { const v = s.virus[id]; if (v === 'cured' || (typeof v === 'string' && /^\d{4}-\d\d-\d\d$/.test(v))) vir[id.slice(0, 24)] = v; }); s.virus = vir;
     const tmc = {}; Object.keys(isPlainObject(s.tms) ? s.tms : {}).forEach(function (t) { if (AB_TMS[t] && s.tms[t]) tmc[t] = 1; }); s.tms = tmc;
     const tmk = {}, tmOwned = s.unlockedPets.concat(s.unlockedSecrets);
     Object.keys(isPlainObject(s.tmKnown) ? s.tmKnown : {}).forEach(function (id) { if (tmOwned.indexOf(id) !== -1 && Array.isArray(s.tmKnown[id])) tmk[id] = s.tmKnown[id].filter(function (t, i, a) { return AB_TMS[t] && a.indexOf(t) === i; }).slice(0, 8); });

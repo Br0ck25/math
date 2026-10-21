@@ -60,6 +60,8 @@ const AB_TMS = {
   solarbeam: { name: 'Solar Beam', el: 'nature', power: 120, acc: 100, pp: 10, charge: true }, thunder: { name: 'Thunder', el: 'electric', power: 110, acc: 70, pp: 10 },
   shadowball: { name: 'Shadow Ball', el: 'dark', power: 80, acc: 100, pp: 15 }, psychic: { name: 'Psychic', el: 'magic', power: 90, acc: 100, pp: 10 },
   hyperbeam: { name: 'Hyper Beam', el: '', type: 'normal', power: 150, acc: 90, pp: 5 },
+  // Gold's Fly and Dig: charge a turn out of reach (`vanish`: the foe's attack misses meanwhile), then strike
+  fly: { name: 'Fly', el: '', type: 'normal', power: 70, acc: 95, pp: 15, charge: true, vanish: true }, dig: { name: 'Dig', el: '', type: 'normal', power: 60, acc: 100, pp: 10, charge: true, vanish: true },
   // utility moves (Gold's Rain Dance, Sunny Day, Protect and Rest): `util` is handled by abUtil in 24x-ow-battle.js
   raindance: { name: 'Rain Dance', el: '', type: 'normal', power: 0, acc: 100, pp: 5, util: 'rain' }, sunnyday: { name: 'Sunny Day', el: '', type: 'normal', power: 0, acc: 100, pp: 5, util: 'sun' },
   protect: { name: 'Protect', el: '', type: 'normal', power: 0, acc: 100, pp: 10, util: 'protect', pri: 3 }, rest: { name: 'Rest', el: '', type: 'normal', power: 0, acc: 100, pp: 10, util: 'rest' }

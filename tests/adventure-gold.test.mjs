@@ -1070,3 +1070,22 @@ test('the music follows the place: a tune for fights, caves, rooms, towns and th
   });
   assert.deepEqual(r, { route: 'route', town: 'town', room: 'room', cave: 'cave', battle: 'battle', tunes: true, speeds: 5 });
 });
+
+test('Fly and Dig: a turn charging out of reach (the foe misses), then the strike; Pokerus doubles Exp. for four days and is then cured for good', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 12 }] });
+    const me = abMe(), foe = abFoe(), fly = abTmMove('fly', me.element, me.type), out = {};
+    const real = Math.random; Math.random = () => 0.3;
+    abHit(me, foe, fly, () => {}, () => {}); out.charged = me.charging && me.charging.id === 'fly';
+    const hp = me.hp; abHit(foe, me, foe.moves[0] || { name: 'x', power: 40, acc: 100, type: 'normal' }, () => {}, () => {}); out.missed = me.hp === hp;
+    abHit(me, foe, me.charging, () => {}, () => {}); out.struck = me.charging === null;
+    Math.random = real; out.tm = AB_TMS.fly.charge && AB_TMS.dig.vanish && CORNER_PRIZES.some((p) => p[0] === 'dig');
+    state.virus = {}; const id = me.id;
+    out.none = virusState(id) === '';
+    state.virus[id] = dayKey(); out.sick = virusState(id) === 'sick';
+    const old = new Date(); old.setDate(old.getDate() - 5); state.virus[id] = dayKey(old); out.cured = virusState(id) === 'cured' && state.virus[id] === 'cured';
+    Math.random = () => 0; state.virus = {}; out.caught = abCatchVirus([me], true).length === 1 && abCatchVirus([me], true).length === 0; Math.random = real;
+    state.virus = { fox: 'junk', dog: '2020-01-01' }; return out;
+  });
+  assert.deepEqual(r, { charged: true, missed: true, struck: true, tm: true, none: true, sick: true, cured: true, caught: true });
+});

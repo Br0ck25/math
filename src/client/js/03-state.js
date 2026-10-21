@@ -60,6 +60,7 @@ function freshState() {
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    virus: {},                                       // buddy id -> the day it caught Pokérus (YYYY-MM-DD), or 'cured'
     vitamins: {},                                    // buddy id -> { hp, atk, def, spd, spc: vitamins used (0-10) }
     ppUp: {},                                        // buddy id -> { move id: PP Ups used (0-3) }
     tms: {},                                         // TM ids held (single use), from the gym leaders

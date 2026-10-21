@@ -89,6 +89,7 @@ const ECON = {
   safari: { fee: 500, balls: 30, steps: 500 },
   // The Day Care (24vd-ow-daycare.js): up to `max` buddies; one level per `stepsPerLevel` steps; a same-type pair leaves an egg after `eggSteps` steps. Taking one back costs `base` + `perLevel` x levels gained.
   daycare: { max: 2, stepsPerLevel: 40, eggSteps: 200, base: 100, perLevel: 100 },
+  virus: { odds: 0.01, days: 4, mult: 2 },                                                // Gold's Pokérus: a rare catch after a wild win; the sick buddy earns `mult` times the Exp. for `days` days, then is cured for good
   mom: { share: 0.5 },                                                                    // Mum keeps this share of each trainer prize while she is saving
   vitamins: { max: 10, hp: 3, stat: 2 },                                                  // Gold's vitamins: each raises one stat for good, up to `max` of each kind per buddy (+hp max HP, +stat points)
   items: { potion: 300, net: 200, greatnet: 600, ultranet: 1200, levelnet: 400, fastnet: 400, lurenet: 400, friendnet: 400, repel: 350, superpotion: 700, hyperpotion: 1200, hpup: 9800, protein: 9800, iron: 9800, carbos: 9800, calcium: 9800, maxpotion: 2500, fullrestore: 3000, fullheal: 600, antidote: 100, burnheal: 250, iceheal: 250, awakening: 250, parlyzheal: 200, revive: 1500, maxrevive: 4000, apricorn: 0, elixir: 1500, xattack: 500, xdefend: 550, xspeed: 350, maxrepel: 700, stone: 2100, ether: 1200, ppup: 9800, escaperope: 550 },

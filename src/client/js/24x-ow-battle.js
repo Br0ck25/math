@@ -296,9 +296,10 @@ function abUtil(att, def, mv, next) {
 }
 function abHit(att, def, mv, down, next) {
   if (mv.util) { abUtil(att, def, mv, next); return; }
-  if (mv.charge && !att.charging && !(mv.id === 'solarbeam' && ab.weather && ab.weather.k === 'sun')) { att.charging = mv; abSteps([[att.name + ' is gathering power!', null, 1100]]); next(); return; }      // two-turn moves: charge now, hit next turn (Solar Beam skips the charge in the sun)
+  if (mv.charge && !att.charging && !(mv.id === 'solarbeam' && ab.weather && ab.weather.k === 'sun')) { att.charging = mv; abSteps([[att.name + (mv.vanish ? (mv.id === 'dig' ? ' dug underground!' : ' flew up high!') : ' is gathering power!'), null, 1100]]); next(); return; }      // two-turn moves: charge now, hit next turn (Solar Beam skips the charge in the sun)
   att.charging = null;
   att.pn = 0;
+  if (def.charging && def.charging.vanish) { abSteps([[def.name + ' is out of reach!', null, 900]]); next(); return; }
   if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
   if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
@@ -356,12 +357,13 @@ function abFoeFainted() {
   abSteps([[foe.name + ' fainted!', null, 1000]]);
   const base = abXpYield(foe, trainer, part.length);
   part.forEach(function (id) {
-    const mon = ab.party.find(function (m) { return m.id === id; }), each = mon.held === 'egg' ? Math.floor(base * 3 / 2) : base;      // a Lucky Egg
+    const mon = ab.party.find(function (m) { return m.id === id; }), each = Math.floor((mon.held === 'egg' ? Math.floor(base * 3 / 2) : base) * (virusState(mon.id) === 'sick' ? ECON.virus.mult : 1));      // a Lucky Egg
     abSteps([[mon.name + ' gained ' + each + ' Exp. Points!', function () {
       abGainXp(mon, each);
       if (mon.leveled) abNow([[mon.name + ' grew to Lv' + mon.level + '!', function () { soundLevelUp(); }, 1200]].concat(mon.evolved ? [['What? ' + mon.evolved + ' evolved into ' + mon.name + '!', null, 1400]] : []).concat(mon.learned.map(function (n) { return [mon.name + ' learned ' + n + '!', null, 1200]; })));
     }, 1000]]);
   });
+  abCatchVirus(part.map(function (id) { return ab.party.find(function (m) { return m.id === id; }); }), !trainer).forEach(function (t) { abSteps([[t, null, 1200]]); });
   abSteps([['', function () {
     abLearnThen(function () {
       if (ab.i + 1 < ab.foes.length) {
@@ -371,6 +373,17 @@ function abFoeFainted() {
       else abWon();
     });
   }, 0]]);
+}
+// Gold's Pokérus: 'sick' while within ECON.virus.days of the day it was caught, then 'cured' for good. Sick buddies earn extra Exp.; a win with a sick buddy beside others may spread it.
+function virusState(id) {
+  let v = state.virus[id];
+  if (!v) return '';
+  if (v !== 'cured' && dayNumber() - dayNumber(new Date(v + 'T12:00:00')) >= ECON.virus.days) state.virus[id] = v = 'cured';
+  return v === 'cured' ? 'cured' : 'sick';
+}
+function abCatchVirus(part, wild) {
+  const sick = part.some(function (m) { return virusState(m.id) === 'sick'; });
+  return part.filter(function (m) { return !virusState(m.id) && (sick || (wild && Math.random() < ECON.virus.odds)); }).map(function (m) { state.virus[m.id] = dayKey(); return m.name + ' caught Pokerus!'; });
 }
 // Experience for one of your buddies; a level-up raises its stats and keeps its HP gain, and may change its form.
 function abGainXp(mon, amt) {
