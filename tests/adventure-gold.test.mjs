@@ -1154,3 +1154,13 @@ test('the Menu has a Trainer Card (name, badges, buddies, gems) and a Save butto
   assert.match(r.card, /^Sam Badges: 2 of 8\. Buddies: \d+\. Gems: 42\.$/);
   assert.equal(r.saved, 43);
 });
+
+test('the Tower Marathon: fourteen trainers (the second seven four levels stronger), a Max Revive once a day', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; const rs = abTowerRounds(true), a = rs[0].foes[0].level, b = rs[7].foes[0].level;
+    state.items.maxrevive = 0; state.tower = { day: '', best: 0, longDay: '' };
+    abTowerWon(true); const first = state.items.maxrevive; closeTalk(); abTowerWon(true); const again = state.items.maxrevive; closeTalk();
+    return { n: rs.length, names: new Set(rs.map((x) => x.name)).size, stronger: b > a, first, again, best: state.tower.best, short: abTowerRounds(false).length };
+  });
+  assert.deepEqual(r, { n: 14, names: 14, stronger: true, first: 1, again: 1, best: 14, short: 7 });
+});
