@@ -176,6 +176,7 @@ function owEnterGym(id) {
 function owGift(npc) {
   const art = heroSprite(heroLookColors(npc.look), 'down', 0), item = KEY_ITEMS.find(function (k) { return k.id === npc.gift; });
   if (grantKeyItem(npc.gift)) { saveState(); openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['You got the ' + item.name + '!']) }); }
+  else if (npc.rate) OW_SERVICES.rate(npc);
   else openTalk({ name: npc.name, art: art, lines: npc.after });
 }
 

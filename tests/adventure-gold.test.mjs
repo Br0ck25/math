@@ -1211,3 +1211,18 @@ test('the Night Walk: dearer and shorter than the day walk, and only dark and ma
   assert.deepEqual(r, { paid: [200, true, true, 20, 300], kinds: r.kinds, after: [false, false], norm: false });
   assert.ok(/^(dark|dark,magic|magic)$/.test(r.kinds), 'only dark and magic buddies at night: ' + r.kinds);
 });
+
+test("Prof. Pi rates your Dex: a prize at each quarter caught, once each, and a count of what is still needed", async () => {
+  const r = await ev(() => {
+    state.hero.made = true; state.keyItems = ['gizmo']; const pi = OW_MAPS['hollow-house'].npcs.find((n) => n.id === 'hollow-pi'), out = {};
+    const total = allBuddies().length, say = () => { OW_SERVICES.rate(pi); const t = talk.lines.join(' '); closeTalk(); return t; };
+    state.dexRate = 0; state.unlockedPets = ['dog']; state.unlockedSecrets = [];
+    out.few = /Catch \d+ more/.test(say()) && state.dexRate === 0;
+    state.unlockedPets = allBuddies().slice(0, Math.ceil(total / 4)).map((p) => p.id); state.items.ultranet = 0;
+    out.first = /Ultra Net/.test(say()) && state.items.ultranet === 1 && state.dexRate === 1; say(); out.once = state.items.ultranet === 1;
+    state.unlockedPets = allBuddies().map((p) => p.id); say(); say(); say(); out.all = state.dexRate === 4; out.done = /wonderful/.test(say());
+    state.dexRate = 99; NORMALIZERS.forEach((fn) => fn(state)); out.clamped = state.dexRate;
+    return out;
+  });
+  assert.deepEqual(r, { few: true, first: true, once: true, all: true, done: true, clamped: 4 });
+});

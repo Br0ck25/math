@@ -5,7 +5,7 @@
 // =====================================================================
 owAddNpc('hollow-house', { id: 'hollow-pi', kind: 'gift', gift: 'gizmo', name: 'Prof. Pi', x: 5, y: 2, face: 'down', look: { skin: 1, hair: 0, outfit: 7, style: 0 },
   lines: ['Ah, there you are! I am Professor Pi. I study buddies and numbers, and they go together very well.', 'Take this Gizmo. It travels back to towns you know, and tells you a math tip each day.'],
-  after: ['The Gizmo is in your Bag. Tap the Gizmo button on the map to use it.', 'Go and meet lots of buddies. I would love to hear about them!'] });
+  rate: true, after: ['The Gizmo is in your Bag. Tap the Gizmo button on the map to use it.', 'Go and meet lots of buddies. I would love to hear about them!'] });
 owAddNpc('meadow-house', { id: 'meadow-netmaker', kind: 'talk', name: 'Weaver Wren', x: 2, y: 2, face: 'down', look: { skin: 2, hair: 3, outfit: 2, style: 3 },
   lines: ['I weave Catch Nets. Buy them at the Mart and keep a few for the tall grass!'] });
 owAddNpc('ember-house', { id: 'ember-trader', kind: 'trade', trade: { give: 'fox', get: 'bunny' }, name: 'Trader Rue', x: 2, y: 2, face: 'down', look: { skin: 3, hair: 2, outfit: 1, style: 2 }, lines: ['Hello, traveller! I love swapping buddies.'] });
@@ -133,4 +133,16 @@ OW_SERVICES.sleeper = function (npc) {
   const art = heroSprite(heroLookColors(npc.look), 'down', 0);
   if (!hasKeyItem('radio-card')) { openTalk({ name: npc.name, art: art, lines: npc.lines }); return; }
   openTalk({ name: npc.name, art: art, lines: ['You tune the Gizmo radio to a lively song...', 'The buddy wakes up with a yawn and wanders off!'], onClose: function () { owStoryDone(npc.story); renderOverworld(); } });
+};
+
+// Gold's Dex rating (Prof. Oak, and Elm's aide): the Professor looks at how many buddies you have met and caught, and hands out a prize at each quarter of the Dex.
+const DEX_PRIZES = [['ultranet', 'an Ultra Net'], ['ppup', 'a PP Up'], ['maxrevive', 'a Max Revive'], ['stone', 'an Evolution Stone']];
+OW_SERVICES.rate = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), all = allBuddies(), caught = getOwnedIds().length, seen = all.filter(function (p) { return dexSeen(p.id); }).length;
+  const earned = Math.min(DEX_PRIZES.length, Math.floor(caught * 4 / all.length)), lines = ['The Gizmo is in your Bag. Tap the Gizmo button on the map to use it.', 'You have met ' + seen + ' of ' + all.length + ' buddies and caught ' + caught + '.'];
+  if (state.dexRate < earned) {
+    const p = DEX_PRIZES[state.dexRate]; state.dexRate += 1; state.items[p[0]] = Math.min(99, (state.items[p[0]] || 0) + 1); saveState();
+    lines.push('That is a fine Dex! Here is ' + p[1] + ' for you.');
+  } else lines.push(state.dexRate >= DEX_PRIZES.length ? 'Your Dex is wonderful. I could not ask for more!' : 'Catch ' + (Math.ceil((state.dexRate + 1) * all.length / 4) - caught) + ' more and I will have a prize for you.');
+  openTalk({ name: npc.name, art: art, lines: lines });
 };
