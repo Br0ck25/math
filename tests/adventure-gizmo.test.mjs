@@ -58,6 +58,17 @@ test('the Gizmo travels only to towns the hero has stood in', async () => {
   assert.deepEqual(errors, []);
 });
 
+test('the Gizmo Town Map draws the towns, marks where you are and travels from a square', async () => {
+  await page.evaluate(() => { grantKeyItem('gizmo'); });
+  await page.evaluate(() => { state.overworld.seen = ['hollow']; state.overworld.map = 'meadow'; owSetRegion(OW_MAPS.meadow); openGizmo(); });
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-town').length), await page.evaluate(() => OW_LANDS.length + 2));
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-me').length), 1);
+  assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-town:not(.gm-dim)').length), 2);   // Cozy Hollow and Meadow Town only
+  await page.evaluate(() => document.querySelector('#gizmo-body svg.gm-map g[onclick*="hollow"]').dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  assert.equal(await page.evaluate(() => state.overworld.map), 'hollow');
+  assert.deepEqual(errors, []);
+});
+
 test('the Gizmo shows the clock, calls and tips', async () => {
   await page.evaluate(() => { grantKeyItem('gizmo'); });
   await put('hollow', 7, 9);

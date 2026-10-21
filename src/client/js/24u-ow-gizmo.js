@@ -46,14 +46,45 @@ function renderGizmo() {
   document.getElementById('gizmo-body').innerHTML = { map: gizmoMapHtml, clock: gizmoClockHtml, calls: gizmoCallsHtml, tips: gizmoTipsHtml }[gizmoTab]();
 }
 
+// The Town Map (Gold's Pokegear map): every town is a square on a winding road, in the order you meet them; the routes join them, you are the red dot, and a visited town can be tapped to travel there.
+const GIZMO_NODES = {
+  hollow: [10, 78], meadow: [28, 78], ember: [28, 62], tide: [46, 62], grove: [46, 78], volt: [64, 78], gloom: [64, 62], mystic: [82, 62], skyreach: [82, 46],
+  cinder: [64, 46], coral: [46, 46], thistle: [28, 46], spark: [10, 46], dusk: [10, 30], prism: [28, 30], cross: [46, 30], summit: [64, 30], peak: [82, 30]
+};
+function gizmoNodeOf(mapId) {
+  if (GIZMO_NODES[mapId]) return { id: mapId };
+  const m = OW_MAPS[mapId]; if (!m) return { id: 'hollow' };
+  const base = mapId.replace(/-side$/, ''), i = OW_LANDS.findIndex(function (L) { return L.routeIn === base; });
+  if (i >= 0) { const to = OW_LANDS[i].town, from = i ? OW_LANDS[i - 1].town : 'hollow'; return { id: to, from: from }; }
+  if (mapId === 'peak') return { id: 'peak' };
+  const land = OW_LANDS.find(function (L) { return mapId.indexOf(L.town + '-') === 0; });
+  if (land) return { id: land.town };
+  if (mapId.indexOf('hollow') === 0) return { id: 'hollow' };
+  const byRegion = OW_LANDS.find(function (L) { return L.land === m.region; });
+  return { id: byRegion ? byRegion.town : 'hollow' };
+}
 function gizmoMapHtml() {
-  const here = state.overworld.map;
-  const rows = owTowns().filter(function (id) { return state.overworld.seen.indexOf(id) !== -1; }).map(function (id) {
-    const m = OW_MAPS[id];
-    return '<div class="gizmo-row"><div><b>' + escHtml(m.name) + '</b></div>' +
-      (id === here ? '<span class="d">You are here</span>' : '<button type="button" class="claim-btn" onclick="gizmoTravel(\'' + id + '\')">Go</button>') + '</div>';
+  const o = state.overworld, here = gizmoNodeOf(o.map), seen = function (id) { return o.seen.indexOf(id) !== -1 || id === here.id; };
+  const towns = ['hollow'].concat(OW_LANDS.map(function (L) { return L.town; })), line = [];
+  for (let i = 1; i < towns.length; i++) {
+    const a = GIZMO_NODES[towns[i - 1]], b = GIZMO_NODES[towns[i]];
+    line.push('<polyline class="gm-road" points="' + a[0] + ',' + a[1] + ' ' + (a[0] === b[0] ? b[0] : b[0]) + ',' + (a[0] === b[0] ? b[1] : a[1]) + ' ' + b[0] + ',' + b[1] + '"/>');
+  }
+  const sk = GIZMO_NODES.summit, pk = GIZMO_NODES.peak;
+  line.push('<polyline class="gm-road" points="' + sk[0] + ',' + sk[1] + ' ' + pk[0] + ',' + pk[1] + '"/>');
+  const nodes = towns.concat(['peak']).map(function (id) {
+    const p = GIZMO_NODES[id], open = id === 'peak' ? seen('peak') : seen(id), name = id === 'peak' ? 'Silver Peak' : OW_MAPS[id].name;
+    const tap = open && id !== 'peak' ? ' onclick="gizmoTravel(\'' + id + '\')" style="cursor:pointer"' : '';
+    return '<g' + tap + '><rect class="gm-town' + (open ? '' : ' gm-dim') + '" x="' + (p[0] - 3) + '" y="' + (p[1] - 3) + '" width="6" height="6" rx="0.8"/>' + (open ? '<text class="gm-name" x="' + p[0] + '" y="' + (p[1] + 7.5) + '" text-anchor="middle">' + escHtml(name) + '</text>' : '<text class="gm-name gm-dimtxt" x="' + p[0] + '" y="' + (p[1] + 1.2) + '" text-anchor="middle">?</text>') + '</g>';
   }).join('');
-  return '<p class="d" style="margin:8px 0">Travel to a town you have already visited.</p>' + rows;
+  let me = GIZMO_NODES[here.id] || GIZMO_NODES.hollow;
+  if (here.from) { const f = GIZMO_NODES[here.from]; me = [(f[0] + me[0]) / 2, (f[1] + me[1]) / 2]; }
+  const dot = '<circle class="gm-me" cx="' + me[0] + '" cy="' + (me[1] - 0.5) + '" r="2.4"/>';
+  const rows = owTowns().filter(function (id) { return o.seen.indexOf(id) !== -1; }).map(function (id) {
+    return '<div class="gizmo-row"><div><b>' + escHtml(OW_MAPS[id].name) + '</b></div>' + (id === o.map ? '<span class="d">You are here</span>' : '<button type="button" class="claim-btn" onclick="gizmoTravel(\'' + id + '\')">Go</button>') + '</div>';
+  }).join('');
+  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you."><rect class="gm-sea" x="0" y="0" width="94" height="94" rx="2"/><text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + nodes + dot + '</svg>' +
+    '<p class="d" style="margin:6px 0">Tap a town you have visited to travel there. The red dot is you.</p>' + rows;
 }
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.
 function gizmoTravel(id) {
