@@ -20,7 +20,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -523,13 +523,14 @@ function abFinish(result) {
   hideModal('ab-modal', function () {
     const o = state.overworld;
     a.after.forEach(function (fn) { fn(); });
-    if (result === 'lose') {
+    if (a.tower) { state.advHp = a.tower.hp; state.advPp = a.tower.pp; if (result === 'lose') state.tower.best = Math.max(state.tower.best, a.r); }          // the Tower puts HP and PP back, and a defeat there costs nothing
+    else if (result === 'lose') {
       state.advHp = {};
       state.gems = Math.floor(state.gems * (1 - ECON.overworld.blackoutShare));                  // Gold: you lose half your money
       o.map = o.center.map; o.x = o.center.x; o.y = o.center.y; o.face = 'down'; owTrail = null;
     }
     showAdventureWindow();
-    if (result === 'lose') openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, you blacked out! You dropped half your gems.', 'Your buddies were taken to the Buddy Center and feel great again. Ready to try again?'] });
+    if (result === 'lose' && !a.tower) openTalk({ name: 'Buddy Center', art: worldSprite('t-center-sign'), lines: ['Oh no, you blacked out! You dropped half your gems.', 'Your buddies were taken to the Buddy Center and feel great again. Ready to try again?'] });
     else if (result === 'win' && a.onWin) a.onWin();
     else if (result === 'win' && a.npc) {
       if (a.rematch && state.phone.ready === a.npc.id) state.phone.ready = '';                         // the rematch is done for today

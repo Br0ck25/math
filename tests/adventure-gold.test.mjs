@@ -420,6 +420,48 @@ test('phone calls: a trainer you beat calls for a rematch once a day, is back on
   assert.deepEqual([after.ready, after.called], ['', '']);
 });
 
+test('the Battle Tower: seven trainers with three buddies each, HP and PP put back afterwards, a PP Up for a full run once a day, and a defeat costs nothing', async () => {
+  const r = await ev(() => {
+    state.buddyXp[state.activePet] = xpForLevel(30); state.gems = 1000; state.advHp = { [state.activePet]: 3 }; state.items = {}; state.tower = { day: '', best: 0 };
+    const rs = abTowerRounds(); return { n: rs.length, foes: rs.every((x) => x.foes.length === 3), leader: rs[6].kind, names: new Set(rs.map((x) => x.name)).size };
+  });
+  assert.deepEqual(r, { n: 7, foes: true, leader: 'leader', names: 7 });
+  await ev(() => { abStartTower(); Math.random = () => 0.3; });
+  for (let k = 0; k < 120; k++) {
+    await page.waitForFunction(() => !ab || (!ab.busy && (ab.phase === 'menu' || ab.phase === 'learn')), null, { timeout: 60000 });
+    if (!(await ev(() => !!ab))) break;
+    if (await ev(() => ab.phase === 'learn')) { await ev(() => abLearnChoose(-1)); continue; }
+    await ev(() => { ab.foes.forEach((f) => { f.hp = 1; f.atk = 1; f.spc = 1; }); abFight(); abAnswer(ab.q.ans); ab.party.forEach((m) => m.moves.forEach((mv) => { mv.left = mv.pp; })); abUseMove(0); });
+    await page.waitForTimeout(300);
+  }
+  await page.waitForFunction(() => !ab, null, { timeout: 60000 });
+  const w = await ev(() => ({ hp: state.advHp[state.activePet], ppUp: state.items.ppup || 0, best: state.tower.best, gems: state.gems > 1000 }));
+  assert.deepEqual(w, { hp: 3, ppUp: 1, best: 7, gems: true });
+  const l = await ev(() => { state.gems = 1000; state.advHp = {}; abStartTower(); return [!!ab, !!ab.tower]; });
+  assert.deepEqual(l, [true, true]);
+  await menu();
+  await ev(() => { ab.party.forEach((m) => { m.hp = 1; state.advHp[m.id] = 1; }); ab.foes.forEach((f) => { f.level = 90; }); Math.random = () => 0.3; abFight(); abAnswer(ab.q.ans + 999); });
+  await page.waitForFunction(() => !ab, null, { timeout: 60000 });
+  assert.deepEqual(await ev(() => [state.gems, state.overworld.map === 'summit-house' || state.overworld.map !== 'meadow-center']), [1000, true]);
+});
+
+test('the Game Corner: 50 coins cost 1000 gems, a spin costs 3 and pays about 90% back over many spins (never more than it takes), and coins buy prizes', async () => {
+  const r = await ev(() => {
+    const clerk = OW_MAPS['spark-corner'].npcs[0], out = { door: OW_MAPS.spark.warps.some((w) => w.to === 'spark-corner') && OW_MAPS['spark-corner'].warps[0].to === 'spark' };
+    const keep = Math.random; let a = 12345; Math.random = () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+    let back = 0; const n = 60000; for (let i = 0; i < n; i++) back += cornerSpin().won; out.rtp = back / (3 * n); Math.random = keep;
+    state.gems = 1500; state.coins = 0; OW_SERVICES.corner(clerk); talk.i = talk.lines.length - 1; renderTalk(); talkChoose(0);
+    out.bought = [state.gems, state.coins];
+    state.coins = 5000; state.items = {}; owCornerPrizes(clerk); talk.i = 0; talkChoose(2);
+    out.prize = [state.items.ppup || 0, state.coins];
+    state.coins = 100; owCornerPrizes(clerk); talkChoose(0); out.poor = [state.items.revive || 0, state.coins];
+    return out;
+  });
+  assert.equal(r.door, true);
+  assert.ok(r.rtp > 0.8 && r.rtp < 1, 'the slots pay back ' + r.rtp);
+  assert.deepEqual([r.bought, r.prize, r.poor], [[500, 50], [1, 2000], [0, 100]]);
+});
+
 test('a Repel keeps wild buddies out of the grass for its steps, wears off, and is sold at the Mart after the first badge', async () => {
   const r = await ev(() => {
     ECON.overworld.grassChance = 1; owSafe = 0; state.gems = 1000; state.repelSteps = 0;

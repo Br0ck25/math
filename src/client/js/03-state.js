@@ -13,6 +13,8 @@ function freshState() {
     genders: {},                                     // buddy id -> 'm' or 'f': the gender it was caught with
     happy: {},                                       // buddy id -> friendship 0-255 (wins, levels and walks raise it)
     fromTrade: {},                                   // buddy id -> 1 when it came from a Trader: it disobeys above the level its badges allow
+    coins: 0,                                        // Game Corner coins
+    tower: { day: '', best: 0 },                      // the Battle Tower: the day of the last prize and the best streak
     phone: { day: '', ready: '' },                   // the trainer who called today for a rematch (24vh-ow-phone.js)
     contest: null,                                   // today's Catching Contest: { day, balls, best: { name, score }, done }
     stoned: {},                                      // buddy id -> 1 once an Evolution Stone was used on it
