@@ -162,11 +162,21 @@ function owWalkEgg() {
 }
 
 // ----- walking -----
+// Gold's Strength: a boulder moves one tile when the hero, holding the Vine Gloves, walks into it, onto free cave floor beyond. Leaving the cave puts it back (rows0), so no push can lock a way for good.
+function owPush(map, x, y, d) {
+  const bx = x + d[0], by = y + d[1];
+  if (!hasKeyItem('vines') || !map.rows[by] || map.rows[by].charAt(bx) !== 'c' || owNpcAt(map, bx, by) || owWarpAt(map, bx, by) || owPickupAt(map, bx, by)) return false;
+  map.rows0 = map.rows0 || map.rows.slice();
+  const set = function (px, py, ch) { map.rows[py] = map.rows[py].slice(0, px) + ch + map.rows[py].slice(px + 1); };
+  set(bx, by, '%'); set(x, y, 'c');
+  return true;
+}
 function owMove(dir) {
   if (!owOpen() || owBusy) return;
   const o = state.overworld, map = OW_MAPS[o.map], d = OW_STEP[dir];
   o.face = dir;
   const nx = o.x + d[0], ny = o.y + d[1];
+  if (owTileAt(map, nx, ny).boulder) owPush(map, nx, ny, d);
   const ledge = dir === 'down' && owTileAt(map, nx, ny).ledge && owWalkable(map, nx, ny + 1) && !owNpcAt(map, nx, ny + 1);      // Gold's ledge: you hop down over it, never up
   if (!ledge && (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny))) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
     renderOverworld();
@@ -177,7 +187,7 @@ function owMove(dir) {
   o.x = nx; o.y = ledge ? ny + 1 : ny;
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, o.x, o.y);
-  if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
+  if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();

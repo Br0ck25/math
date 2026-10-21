@@ -66,6 +66,9 @@ function owBuildCave(L, i, attempt) {
   const arrive = function (g, lad) { return [[0, 1], [0, -1], [1, 0], [-1, 0]].map(function (d) { return [lad[0] + d[0], lad[1] + d[1]]; }).find(function (p) { return g[p[1]] && g[p[1]][p[0]] === 'c'; }); };
   const a1 = arrive(g1, lad1), a2 = arrive(g2, lad2);
   if (!a1 || !a2) return false;
+  // Gold's Strength: a find lies under a boulder on a floor tile that is not the only way anywhere, with free floor on both sides of it in a line
+  const dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]], isC = function (g, p) { return g[p[1]] && g[p[1]][p[0]] === 'c'; };
+  const boulder = spots1.map(function (q) { return dirs.map(function (d) { return { q: q, d: d, a: [q[0] - d[0], q[1] - d[1]], b: [q[0] + d[0], q[1] + d[1]] }; }).find(function (c) { return c.q !== hiker && isC(g1, c.a) && isC(g1, c.b) && !owCaveCut(g1, entrance, a1, c.q) && !owCaveCut(g1, entrance, c.a, c.q) && !owCaveCut(g1, entrance, hiker, c.q); }); }).find(Boolean);
   const rows = function (g) { return g.map(function (r) { return r.join(''); }); };
   const spots2 = far2.filter(function (p) { return g2[p[1]][p[0]] === 'c' && p[0] >= 9 && !near(g2, [lad2, entrance], p); });
   if (spots1.length < 3 || spots2.length < 3) return false;
@@ -73,6 +76,10 @@ function owBuildCave(L, i, attempt) {
     warps: [{ x: 7, y: H - 1, to: L.routeIn, tx: mouth[0], ty: mouth[1] + 1 }, { x: lad1[0], y: lad1[1], to: id2, tx: a2[0], ty: a2[1] }],
     npcs: [{ id: id1 + '-hiker', kind: 'trainer', name: 'Hiker ' + ['Rocky', 'Flint', 'Boulder', 'Gravel'][i % 4], x: hiker[0], y: hiker[1], face: 'down', look: { skin: 3, hair: i % 8, outfit: 7, style: 0 }, lines: ['Caves are the best place to train!'], win: ['You found your way in the dark. Well done!'] }],
     objects: [], trees: {}, signs: {} }, base);
+  if (boulder) {
+    OW_MAPS[id1].rows[boulder.q[1]] = OW_MAPS[id1].rows[boulder.q[1]].slice(0, boulder.q[0]) + '%' + OW_MAPS[id1].rows[boulder.q[1]].slice(boulder.q[0] + 1);
+    OW_MAPS[id1].objects.push({ id: id1 + '-boulder', type: 'pickup', x: boulder.q[0], y: boulder.q[1], give: i % 2 ? 'net' : 'gems' });
+  }
   OW_MAPS[id2] = Object.assign({ id: id2, name: R.name + ' cave, below', start: { x: a2[0], y: a2[1] }, rows: rows(g2),
     warps: [{ x: lad2[0], y: lad2[1], to: id1, tx: a1[0], ty: a1[1] }], npcs: [],
     objects: [{ id: id2 + '-gem', type: 'pickup', x: spots2[0][0], y: spots2[0][1], give: i % 2 ? 'gems' : 'net' }, { id: id2 + '-net', type: 'pickup', x: spots2[Math.floor(spots2.length / 2)][0], y: spots2[Math.floor(spots2.length / 2)][1], give: i % 2 ? 'net' : 'gems' }],

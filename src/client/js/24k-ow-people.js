@@ -34,6 +34,7 @@ function owInteract(map, x, y) {
     if (badge && !owRoadOpen(badge)) openTalk({ name: 'Road guard', art: worldSprite('t-gate-road'), lines: ['The road ahead is for explorers who hold the ' + regionById(badge).name + ' Badge.', 'Win it at the gym here first, then come back!'] });
     return;
   }
+  if (tile.boulder) { openTalk({ name: 'Boulder', art: worldSprite('t-boulder'), lines: [hasKeyItem('vines') ? 'The boulder will not budge that way.' : 'A big round boulder. Vine Gloves from the Leaf Grove Gym would let you push it!'] }); return; }
   if (tile.gate && !hasKeyItem(tile.gate)) { openTalk({ name: 'Blocked', art: worldSprite(OW_GATES[tile.gate].closed), lines: [OW_GATES[tile.gate].hint] }); return; }
   const tree = map.trees && map.trees[x + ',' + y];
   if (tree) owShake(tree);

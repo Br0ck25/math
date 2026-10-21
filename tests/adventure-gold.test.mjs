@@ -1021,6 +1021,27 @@ test('a sleeping buddy blocks the way to the last find of a cave floor; the Radi
   assert.deepEqual(r, { many: true, asleep: true, there: true, gone: true, saved: true, known: true });
 });
 
+test('Strength: a boulder in a cave floor covers a find; Vine Gloves push it one tile, without them it stays, and leaving puts it back', async () => {
+  const r = await ev(() => {
+    const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn + '-cave1']).filter((m) => m && m.objects.some((o) => /-boulder$/.test(o.id)));
+    const m = maps[0], o = m.objects.find((p) => /-boulder$/.test(p.id)), out = { many: maps.length >= 6 }; state.hero.made = true; openAdventure();
+    [[1, 0], [0, 1], [-1, 0], [0, -1]].some(([dx, dy]) => {
+      const a = [o.x - dx, o.y - dy], b = [o.x + dx, o.y + dy];
+      if (!owWalkable(m, a[0], a[1]) || m.rows[b[1]].charAt(b[0]) !== 'c') return false;
+      state.overworld.map = m.id; state.overworld.x = a[0]; state.overworld.y = a[1]; state.overworld.face = 'down';
+      const dir = Object.keys(OW_STEP).find((k) => OW_STEP[k][0] === dx && OW_STEP[k][1] === dy);
+      state.keyItems = []; owMove(dir); closeTalk(); out.stuck = m.rows[o.y].charAt(o.x) === '%' && state.overworld.x === a[0];
+      state.keyItems = ['vines']; owMove(dir);
+      out.pushed = m.rows[o.y].charAt(o.x) === 'c' && m.rows[b[1]].charAt(b[0]) === '%' && state.overworld.x === o.x && state.overworld.y === o.y;
+      out.got = state.overworld.found.includes(o.id);
+      const w = m.warps[0]; state.overworld.x = w.x; state.overworld.y = w.y - 1; owMove('down');
+      out.reset = m.rows[o.y].charAt(o.x) === '%' && m.rows[b[1]].charAt(b[0]) === 'c'; return true;
+    });
+    return out;
+  });
+  assert.deepEqual(r, { many: true, stuck: true, pushed: true, got: true, reset: true });
+});
+
 test('Card Flip at the Game Corner: three coins to flip two of six cards; a pair pays 13, about 87 coins back in 100 over many plays', async () => {
   const r = await ev(() => {
     const npc = OW_MAPS['spark-corner'].npcs[0]; state.coins = 10; const real = Math.random; Math.random = () => 0.5;
