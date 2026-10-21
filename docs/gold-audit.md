@@ -11,6 +11,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Moves:** every kind has its own learnset (two moves at the start, about ten by level 50, a new one every 6 to 8 levels), six stat moves with Gold's stages, and TMs: each gym leader gives one and a Move Tutor teaches it (an element TM only to buddies of that type).
 - **Wild tables:** every route and side path has its own hand-written five kinds with set odds (30, 30, 20, 15, 5), a level range around the route's level that rises route by route, and morning, day and night variants.
 - **Friendship and obedience:** wins, levels and walks raise a buddy's friendship (a faint lowers it) and four kinds evolve when it is high; a buddy from a Trader disobeys above the level its badges allow (10 plus 10 a badge); eggs can pass a parent's TM move.
+- **Winding routes and Town Map:** every route has tree walls across the road with gaps that alternate sides, so the way north runs up, left, up, right, through the grass; the Gizmo map is a Town Map with a red dot for you and tap-to-travel squares.
 - **Forced grass:** every route has a band of tall grass across the whole road, so there is no way past without stepping on it (Repel helps).
 - **Items:** Ether, PP Up (up to three times a move) and Escape Rope are in.
 - **Side games:** the Catching Contest, a Game Corner with slots and prizes in Spark City, the Safari Zone in Thistle Wood (balls, bait, rocks, no fighting) and the Battle Tower in the Summit Citadel (seven trainers, a PP Up a day).
@@ -18,7 +19,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Set pieces:** the Radio Tower takeover in Spark City (three floors, Boss Static), the Lighthouse quest, the Scramblers' plots and Master Ori on Silver Peak.
 - **Side game and quest:** the Catching Contest and the Lighthouse fetch quest.
 - **Evolution and stats:** the Link Trader's trade evolutions, Evolution Stones (a stone kind takes its first evolution at once) and Gold's badge boost (each of the first eight badges raises one stat by an eighth).
-- **Items:** Potion, Super Potion, Full Heal, Revive, Catch Net (a Poke Ball), Great Net (x1.5), Ultra Net (x2), Repel, Max Repel, Elixir (10 PP back), X Attack, X Defend and X Speed, Evolution Stone, bag limit 99; held items; potions found on the ground.
+- **Items:** Potion, Super Potion, Full Heal, Revive, Catch Net (a Poke Ball), Hyper Potion (200 HP), Great Net (x1.5), Ultra Net (x2), Repel, Max Repel, Elixir (10 PP back), X Attack, X Defend and X Speed, Evolution Stone, bag limit 99; held items; potions found on the ground.
 
 ## Differs on purpose
 - **Math:** every attack needs a right answer; a wrong answer is a miss. This is the game.
@@ -28,6 +29,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Stats:** a fixed build per kind (hand-tuned for about 40), no hidden DVs, no stat experience.
 
 ## Still missing
+0. **From the pret/pokegold item list:** Max Potion, Full Restore, Max Revive, status cures (Antidote, Burn Heal and so on), vitamins (HP Up, Protein), special balls from Kurt's Apricorns, Berry trees, the Bicycle and Itemfinder.
 1. **Wild lists and teams written for every place:** all sixteen routes now have hand-written wild tables, and every route and side-path trainer and every gym trainer has a hand-written team. Gym leaders are fixed per land but drawn from the boss list, and learnsets are generated per kind.
 2. **More side games:** only one game of each kind exists (one slot machine, one Safari field, one Tower mode).
 3. **Seventeen types and the abilities of later games** are outside Gold anyway.

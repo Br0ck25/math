@@ -160,6 +160,9 @@ test('the pack: Super Potion heals more, Full Heal cures a status, Revive wakes 
   const h = await ev(() => { const me = abMe(); me.hp = 2; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('superpotion'); return me.hp; });
   assert.ok(h > 2);
   await menu();
+  const hy = await ev(() => { const me = abMe(); me.hp = 1; me.max = Math.max(me.max, 300); state.items.hyperpotion = 1; ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; }); ab.phase = 'pack'; abUseItem('hyperpotion'); return [me.hp > 150, state.items.hyperpotion || 0]; });
+  assert.deepEqual(hy, [true, 0]);
+  await menu();
   const run = await ev(() => {
     const out = []; for (let k = 1; k <= 12; k++) { ab.runs = 0; const spd = abMe().spd, fs = abFoe().spd; out.push([k]); }
     const f = (runs) => Math.floor(abMe().spd * 32 / Math.max(1, Math.floor(abFoe().spd / 4) % 256)) + 30 * runs;
@@ -613,4 +616,13 @@ test('the map fills the screen, shows trees (never black) past the edge, and a f
   await page.mouse.up();
   assert.ok((await ev(() => state.overworld.y)) < y0, 'holding above the hero walks up');
   assert.deepEqual(errors, []);
+});
+
+test('routes wind like Gold: tree walls across the road across the road, so the way north zigzags', async () => {
+  const bad = await page.evaluate(() => OW_LANDS.map((L) => {
+    const m = OW_MAPS[L.routeIn], walls = [];
+    m.rows.forEach((r, y) => { if ((r.slice(1, 13).match(/T/g) || []).length >= 7 && y > 2 && y < m.rows.length - 3) walls.push(y); });
+    return walls.length >= 2 ? '' : L.routeIn;
+  }).filter(Boolean));
+  assert.deepEqual(bad, []);
 });

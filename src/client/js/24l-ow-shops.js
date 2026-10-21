@@ -38,7 +38,7 @@ function renderMart() {
     const look = ITEM_LOOKS[it.type], open = state.badges.length >= it.badges, cost = itemCost(it.type);
     const act = open ? '<button type="button" class="claim-btn" aria-label="Buy ' + look[1] + ' for ' + cost + ' gems" onclick="buyItem(\'' + it.type + '\')">' + cost + ' gems</button>' : '';
     return '<div class="care-row mart-row' + (open ? '' : ' locked') + '"><div class="mart-info"><div class="t">' + look[1] + '</div><div class="d">' + (open ? look[2] : 'Opens with ' + it.badges + (it.badges === 1 ? ' badge' : ' badges')) + '</div></div>' + act + '</div>';
-  }).join('') + '<div class="t" style="margin:10px 0 2px;">Sell</div>' + (['potion', 'net', 'greatnet', 'ultranet', 'superpotion', 'fullheal', 'revive', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].filter(function (t) { return sellCount(t) > 0; }).map(function (t) {
+  }).join('') + '<div class="t" style="margin:10px 0 2px;">Sell</div>' + (['potion', 'net', 'greatnet', 'ultranet', 'superpotion', 'hyperpotion', 'fullheal', 'revive', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].filter(function (t) { return sellCount(t) > 0; }).map(function (t) {
     const look = ITEM_LOOKS[t], half = Math.floor(itemCost(t) / 2);
     return '<div class="care-row mart-row"><div class="mart-info"><div class="t">' + look[1] + ' x' + sellCount(t) + '</div><div class="d">The Mart pays half the price.</div></div><button type="button" class="claim-btn" aria-label="Sell one ' + look[1] + ' for ' + half + ' gems" onclick="sellItem(\'' + t + '\')">+' + half + '</button></div>';
   }).join('') || '<div class="d">You have nothing to sell.</div>');

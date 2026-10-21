@@ -38,3 +38,19 @@ function owGrassBand(mapId, y0, y1) {
   for (let y = y0; y <= y1; y++) for (let x = 1; x <= 12; x++) if (',.*'.indexOf(m.rows[y].charAt(x)) !== -1) owSetTile(mapId, x, y, '"');
 }
 OW_LANDS.forEach(function (L, i) { owGrassBand(L.routeIn, 7 + (i * 5) % 9, 8 + (i * 5) % 9 + (i % 2)); });
+
+// ----- winding roads (Gold): tree walls across the route with the gap on alternating sides, so the way north runs up, left, up, right, through the grass -----
+// A row is only walled when nothing stands on it (people, finds, signs, trees, doors), so every gap stays reachable.
+function owWindRoute(mapId, i) {
+  const m = OW_MAPS[mapId], n = m.rows.length, keys = Object.keys(m.signs || {}).concat(Object.keys(m.trees || {}));
+  const busy = function (x, y) {
+    return m.warps.some(function (w) { return Math.abs(w.x - x) <= 1 && Math.abs(w.y - y) <= 1; }) || (m.npcs || []).concat(m.objects || []).some(function (p) { return p.x === x && p.y === y; }) || keys.indexOf(x + ',' + y) !== -1;
+  };
+  let side = i % 2;
+  for (let y = 4; y < n - 4; y += 3) {
+    if (Math.abs(y - m.start.y) < 3 || (m.npcs || []).some(function (p) { return Math.abs(p.y - y) <= 1; })) continue;
+    for (let x = 1; x <= 12; x++) if ((side ? x < 10 : x > 3) && ',.*"'.indexOf(m.rows[y].charAt(x)) !== -1 && !busy(x, y)) owSetTile(mapId, x, y, 'T');
+    side = 1 - side;
+  }
+}
+OW_LANDS.forEach(function (L, i) { owWindRoute(L.routeIn, i); });
