@@ -60,7 +60,7 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
       (m.objects || []).forEach((o) => {
         unique(o.id, 'pickup');
         if (!free(o.x, o.y)) out.push(k + ': pickup ' + o.id + ' is not on a free tile');
-        if (['gems', 'net', 'berry', 'ore', 'apricorn'].indexOf(o.give) === -1) out.push(o.id + ': unknown gift ' + o.give);
+        if (['gems', 'net', 'berry', 'ore', 'apricorn', 'ultranet'].indexOf(o.give) === -1) out.push(o.id + ': unknown gift ' + o.give);
         if (arrivals[k].some((a) => a.x === o.x && a.y === o.y)) out.push(o.id + ': on an arrival tile');
       });
       Object.keys(m.trees || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); unique(m.trees[p], 'tree'); if (m.rows[y].charAt(x) !== 'Y') out.push(k + ': tree ' + m.trees[p] + ' is not on a shake-tree tile'); });

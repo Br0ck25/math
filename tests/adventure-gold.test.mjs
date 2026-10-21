@@ -881,3 +881,35 @@ test('towns differ in height (16, 18 or 20), and the road into each still lands 
   });
   assert.deepEqual(r, { heights: [16, 18, 20], ok: true });
 });
+
+test('caves: most routes have a mouth in the trees leading to a dark two-floor cave with a hiker, a ladder and two finds; cave floor starts fights with the route\'s buddies', async () => {
+  const r = await ev(() => {
+    const caves = OW_LANDS.filter((L) => OW_MAPS[L.routeIn + '-cave1']);
+    const linked = caves.every((L) => {
+      const R = OW_MAPS[L.routeIn], c1 = OW_MAPS[L.routeIn + '-cave1'], c2 = OW_MAPS[L.routeIn + '-cave2'], mw = R.warps.find((w) => w.to === c1.id);
+      const lad1 = c1.warps.find((w) => w.to === c2.id), back = c2.warps[0];
+      return R.rows[mw.y].charAt(mw.x) === 'O' && c1.warps[0].tx === mw.x && c1.warps[0].ty === mw.y + 1 && c2.rows[back.y].charAt(back.x) === 'u' && owWalkable(c2, lad1.tx, lad1.ty) && owWalkable(c1, back.tx, back.ty) && c1.dark && c2.dark && c1.npcs.length === 1 && c2.objects.length === 2;
+    });
+    const c = OW_MAPS['route2-cave1'], t = owTileAt(c, c.start.x, c.start.y);
+    openAdventure(); state.overworld.map = 'route2-cave1'; renderOverworld();
+    const dark = document.getElementById('ow-view').classList.contains('ow-dark');
+    const table = owWildTable('route2-cave1'), route = owWildTable('route2');
+    return { n: caves.length >= 12, linked, grass: !!t.grass, dark, level: table.lo === route.lo + 1 };
+  });
+  assert.deepEqual(r, { n: true, linked: true, grass: true, dark: true, level: true });
+});
+
+test('a stone in the pond lets the Water Steps charm reach a second islet with an Ultra Net; without the charm the islet cannot be reached', async () => {
+  const r = await ev(() => {
+    const reach = (m, hasCharm) => {
+      const seen = new Set([m.start.x + ',' + m.start.y]), q = [[m.start.x, m.start.y]], real = hasKeyItem;
+      hasKeyItem = (id) => id === 'water' ? hasCharm : real(id);
+      while (q.length) { const [x, y] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = x + dx, ny = y + dy; if (owWalkable(m, nx, ny) && !owNpcAt(m, nx, ny) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); }
+      hasKeyItem = real; return seen;
+    };
+    const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn]).filter((m) => m.objects.some((o) => /-surf$/.test(o.id)));
+    const ok = maps.every((m) => { const o = m.objects.find((p) => /-surf$/.test(p.id)); return !reach(m, false).has(o.x + ',' + o.y) && reach(m, true).has(o.x + ',' + o.y); });
+    return { n: maps.length >= 10, ok };
+  });
+  assert.deepEqual(r, { n: true, ok: true });
+});

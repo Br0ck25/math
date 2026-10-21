@@ -961,3 +961,7 @@ body.trivia .math-only { display: none; }
 @keyframes abSuck { to { transform: scale(0.05); opacity: 0; } }
 @keyframes abBurst { from { transform: scale(0.2); opacity: 0; filter: brightness(3); } to { transform: scale(1); opacity: 1; filter: none; } }
 @media (prefers-reduced-motion: reduce) { .ab-net, .ab-sucked, .ab-burst { animation-duration: 0.01s; } }
+
+/* A dark cave: only a circle around the hero is lit (wider with the Night Lamp) */
+.ow-view.ow-dark { position: relative; }
+.ow-view.ow-dark::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle at 50% 50%, transparent var(--dark-r, 120px), rgba(2, 6, 23, 0.94) calc(var(--dark-r, 120px) + 70px)); }

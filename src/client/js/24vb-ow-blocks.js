@@ -51,12 +51,15 @@ function owBlockRoute(L, i, attempt) {
   for (let by = 0; by < 12; by++) for (let bx = 0; bx < 7; bx++) { const blk = OW_BLOCKS[B[by][bx]]; for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) g[by * 2 + y][bx * 2 + x] = blk[y].charAt(x); }
   const px = pond[0] * 2, py = pond[1] * 2;
   g[py][px + 1] = 'B'; g[py + 1][px + 1] = 'd';
+  const surf = px + 4 <= 12;                                                                              // a second islet behind a stepping stone that only the Water Steps charm opens (Gold's Surf)
+  if (surf) { g[py][px + 2] = 'j'; g[py][px + 3] = 'd'; [[px + 4, py], [px + 3, py - 1]].forEach(function (p) { if (g[p[1]][p[0]] !== 'T') g[p[1]][p[0]] = 'T'; }); }
   lanes.forEach(function (r) { const y = 2 * Math.floor((r[0] + r[1]) / 2); g[y][6] = 'g'; g[y][7] = 'T'; g[y + 1][6] = 'g'; g[y + 1][7] = 'T'; });
   const solid = function (c) { return 'TYvRW~#bs=x'.indexOf(c) !== -1 || OW_GATE_CHARS[c]; };
   const walk = function (x, y) { return x >= 0 && x < 14 && y >= 0 && y < 24 && !solid(g[y][x]); };
   const npcs = m.npcs.map(function (n) { return Object.assign({}, n); }), objects = (m.objects || []).map(function (o) { return Object.assign({}, o); }), used = {};
   const mark = function (x, y) { used[x + ',' + y] = 1; }, usedNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (used[(x + dx) + ',' + (y + dy)]) return true; return false; };
   if (house) for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) mark(house[0] * 2 + x, house[1] * 2 + y);                // the house and the way down from its door
+  for (let y = 0; y < 24; y++) for (let x = 0; x < 14; x++) if (g[y][x] === 'v') { mark(x, y - 1); mark(x, y + 1); }              // nothing stands where a ledge is hopped from or onto
   mark(6, 22); mark(7, 22); mark(px + 1, py); mark(px + 1, py + 1);
   const roadAt = function (x, y) { return g[y][x] === '.'; };
   const ground = function (x, y) { return ',"*d'.indexOf(g[y][x]) !== -1 && !usedNear(x, y); };
@@ -81,13 +84,14 @@ function owBlockRoute(L, i, attempt) {
     if (!done) return null;
   }
   // the shake tree and the finds that lie in the open: grass next to trees or at the edge, away from the road
-  const open = function () { const out = []; for (let y = 2; y < 22; y++) for (let x = 2; x < 12; x++) if (g[y][x] === ',' && !usedNear(x, y) && !roadAt(x - 1, y) && !roadAt(x + 1, y) && !roadAt(x, y - 1) && !roadAt(x, y + 1)) out.push([x, y]); return out; };
+  const open = function () { const out = []; for (let y = 2; y < 22; y++) for (let x = 2; x < 12; x++) if (g[y][x] === ',' && !used[x + ',' + y] && !roadAt(x - 1, y) && !roadAt(x + 1, y) && !roadAt(x, y - 1) && !roadAt(x, y + 1)) out.push([x, y]); return out; };
   const treeId = Object.keys(m.trees || {}).map(function (k) { return m.trees[k]; })[0], trees = {};
   if (treeId) { const s = take(open()); if (!s) return null; g[s[1]][s[0]] = 'Y'; trees[s[0] + ',' + s[1]] = treeId; mark(s[0], s[1]); }
   for (let k = 0; k < objects.length; k++) {
     const o = objects[k]; if (/nook/.test(o.id)) continue;
     const s = take(open()); if (!s) return null; o.x = s[0]; o.y = s[1]; mark(s[0], s[1]);
   }
+  if (surf) objects.push({ id: L.routeIn + '-surf', type: 'pickup', x: px + 3, y: py, give: 'ultranet' });
   const apr = take(open()); if (!apr) return null;                                                        // an Apricorn tree (Kurt makes nets from them)
   mark(apr[0], apr[1]); objects.push({ id: L.routeIn + '-apricorns', type: 'pickup', x: apr[0], y: apr[1], give: 'apricorn' });
   const hide = take(open()); if (!hide) return null;                                                      // a hidden find (Itemfinder) in the open, away from the others
@@ -111,7 +115,7 @@ function owBlockRoute(L, i, attempt) {
   const blocked = function (x, y) { return npcs.some(function (n) { return n.x === x && n.y === y; }); };
   while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { const x = c[0] + d[0], y = c[1] + d[1], k = x + ',' + y; if (!seen[k] && walk(x, y) && !blocked(x, y)) { seen[k] = 1; q.push([x, y]); } }); }
   const reach = function (x, y) { return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return seen[(x + d[0]) + ',' + (y + d[1])]; }) || seen[x + ',' + y]; };
-  if (!seen[(px + 1) + ',' + (py - 1)] || !reach(6, 0) || !reach(7, 0) || !people.every(function (n) { return reach(n.x, n.y); }) || !objects.every(function (o) { return /nook/.test(o.id) || seen[o.x + ',' + o.y]; })) return null;
+  if (!seen[(px + 1) + ',' + (py - 1)] || !reach(6, 0) || !reach(7, 0) || !people.every(function (n) { return reach(n.x, n.y); }) || !objects.every(function (o) { return /nook|surf/.test(o.id) || seen[o.x + ',' + o.y]; })) return null;
   // the bend must cost at least two steps of tall grass wherever the whole way is grass: count the least on any walk from start to the top
   const cost = {}, heap = [[0, 6, 22]]; cost['6,22'] = 0; let best = Infinity;
   while (heap.length) {
@@ -126,7 +130,7 @@ function owBlockRoute(L, i, attempt) {
 }
 OW_LANDS.forEach(function (L, i) {
   const m = OW_MAPS[L.routeIn]; let best = null;
-  for (let attempt = 0; attempt < 40 && (!best || best.score < 4); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
+  for (let attempt = 0; attempt < 80 && (!best || best.score < 3); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
   if (!best) return;
   m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.house = best.house;
   m.npcs.push({ id: L.routeIn + '-swimmer', kind: 'trainer', name: 'Swimmer ' + OW_SIDE_FOLK_NAME(i), x: best.pond.x, y: best.pond.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });

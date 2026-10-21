@@ -71,8 +71,8 @@ function owRouteLevel(mapId) {
 }
 function owWildTable(mapId) {
   if (OW_WILD_TABLES[mapId] !== undefined) return OW_WILD_TABLES[mapId];
-  const hand = OW_WILD_HAND[mapId.replace(/-side$/, '')];
-  if (hand) { const up = mapId.indexOf('-side') !== -1 ? 1 : 0; return (OW_WILD_TABLES[mapId] = { center: Math.round((hand.lv[0] + hand.lv[1]) / 2) + up, lo: hand.lv[0] + up, hi: hand.lv[1] + up, day: hand.day, morning: hand.morning, night: hand.night, hand: true }); }
+  const hand = OW_WILD_HAND[mapId.replace(/-(side|cave\d)$/, '')];
+  if (hand) { const up = /-(side|cave\d)$/.test(mapId) ? 1 : 0; return (OW_WILD_TABLES[mapId] = { center: Math.round((hand.lv[0] + hand.lv[1]) / 2) + up, lo: hand.lv[0] + up, hi: hand.lv[1] + up, day: hand.day, morning: hand.morning, night: hand.night, hand: true }); }
   const m = OW_MAPS[mapId], center = owRouteLevel(mapId);
   if (!m || !center || !m.rows.some(function (r) { return r.indexOf('"') !== -1; })) return (OW_WILD_TABLES[mapId] = null);
   const el = regionById(m.region).element, order = function (list, salt) {

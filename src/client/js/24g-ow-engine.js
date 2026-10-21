@@ -136,7 +136,8 @@ function renderOverworld() {
   h += owActorHtml('ow-hero', hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
-  view.className = 'ow-view ow-' + owTimeOfDay();
+  view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '');
+  if (map.dark) view.style.setProperty('--dark-r', ((hasKeyItem('lamp') ? 5 : 2.6) * g.tile).toFixed(0) + 'px');
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;
   document.getElementById('ow-gizmo-btn').style.display = hasKeyItem('gizmo') ? '' : 'none';
