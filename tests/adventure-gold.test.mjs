@@ -1143,3 +1143,14 @@ test('the Whirlpool Charm (Skyreach badge) opens the nook gates of the second jo
   });
   assert.deepEqual(r, { many: true, chars: 'y,n', none: false, have: true });
 });
+
+test('the Menu has a Trainer Card (name, badges, buddies, gems) and a Save button', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; state.hero.name = 'Sam'; state.badges = ['meadow', 'ember']; state.gems = 42; openAdventure();
+    menuGo('openTrainerCard'); const card = document.getElementById('talk-name').innerText + ' ' + talk.lines.join(' '); closeTalk();
+    state.gems = 43; menuGo('menuSave'); const saved = JSON.parse(localStorage.getItem('math_quest_save')).gems;
+    return { card, saved };
+  });
+  assert.match(r.card, /^Sam Badges: 2 of 8\. Buddies: \d+\. Gems: 42\.$/);
+  assert.equal(r.saved, 43);
+});

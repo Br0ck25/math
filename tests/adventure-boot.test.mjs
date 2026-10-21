@@ -40,7 +40,7 @@ test('the Menu opens the other screens above the map, and closing them brings th
   await page.evaluate(() => { finishHero(); state.storySeen.starter = 1; closeStarterModal(); });
   await page.click('.ow-head .ow-back-chip');
   assert.equal(await shown(page, 'menu-modal'), true);
-  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#menu-body button')].map((b) => b.innerText)), ['Buddies', 'Bag', 'Team', 'Dex', 'Settings']);
+  assert.deepEqual(await page.evaluate(() => [...document.querySelectorAll('#menu-body button')].map((b) => b.innerText)), ['Buddies', 'Bag', 'Team', 'Dex', 'Trainer', 'Save', 'Settings']);
   for (const [fn, id] of [['openHub', 'hub-modal'], ['openBook', 'book-modal'], ['openSettings', 'settings-modal']]) {
     await page.evaluate((f) => menuGo(f), fn);
     const top = await page.evaluate(() => { const o = openOverlays(); return o[o.length - 1].id; });
