@@ -978,17 +978,18 @@ test('three legends roam each week, each on its own route, and a caught one stop
   assert.deepEqual(r, { distinct: 3, all: 3, second: false, third: 1, ids: ['a', 'b'] });
 });
 
-test('Mum saves half of each prize while she is asked to, and gives the savings back; a bad save is repaired', async () => {
+test('Mom saves half of each prize while she is asked to, and gives the savings back; a bad save is repaired', async () => {
   const r = await ev(() => {
-    const mum = OW_MAPS['hollow-home'].npcs.find((n) => n.id === 'hollow-mum-savings'), out = {};
+    const mum = OW_MAPS['hollow-home'].npcs.find((n) => n.id === 'hollow-mum'), out = {};
+    out.moms = OW_MAPS['hollow-home'].npcs.filter((n) => /Mom|Mum/.test(n.name)).map((n) => n.name + ':' + n.kind).join();
     state.mom = { save: false, bank: 0 }; out.off = momKeeps(100);
-    OW_SERVICES.mum(mum); document.querySelectorAll('#talk-choices button')[0].click(); out.on = state.mom.save;
+    OW_SERVICES.mom(mum); talk.i = talk.lines.length - 1; renderTalk(); document.querySelectorAll('#talk-choices button')[0].click(); out.on = state.mom.save;
     out.kept = momKeeps(101); out.bank = state.mom.bank;
-    state.gems = 0; OW_SERVICES.mum(mum); document.querySelectorAll('#talk-choices button')[1].click(); out.gems = state.gems; out.empty = state.mom.bank;
+    state.gems = 0; OW_SERVICES.mom(mum); talk.i = talk.lines.length - 1; renderTalk(); document.querySelectorAll('#talk-choices button')[1].click(); out.gems = state.gems; out.empty = state.mom.bank;
     state.mom = { save: 'yes', bank: -5 }; normalizeState(state); out.fixed = [state.mom.save, state.mom.bank];
     return out;
   });
-  assert.deepEqual(r, { off: 0, on: true, kept: 50, bank: 50, gems: 50, empty: 0, fixed: [false, 0] });
+  assert.deepEqual(r, { moms: 'Mom:mom', off: 0, on: true, kept: 50, bank: 50, gems: 50, empty: 0, fixed: [false, 0] });
 });
 
 test('the Buddy Dex says where a wild buddy is found, by route name', async () => {

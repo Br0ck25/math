@@ -568,7 +568,7 @@ function abPrize(round) {
 function abRoundWon() {
   const round = ab.rounds[ab.r], prize = ab.kind === 'wild' ? 0 : abPrize({ kind: ab.kind, base: round.base, foes: ab.foes }) * (ab.party.some(function (m) { return m.held === 'amulet'; }) ? 2 : 1);
   if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
-  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) { const kept = momKeeps(prize); grantGems(prize - kept, ab.name + ' paid you ' + prize + ' gems!' + (kept ? ' Mum saved ' + kept + '.' : ''), false); } }, ab.kind === 'wild' ? 0 : 1300]];
+  return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) { const kept = momKeeps(prize); grantGems(prize - kept, ab.name + ' paid you ' + prize + ' gems!' + (kept ? ' Mom saved ' + kept + '.' : ''), false); } }, ab.kind === 'wild' ? 0 : 1300]];
 }
 // A boss or gym leader beaten: the Dex book, an Alpha win toward its buddy, a chance at a rare buddy. Run once the battle screen is gone (their windows open above the map).
 function abBossBeaten(idx, level) {

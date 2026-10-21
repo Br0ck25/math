@@ -104,7 +104,7 @@ const OW_MAPS = {
     signs: { '4,10': 'Cozy Hollow. Follow the path north to Route 1!' }
   },
   'hollow-home': owRoom('hollow-home', 'Home', { to: 'hollow', tx: 4, ty: 5 }, [
-    { id: 'hollow-mum', name: 'Mum', x: 4, y: 2, face: 'down', look: { skin: 1, hair: 2, outfit: 6, style: 3 },
+    { id: 'hollow-mum', kind: 'mom', name: 'Mom', x: 4, y: 2, face: 'down', look: { skin: 1, hair: 2, outfit: 6, style: 3 },
       lines: ['Good morning! Did you sleep well?', 'The tall grass on Route 1 hides wild buddies. Win a fight there and you may catch one!', 'Take your time. Your buddies will be right beside you.'] }
   ], [{ id: 'hollow-home-gem', type: 'pickup', x: 6, y: 4, give: 'gems' }]),
   'hollow-house': owRoom('hollow-house', 'Neighbour', { to: 'hollow', tx: 11, ty: 9 }, [

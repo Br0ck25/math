@@ -10,7 +10,7 @@ let gizmoTab = 'map', gizmoTip = 0;
 const GIZMO_CALLS = [
   { from: 'Radio news', text: '', when: function () { return legendRoamers().length > 0; }, dyn: function () { return legendRoamers().map(function (x) { return x.legend.name + ' on ' + OW_MAPS[x.route].name; }).join(', ') + ' today. Walk in the tall grass there!'; } },
   { from: 'Prof. Pi', text: 'Welcome to the team! Come and see me in Cozy Hollow any time. Every buddy you meet makes my Dex book better.', when: function () { return true; } },
-  { from: 'Mum', text: 'Take your time, and eat something! Your buddies are always happy to see you home.', when: function () { return true; } },
+  { from: 'Mom', text: 'Take your time, and eat something! Your buddies are always happy to see you home.', when: function () { return true; } },
   { from: 'Nurse Joy', text: 'Any Buddy Center will wake your sleepy buddies. The first visit each day is free!', when: function () { return state.badges.length > 0; } },
   { from: RIVAL, text: 'I fixed the Tide Bay ferry numbers before you did! Next time I will not be so quick. Race you to the next gym!', when: function () { return state.overworld.story.indexOf('tide-ferry') !== -1; } },
   { from: RIVAL, text: 'The lights are back on in Volt Valley. The Scramblers are running out of places to hide, I think.', when: function () { return state.overworld.story.indexOf('volt-blackout') !== -1; } },

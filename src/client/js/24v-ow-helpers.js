@@ -117,16 +117,16 @@ OW_SERVICES.lucky = function (npc) {
   else lines.push('No match today. Check each buddy\'s number on its Stats tab!');
   openTalk({ name: npc.name, art: art, lines: lines });
 };
-// Mum (Gold's Mom): while she is saving, she keeps half of every trainer prize (the bank), and gives it back whenever you ask. The part she keeps is returned here.
+// Mom (Gold's Mom, in the Home): while she is saving, she keeps half of every trainer prize (the bank), and gives it back whenever you ask. The part she keeps is returned here.
 function momKeeps(prize) {
   if (!state.mom.save) return 0;
   const k = Math.floor(prize * ECON.mom.share); state.mom.bank = Math.min(999999, state.mom.bank + k); saveState(); return k;
 }
-OW_SERVICES.mum = function (npc) {
+OW_SERVICES.mom = function (npc) {
   const art = heroSprite(heroLookColors(npc.look), 'down', 0), m = state.mom;
-  openTalk({ name: npc.name, art: art, lines: [((npc.lines || [''])[0] + ' I am keeping ' + m.bank + ' gems for you. Shall I put half of what you win aside?').trim()], choices: [
+  openTalk({ name: npc.name, art: art, lines: npc.lines, choices: [
     { label: m.save ? 'Stop saving' : 'Save half of my prizes', run: function () { closeTalk(); m.save = !m.save; saveState(); openTalk({ name: npc.name, art: art, lines: [m.save ? 'Good idea! I will keep half of your prizes safe.' : 'All right. You keep everything you win.'] }); } },
-    { label: 'Take my savings', run: function () { closeTalk(); const n = m.bank; m.bank = 0; if (n) grantGems(n, 'Mum gave you ' + n + ' gems!', false); else openTalk({ name: npc.name, art: art, lines: ['There is nothing saved yet.'] }); saveState(); } }
+    { label: 'Take my savings (' + m.bank + ')', run: function () { closeTalk(); const n = m.bank; m.bank = 0; if (n) grantGems(n, 'Mom gave you ' + n + ' gems!', false); else openTalk({ name: npc.name, art: art, lines: ['There is nothing saved yet.'] }); saveState(); } }
   ] });
 };
 OW_SERVICES.sleeper = function (npc) {
@@ -134,4 +134,3 @@ OW_SERVICES.sleeper = function (npc) {
   if (!hasKeyItem('radio-card')) { openTalk({ name: npc.name, art: art, lines: npc.lines }); return; }
   openTalk({ name: npc.name, art: art, lines: ['You tune the Gizmo radio to a lively song...', 'The buddy wakes up with a yawn and wanders off!'], onClose: function () { owStoryDone(npc.story); renderOverworld(); } });
 };
-owAddNpc('hollow-home', { id: 'hollow-mum-savings', kind: 'mum', name: 'Mum at the desk', x: 8, y: 2, face: 'down', look: { skin: 1, hair: 2, outfit: 6, style: 3 }, lines: ['I keep your savings tidy!'] });

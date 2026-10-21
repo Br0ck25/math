@@ -99,20 +99,20 @@ test('a person is solid: bumping turns them to face you, opens the text window, 
   await put('hollow-home', 5, 2, 'down');
   await page.evaluate(() => owMove('left'));
   assert.equal(await shown('talk-modal'), true);
-  assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Mum');
+  assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Mom');
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Good morning/);
   assert.equal(await page.evaluate(() => document.querySelectorAll('#talk-art use').length), 2, 'the portrait is the hero art: a body and hair');
   assert.deepEqual([(await state_()).x, (await state_()).y, (await state_()).face], [5, 2, 'left']);
-  assert.equal(await page.evaluate(() => OW_MAPS['hollow-home'].npcs[0].face), 'right', 'Mum turned towards the hero');
+  assert.equal(await page.evaluate(() => OW_MAPS['hollow-home'].npcs[0].face), 'right', 'Mom turned towards the hero');
   assert.equal(await page.evaluate(() => document.querySelector('#talk-modal .modal-x') !== null), true, 'it has the close button every window has');
 });
 
 test('the text window goes line by line, closes at the end, and Escape closes it at once; the map is still there', async () => {
-  await put('hollow-home', 5, 2, 'down');
+  await put('hollow-house', 3, 3, 'down');
   await page.evaluate(() => owMove('left'));
   assert.equal(await page.evaluate(() => document.getElementById('talk-next').innerText), 'Next');
   await page.click('#talk-next');
-  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /tall grass/);
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Some signs ask/);
   await page.click('#talk-text');                                                                         // tapping the words also goes on
   assert.equal(await page.evaluate(() => document.getElementById('talk-next').innerText), 'Close');
   await page.click('#talk-next');
@@ -126,12 +126,12 @@ test('the text window goes line by line, closes at the end, and Escape closes it
 });
 
 test('Space and Enter talk to what the hero faces, without skipping the first line, and go on in the window', async () => {
-  await put('hollow-home', 5, 2, 'left');
+  await put('hollow-house', 3, 3, 'left');
   await page.keyboard.press('Enter');
   assert.equal(await shown('talk-modal'), true);
-  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Good morning/, 'the same key press must not also advance the text');
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /I read every sign/, 'the same key press must not also advance the text');
   await page.keyboard.press(' ');
-  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /tall grass/);
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Some signs ask/);
   await page.keyboard.press('Enter');
   await page.keyboard.press('Enter');
   assert.equal(await shown('talk-modal'), false);
@@ -142,9 +142,9 @@ test('Space and Enter talk to what the hero faces, without skipping the first li
 
 test('words in the text window are shown as text, never as markup', async () => {
   await put('hollow-home', 5, 2, 'down');
-  await page.evaluate(() => { OW_MAPS['hollow-home'].npcs[0].lines = ['<img src=x onerror="window.pwned=1"> hi']; OW_MAPS['hollow-home'].npcs[0].name = '<b>Mum</b>'; owMove('left'); });
+  await page.evaluate(() => { OW_MAPS['hollow-home'].npcs[0].lines = ['<img src=x onerror="window.pwned=1"> hi']; OW_MAPS['hollow-home'].npcs[0].name = '<b>Mom</b>'; owMove('left'); });
   const r = await page.evaluate(() => ({ imgs: document.querySelectorAll('#talk-modal img').length, text: document.getElementById('talk-text').innerText, name: document.getElementById('talk-name').innerText, pwned: window.pwned || 0 }));
-  assert.deepEqual(r, { imgs: 0, text: '<img src=x onerror="window.pwned=1"> hi', name: '<b>Mum</b>', pwned: 0 });
+  assert.deepEqual(r, { imgs: 0, text: '<img src=x onerror="window.pwned=1"> hi', name: '<b>Mom</b>', pwned: 0 });
 });
 
 test('a door leads into a room and the mat leads out, to the tile south of the door; rooms have no tall grass', async () => {
@@ -221,7 +221,7 @@ test('a saved found list is repaired: unknown or repeated ids are dropped', asyn
     return [
       o({ map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: ['hollow-home-gem', 'hollow-home-gem', 'nope', 5, null, 'meadow-ore'] }),
       o({ map: 'hollow', x: 7, y: 9, found: 'all' }),
-      o({ map: 'hollow-home', x: 4, y: 2 })                                                                // Mum's tile: not a place to stand
+      o({ map: 'hollow-home', x: 4, y: 2 })                                                                // Mom's tile: not a place to stand
     ];
   });
   assert.deepEqual(r[0].found, ['hollow-home-gem', 'meadow-ore']);
