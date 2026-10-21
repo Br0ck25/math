@@ -712,3 +712,18 @@ test('past the top or bottom edge of a route the map shows the next town, lined 
   assert.deepEqual(r.filter((ok) => !ok), []);
   assert.equal(await ev(() => owBeyond(OW_MAPS.route1, 6, 5)), null, 'only past an edge');
 });
+
+test('after a catch nothing of the net stays, and a swap makes the foe hit the buddy that came in', async () => {
+  await begin();
+  await ev(() => { state.nets = 3; ab.foes[0].hp = 1; Math.random = () => 0; ab.phase = 'pack'; abThrowNet(); });
+  await page.waitForFunction(() => !ab, null, { timeout: 30000 });
+  await begin();
+  assert.deepEqual(await ev(() => [document.querySelectorAll('#ab-modal .ab-net').length, document.getElementById('ab-foe-icon').classList.contains('ab-sucked')]), [0, false]);
+  await ev(() => {
+    window.oldMon = abMe(); window.oldMon.hp = 1; ab.foes[0].atk = 40; ab.foes[0].spc = 40; Math.random = () => 0.3;
+    if (!ab.party.some((m, i) => i !== ab.cur && m.hp > 0)) ab.party.push(Object.assign({}, abMe(), { id: 'swapper', name: 'Swapper', hp: 900, max: 900, moves: abMe().moves.map((m) => Object.assign({}, m)) }));
+    ab.phase = 'team'; abSwitch(ab.party.findIndex((m, i) => i !== ab.cur && m.hp > 0));
+  });
+  await page.waitForFunction(() => ab && !ab.busy && (ab.phase === 'menu' || ab.phase === 'team'), null, { timeout: 20000 });
+  assert.deepEqual(await ev(() => [window.oldMon.hp, !!ab.forced, abMe() !== window.oldMon]), [1, false, true], 'the buddy that left is not hit, and nobody is forced to switch again');
+});

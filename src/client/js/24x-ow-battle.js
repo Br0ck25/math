@@ -15,6 +15,8 @@ function abMe() { return ab.party[ab.cur]; }
 // ({kind, name, npc, foes}) fought one after another with the same team (a gym, the Hall). onWin runs on the map after the last round is won.
 function abStart(opts) {
   if (ab) return false;
+  document.querySelectorAll('#ab-modal .ab-net').forEach(function (b) { b.remove(); });                    // nothing of the last catch stays on the field
+  ['ab-foe-icon', 'ab-me-icon'].forEach(function (id) { const e = document.getElementById(id); if (e) e.classList.remove('ab-sucked', 'ab-burst'); });
   const party = getTeam().map(abPartyMon);
   const lead = party.findIndex(function (m) { return m.id === state.activePet && m.hp > 0; });          // the lead goes first, as the first slot does in Gold; if it is resting, the first one that can fight
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
@@ -402,7 +404,7 @@ function abSwitch(i) {
   const forced = ab.forced, old = abMe();
   ab.phase = 'busy'; ab.forced = false;
   abSteps([[forced ? '' : 'Come back, ' + old.name + '!', null, forced ? 0 : 700], ['Go! ' + mon.name + '!', function () { old.conf = 0; old.stg = {}; ab.cur = i; if (ab.part.indexOf(mon.id) === -1) ab.part.push(mon.id); }, 800]]);
-  if (forced) abBackToMenu(); else abFoeTurn();
+  if (forced) abBackToMenu(); else abSteps([['', abFoeTurn, 0]]);      // the foe strikes whoever came in, so it is worked out after the swap
 }
 
 // ----- the pack -----
