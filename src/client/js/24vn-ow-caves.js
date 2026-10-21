@@ -91,6 +91,13 @@ function owBuildCave(L, i, attempt) {
     OW_STORY.push(id2 + '-woken');
     f2.npcs.push({ id: id2 + '-sleeper-buddy', kind: 'sleeper', name: 'Sleeping buddy', x: choke[0], y: choke[1], face: 'down', story: id2 + '-woken', vanish: true, look: { skin: 5, hair: 2, outfit: 1, style: 0 }, lines: ['A buddy is fast asleep and blocks the way. A tune on the Gizmo radio might wake it...'] });
   }
+  // Gold's Ruins of Alph: in every fourth cave an old stone sign in the first chamber asks four questions in a row, and pays an Evolution Stone once
+  const spot = i % 4 === 0 ? far2.find(function (p) { return g2[p[1]][p[0]] === 'c' && p[0] <= 4 && p[1] !== ym && !near(g2, [lad2, a2], p) && !owCaveCut(g2, a2, [5, ym], p) && !owCaveCut(g2, a2, [lad2[0] + (a2[0] - lad2[0]), lad2[1] + (a2[1] - lad2[1])], p); }) : null;
+  if (spot) {
+    f2.rows[spot[1]] = f2.rows[spot[1]].slice(0, spot[0]) + 's' + f2.rows[spot[1]].slice(spot[0] + 1);
+    f2.signs[spot[0] + ',' + spot[1]] = { id: id2 + '-ruin', text: 'Old stones with numbers carved in them. Answer four questions in a row and the ruin gives up its secret.', quiz: true, rounds: 4, story: id2 + '-ruins', after: id1 + '-hiker', locked: 'The stones are covered in dust and the Hiker upstairs is watching. Beat him first!' };
+    OW_STORY.push(id2 + '-ruins'); OW_STORY_ITEMS[id2 + '-ruins'] = 'stone';
+  }
   owSetTile(L.routeIn, mouth[0], mouth[1], 'O');
   R.warps.push({ x: mouth[0], y: mouth[1], to: id1, tx: entrance[0], ty: entrance[1] });
   return true;

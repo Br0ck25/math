@@ -1118,3 +1118,18 @@ test('the gym puzzle: three right answers (wrong ones are free) let you past the
   });
   assert.deepEqual(r, { choices: ['Enter the gym', 'Solve the gym puzzle'], free: true, done: true, skipped: true });
 });
+
+test('the ruin signs in every fourth cave: four answers in a row pay one Evolution Stone, once', async () => {
+  const r = await ev(() => {
+    const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn + '-cave2']).filter((m) => m && Object.values(m.signs).some((s) => /-ruin$/.test(s.id)));
+    const sign = Object.values(maps[0].signs).find((s) => /-ruin$/.test(s.id)), out = { n: maps.length >= 3 };
+    state.hero.made = true; openAdventure(); state.items.stone = 0; state.overworld.beat.push(sign.after);
+    openSignQuiz(sign);
+    for (let i = 0; i < 4; i++) { answerSignQuiz(talk.quiz.q.opts.find((o) => o !== talk.quiz.q.ans)); answerSignQuiz(talk.quiz.q.ans); }
+    out.stone = state.items.stone; out.saved = state.overworld.story.includes(sign.story); closeTalk();
+    openSignQuiz(sign); out.again = /Everything is in order/.test(document.getElementById('talk-text').innerText) || !talk.quiz; closeTalk();
+    out.known = owIds('sign').includes(sign.id) && owIds('story').includes(sign.story);
+    return out;
+  });
+  assert.deepEqual(r, { n: true, stone: 1, saved: true, again: true, known: true });
+});
