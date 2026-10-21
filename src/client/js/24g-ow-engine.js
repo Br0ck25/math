@@ -283,6 +283,8 @@ function owStoryDone(id) {
 function owStoryReward(id) {
   if (!owStoryDone(id)) return;
   const it = OW_STORY_ITEMS[id];
+  const key = OW_STORY_KEYS[id];
+  if (key && grantKeyItem(key)) { saveState(); toast('You got the Radio Card!'); }
   if (it) { state.items[it] = Math.min(99, (state.items[it] || 0) + 1); saveState(); toast('You got an Evolution Stone!'); }
 }
 // One step back the way the hero came (it faces where it was walking), if that tile is free.

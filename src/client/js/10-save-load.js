@@ -228,7 +228,7 @@ const NORMALIZERS = [
     const gd = {}; Object.keys(isPlainObject(s.genders) ? s.genders : {}).forEach(function (id) { if (getSpecies(id) && (s.genders[id] === 'm' || s.genders[id] === 'f')) gd[id] = s.genders[id]; });
     s.genders = gd;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.maxRepelSteps * 2, 0);
-    const it = {}; ['superpotion', 'hyperpotion', 'maxpotion', 'fullrestore', 'fullheal', 'revive', 'greatnet', 'ultranet', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
+    const it = {}; ['antidote', 'burnheal', 'iceheal', 'awakening', 'parlyzheal', 'superpotion', 'hyperpotion', 'maxpotion', 'fullrestore', 'fullheal', 'revive', 'greatnet', 'ultranet', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
     s.items = it;
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },

@@ -17,6 +17,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Route land:** big tall-grass fields, a house with a room on most routes, and a Trim-charm shortcut through the tree walls (a second way past the zigzag). The Town Map is not given at the start: Guide Ivy in Meadow Town hands over the Map Card, as the old man in Cherrygrove does. See `docs/gold-research.md` for how Gold builds its world.
 - **Block routes:** every route is laid out from 2x2 blocks (`24vb-ow-blocks.js`): a road that winds up, left, up, right, a tall-grass band across the whole road, tall-grass fields, thick tree edges, a ledge, a pond with a bridge to an islet and a swimmer, a house with a room, a thick wood with the nook cut into it, and a Trim-charm lane that cuts straight through a bend. The route's own file still lists the people and finds; the generator stands them on the new land (trainers look at the road from a clear row).
 - **Town blocks:** every town is laid out by `24vc-ow-towns.js`: the main road up the middle, a cross street, and the Buddy Center, Mart, house and gym in four of six slots (each with a path from its door to the road), a pond, garden, grove or plaza in the other two, a wood with the nook cut in, and the people, signs and finds stood on the new land. Towns still share one 16x16 size and the edge gaps at rows 4-8 that the side games cut into.
+- **Radio Card:** the Gizmo radio (Tips) is not tuned at the start; a five-question quiz at the Radio Tower counter in Spark City (once the first-floor guard is beaten) wins the Radio Card, as in Gold.
 - **Seamless edges:** past the top or bottom of a route the map shows the next town in its own colours, lined up with where the edge warp lands. The towns are still hand-written rows joined by warps, not Gold's blocks with connections.
 - **Forced grass:** every route has a band of tall grass across the whole road, so there is no way past without stepping on it (Repel helps).
 - **Items:** Ether, PP Up (up to three times a move) and Escape Rope are in.
@@ -25,7 +26,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Set pieces:** the Radio Tower takeover in Spark City (three floors, Boss Static), the Lighthouse quest, the Scramblers' plots and Master Ori on Silver Peak.
 - **Side game and quest:** the Catching Contest and the Lighthouse fetch quest.
 - **Evolution and stats:** the Link Trader's trade evolutions, Evolution Stones (a stone kind takes its first evolution at once) and Gold's badge boost (each of the first eight badges raises one stat by an eighth).
-- **Items:** Potion, Super Potion, Full Heal, Revive, Catch Net (a Poke Ball), Hyper Potion (200 HP), Max Potion, Full Restore, Great Net (x1.5), Ultra Net (x2), Repel, Max Repel, Elixir (10 PP back), X Attack, X Defend and X Speed, Evolution Stone, bag limit 99; held items; potions found on the ground.
+- **Items:** Potion, Super Potion, Full Heal, Revive, Catch Net (a Poke Ball), Hyper Potion (200 HP), Max Potion, Full Restore, the five status cures, Great Net (x1.5), Ultra Net (x2), Repel, Max Repel, Elixir (10 PP back), X Attack, X Defend and X Speed, Evolution Stone, bag limit 99; held items; potions found on the ground.
 
 ## Differs on purpose
 - **Math:** every attack needs a right answer; a wrong answer is a miss. This is the game.
@@ -35,7 +36,7 @@ Last checked after the money, items and Wardrobe changes. "Gold" facts come from
 - **Stats:** a fixed build per kind (hand-tuned for about 40), no hidden DVs, no stat experience.
 
 ## Still missing
-0. **From the pret/pokegold item list:** Max Revive, status cures (Antidote, Burn Heal and so on), vitamins (HP Up, Protein), special balls from Kurt's Apricorns, Berry trees, the Bicycle and Itemfinder.
+0. **From the pret/pokegold item list:** Max Revive, vitamins (HP Up, Protein), special balls from Kurt's Apricorns, Berry trees, the Bicycle and Itemfinder.
 1. **Wild lists and teams written for every place:** all sixteen routes now have hand-written wild tables, and every route and side-path trainer and every gym trainer has a hand-written team. Gym leaders are fixed per land but drawn from the boss list, and learnsets are generated per kind.
 2. **More side games:** only one game of each kind exists (one slot machine, one Safari field, one Tower mode).
 3. **Seventeen types and the abilities of later games** are outside Gold anyway.

@@ -2,8 +2,9 @@
 //  THE RADIO TOWER TAKEOVER (Gold's Team Rocket at the Radio Tower): the Scramblers have seized the tower in Spark City and fill the radio with scrambled numbers.
 //  A door in the east edge of Spark City (it opens with the Spark Badge) leads up three floors: two Scramblers on each of the first two, Boss Static on the top. Beating the boss ends the takeover.
 // =====================================================================
-OW_STORY.push('radio-tower');
-const OW_STORY_ITEMS = { 'radio-tower': 'stone' };                  // a story beat that hands over an item the first time
+OW_STORY.push('radio-tower', 'radio-quiz');
+const OW_STORY_ITEMS = { 'radio-tower': 'stone' };
+const OW_STORY_KEYS = { 'radio-quiz': 'radio-card' };                  // a story beat that hands over a key item the first time                  // a story beat that hands over an item the first time
 (function () {
   const stairs = function (up, down) { return ['wwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'w', 'wffffffw', 'wfrrrrfw', 'wffffffw', 'wffffffw', 'wwwmwwww']; };
   const look = OW_SCRAMBLER_LOOK;
@@ -24,6 +25,10 @@ const OW_STORY_ITEMS = { 'radio-tower': 'stone' };                  // a story b
     { id: 'tower-boss', kind: 'boss', boss: 'electric', name: 'Boss Static', x: 3, y: 2, face: 'down', look: { skin: 4, hair: 7, outfit: 4, style: 2 }, story: 'radio-tower', vanish: true,
       lines: ['Bzzzt! You came all the way up? Listen to my station: every number is wrong and everybody loves it!', 'Well, nearly everybody. Let us see your buddies!'],
       win: ['Static! All static! Okay, okay. I will play the right numbers.', 'Take this Evolution Stone. I found it in the studio. The tower is yours again.'] }]);
+  // Gold's Radio Card is won with a quiz at the Radio Tower counter: five questions in a row, once the guards on the first floor are beaten
+  owSetTile('spark-tower-1', 3, 2, 's');
+  OW_MAPS['spark-tower-1'].signs['3,2'] = { id: 'tower-quiz', text: 'The Radio Tower quiz! Answer five questions in a row to win a Radio Card for your Gizmo.', quiz: true, rounds: 5, story: 'radio-quiz', after: 'tower-zam',
+    locked: 'The quiz counter is guarded by a Scrambler named Zam. Beat him first!', done: 'You already have your Radio Card. Enjoy the tips on the Gizmo radio!' };
   owSetTile('spark', 15, 6, 'x');
   OW_MAPS.spark.roads = Object.assign(OW_MAPS.spark.roads || {}, { '15,6': 'spark' });
   OW_MAPS.spark.warps.push({ x: 15, y: 6, to: 'spark-tower-1', tx: 3, ty: 5 });

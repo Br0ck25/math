@@ -761,3 +761,16 @@ test('towns are laid out from blocks, each its own: buildings in different slots
   });
   assert.deepEqual(r, { lane: true, lanes: true, looks: true, blocks: true });
 });
+
+test('the status cures work only on their own status: Antidote on poison, Burn Heal on a burn, and so on', async () => {
+  await begin();
+  const r = await ev(() => {
+    const me = abMe(); ab.foes.forEach((f) => { f.atk = 1; f.spc = 1; });
+    state.items.antidote = 1; state.items.burnheal = 1; me.status = 'burn'; ab.phase = 'pack'; abUseItem('antidote');
+    return [me.status, state.items.antidote, Object.keys(AB_CURES).length];
+  });
+  assert.deepEqual(r, ['burn', 1, 5], 'the wrong cure is not used up');
+  await ev(() => { ab.phase = 'pack'; abUseItem('burnheal'); });
+  await menu();
+  assert.deepEqual(await ev(() => [abMe().status, state.items.burnheal || 0]), ['', 0]);
+});

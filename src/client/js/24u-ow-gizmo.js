@@ -114,6 +114,7 @@ function gizmoCallsHtml() {
 }
 
 function gizmoTipsHtml() {
+  if (!hasKeyItem('radio-card')) return '<p class="d" style="margin:10px 0">The radio is not tuned yet. Win a Radio Card with the quiz at the Radio Tower in Spark City.</p>';
   const tips = Object.keys(GIZMO_TIPS).map(function (k) { return GIZMO_TIPS[k]; });
   const text = tips[(dayHash('tip' + dayKey()) + gizmoTip) % tips.length];
   return '<div class="gizmo-row"><div>' + escHtml(text) + '</div></div><button type="button" class="claim-btn" onclick="gizmoTip += 1; soundClick(); renderGizmo()">Another tip</button>';

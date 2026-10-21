@@ -16,7 +16,7 @@ beforeEach(async () => {
   await page.reload();
   errors.length = 0;
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.keyItems = ['map-card']; });
+  await page.evaluate(() => { startGoldenVault = function () { modalDone(); }; state.storySeen.map = 1; state.hero.made = true; state.keyItems = ['map-card', 'radio-card']; });
 });
 const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
   state.overworld.map = m; state.overworld.x = px; state.overworld.y = py; state.overworld.face = f;
@@ -162,4 +162,22 @@ test('the Map Card is not given to you: Guide Ivy gives it after her tour, and w
   assert.ok(await page.evaluate(() => hasKeyItem('map-card')));
   await page.evaluate(() => { closeTalk(); openGizmo(); });
   assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map').length), 1);
+});
+
+test('the Radio Card is won with a five-question quiz at the Radio Tower; without it the Gizmo radio gives no tips', async () => {
+  const r = await page.evaluate(() => {
+    state.keyItems = ['map-card']; grantKeyItem('gizmo'); gizmoTab = 'tips'; openGizmo();
+    const locked = document.getElementById('gizmo-body').innerText;
+    const sign = OW_MAPS['spark-tower-1'].signs['3,2'], tile = OW_MAPS['spark-tower-1'].rows[2].charAt(3);
+    closeGizmo();
+    state.overworld.beat = []; openSignQuiz(sign); const early = document.getElementById('talk-text').innerText;
+    closeTalk(); state.overworld.beat = ['tower-zam']; openSignQuiz(sign); const rounds = talk.quiz.rounds; closeTalk();
+    owStoryReward('radio-quiz');
+    gizmoTab = 'tips'; openGizmo();
+    return { locked, early, rounds, tile, has: hasKeyItem('radio-card'), tips: document.getElementById('gizmo-body').innerText, again: owStoryDone('radio-quiz') };
+  });
+  assert.match(r.locked, /Radio Card/);
+  assert.match(r.early, /Zam/);
+  assert.deepEqual([r.rounds, r.tile, r.has, r.again], [5, 's', true, false]);
+  assert.doesNotMatch(r.tips, /not tuned/);
 });

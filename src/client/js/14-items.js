@@ -21,6 +21,11 @@ const ITEM_LOOKS = {
   fullrestore: ['💗', 'Full Restore', 'Heals all of a buddy\'s HP in a battle and cures a status'],
   hyperpotion: ['💗', 'Hyper Potion', 'Heals ' + ECON.overworld.hyperPotionHeal + ' HP in a battle and cures a status'],
   superpotion: ['💗', 'Super Potion', 'Heals ' + ECON.overworld.superPotionHeal + ' HP in a battle and cures a status'],
+  antidote: ['💊', 'Antidote', 'Cures poison in a battle'],
+  burnheal: ['💊', 'Burn Heal', 'Cures a burn in a battle'],
+  iceheal: ['💊', 'Ice Heal', 'Thaws a frozen buddy in a battle'],
+  awakening: ['💊', 'Awakening', 'Wakes a sleeping buddy in a battle'],
+  parlyzheal: ['💊', 'Parlyz Heal', 'Cures paralysis in a battle'],
   fullheal: ['💊', 'Full Heal', 'Cures a status in a battle'],
   revive: ['✨', 'Revive', 'Wakes a resting buddy in a battle with half its HP'],
   repel: ['🧴', 'Repel', 'No wild buddies in the grass for ' + ECON.overworld.repelSteps + ' steps']

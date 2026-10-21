@@ -133,6 +133,7 @@ function abPanel() {
     if (ab.contest) { p.appendChild(abBtn('Park Ball <small>x' + state.contest.balls + '</small>', abThrowPark, '', state.contest.balls < 1)); p.appendChild(abBtn('Back', function () { ab.phase = 'menu'; abRender(); }, 'ab-back')); return; }
     p.appendChild(abBtn('Catch Net <small>x' + state.nets + '</small>', function () { abThrowNet('net'); }, '', !wild || state.nets < 1));
     p.appendChild(abBtn('Potion <small>x' + state.potions + '</small>', abPotion, '', state.potions < 1 || (m.hp >= m.max && !m.status)));
+    Object.keys(AB_CURES).forEach(function (k) { if (state.items[k]) p.appendChild(abBtn(AB_CURES[k][1] + ' <small>x' + state.items[k] + '</small>', function () { abUseItem(k); }, '', m.status !== AB_CURES[k][0])); });
     const carry = [['fullrestore', 'Full Restore', function () { return m.hp >= m.max && !m.status; }], ['maxpotion', 'Max Potion', function () { return m.hp >= m.max; }], ['hyperpotion', 'Hyper Potion', function () { return m.hp >= m.max && !m.status; }], ['superpotion', 'Super Potion', function () { return m.hp >= m.max && !m.status; }], ['fullheal', 'Full Heal', function () { return !m.status && !(m.conf > 0); }], ['revive', 'Revive', function () { return !ab.party.some(function (x) { return x.hp <= 0; }); }],
       ['elixir', 'Elixir', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }], ['xattack', 'X Attack', function () { return abStage(m, 'atk') >= 6; }], ['xdefend', 'X Defend', function () { return abStage(m, 'def') >= 6; }], ['xspeed', 'X Speed', function () { return abStage(m, 'spd') >= 6; }], ['ether', 'Ether', function () { return m.moves.every(function (mv) { return mv.left >= mv.pp; }); }]];
     carry.forEach(function (c) { if (state.items[c[0]]) p.appendChild(abBtn(c[1] + ' <small>x' + state.items[c[0]] + '</small>', function () { if (c[0] === 'ether') { ab.phase = 'ether'; abRender(); } else abUseItem(c[0]); }, '', c[2]())); });
@@ -418,11 +419,14 @@ function abUseEther(i) {
   abFoeTurn();
 }
 // The other supplies of the pack: a Super Potion heals more, a Full Heal cures a status, a Revive wakes the first resting buddy with half its HP.
+// The single-status cures (Gold's Antidote, Burn Heal, Ice Heal, Awakening and Parlyz Heal): item -> [the status it cures, its name].
+const AB_CURES = { antidote: ['poison', 'Antidote'], burnheal: ['burn', 'Burn Heal'], iceheal: ['freeze', 'Ice Heal'], awakening: ['sleep', 'Awakening'], parlyzheal: ['paralysis', 'Parlyz Heal'] };
 function abUseItem(kind) {
   const me = abMe(), n = state.items[kind] || 0;
   if (n < 1 || ab.phase !== 'pack') return;
   if ((kind === 'superpotion' || kind === 'hyperpotion' || kind === 'fullrestore') && me.hp >= me.max && !me.status) return;
   if (kind === 'maxpotion' && me.hp >= me.max) return;
+  if (AB_CURES[kind] && me.status !== AB_CURES[kind][0]) return;
   if (kind === 'fullheal' && !me.status && !(me.conf > 0)) return;
   const down = ab.party.find(function (x) { return x.hp <= 0; });
   if (kind === 'revive' && !down) return;
@@ -434,6 +438,7 @@ function abUseItem(kind) {
   if (kind === 'elixir') abSteps([['You used an Elixir!', function () { me.moves.forEach(function (mv) { mv.left = Math.min(mv.pp, mv.left + 10); state.advPp[me.id] = state.advPp[me.id] || {}; state.advPp[me.id][mv.id] = mv.left; }); soundLevelUp(); }, 900], [me.name + "'s moves got 10 PP back.", null, 900]]);
   else if (XS) abSteps([['You used an ' + ITEM_LOOKS[kind][1] + '!', function () { me.stg = me.stg || {}; me.stg[XS[0]] = Math.min(6, abStage(me, XS[0]) + 1); soundLevelUp(); }, 900], [me.name + "'s " + XS[1] + ' rose!', null, 900]]);
   else if (kind === 'revive') abSteps([['You used a Revive!', function () { down.hp = Math.max(1, Math.floor(down.max / 2)); state.advHp[down.id] = down.hp; soundLevelUp(); }, 900], [down.name + ' is back on its feet!', null, 900]]);
+  else if (AB_CURES[kind]) abSteps([['You used ' + AB_CURES[kind][1] + '!', function () { me.status = ''; soundLevelUp(); }, 900], [me.name + ' is cured.', null, 900]]);
   else if (kind === 'fullheal') abSteps([['You used a Full Heal!', function () { me.status = ''; me.conf = 0; soundLevelUp(); }, 900], [me.name + ' feels fine again.', null, 900]]);
   else { const heal = Math.min({ hyperpotion: ECON.overworld.hyperPotionHeal, maxpotion: ECON.overworld.maxHeal, fullrestore: ECON.overworld.maxHeal }[kind] || ECON.overworld.superPotionHeal, me.max - me.hp); abSteps([['You used a ' + ITEM_LOOKS[kind][1] + '!', function () { me.hp += heal; if (kind !== 'maxpotion') { me.status = ''; me.conf = 0; } state.advHp[me.id] = me.hp; soundLevelUp(); }, 900], [me.name + ' got back ' + heal + ' HP.', null, 900]]); }
   abFoeTurn();
