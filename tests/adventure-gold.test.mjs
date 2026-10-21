@@ -666,11 +666,24 @@ test('a caught buddy keeps the level it had in the fight (Gold)', async () => {
   assert.equal(lv, 7);
 });
 
-test('Settings > Trivia opens a subjects window: pick the grade and tick subjects', async () => {
+test('Settings > Trivia opens a subjects window: one list for grades 6-8, tick subjects', async () => {
   await ev(() => { closeSettings && 0; openSettings(); });
   await ev(() => { closeSettings(); studyHome(); });
   assert.equal(await ev(() => document.getElementById('study-modal').style.display), 'flex');
-  const r = await ev(() => { studySetLevel(7); const first = studyFilters().find((f) => f[0] !== 'all')[0]; studyToggleSubject(first); const on = state.study.subjects.includes(first); studyToggleSubject(first); return [state.study.level, on, state.study.subjects.includes(first), document.querySelectorAll('#study-subjects button').length > 0]; });
-  assert.deepEqual(r, [7, true, false, true]);
+  const r = await ev(() => { const first = studyFilters().find((f) => f[0] !== 'all')[0]; studyToggleSubject(first); const on = state.study.subjects.includes(first); studyToggleSubject(first); return [state.study.level === ECON.study.maxLevel, on, state.study.subjects.includes(first), document.querySelectorAll('#study-subjects button').length > 0]; });
+  assert.deepEqual(r, [true, true, false, true]);
   await ev(() => closeStudyHome());
+});
+
+test('a ledge can be hopped down over but never climbed, and routes have thick tree edges', async () => {
+  const r = await ev(() => {
+    const withLedge = OW_LANDS.map((L) => OW_MAPS[L.routeIn]).filter((mm) => mm.rows.some((row) => row.includes('v'))), m = withLedge[0]; let lx = -1, ly = -1;
+    m.rows.forEach((row, y) => { const x = row.indexOf('v'); if (x !== -1 && lx < 0) { lx = x; ly = y; } });
+    state.overworld.map = m.id; openAdventure();
+    state.overworld.x = lx; state.overworld.y = ly - 1; state.overworld.face = 'down'; owMove('down');
+    const hopped = [state.overworld.x, state.overworld.y];
+    state.overworld.x = lx; state.overworld.y = ly + 1; owMove('up');
+    return { many: withLedge.length >= 8, hopped: hopped.join() === lx + ',' + (ly + 1), blockedUp: state.overworld.y === ly + 1, thick: m.rows.filter((row) => row.charAt(1) === 'T').length >= 3 };
+  });
+  assert.deepEqual(r, { many: true, hopped: true, blockedUp: true, thick: true });
 });

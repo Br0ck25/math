@@ -30,6 +30,7 @@ const OW_TILES = {
   '_': { t: 't-sand' },
   'd': { t: 't-dirt' },
   'B': { t: 't-bridge' },
+  'v': { t: 't-ledge', solid: true, ledge: true },
   '~': { t: 't-water', solid: true, water: true },
   'Y': { t: 't-tree-shake', solid: true },
   'T': { t: 't-tree', solid: true },

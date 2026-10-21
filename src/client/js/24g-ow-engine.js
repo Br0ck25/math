@@ -131,15 +131,16 @@ function owMove(dir) {
   const o = state.overworld, map = OW_MAPS[o.map], d = OW_STEP[dir];
   o.face = dir;
   const nx = o.x + d[0], ny = o.y + d[1];
-  if (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny)) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
+  const ledge = dir === 'down' && owTileAt(map, nx, ny).ledge && owWalkable(map, nx, ny + 1) && !owNpcAt(map, nx, ny + 1);      // Gold's ledge: you hop down over it, never up
+  if (!ledge && (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny))) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
     renderOverworld();
     owInteract(map, nx, ny);
     return;
   }
   owTrail = { x: o.x, y: o.y };
-  o.x = nx; o.y = ny;
+  o.x = nx; o.y = ledge ? ny + 1 : ny;
   owFrame = owFrame ? 0 : 1;
-  const warp = owWarpAt(map, nx, ny);
+  const warp = owWarpAt(map, o.x, o.y);
   if (warp) { o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }

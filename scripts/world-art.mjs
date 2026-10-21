@@ -27,6 +27,7 @@ const TILE_BODIES = {
     '<path d="M' + w[0] + ' ' + w[1] + 'q8 -9 16 0t16 0" fill="none" ' + stroke('waterL', 4) + ' stroke-linecap="round"/>').join(''),
   't-dirt': rect(0, 0, 100, 100, 'dirt') + dot(22, 28, 5, 'dirtD') + dot(68, 22, 4, 'dirtD') + dot(46, 58, 6, 'dirtD') + dot(82, 72, 5, 'dirtD') + dot(16, 82, 4, 'dirtD'),
   't-bridge': rect(0, 0, 100, 100, 'water') + '<rect x="14" y="0" width="72" height="100" ' + fill('wood') + ' ' + outline + '/>' + [14, 38, 62, 86].map((y) => '<path d="M14 ' + y + 'h72" stroke="' + INK + '" stroke-width="3"/>').join(''),
+  't-ledge': rect(0, 0, 100, 100, 'grass') + '<path d="M0 38h100v34l-12 10l-14 -10l-14 10l-14 -10l-14 10l-14 -10l-14 10l-4 -4z" ' + fill('rockD') + ' ' + outline + '/><path d="M0 38h100v12h-100z" ' + fill('rock') + '/>' + tuft(20, 24, 'grassD') + tuft(74, 90, 'grassD'),
   't-sand': rect(0, 0, 100, 100, 'sand') + dot(24, 24, 3, 'sandD') + dot(70, 36, 3, 'sandD') + dot(44, 70, 4, 'sandD') + dot(84, 84, 3, 'sandD') + dot(12, 66, 3, 'sandD'),
   't-tree': rect(0, 0, 100, 100, 'grass') + '<rect x="42" y="62" width="16" height="30" rx="3" ' + fill('wood') + ' ' + outline + '/>' +
     '<circle cx="50" cy="40" r="32" ' + fill('leaf') + ' ' + outline + '/><circle cx="38" cy="32" r="8" ' + fill('grass') + '/><path d="M60 48q8 -4 10 -12" fill="none" ' + stroke('leafD', 4) + ' stroke-linecap="round"/>',

@@ -73,3 +73,19 @@ function owLake(mapId, i, walls) {
   }
 }
 OW_LANDS.forEach(function (L, i) { owLake(L.routeIn, i, owWindRoute(L.routeIn, i)); });
+
+// ----- ledges and thick borders (Gold): a row of ledge on one side of the road that you can only hop down over, and a second row of trees along both edges -----
+// Only plain grass is changed, and never near a door, a person, a sign or a find, so every route stays as open as before (the middle of the road is never touched).
+function owLandscape(mapId, i) {
+  const m = OW_MAPS[mapId], n = m.rows.length, keys = Object.keys(m.signs || {}).concat(Object.keys(m.trees || {}));
+  const near = function (x, y, r) { return m.warps.some(function (w) { return Math.abs(w.x - x) <= r && Math.abs(w.y - y) <= r; }) || (m.npcs || []).concat(m.objects || []).some(function (p) { return Math.abs(p.x - x) <= r && Math.abs(p.y - y) <= r; }) || keys.some(function (k) { const p = k.split(',').map(Number); return Math.abs(p[0] - x) <= r && Math.abs(p[1] - y) <= r; }); };
+  const plain = function (x, y) { return m.rows[y].charAt(x) === ',' && !near(x, y, 1); };
+  for (let y = 2; y < n - 2; y++) [1, 12].forEach(function (x) { if (plain(x, y) && !near(x, y, 2)) owSetTile(mapId, x, y, 'T'); });
+  const sides = i % 2 ? [8, 1] : [1, 8];                                                                  // the ledge prefers the side opposite the last one
+  const free = function (x, y) { return m.rows[y].charAt(x) === ',' && !near(x, y, 0); };
+  for (let y = n - 4; y > 3; y--) for (let s = 0; s < 2; s++) {
+    let ok = true; for (let x = sides[s]; x < sides[s] + 4; x++) if (!free(x, y) || ',"*d'.indexOf(m.rows[y - 1].charAt(x)) === -1 || ',"*d'.indexOf(m.rows[y + 1].charAt(x)) === -1) ok = false;
+    if (ok) { for (let x = sides[s]; x < sides[s] + 4; x++) owSetTile(mapId, x, y, 'v'); return; }
+  }
+}
+OW_LANDS.forEach(function (L, i) { owLandscape(L.routeIn, i); });

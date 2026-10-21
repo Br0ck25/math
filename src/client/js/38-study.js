@@ -101,19 +101,15 @@ function toggleStudy() {
   if (b) b.innerText = studyOn ? 'Questions: school subjects' : 'Questions: math';
 }
 
-// The subjects window (Settings > Trivia): pick the grade (6-8) and tick the subjects; none ticked means all.
-function studyHome() { showModal('study-modal', renderStudyHome); }
+// The subjects window (Settings > Trivia): one list for grades 6-8 together (every question up to the top grade is in); tick subjects, none ticked means all.
+function studyHome() { state.study.level = ECON.study.maxLevel; showModal('study-modal', renderStudyHome); }
 function closeStudyHome() { hideModal('study-modal'); }
 function renderStudyHome() {
-  document.getElementById('study-levels').innerHTML = [6, 7, 8].map(function (g) {
-    return '<button type="button" class="grade-btn' + (state.study.level === g ? ' active' : '') + '" onclick="studySetLevel(' + g + ')">Grade ' + g + '</button>';
-  }).join('');
   const sel = studySelected();
   document.getElementById('study-subjects').innerHTML = studyFilters().filter(function (f) { return f[0] !== 'all'; }).map(function (f) {
     return '<button type="button" class="grade-btn' + (sel.indexOf(f[0]) !== -1 && sel[0] !== 'all' ? ' active' : '') + '" onclick="studyToggleSubject(\'' + f[0] + '\')">' + escHtml(f[1]) + '</button>';
   }).join('');
 }
-function studySetLevel(g) { state.study.level = g; soundClick(); saveState(); renderStudyHome(); }
 function studyToggleSubject(id) {
   const cur = state.study.subjects, i = cur.indexOf(id);
   if (i === -1) cur.push(id); else cur.splice(i, 1);
