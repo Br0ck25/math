@@ -192,6 +192,8 @@ const NORMALIZERS = [
     Object.keys(hp).forEach(function (id) { if (owned.indexOf(id) !== -1 && Number.isFinite(hp[id])) s.advHp[id] = clamp(Math.floor(hp[id]), 0, 9999); });
     const pu = {}; Object.keys(isPlainObject(s.ppUp) ? s.ppUp : {}).forEach(function (id) { if (!isPlainObject(s.ppUp[id])) return; pu[id] = {}; Object.keys(s.ppUp[id]).slice(0, 12).forEach(function (m) { pu[id][m.slice(0, 16)] = clamp(Math.floor(Number(s.ppUp[id][m])) || 0, 0, 3); }); });
     s.ppUp = pu;
+    const vit = {}; Object.keys(isPlainObject(s.vitamins) ? s.vitamins : {}).slice(0, 400).forEach(function (id) { if (!isPlainObject(s.vitamins[id])) return; vit[id.slice(0, 24)] = {}; VITAMINS.forEach(function (v) { const n = clamp(Math.floor(Number(s.vitamins[id][v[1]])) || 0, 0, ECON.vitamins.max); if (n) vit[id.slice(0, 24)][v[1]] = n; }); });
+    s.vitamins = vit;
     const tmc = {}; Object.keys(isPlainObject(s.tms) ? s.tms : {}).forEach(function (t) { if (AB_TMS[t] && s.tms[t]) tmc[t] = 1; }); s.tms = tmc;
     const tmk = {}, tmOwned = s.unlockedPets.concat(s.unlockedSecrets);
     Object.keys(isPlainObject(s.tmKnown) ? s.tmKnown : {}).forEach(function (id) { if (tmOwned.indexOf(id) !== -1 && Array.isArray(s.tmKnown[id])) tmk[id] = s.tmKnown[id].filter(function (t, i, a) { return AB_TMS[t] && a.indexOf(t) === i; }).slice(0, 8); });
@@ -228,7 +230,7 @@ const NORMALIZERS = [
     const gd = {}; Object.keys(isPlainObject(s.genders) ? s.genders : {}).forEach(function (id) { if (getSpecies(id) && (s.genders[id] === 'm' || s.genders[id] === 'f')) gd[id] = s.genders[id]; });
     s.genders = gd;
     s.repelSteps = asInt(s.repelSteps, 0, ECON.overworld.maxRepelSteps * 2, 0);
-    const it = {}; ['antidote', 'burnheal', 'iceheal', 'awakening', 'parlyzheal', 'superpotion', 'hyperpotion', 'maxpotion', 'fullrestore', 'fullheal', 'revive', 'greatnet', 'ultranet', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
+    const it = {}; ['hpup', 'protein', 'iron', 'carbos', 'calcium', 'antidote', 'burnheal', 'iceheal', 'awakening', 'parlyzheal', 'superpotion', 'hyperpotion', 'maxpotion', 'fullrestore', 'fullheal', 'revive', 'greatnet', 'ultranet', 'elixir', 'xattack', 'xdefend', 'xspeed', 'stone', 'ether', 'ppup', 'escaperope'].forEach(function (k) { const n = clamp(Math.floor(Number(isPlainObject(s.items) ? s.items[k] : 0)) || 0, 0, 99); if (n) it[k] = n; });
     s.items = it;
     s.potions = clamp(Math.floor(Number(s.potions)) || 0, 0, 99);
   },
@@ -240,7 +242,7 @@ const NORMALIZERS = [
     const c = isPlainObject(o.center) ? o.center : {}, cm = OW_MAPS[c.map];
     const center = cm && owWalkable(cm, c.x, c.y) && !owNpcAt(cm, c.x, c.y) ? { map: c.map, x: c.x, y: c.y } : { map: OW_START.map, x: OW_MAPS[OW_START.map].start.x, y: OW_MAPS[OW_START.map].start.y };     // a Center that is not a place to stand: the start
     s.overworld = { map: map.id, x: spot.x, y: spot.y, face: OW_FACES.indexOf(o.face) !== -1 ? o.face : 'down',
-      found: known('pickup', o.found), center: center, beat: known('trainer', o.beat), story: known('story', o.story), walk: { day: isPlainObject(o.walk) && typeof o.walk.day === 'string' ? o.walk.day.slice(0, 10) : '', n: isPlainObject(o.walk) ? asInt(o.walk.n, 0, 1e9, 0) : 0, eggs: isPlainObject(o.walk) ? asInt(o.walk.eggs, 0, 99, 0) : 0 }, seen: (Array.isArray(o.seen) ? o.seen : []).filter(function (id, i, a) { return owTowns().indexOf(id) !== -1 && a.indexOf(id) === i; }), traded: known('npc', o.traded), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) } };
+      found: known('pickup', o.found), fruitDay: typeof o.fruitDay === 'string' ? o.fruitDay.slice(0, 10) : '', center: center, beat: known('trainer', o.beat), story: known('story', o.story), walk: { day: isPlainObject(o.walk) && typeof o.walk.day === 'string' ? o.walk.day.slice(0, 10) : '', n: isPlainObject(o.walk) ? asInt(o.walk.n, 0, 1e9, 0) : 0, eggs: isPlainObject(o.walk) ? asInt(o.walk.eggs, 0, 99, 0) : 0 }, seen: (Array.isArray(o.seen) ? o.seen : []).filter(function (id, i, a) { return owTowns().indexOf(id) !== -1 && a.indexOf(id) === i; }), traded: known('npc', o.traded), shaken: { day: typeof (isPlainObject(o.shaken) ? o.shaken : {}).day === 'string' ? o.shaken.day.slice(0, 10) : '', ids: known('tree', (isPlainObject(o.shaken) ? o.shaken : {}).ids) } };
   }
 ];
 function normalizeState() {

@@ -158,7 +158,15 @@ function abBadgeBoost(m) {
   gymRegions().forEach(function (r, i) { if (hasBadge(r.id)) m[AB_BADGE_STAT[i]] = Math.floor(m[AB_BADGE_STAT[i]] * 9 / 8); });
   return m;
 }
-function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return abBadgeBoost(m); }
+// Gold's vitamins: [item, the stat they raise, the name]; each one used adds ECON.vitamins points to that stat (HP: more) for good.
+const VITAMINS = [['hpup', 'hp', 'HP Up'], ['protein', 'atk', 'Protein'], ['iron', 'def', 'Iron'], ['carbos', 'spd', 'Carbos'], ['calcium', 'spc', 'Calcium']];
+function abVitamins(m) {
+  const v = state.vitamins[m.id] || {};
+  m.max += (v.hp || 0) * ECON.vitamins.hp;
+  ['atk', 'def', 'spd', 'spc'].forEach(function (k) { m[k] += (v[k] || 0) * ECON.vitamins.stat; });
+  return m;
+}
+function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return abBadgeBoost(abVitamins(m)); }
 // Gold's damage formula, step by step. Normal moves are physical (Attack against Defense); every other type is special (Special against Special), as in Gold.
 // A burn halves a physical Attack. A critical hit doubles the damage before the +2; then the same-type bonus, type effectiveness and luck follow, each rounded down.
 const AB_CRIT = 17 / 256, AB_CRIT_LENS = 32 / 256;     // the critical hit chance, and with a Scope Lens (one stage up)

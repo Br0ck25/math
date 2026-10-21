@@ -107,6 +107,7 @@ function owCollect(p) {
   state.overworld.found.push(p.id);
   let msg;
   if (p.give === 'gems') { state.potions = Math.min(99, state.potions + 1); msg = 'You found a Potion!'; }
+  else if (p.give === 'berry') { state.potions = Math.min(99, state.potions + 1); msg = 'You picked a Berry! It works like a Potion.'; }      // a berry bush grows back every day (owFruitDay)
   else if (p.give === 'net' && state.nets < maxNets()) { state.nets += 1; msg = 'You found a Catch Net!'; }
   else { state.potions = Math.min(99, state.potions + 1); msg = 'You found a Potion!'; }      // instead of a net when the net bag is full
   soundCoinChirp();

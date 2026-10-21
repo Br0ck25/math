@@ -774,3 +774,43 @@ test('the status cures work only on their own status: Antidote on poison, Burn H
   await menu();
   assert.deepEqual(await ev(() => [abMe().status, state.items.burnheal || 0]), ['', 0]);
 });
+
+test('vitamins raise one stat of one buddy for good, up to ten of each, and a bad save is repaired', async () => {
+  const r = await ev(() => {
+    openAdventure(); const id = state.activePet, before = abPartyMon(id);
+    state.items.protein = 12; state.items.hpup = 1; hubPet = id;
+    for (let i = 0; i < 12; i++) useVitamin('protein');
+    useVitamin('hpup');
+    const after = abPartyMon(id);
+    state.vitamins = { [id]: { atk: 999, hp: 'x', zzz: 5 }, bad: 7 }; normalizeState(state);
+    return { atk: after.atk - before.atk, hp: after.max - before.max, left: state.items.protein || 0, repaired: JSON.stringify(state.vitamins[id]), badGone: state.vitamins.bad === undefined };
+  });
+  assert.deepEqual(r, { atk: 20, hp: 3, left: 2, repaired: '{"atk":10}', badGone: true });
+});
+
+test('a berry bush gives a berry once a day and grows back the next morning', async () => {
+  const r = await ev(() => {
+    openAdventure(); const real = dayKey, bush = OW_MAPS.route1.objects.find((o) => o.id === 'route1-berries'), other = OW_MAPS.route1.objects.find((o) => o.id === 'route1-islet');
+    dayKey = () => '2031-02-01'; renderOverworld();
+    state.potions = 0; owCollect(bush); owCollect(other);
+    const first = [state.potions, !!owPickupAt(OW_MAPS.route1, bush.x, bush.y)];
+    renderOverworld(); const sameDay = !!owPickupAt(OW_MAPS.route1, bush.x, bush.y);
+    dayKey = () => '2031-02-02'; renderOverworld();
+    const next = [!!owPickupAt(OW_MAPS.route1, bush.x, bush.y), !!owPickupAt(OW_MAPS.route1, other.x, other.y)];
+    dayKey = real; return { first, sameDay, next };
+  });
+  assert.deepEqual(r, { first: [2, false], sameDay: false, next: [true, false] });
+});
+
+test('a person or find in the next map shows past the edge, where you will meet it after crossing', async () => {
+  const r = await ev(() => {
+    openAdventure(); state.overworld.map = 'route1'; state.overworld.x = 6; state.overworld.y = 1; renderOverworld();
+    const before = document.querySelectorAll('.ow-npc').length, mm = OW_MAPS.meadow, w = OW_MAPS.route1.warps.find((p) => p.y === 0 && p.x === 6);
+    const npc = { id: 'tmp-far', kind: 'talk', name: 'Far', x: w.tx, y: w.ty - 1, face: 'down', look: { skin: 1, hair: 1, outfit: 1, style: 1 }, lines: ['hi'] };
+    mm.npcs.push(npc); renderOverworld();
+    const during = document.querySelectorAll('.ow-npc').length;
+    mm.npcs.pop(); renderOverworld();
+    return [before, during, document.querySelectorAll('.ow-npc').length];
+  });
+  assert.deepEqual(r, [r[0], r[0] + 1, r[0]]);
+});

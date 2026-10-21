@@ -60,7 +60,7 @@ function renderStatsTab() {
   document.getElementById('hub-body').innerHTML =
     stat('Type', escHtml(m.type.toUpperCase())) + stat('Level', lv + (lv < MAX_LEVEL ? ' (' + (xpForLevel(lv + 1) - xp) + ' XP to next)' : ' (max)')) +
     stat('HP', m.hp + ' / ' + m.max) + stat('Attack', m.atk) + stat('Defense', m.def) + stat('Speed', m.spd) + stat('Special', m.spc) +
-    stat('Friendship', happyOf(hubPet) + ' / 255' + (HAPPY_EVOLVERS.indexOf(hubPet) !== -1 && getPetById(hubPet).stage < 1 ? ' (evolves at ' + HAPPY_EVO_AT + ')' : '')) + stat('Held item', item ? escHtml(item.name) : 'none') + stoneRow() + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
+    stat('Friendship', happyOf(hubPet) + ' / 255' + (HAPPY_EVOLVERS.indexOf(hubPet) !== -1 && getPetById(hubPet).stage < 1 ? ' (evolves at ' + HAPPY_EVO_AT + ')' : '')) + stat('Held item', item ? escHtml(item.name) : 'none') + stoneRow() + vitaminRows() + '<div style="font-size:0.78rem; font-weight:800; margin:8px 0 2px;">Moves</div>' + moves;
 }
 
 // An Evolution Stone makes the kinds in STONE_EVOLVERS take their first evolution at once (Gold's stone evolutions).
@@ -81,6 +81,21 @@ function useStone() {
   renderHub();
 }
 
+// Vitamins: one row per kind the player holds; each raises one stat of this buddy for good, up to ECON.vitamins.max of each.
+function vitaminRows() {
+  return VITAMINS.filter(function (v) { return state.items[v[0]]; }).map(function (v) {
+    const used = (state.vitamins[hubPet] || {})[v[1]] || 0, full = used >= ECON.vitamins.max;
+    return '<div class="care-row"><div><div class="t">' + v[2] + ' x' + state.items[v[0]] + '</div><div class="d">Used ' + used + ' of ' + ECON.vitamins.max + ' on ' + escHtml(name0(hubPet)) + '.</div></div><button class="claim-btn"' + (full ? ' disabled' : '') + ' onclick="useVitamin(\'' + v[0] + '\')">Use</button></div>';
+  }).join('');
+}
+function useVitamin(item) {
+  const v = VITAMINS.find(function (x) { return x[0] === item; });
+  if (!v || !state.items[item] || ((state.vitamins[hubPet] || {})[v[1]] || 0) >= ECON.vitamins.max) return;
+  state.items[item] -= 1; if (!state.items[item]) delete state.items[item];
+  state.vitamins[hubPet] = state.vitamins[hubPet] || {};
+  state.vitamins[hubPet][v[1]] = (state.vitamins[hubPet][v[1]] || 0) + 1;
+  saveState(); soundLevelUp(); renderHub();
+}
 // A PP Up raises one move's PP by a fifth of its base, up to three times.
 function usePpUp(moveId) {
   if (!state.items.ppup || (state.ppUp[hubPet] && state.ppUp[hubPet][moveId] >= 3)) return;

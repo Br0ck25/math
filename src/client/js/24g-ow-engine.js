@@ -87,19 +87,30 @@ function owBeyond(map, x, y) {
   const n = map.rows.length, edge = y < 0 ? 0 : n - 1, w = (y < 0 || y >= n) && map.warps.filter(function (p) { return p.y === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
   if (!w) return null;
   const nm = OW_MAPS[w.to], nx = clamp(x + w.tx - w.x, 0, nm.rows[0].length - 1), ny = clamp(w.ty + (y - w.y), 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
-  return t ? { t: t, style: owPaletteCss(nm.palette) } : null;
+  return t ? { t: t, style: owPaletteCss(nm.palette), map: nm, x: x + w.tx - w.x, y: w.ty + (y - w.y) } : null;
 }
 function owPaletteCss(palette) { return Object.keys(palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + palette[k]; }).join(';'); }
+// Berry bushes (a pickup whose id ends in -berries) grow back each new day, like Gold's fruit trees: on a new day their ids leave the found list.
+function owFruitDay() {
+  const o = state.overworld, today = dayKey();
+  if (o.fruitDay === today) return;
+  const bushes = owIds('pickup').filter(function (id) { return /-berries$/.test(id); });
+  o.found = o.found.filter(function (id) { return bushes.indexOf(id) === -1; });
+  o.fruitDay = today;
+}
 function renderOverworld() {
+  owFruitDay();
   const o = state.overworld, map = OW_MAPS[o.map], g = owGrid(), hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
   const inView = function (x, y) { return Math.abs(x - o.x) <= hx && Math.abs(y - o.y) <= hy; };
   let h = '';
+  const farActors = [];                                                                                   // people and finds of the next map that are in view past the edge
   for (let vy = 0; vy < g.rows; vy++) {
     for (let vx = 0; vx < g.cols; vx++) {
       const x = o.x - hx + vx, y = o.y - hy + vy;
       const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
       const shown = t || (beyond && beyond.t) || owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1));
       h += '<span class="ow-cell"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
+      if (beyond) farActors.push([beyond, vx, vy]);
     }
   }
   (map.objects || []).forEach(function (ob) {
@@ -109,6 +120,11 @@ function renderOverworld() {
     if (!owNpcActive(np)) return;
     if (inView(np.x, np.y)) h += owActorHtml('ow-npc', np.x - o.x + hx, np.y - o.y + hy, g, heroSprite(heroLookColors(np.look), np.face, 0));
     if (np.alert && inView(np.x, np.y - 1)) h += owActorHtml('ow-alert', np.x - o.x + hx, np.y - 1 - o.y + hy, g, worldSprite('fx-alert'));
+  });
+  farActors.forEach(function (f) {
+    const b = f[0], npc = owNpcAt(b.map, b.x, b.y), pick = !npc && (b.map.objects || []).find(function (ob) { return ob.type === 'pickup' && ob.x === b.x && ob.y === b.y && o.found.indexOf(ob.id) === -1; });
+    if (npc && owNpcActive(npc)) h += owActorHtml('ow-npc', f[1], f[2], g, heroSprite(heroLookColors(npc.look), npc.face, 0));
+    else if (pick) h += owActorHtml('ow-pickup', f[1], f[2], g, worldSprite('o-sparkle'));
   });
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
   h += owActorHtml('ow-hero', hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
