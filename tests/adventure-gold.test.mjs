@@ -1176,3 +1176,15 @@ test('friend calls: whoever gave you a key item rings once a day with a small gi
   });
   assert.deepEqual(r, { none: true, named: true, btn: true, gained: true, done: true, saved: true, noBtn: true });
 });
+
+test('gym skies: the Ember gym is under harsh sun and the Tide gym in rain (every round), the Meadow gym has none', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = {};
+    const run = (id) => { const real = abStart; let o; abStart = (x) => { o = x; return true; }; state.buddyXp.dog = xpForLevel(60); abStartGym(id); abStart = real; return o && o.gymWeather; };
+    out.ember = run('ember'); out.tide = run('tide'); out.meadow = run('meadow');
+    abStart({ rounds: [{ kind: 'trainer', name: 'A', foes: [{ id: 'fox', level: 3 }] }, { kind: 'trainer', name: 'B', foes: [{ id: 'fox', level: 3 }] }], gymWeather: 'sun' });
+    out.start = ab.weather && ab.weather.k; ab.weather = null; ab.r = 1; abLoadRound(); out.again = ab.weather && ab.weather.k;
+    return out;
+  });
+  assert.deepEqual(r, { ember: 'sun', tide: 'rain', meadow: '', start: 'sun', again: 'sun' });
+});

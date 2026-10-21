@@ -22,7 +22,7 @@ function abStart(opts) {
   const first = lead !== -1 ? lead : party.findIndex(function (m) { return m.hp > 0; });
   if (first === -1) { toast('Your buddies are too tired. Rest at a Buddy Center first!'); return false; }
   const rounds = opts.rounds || [{ kind: opts.kind, name: opts.name || '', npc: opts.npc || null, foes: opts.foes }];
-  ab = { fished: !!opts.fished, safari: opts.safari || null, tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
+  ab = { fished: !!opts.fished, safari: opts.safari || null, tower: opts.tower || null, rematch: !!opts.rematch, contest: !!opts.contest, introMe: true, introFoe: false, after: [], rounds: rounds, r: 0, gymWeather: opts.gymWeather || '', onWin: opts.onWin || null, party: party, cur: first, queue: [], busy: false, phase: 'busy', q: null, forced: false, text: '' };
   abLoadRound();
   hideModal('overworld-modal');
   showModal('ab-modal', function () {
@@ -47,11 +47,17 @@ function abLoadRound() {
   ab.kind = r.kind; ab.name = r.name; ab.npc = r.npc || null;
   ab.foes = r.foes.map(abFoeMon);
   ab.i = 0; ab.part = [abMe().id];
+  if (ab.gymWeather) ab.weather = { k: ab.gymWeather, n: 5 };                        // a gym's own sky: it comes back with every round
   abSeen();
 }
 function abSeen() { const f = abFoe(); if (f.id) markDexSeen(f.id); }
 // Gold shows the people first: you from behind, and the trainer in front of the foe's buddy until it is sent out.
 function abIntro() {
+  if (ab.gymWeather && ab.kind !== 'wild') return abGymSky().concat(abIntroSteps());
+  return abIntroSteps();
+}
+function abGymSky() { return [[ab.gymWeather === 'rain' ? 'Rain falls inside the gym!' : 'The gym is blazing hot!', null, 1000]]; }
+function abIntroSteps() {
   if (ab.kind === 'wild') return [['A wild ' + abFoe().name + ' appeared!', function () { soundBuddyCry(abFoe().id); }, 1100]];
   ab.introFoe = true;
   return [[ab.name + ' wants to battle!', function () { abRender(); }, 1300], [ab.name + ' sent out ' + abFoe().name + '!', function () { ab.introFoe = false; abRender(); soundBuddyCry(abFoe().id); }, 1000]];

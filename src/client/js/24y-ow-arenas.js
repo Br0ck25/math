@@ -35,7 +35,7 @@ function abStartGym(id, skipFirst) {
   const r = regionById(id), rematch = hasBadge(id);
   if (!r.gym || !regionUnlocked(r) || (rematch && !isChampion()) || state.gym || ab) return;
   state.region = id; markRegionVisited(id);
-  abStart({ rounds: skipFirst && !rematch ? abGymRounds(id, rematch).slice(1) : abGymRounds(id, rematch), onWin: function () { abGymWon(id, rematch); } });
+  abStart({ rounds: skipFirst && !rematch ? abGymRounds(id, rematch).slice(1) : abGymRounds(id, rematch), gymWeather: { fire: 'sun', water: 'rain' }[r.element] || '', onWin: function () { abGymWon(id, rematch); } });
 }
 function abGymWon(id, rematch) {
   state.gym = rematch ? { region: id, step: ECON.map.trainers, rematch: true } : { region: id, step: ECON.map.trainers };
