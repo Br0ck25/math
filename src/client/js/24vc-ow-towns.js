@@ -35,7 +35,7 @@ function owBuildTown(L, i, attempt) {
   const spots = function (w, h, x0, y0, x1, y1) { const out = []; for (let y = y0; y + h <= y1 + 1; y++) for (let x = x0; x + w <= x1 + 1; x++) if (rect(x, y, w, h)) out.push([x, y]); return out; };
   const take = function (list) { return list.length ? list[Math.floor(rnd() * list.length)] : null; };
   // the nook: a thick wood with a gate in it and the finds behind
-  const gateChar = L.charm ? (old.join('').match(/[ghjklqz]/) || ['g'])[0] : 'y', nookObjs = (m.objects || []).filter(function (o) { return /nook/.test(o.id); }), objs = (m.objects || []).map(function (o) { return Object.assign({}, o); });
+  const gateChar = L.charm ? (old.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n'), nookObjs = (m.objects || []).filter(function (o) { return /nook/.test(o.id); }), objs = (m.objects || []).map(function (o) { return Object.assign({}, o); });
   let nook = null;
   if (nookObjs.length) {
     const c = []; for (let y = 8; y < 14; y++) for (let x = 3; x < 13; x++) if (x !== 7 && x !== 8 && rect(x - 1, y - 4, 3, 4) && (at(x, y) === ',' || at(x, y) === '.') && Math.abs(x - 7.5) > 2) c.push([x, y]);

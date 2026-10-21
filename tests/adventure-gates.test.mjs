@@ -27,24 +27,24 @@ const put = (map, x, y, face = 'up') => page.evaluate(([m, px, py, f]) => {
 const shown = (id) => page.evaluate((i) => document.getElementById(i).style.display === 'flex', id);
 const wait = (ms) => page.waitForTimeout(ms);
 
-test('eight charms, one per badge, each with a picture for the charm, the closed gate and the open gate', async () => {
+test('nine charms, one per badge, each with a picture for the charm, the closed gate and the open gate', async () => {
   const r = await page.evaluate(() => {
     mountWorldArt();
     const ids = Object.keys(OW_GATES), has = (x) => !!document.getElementById('w-' + x);
     return {
       ids, badges: ids.map((i) => OW_GATES[i].badge), distinct: new Set(ids.map((i) => OW_GATES[i].badge)).size,
-      real: ids.every((i) => gymRegions().some((g) => g.id === OW_GATES[i].badge)),
+      real: ids.every((i) => allGymRegions().some((g) => g.id === OW_GATES[i].badge)),
       charmArt: ids.every((i) => has('k-' + i) && KEY_ITEMS.some((k) => k.id === i && k.art === 'k-' + i && k.badge === OW_GATES[i].badge)),
       gateArt: ids.every((i) => has(OW_GATES[i].closed) && has(OW_GATES[i].open)), tileArt: Object.keys(OW_TILES).every((c) => has(OW_TILES[c].t)),
       chars: Object.keys(OW_GATE_CHARS).sort().join(), hints: ids.every((i) => OW_GATES[i].hint.includes(OW_GATES[i].name) && OW_GATES[i].text),
       skyreach: KEY_ITEMS.some((k) => k.badge === 'skyreach')
     };
   });
-  assert.deepEqual(r.ids, ['trim', 'steam', 'water', 'vines', 'switch', 'lamp', 'stars', 'whirl']);
-  assert.deepEqual(r.badges, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'skyreach']);
-  assert.equal(r.distinct, 8);
+  assert.deepEqual(r.ids, ['trim', 'steam', 'water', 'vines', 'switch', 'lamp', 'stars', 'fall', 'whirl']);
+  assert.deepEqual(r.badges, ['meadow', 'ember', 'tide', 'grove', 'volt', 'gloom', 'mystic', 'coral', 'skyreach']);
+  assert.equal(r.distinct, 9);
   assert.ok(r.real && r.charmArt && r.gateArt && r.tileArt && r.hints);
-  assert.equal(r.chars, 'g,h,j,k,l,q,y,z');
+  assert.equal(r.chars, 'g,h,j,k,l,n,q,y,z');
   assert.equal(r.skyreach, true);
 });
 
@@ -62,8 +62,8 @@ test('a charm is yours while you hold its badge: old saves have theirs, nothing 
     out.kept = state.keyItems.slice();
     return out;
   });
-  assert.deepEqual(r.none, [false, false, false, false, false, false, false, false]);
-  assert.deepEqual(r.two, [true, false, true, false, false, false, false, false]);
+  assert.deepEqual(r.none, [false, false, false, false, false, false, false, false, false]);
+  assert.deepEqual(r.two, [true, false, true, false, false, false, false, false, false]);
   assert.equal(r.grant, false);
   assert.deepEqual(r.stored, []);
   assert.equal(r.stars, true);

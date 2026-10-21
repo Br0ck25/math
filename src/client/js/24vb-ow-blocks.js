@@ -16,7 +16,7 @@ function owRng(text, k) {
 }
 // One try at laying a route out; returns its new rows, people and finds, or null when something could not be placed.
 function owBlockRoute(L, i, attempt) {
-  const m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : 'y';
+  const m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n');
   const B = []; for (let by = 0; by < 12; by++) { B.push([]); for (let bx = 0; bx < 7; bx++) B[by].push(bx === 0 || bx === 6 || by === 0 || by === 11 ? 'T' : 'g'); }
   const at = function (bx, by) { return B[by] && B[by][bx]; }, roadNear = function (bx, by, r) { for (let y = by - r; y <= by + r; y++) for (let x = bx - r; x <= bx + r; x++) if (at(x, y) === 'p') return true; return false; };
   for (let by = 0; by < 12; by++) { B[by][plan[by]] = 'p'; if (by) for (let c = Math.min(plan[by], plan[by - 1]); c <= Math.max(plan[by], plan[by - 1]); c++) B[by][c] = 'p'; }

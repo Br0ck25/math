@@ -29,7 +29,7 @@ const state_ = () => page.evaluate(() => JSON.parse(JSON.stringify(state.overwor
 test('the town data is sound: unique ids, people and pickups on free walkable tiles, doors that lead in and back, and everything reachable', async () => {
   const problems = await page.evaluate(() => {
     const out = [], seen = {};
-    state.badges = gymRegions().map((x) => x.id);                                                       // every charm: the gates are open, so everything can be reached
+    state.badges = allGymRegions().map((x) => x.id);                                                       // every charm: the gates are open, so everything can be reached
     owNpcActive = () => true;                                                                           // and every person is there (some only appear after a badge or the Champion)
     const unique = (id, what) => { if (seen[id]) out.push('duplicate id ' + id + ' (' + what + ')'); seen[id] = 1; };
     const arrivals = {};                                                                                // map id -> tiles where the hero can appear

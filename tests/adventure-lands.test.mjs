@@ -28,7 +28,7 @@ const shown = (id) => page.evaluate((i) => document.getElementById(i).style.disp
 test('every land with a town has what a town needs: a gym door, a Center and a Mart with their people, a house, a guide, a quiz sign, a route in, and goods in a nook', async () => {
   const problems = await page.evaluate(() => {
     const out = [];
-    state.badges = gymRegions().map((x) => x.id);
+    state.badges = allGymRegions().map((x) => x.id);
     OW_LANDS.forEach((L) => {
       const town = OW_MAPS[L.town], need = (c, why) => { if (!c) out.push(L.land + ': ' + why); };
       need(town && regionById(L.land).gym, 'no town or no gym land');
@@ -204,7 +204,7 @@ test('every nook is behind its charm gate: unreachable without the charm, reacha
     const nooks = [];
     OW_LANDS.forEach((L) => { if (L.nook.length) nooks.push({ map: L.town, ids: L.nook }); const route = OW_MAPS[L.routeIn]; const ids = route.objects.filter((o) => /-nook-/.test(o.id)).map((o) => o.id); if (ids.length) nooks.push({ map: L.routeIn, ids }); });
     const out = [], real = hasKeyItem;
-    state.badges = gymRegions().map((x) => x.id);
+    state.badges = allGymRegions().map((x) => x.id);
     nooks.forEach((n) => {
       const m = OW_MAPS[n.map], at = (id) => { const o = m.objects.find((p) => p.id === id); return o.x + ',' + o.y; };
       hasKeyItem = () => false;
