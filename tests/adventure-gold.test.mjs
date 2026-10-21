@@ -1188,3 +1188,10 @@ test('gym skies: the Ember gym is under harsh sun and the Tide gym in rain (ever
   });
   assert.deepEqual(r, { ember: 'sun', tide: 'rain', meadow: '', start: 'sun', again: 'sun' });
 });
+
+test('towns have more landscape: orchards, fenced paddocks and boulder fields appear among the leftover slots', async () => {
+  const r = await ev(() => {
+    return OW_LANDS.filter((L) => OW_MAPS[L.town].rows.join('').includes('=')).length;      // no town had a fence before the paddock stamp
+  });
+  assert.ok(r >= 3, 'fenced paddocks stand in several towns');
+});

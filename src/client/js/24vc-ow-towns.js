@@ -1,7 +1,7 @@
 // =====================================================================
 //  TOWN BLOCKS: every town used to be one plan. Now each is laid out from buildings and land stamps: the main road runs up the middle, a cross street at rows 5-6, and the Buddy
 //  Center, Mart, house and gym take four of six slots (top, middle and bottom row, left and right of the road), each with a lane of path from its door to the road. The two
-//  slots left over get a pond, garden, grove or plaza. The town's people, signs and finds are then stood on the new land, and a wood with the nook is cut in.
+//  slots left over get a pond, garden, grove, plaza, orchard, paddock or boulder field. The town's people, signs and finds are then stood on the new land, and a wood with the nook is cut in.
 //  The edge columns at rows 4-8 are kept as they were: the side games (24vf and later) and the hideout doors cut their gaps there.
 //  A town that cannot be laid out in a few tries keeps its hand-written rows. Runs after the route blocks (24vb) and before the side games.
 // =====================================================================
@@ -49,7 +49,10 @@ function owBuildTown(L, i, attempt) {
     pond: [4, 3, function (x, y) { return x === 0 || x === 3 || y === 0 || y === 2 ? '_' : '~'; }],
     garden: [3, 3, function (x, y) { return y === 0 ? 'b' : (x + y) % 2 ? '*' : ','; }],
     grove: [3, 3, function (x, y) { return y < 2 || x === 1 ? 'T' : '*'; }],
-    plaza: [3, 3, function (x, y) { return (x === 0 || x === 2) && (y === 0 || y === 2) ? '*' : 'd'; }]
+    plaza: [3, 3, function (x, y) { return (x === 0 || x === 2) && (y === 0 || y === 2) ? '*' : 'd'; }],
+    orchard: [3, 3, function (x, y) { return (x + y) % 2 ? ',' : 'T'; }],
+    paddock: [4, 3, function (x, y) { return (x === 0 || x === 3 || y === 0 || y === 2) && !(y === 2 && x === 1) ? '=' : ','; }],
+    boulders: [3, 3, function (x, y) { return (x + y) % 3 === 0 ? '#' : '*'; }]
   };
   const pool = Object.keys(STAMPS), free = names.slice(4).concat(extra);
   let water = null;

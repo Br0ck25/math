@@ -22,7 +22,7 @@ Math answers drive every attack; six types not seventeen; no DVs or stat experie
 8. **Mini-games:** (Card Flip done) one slot machine and Card Flip; Ruin signs (four questions, an Evolution Stone) in every fourth cave stand in for the Unown puzzle, a second Tower mode (the 14-trainer Marathon) is done, no second Safari mode.
 9. **(Partly done: a gym riddle lets you skip the first trainer; fire gyms are under sun and water gyms in rain.) Trainer and gym feel.** Gold gyms have puzzles (switches, ice, mazes, tracks); ours are a chain of trainers then a leader. Trainers have no classes with distinct teams beyond our hand-written ones, and no double battles (Gold II has none either).
 10. **Sound and animation.** (Per-area music done.) battle wipes and cries done; attack effects are typed CSS only.
-11. **Town shape.** Towns are still one family of plan (Center, Mart, house, gym in slots); Gold towns differ more, and its connected maps scroll with no screen change.
+11. **(Partly done: orchard, paddock and boulder stamps.) Town shape.** Towns are still one family of plan (Center, Mart, house, gym in slots); Gold towns differ more, and its connected maps scroll with no screen change.
 
 ## Suggested next three
 1. A cave generator with a Flash-style dark floor (item 1).
