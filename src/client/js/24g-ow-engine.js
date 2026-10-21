@@ -34,8 +34,11 @@ function owSetRegion(map) {
 }
 function owWalkable(map, x, y) { const t = Number.isInteger(x) && Number.isInteger(y) ? owTileAt(map, x, y) : null; return !!t && !t.solid; }
 // A person is there when its `needs` is met (a badge, or 'champion') and it has not vanished (beaten, or its story scene done).
+// The day of the week on this device (0 = Sunday); a few visitors only come on their own day, as Gold's Tuscany does on Tuesdays.
+function owWeekday() { return new Date().getDay(); }
 function owNpcActive(n) {
   const o = state.overworld;
+  if (n.day !== undefined && n.day !== owWeekday()) return false;
   if (n.needs && !(n.needs === 'champion' ? isChampion() : hasBadge(n.needs))) return false;
   if (n.kind === 'trainer' && phoneReady() === n.id) return true;                       // a trainer who called for a rematch is back on the map
   if (n.vanish && (o.beat.indexOf(n.id) !== -1 || (n.story && o.story.indexOf(n.story) !== -1))) return false;
@@ -279,7 +282,8 @@ function startAdventureFight(sp, levelBonus, fished) {
     abStart({ kind: 'wild', contest: true, foes: [{ id: w.id, level: clamp(abWildLevel() + rnd(0, 2), 2, MAX_LEVEL) }] });
     return;
   }
-  if (!sp && legendRoute() === state.overworld.map && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: legendOfWeek().id, level: ECON.legend.level }] }); return; }
+  const roamer = !sp && legendRoamers().find(function (x) { return x.route === state.overworld.map; });
+  if (roamer && Math.random() < ECON.legend.encounter) { abStart({ kind: 'wild', foes: [{ id: roamer.legend.id, level: ECON.legend.level }] }); return; }
   const route = sp ? null : owRollRoute(state.overworld.map);
   if (route) { abStart({ kind: 'wild', foes: [{ id: route.id, level: route.level, shiny: Math.random() * ECON.shiny.shinyOdds < 1 }] }); return; }
   sp = sp || rollWildSpecies([]);

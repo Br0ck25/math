@@ -113,8 +113,15 @@ function legendRoster() { return legendPets.concat(mythicCompanions, ultraPets);
 function legendOfWeek() { const r = legendRoster(); return r[weekNumber() % r.length]; }
 function legendState() {
   const l = state.legend, w = weekNumber();
-  if (l.week !== w) { l.week = w; l.caught = false; }
+  if (l.week !== w) { l.week = w; l.caught = false; l.ids = []; }
   return l;
+}
+// Gold's three roaming beasts: this week's legend and the next two in the roster all roam, each on a route of its own today (the first keeps its old route). `caught` is the first one, `ids` the others.
+function legendTrio() { const r = legendRoster(), w = weekNumber(); return [r[w % r.length], r[(w + 1) % r.length], r[(w + 2) % r.length]]; }
+function legendRoamers() {
+  if (!isChampion()) return [];
+  const l = legendState(), routes = OW_LANDS.map(function (x) { return x.routeIn; });
+  return legendTrio().map(function (legend, k) { return { legend: legend, route: routes[dayHash(weekNumber() + dayKey() + (k ? 'r' + k : '')) % routes.length] }; }).filter(function (x, k) { return k ? l.ids.indexOf(x.legend.id) === -1 : !l.caught; });
 }
 // The route the legend is on today ('' when it is not roaming: you are not Champion yet, or you caught it this week).
 function legendRoute() {

@@ -59,7 +59,10 @@ const AB_TMS = {
   fireblast: { name: 'Fire Blast', el: 'fire', power: 110, acc: 85, pp: 5 }, surf: { name: 'Surf', el: 'water', power: 95, acc: 100, pp: 15 },
   solarbeam: { name: 'Solar Beam', el: 'nature', power: 120, acc: 100, pp: 10 }, thunder: { name: 'Thunder', el: 'electric', power: 110, acc: 70, pp: 10 },
   shadowball: { name: 'Shadow Ball', el: 'dark', power: 80, acc: 100, pp: 15 }, psychic: { name: 'Psychic', el: 'magic', power: 90, acc: 100, pp: 10 },
-  hyperbeam: { name: 'Hyper Beam', el: '', type: 'normal', power: 150, acc: 90, pp: 5 }
+  hyperbeam: { name: 'Hyper Beam', el: '', type: 'normal', power: 150, acc: 90, pp: 5 },
+  // utility moves (Gold's Rain Dance, Sunny Day, Protect and Rest): `util` is handled by abUtil in 24x-ow-battle.js
+  raindance: { name: 'Rain Dance', el: '', type: 'normal', power: 0, acc: 100, pp: 5, util: 'rain' }, sunnyday: { name: 'Sunny Day', el: '', type: 'normal', power: 0, acc: 100, pp: 5, util: 'sun' },
+  protect: { name: 'Protect', el: '', type: 'normal', power: 0, acc: 100, pp: 10, util: 'protect', pri: 3 }, rest: { name: 'Rest', el: '', type: 'normal', power: 0, acc: 100, pp: 10, util: 'rest' }
 };
 const AB_TM_BY_BADGE = { meadow: 'doubleedge', ember: 'fireblast', tide: 'surf', grove: 'solarbeam', volt: 'thunder', gloom: 'shadowball', mystic: 'psychic', skyreach: 'hyperbeam' };
 function abTmMove(tmId, element, type) {
@@ -182,6 +185,7 @@ function abDamage(att, def, move, crit) {
   if (crit) d *= 2;
   d = Math.min(d, 997) + 2;
   if (move.type === att.type && move.type !== 'normal') d = Math.floor(d * 3 / 2);
+  if (ab && ab.weather) d = Math.floor(d * (ab.weather.k === 'rain' ? (move.type === 'water' ? 1.5 : move.type === 'fire' ? 0.5 : 1) : (move.type === 'fire' ? 1.5 : move.type === 'water' ? 0.5 : 1)));      // rain and sun
   d = eff === 2 ? d * 2 : eff === 0.5 ? Math.floor(d / 2) : d;
   d = Math.floor(d * (217 + Math.floor(Math.random() * 39)) / 255);
   return { dmg: Math.max(1, d), eff: eff };

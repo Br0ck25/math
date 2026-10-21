@@ -499,7 +499,7 @@ test('the Safari Zone: 500 gems for 30 Safari Balls and 500 steps, no fighting (
 
 test('the Radio Tower takeover: a door in Spark City (Spark Badge), two Scramblers on each of two floors, Boss Static on the third, an Evolution Stone and the Gizmo news once he is beaten', async () => {
   const r = await ev(() => {
-    const out = { road: OW_MAPS.spark.roads['15,6'], floors: [1, 2, 3].map((n) => OW_MAPS['spark-tower-' + n].npcs.length), boss: OW_MAPS['spark-tower-3'].npcs[0].kind };
+    const out = { road: OW_MAPS.spark.roads['15,6'], floors: [1, 2, 3].map((n) => OW_MAPS['spark-tower-' + n].npcs.filter((p) => p.kind !== 'lucky').length), boss: OW_MAPS['spark-tower-3'].npcs[0].kind };
     state.badges = []; const closed = !owWalkable(OW_MAPS.spark, 15, 6); state.badges = ['spark']; out.gate = [closed, owWalkable(OW_MAPS.spark, 15, 6)];
     state.items = {}; state.overworld.story = []; out.news0 = GIZMO_CALLS.some((c) => c.from === 'Radio news' && /Radio Tower/.test(c.text) && c.when());
     owStoryReward('radio-tower'); owStoryReward('radio-tower'); out.stone = state.items.stone || 0; out.news = GIZMO_CALLS.some((c) => c.from === 'Radio news' && /Radio Tower/.test(c.text) && c.when());
@@ -912,4 +912,68 @@ test('a stone in the pond lets the Water Steps charm reach a second islet with a
     return { n: maps.length >= 10, ok };
   });
   assert.deepEqual(r, { n: true, ok: true });
+});
+
+test('utility moves: rain boosts water and weakens fire (and sun the opposite), Protect stops the next attack, Rest heals fully and sleeps', async () => {
+  await begin();
+  const r = await ev(() => {
+    Math.random = () => 0.3; const me = abMe(), foe = abFoe(), out = {};
+    const wat = { power: 60, type: 'water', name: 'w' }, fir = { power: 60, type: 'fire', name: 'f' };
+    const dmg = (m) => abDamage(me, foe, m, false).dmg;
+    ab.weather = null; const w0 = dmg(wat), f0 = dmg(fir);
+    ab.weather = { k: 'rain', n: 5 }; out.rain = [dmg(wat) > w0, dmg(fir) < f0];
+    ab.weather = { k: 'sun', n: 5 }; out.sun = [dmg(wat) < w0, dmg(fir) > f0]; ab.weather = null;
+    foe.protect = true; const hp = foe.hp; abHit(me, foe, { id: 'x', name: 'Tackle', type: 'normal', power: 40, acc: 100, pp: 5 }, () => {}, () => {}); out.protectedHp = foe.hp === hp;
+    foe.protect = false; me.hp = 3; me.status = ''; abUtil(me, foe, AB_TMS.rest, () => {});
+    return out;
+  });
+  assert.deepEqual([r.rain, r.sun, r.protectedHp], [[true, true], [true, true], true]);
+  await page.waitForTimeout(2500);
+  assert.deepEqual(await ev(() => [abMe().hp === abMe().max, abMe().status]), [true, 'sleep']);
+  await ev(() => { Object.keys(AB_TMS).forEach((k) => { state.tms[k] = 1; }); });
+  assert.ok(await ev(() => CORNER_PRIZES.some((p) => p[0] === 'protect') && AB_TMS.protect.pri === 3));
+});
+
+test('held items: Focus Band can leave 1 HP, Lucky Egg adds half experience, Smoke Ball always escapes, Amulet Coin doubles prize money, all bought with gems', async () => {
+  const r = await ev(() => ({ owned: ['focus', 'egg', 'amulet', 'smoke'].every((k) => HELD_ITEMS.some((i) => i.id === k) && ECON.held.cost[k] > 0), norm: (() => { state.heldOwned = ['focus', 'egg', 'nope']; state.held = {}; normalizeState(state); return state.heldOwned.join(); })() }));
+  assert.deepEqual(r, { owned: true, norm: 'focus,egg' });
+  await begin();
+  const f = await ev(() => {
+    Math.random = () => 0; const me = abMe(), foe = abFoe(); foe.held = 'focus'; foe.hp = 1;
+    abHit(me, foe, { id: 'x', name: 'Tackle', type: 'normal', power: 120, acc: 100, pp: 5 }, () => {}, () => {});
+    return foe.hp;
+  });
+  await page.waitForTimeout(1500);
+  assert.equal(f >= 0, true);
+  assert.equal(await ev(() => abFoe().hp), 1, 'the Focus Band left 1 HP');
+  await menu();
+  await ev(() => { abMe().held = 'smoke'; abFoe().hp = abFoe().max; Math.random = () => 0.99; ab.phase = 'menu'; abRun(); });
+  await page.waitForFunction(() => !ab, null, { timeout: 20000 });
+});
+
+test('weekday visitors come only on their own day and give one gift a day; the Lucky Number is the same all day and pays a PP Up once', async () => {
+  const r = await ev(() => {
+    const monty = OW_MAPS.meadow.npcs.find((n) => n.id === 'meadow-monty'), real = owWeekday;
+    owWeekday = () => 1; const mon = owNpcActive(monty); owWeekday = () => 2; const tue = owNpcActive(monty); owWeekday = real;
+    state.items = {}; OW_SERVICES.weekly(monty); const first = state.items.greatnet || 0; closeTalk(); OW_SERVICES.weekly(monty); closeTalk(); const again = state.items.greatnet || 0;
+    const lucky = [luckyNumber() === luckyNumber(), luckyNumber() >= 0 && luckyNumber() < 500];
+    state.unlockedPets = state.unlockedPets.slice(0, 1); const id = getOwnedIds()[0], realN = buddyNumber;
+    buddyNumber = () => luckyNumber(); state.items = {}; state.overworld.weekly = {};
+    const dj = OW_MAPS['spark-tower-1'].npcs.find((n) => n.kind === 'lucky'); OW_SERVICES.lucky(dj); closeTalk(); OW_SERVICES.lucky(dj); closeTalk();
+    buddyNumber = realN;
+    return { mon, tue, first, again, lucky, pp: state.items.ppup || 0 };
+  });
+  assert.deepEqual(r, { mon: true, tue: false, first: 1, again: 1, lucky: [true, true], pp: 1 });
+});
+
+test('three legends roam each week, each on its own route, and a caught one stops roaming', async () => {
+  const r = await ev(() => {
+    state.storySeen.champion = 1; state.legend = { week: -1, caught: false, ids: [] };
+    const trio = legendTrio(), all = legendRoamers().map((x) => x.legend.id);
+    state.legend.ids = [trio[1].id]; const second = legendRoamers().map((x) => x.legend.id);
+    state.legend.caught = true; const third = legendRoamers().map((x) => x.legend.id);
+    state.legend = { week: legendState().week, caught: false, ids: ['a', 5, 'a', 'b', 'c'] }; normalizeState(state);
+    return { distinct: new Set(trio.map((t) => t.id)).size, all: all.length, second: second.includes(trio[1].id), third: third.length, ids: state.legend.ids };
+  });
+  assert.deepEqual(r, { distinct: 3, all: 3, second: false, third: 1, ids: ['a', 'b'] });
 });

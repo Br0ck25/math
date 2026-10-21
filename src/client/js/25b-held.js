@@ -8,6 +8,10 @@ const HELD_ITEMS = [
   { id: 'leftovers', icon: '🍙', name: 'Leftovers',  text: 'Heals 1/16 of its HP every round of a battle' },
   { id: 'claw',      icon: '🪝', name: 'Quick Claw', text: 'Sometimes moves first in a round' },
   { id: 'lens',      icon: '🔍', name: 'Scope Lens', text: 'Critical hits happen more often' },
+  { id: 'focus',     icon: '🎗️', name: 'Focus Band', text: 'Sometimes (about 1 in 8) hangs on with 1 HP instead of fainting' },
+  { id: 'egg',       icon: '🥚', name: 'Lucky Egg',  text: 'The holder gains half as much experience again' },
+  { id: 'amulet',    icon: '🪙', name: 'Amulet Coin', text: 'Prize money is doubled when the holder is on the team in a trainer win' },
+  { id: 'smoke',     icon: '💨', name: 'Smoke Ball', text: 'The holder always gets away from a wild buddy' },
   { id: 'charm',     icon: '🔮', name: 'Type Charm', text: 'Moves of its own type do 10% more damage' }
 ];
 function heldIdOf(buddyId) { return state.held[buddyId] || ''; }

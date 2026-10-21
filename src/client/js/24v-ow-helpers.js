@@ -92,3 +92,28 @@ OW_SERVICES.kurt = function (npc) {
   }) });
 };
 owAddNpc('grove-house', { id: 'grove-kurt', kind: 'kurt', name: 'Kurt', x: 6, y: 2, face: 'down', look: { skin: 2, hair: 2, outfit: 5, style: 0 }, lines: ['I make nets.'] });
+// Weekday visitors (Gold's Tuscany of Tuesday and her friends): each is in town only on their own day of the week and gives one gift a day.
+const OW_WEEKLY = [
+  ['meadow', 'meadow-monty', 'Hiker Monty', 1, 'greatnet', 'Great Net', 'Monday is my day for the road. Here, a net for yours!'],
+  ['ember', 'ember-tuscany', 'Tuscany of Tuesday', 2, 'hyperpotion', 'Hyper Potion', 'I only visit on Tuesdays. Take this, dear!'],
+  ['tide', 'tide-wesley', 'Wesley of Wednesday', 3, 'revive', 'Revive', 'It is Wednesday, so I am here. A little something for you.']
+];
+OW_WEEKLY.forEach(function (w, i) { owAddNpc(w[0], { id: w[1], kind: 'weekly', name: w[2], day: w[3], give: w[4], giveName: w[5], x: 6, y: 11, face: 'down', look: { skin: i + 1, hair: i * 2, outfit: i + 4, style: i % 4 }, lines: [w[6]] }); });
+OW_SERVICES.weekly = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), w = state.overworld.weekly, today = dayKey();
+  if (w[npc.id] === today) { openTalk({ name: npc.name, art: art, lines: ['I already gave you my present today. See you next week!'] }); return; }
+  w[npc.id] = today; state.items[npc.give] = Math.min(99, (state.items[npc.give] || 0) + 1); saveState();
+  openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['You got a ' + npc.giveName + '!']) });
+};
+// The daily Lucky Number at the Radio Tower: one number from 0 to 499 every day; a buddy whose number matches it wins a PP Up (each buddy's number is fixed by its name).
+function luckyNumber() { return dayHash('lucky' + dayKey()) % 500; }
+function buddyNumber(id) { return dayHash('number' + id) % 500; }
+OW_SERVICES.lucky = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), w = state.overworld.weekly, today = dayKey(), n = luckyNumber();
+  const hit = getOwnedIds().find(function (id) { return buddyNumber(id) === n; });
+  const lines = ['Tonight\'s Lucky Number is ' + n + '! Does one of your buddies carry it?'];
+  if (hit && w['tower-lucky'] !== today) { w['tower-lucky'] = today; state.items.ppup = Math.min(99, (state.items.ppup || 0) + 1); saveState(); lines.push(getPetById(hit).baseName + ' has number ' + n + '! You win a PP Up!'); }
+  else if (hit) lines.push('You already won today. Come back tomorrow!');
+  else lines.push('No match today. Check each buddy\'s number on its Stats tab!');
+  openTalk({ name: npc.name, art: art, lines: lines });
+};

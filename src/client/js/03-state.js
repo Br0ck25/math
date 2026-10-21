@@ -45,7 +45,7 @@ function freshState() {
     badges: [],                                      // gym badges: region ids
     rematch: { day: '', lands: [], wins: 0 },        // Champion rematches: the lands paid today, and how many rematches were won in all
     champ: { wins: 0, master: 0, day: '', masterDay: '' },                     // the Champion's Hall: wins in all, and the day of the last paid win
-    legend: { week: -1, caught: false },             // the roaming legend: this week's number and whether you caught it
+    legend: { week: -1, caught: false, ids: [] },             // the roaming legend: this week's number and whether you caught it
     gym: null,                                       // a gym run in progress: { region, step } (the Champion's Hall also has `champ`, see 24d-champion.js)
     storySeen: {},                                   // one-time story beats already shown
     wild: { id: '', trainer: '', shiny: false, legend: false, since: 0, next: 6 },   // the wild buddy being fought ('' = a boss), wild buddies beaten since the last boss, how many to beat before the next boss
@@ -68,7 +68,7 @@ function freshState() {
     items: {},                                       // supplies beyond the Potion and the net: superpotion, fullheal, revive (counts)
     potions: 0,                                      // Potions for Adventure battles, bought at the Mart
     keyItems: [],                                    // key item ids earned on the Adventure (24i-ow-hero.js KEY_ITEMS)
-    overworld: { map: 'hollow', x: 7, y: 9, face: 'down', found: [], fruitDay: '', center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } },   // the Adventure map (24g-ow-engine.js): where the hero stands, the pickup ids already taken, the math signs paid today, and the last Buddy Center you visited (a team wipe on a walk returns you there), the trainers beaten, the trees shaken today, and the story beats done, the towns visited (the Gizmo travels to them), the trades made and the steps that warmed an egg today
+    overworld: { map: 'hollow', x: 7, y: 9, face: 'down', found: [], fruitDay: '', weekly: {}, center: { map: 'hollow', x: 7, y: 9 }, beat: [], shaken: { day: '', ids: [] }, story: [], seen: [], traded: [], walk: { day: '', n: 0, eggs: 0 } },   // the Adventure map (24g-ow-engine.js): where the hero stands, the pickup ids already taken, the math signs paid today, and the last Buddy Center you visited (a team wipe on a walk returns you there), the trainers beaten, the trees shaken today, and the story beats done, the towns visited (the Gizmo travels to them), the trades made and the steps that warmed an egg today
   };
 }
 

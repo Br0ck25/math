@@ -283,13 +283,28 @@ function abStatMove(att, def, mv, next) {
   next();
 }
 // One attack: accuracy, then damage with its messages and maybe a status. Used for both sides.
+// Rain Dance and Sunny Day (five rounds: water or fire moves hit half as hard again, the other half as hard), Protect (the next attack this round fails; it gets less likely each time in a row) and Rest (heal fully, sleep two turns).
+function abUtil(att, def, mv, next) {
+  const u = mv.util;
+  if (u === 'rain' || u === 'sun') abSteps([['', function () { ab.weather = { k: u, n: 5 }; soundLevelUp(); }, 500], [u === 'rain' ? 'It started to rain!' : 'The sunlight turned harsh!', null, 1000]]);
+  else if (u === 'protect') { const ok = Math.random() < 1 / Math.pow(2, att.pn || 0); att.pn = (att.pn || 0) + 1; if (ok) att.protect = true; abSteps([[ok ? att.name + ' protected itself!' : 'But it failed!', null, 1000]]); }
+  else if (u === 'rest') {
+    if (att.hp >= att.max || att.status === 'sleep') abSteps([['But it failed!', null, 900]]);
+    else abSteps([[att.name + ' went to sleep and became healthy!', function () { att.hp = att.max; att.status = 'sleep'; att.sleep = 2; att.conf = 0; if (ab.party.indexOf(att) !== -1) state.advHp[att.id] = att.hp; soundLevelUp(); }, 1300]]);
+  }
+  next();
+}
 function abHit(att, def, mv, down, next) {
+  if (mv.util) { abUtil(att, def, mv, next); return; }
+  att.pn = 0;
+  if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
   if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     abFx(att, def, mv, true);
     def.hp = Math.max(0, def.hp - r.dmg);
+    if (def.hp === 0 && def.held === 'focus' && Math.random() < 0.12) def.hp = 1;                       // a Focus Band: hangs on
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
     abBerry(def);
     [def, att].forEach(function (m) { if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; });
@@ -324,6 +339,8 @@ function abEndRound() {
     [abFoe(), abMe()].forEach(function (m) {
       if (m.hp > 0 && (m.status === 'burn' || m.status === 'poison')) list.push([m.name + ' is hurt by its ' + (m.status === 'burn' ? 'burn' : 'poison') + '!', function () { m.hp = Math.max(0, m.hp - Math.max(1, Math.floor(m.max / 8))); if (ab.party.indexOf(m) !== -1) state.advHp[m.id] = m.hp; }, 900]);
     });
+    if (ab.weather) { ab.weather.n -= 1; if (ab.weather.n <= 0) { const k = ab.weather.k; list.push([k === 'rain' ? 'The rain stopped.' : 'The sunlight faded.', function () { ab.weather = null; }, 900]); } }
+    ab.party.concat(ab.foes).forEach(function (m) { m.protect = false; });
     list.push(['', function () { if (abFoe().hp <= 0) abFoeFainted(); else if (abMe().hp <= 0) abMeFainted(); else abBackToMenu(); }, 0]);
     abNow(list);
   }, 0]]);
@@ -334,9 +351,9 @@ function abBackToMenu() { abSteps([abMenuStep()]); saveState(); }
 function abFoeFainted() {
   const foe = abFoe(), trainer = ab.kind !== 'wild', part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
   abSteps([[foe.name + ' fainted!', null, 1000]]);
-  const each = abXpYield(foe, trainer, part.length);
+  const base = abXpYield(foe, trainer, part.length);
   part.forEach(function (id) {
-    const mon = ab.party.find(function (m) { return m.id === id; });
+    const mon = ab.party.find(function (m) { return m.id === id; }), each = mon.held === 'egg' ? Math.floor(base * 3 / 2) : base;      // a Lucky Egg
     abSteps([[mon.name + ' gained ' + each + ' Exp. Points!', function () {
       abGainXp(mon, each);
       if (mon.leveled) abNow([[mon.name + ' grew to Lv' + mon.level + '!', function () { soundLevelUp(); }, 1200]].concat(mon.evolved ? [['What? ' + mon.evolved + ' evolved into ' + mon.name + '!', null, 1400]] : []).concat(mon.learned.map(function (n) { return [mon.name + ' learned ' + n + '!', null, 1200]; })));
@@ -496,7 +513,7 @@ function abNetFx(step, kind) {
 function abKeepCaught(foe) {
   const sp = getSpecies(foe.id);
   if (foe.shiny) state.shinies[sp.id] = 1;
-  if (sp.id === legendOfWeek().id) legendState().caught = true;
+  if (sp.id === legendOfWeek().id) legendState().caught = true; else if (legendTrio().some(function (x) { return x.id === sp.id; })) { const l = legendState(); if (l.ids.indexOf(sp.id) === -1) l.ids.push(sp.id); }
   if (getOwnedIds().indexOf(sp.id) !== -1) { state.spares[sp.id] = Math.min(99, (state.spares[sp.id] || 0) + 1); toast('A spare ' + sp.name + '! A Trader may want it.'); }
   else { if (foe.g) state.genders[sp.id] = foe.g; grantBuddy(sp.id); state.buddyXp[sp.id] = xpForLevel(foe.level); if (ab.lastNet === 'friendnet') addHappy(sp.id, 200 - happyOf(sp.id));      // Gold: a caught buddy keeps the level it had in the fight
     (isStoreBuddy(sp) ? state.unlockedPets : state.unlockedSecrets).push(sp.id); toast(sp.name + ' joined your collection!'); }
@@ -506,6 +523,7 @@ function abRun() {
   if (ab.kind !== 'wild') { ab.phase = 'busy'; abSteps([["No! There's no running from a trainer battle!", null, 1200], abMenuStep()]); return; }
   ab.phase = 'busy';
   ab.runs = (ab.runs || 0) + 1;                                           // Gold: the escape chance grows with your Speed over the foe's, and with every try
+  if (abMe().held === 'smoke') { abSteps([['Got away safely!', function () { soundEscape(); }, 900], ['', function () { abFinish('run'); }, 0]]); return; }      // a Smoke Ball
   const f = Math.floor(abMe().spd * 32 / Math.max(1, Math.floor(abFoe().spd / 4) % 256)) + 30 * ab.runs;
   if (f <= 255 && Math.floor(Math.random() * 256) >= f) { abSteps([["Can't escape!", null, 900]]); abFoeTurn(); return; }
   abSteps([['Got away safely!', function () { soundEscape(); }, 900], ['', function () { abFinish('run'); }, 0]]);
@@ -518,7 +536,7 @@ function abPrize(round) {
   return base * last.level;
 }
 function abRoundWon() {
-  const round = ab.rounds[ab.r], prize = ab.kind === 'wild' ? 0 : abPrize({ kind: ab.kind, base: round.base, foes: ab.foes });
+  const round = ab.rounds[ab.r], prize = ab.kind === 'wild' ? 0 : abPrize({ kind: ab.kind, base: round.base, foes: ab.foes }) * (ab.party.some(function (m) { return m.held === 'amulet'; }) ? 2 : 1);
   if (round.bossIdx !== undefined) ab.after.push(function () { abBossBeaten(round.bossIdx, round.bossLevel); });
   return [[ab.kind === 'wild' ? '' : 'You defeated ' + ab.name + '!', function () { if (prize) grantGems(prize, ab.name + ' paid you ' + prize + ' gems!', false); }, ab.kind === 'wild' ? 0 : 1300]];
 }

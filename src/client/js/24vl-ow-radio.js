@@ -34,3 +34,4 @@ const OW_STORY_KEYS = { 'radio-quiz': 'radio-card' };                  // a stor
   OW_MAPS.spark.warps.push({ x: 15, y: 6, to: 'spark-tower-1', tx: 5, ty: 8 });
 })();
 GIZMO_CALLS.push({ from: 'Radio news', text: 'Good news from Spark City: the Radio Tower is back on the air, and every number it reads out is right again!', when: function () { return state.overworld.story.indexOf('radio-tower') !== -1; } });
+owAddNpc('spark-tower-1', { id: 'tower-lucky', kind: 'lucky', name: 'DJ Lucky', x: 4, y: 6, face: 'down', look: { skin: 3, hair: 5, outfit: 4, style: 1 }, lines: ['The Lucky Number show!'] });

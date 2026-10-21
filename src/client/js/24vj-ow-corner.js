@@ -4,7 +4,7 @@
 // =====================================================================
 const CORNER_SYMBOLS = [['7', 3], ['bell', 5], ['cherry', 6], ['fish', 6], ['star', 6]];                 // symbol and its weight on a reel
 const CORNER_PAYS = { '7': 300, bell: 150, cherry: 30, fish: 18, star: 12 };                                  // coins for three alike; a cherry on the first reel alone gives 2 back (about 90% comes back in all)
-const CORNER_PRIZES = [['revive', 'Revive', 800], ['ultranet', 'Ultra Net', 1500], ['ppup', 'PP Up', 3000], ['stone', 'Evolution Stone', 4000], ['maxrevive', 'Max Revive', 5000], ['hyperbeam', 'TM Hyper Beam', 7500]];
+const CORNER_PRIZES = [['revive', 'Revive', 800], ['ultranet', 'Ultra Net', 1500], ['ppup', 'PP Up', 3000], ['stone', 'Evolution Stone', 4000], ['maxrevive', 'Max Revive', 5000], ['raindance', 'TM Rain Dance', 3500], ['sunnyday', 'TM Sunny Day', 3500], ['protect', 'TM Protect', 4000], ['rest', 'TM Rest', 4000], ['hyperbeam', 'TM Hyper Beam', 7500]];
 function cornerReel() { let r = Math.random() * 26; for (let i = 0; i < CORNER_SYMBOLS.length; i++) { r -= CORNER_SYMBOLS[i][1]; if (r < 0) return CORNER_SYMBOLS[i][0]; } return 'star'; }
 // One spin of the three reels: { reels, won } (the bet is already taken).
 function cornerSpin() {
