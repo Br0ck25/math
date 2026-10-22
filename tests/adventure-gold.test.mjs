@@ -1245,3 +1245,25 @@ test('status moves and Leech Seed: Thunder Wave, Sleep Powder, Toxic and Confuse
   });
   assert.deepEqual(r, { thunderwave: 'paralysis', sleeppowder: 'sleep', toxic: 'poison', failed: true, conf: true, seeded: true, sapped: true, flinch: true, tms: true });
 });
+
+test("King's Rock, Bright Powder and Exp. Share: flinch on any hit, foes miss a little more, and the holder learns without fighting", async () => {
+  const r = await ev(() => {
+    const out = { owned: ['kings', 'powder', 'share'].every((k) => HELD_ITEMS.some((i) => i.id === k) && ECON.held.cost[k] > 0) };
+    state.hero.made = true; openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 8 }] });
+    const me = abMe(), foe = abFoe(), real = Math.random, drain = () => { for (let i = 0; i < 60 && ab.queue.length; i++) { const st = ab.queue.shift(); st[1] && st[1](); } ab.queue = []; };
+    const tackle = { id: 'tackle', name: 'Tackle', type: 'normal', power: 40, acc: 100, pp: 10 };
+    me.held = 'kings'; foe.max = foe.hp = 9999; foe.moved = false; foe.flinched = false; Math.random = () => 0.05; abHit(me, foe, tackle, () => {}, () => {}); drain(); out.flinch = foe.flinched;
+    me.held = ''; foe.held = 'powder'; foe.hp = foe.max; foe.moved = false; foe.flinched = false; Math.random = () => 0.95; let hp = foe.hp; abHit(me, foe, tackle, () => {}, () => {}); drain(); out.missed = foe.hp === hp;
+    Math.random = real;
+    return out;
+  });
+  assert.deepEqual(r, { owned: true, flinch: true, missed: true });
+  const x = await ev(() => {
+    ab = null; state.unlockedPets = ['dog', 'fox']; state.team = ['dog', 'fox']; state.held = { fox: 'share' }; state.buddyXp.dog = xpForLevel(10); state.buddyXp.fox = xpForLevel(10); state.advHp = {};
+    abStart({ kind: 'wild', foes: [{ id: 'fox', level: 8 }] }); ab.cur = ab.party.findIndex((m) => m.id === 'dog'); ab.part = ['dog'];
+    const before = getBuddyXp('fox'), lead = getBuddyXp('dog'); abFoeFainted();
+    for (let i = 0; i < 80 && ab && ab.queue.length; i++) { const st = ab.queue.shift(); if (st[1] && st[0] !== '' ) st[1](); }
+    return { cat: getBuddyXp('fox') - before, dog: getBuddyXp('dog') - lead };
+  });
+  assert.ok(x.dog > 0 && x.cat > 0 && x.cat === Math.floor(x.dog / 2), 'the Exp. Share holder gets half without fighting: ' + JSON.stringify(x));
+});

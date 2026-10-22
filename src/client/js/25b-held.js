@@ -12,6 +12,9 @@ const HELD_ITEMS = [
   { id: 'egg',       icon: '🥚', name: 'Lucky Egg',  text: 'The holder gains half as much experience again' },
   { id: 'amulet',    icon: '🪙', name: 'Amulet Coin', text: 'Prize money is doubled when the holder is on the team in a trainer win' },
   { id: 'smoke',     icon: '💨', name: 'Smoke Ball', text: 'The holder always gets away from a wild buddy' },
+  { id: 'kings',     icon: '👑', name: "King's Rock", text: 'Its hits may make a slower foe flinch' },
+  { id: 'powder',    icon: '✨', name: 'Bright Powder', text: 'Foes miss it a little more often' },
+  { id: 'share',     icon: '📻', name: 'Exp. Share', text: 'The holder gets half the experience of a fight without taking part' },
   { id: 'charm',     icon: '🔮', name: 'Type Charm', text: 'Moves of its own type do 10% more damage' }
 ];
 function heldIdOf(buddyId) { return state.held[buddyId] || ''; }

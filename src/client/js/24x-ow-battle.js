@@ -333,7 +333,7 @@ function abHit(att, def, mv, down, next) {
   if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
   if (mv.inflict || mv.seed) { abInflict(att, def, mv, next); return; }
-  if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
+  if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100 * (def.held === 'powder' ? 0.9 : 1)) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     abFx(att, def, mv, true);
@@ -349,7 +349,8 @@ function abHit(att, def, mv, down, next) {
   else if (r.eff < 1) abSteps([["It's not very effective...", null, 900]]);
   abSteps([['', function () {
     if (def.hp <= 0) { down(); return; }
-    if (mv.flinch && !def.moved && Math.random() * 100 < mv.flinch) def.flinched = true;
+    const fl = mv.flinch || (att.held === 'kings' ? 10 : 0);                                       // a King's Rock: any hit may make a slower foe flinch
+    if (fl && !def.moved && Math.random() * 100 < fl) def.flinched = true;
     if (mv.status === 'confusion' && !(def.conf > 0) && Math.random() < AB_STATUS_CHANCE) { def.conf = rnd(2, 5) + 1; abNow([[def.name + ' ' + AB_STATUS_TEXT.confusion, null, 1000]]); }
     else if (mv.status && mv.status !== 'confusion' && !def.status && Math.random() < AB_STATUS_CHANCE) { def.status = mv.status; def.sleep = rnd(2, 7); abNow([[def.name + ' ' + AB_STATUS_TEXT[mv.status], null, 1000]]); }
     next();
@@ -392,9 +393,9 @@ function abBackToMenu() { abSteps([abMenuStep()]); saveState(); }
 function abFoeFainted() {
   const foe = abFoe(), trainer = ab.kind !== 'wild', part = ab.part.filter(function (id) { return ab.party.some(function (m) { return m.id === id && m.hp > 0; }); });
   abSteps([[foe.name + ' fainted!', null, 1000]]);
-  const base = abXpYield(foe, trainer, part.length);
-  part.forEach(function (id) {
-    const mon = ab.party.find(function (m) { return m.id === id; }), each = Math.floor((mon.held === 'egg' ? Math.floor(base * 3 / 2) : base) * (virusState(mon.id) === 'sick' ? ECON.virus.mult : 1));      // a Lucky Egg
+  const base = abXpYield(foe, trainer, part.length), sharers = ab.party.filter(function (m) { return m.held === 'share' && m.hp > 0 && part.indexOf(m.id) === -1; }).map(function (m) { return m.id; });      // an Exp. Share: the holder gets half as much without fighting
+  part.concat(sharers).forEach(function (id) {
+    const mon = ab.party.find(function (m) { return m.id === id; }), each = Math.floor((mon.held === 'egg' ? Math.floor(base * 3 / 2) : base) * (part.indexOf(id) === -1 ? 0.5 : 1) * (virusState(mon.id) === 'sick' ? ECON.virus.mult : 1));      // a Lucky Egg
     abSteps([[mon.name + ' gained ' + each + ' Exp. Points!', function () {
       abGainXp(mon, each);
       if (mon.leveled) abNow([[mon.name + ' grew to Lv' + mon.level + '!', function () { soundLevelUp(); }, 1200]].concat(mon.evolved ? [['What? ' + mon.evolved + ' evolved into ' + mon.name + '!', null, 1400]] : []).concat(mon.learned.map(function (n) { return [mon.name + ' learned ' + n + '!', null, 1200]; })));
