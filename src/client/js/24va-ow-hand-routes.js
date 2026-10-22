@@ -41,10 +41,39 @@ const OW_HAND_ROUTES = {
       'TTTTTT..TTTTTT',
       'TTTTTT..TTTTTT'
     ],
-    trainers: [[10, 5, 'left'], [9, 12, 'right']],
+    trainers: [[10, 5, 'left'], [9, 12, 'right']], house: [2, 2],
     finds: { 'route5-ore': [3, 5] }, apricorn: [5, 17], hidden: [10, 27],
     nook: { gate: [10, 16], items: [[10, 15], [10, 14]] },
     tree: [11, 10], pond: [8, 19]
+  }
+  ,
+  // Ember's road to Tide Bay is a ledge run (Gold's Route 45): three lines of ledge across the road, each with its gap of tall grass on the other side, so the way up zigzags and the way back down is a hop.
+  route3: {
+    rows: [
+      'TTTTTT..TTTTTT', 'TTTTTT..TTTTTT', 'TT,,,,..,,,,TT', 'TT,*,,..,,*,TT', 'TT,,,,..,,,YTT', 'TTvvvvvvvv""TT',
+      'TTTTT,,,,,..TT', 'TTTTT"",,,..TT', 'TTT,T,,,,,..TT', 'TTT,T,,,,,..TT', 'TT,q,,,,,,..TT', 'TT,,,,,,,,..TT',
+      'TT""vvvvvvvvTT', 'TT..,,,,,,,TTT', 'TT..,,,,~BjdTT', 'TT..,,,,~d~~TT', 'TT..,,,,~~~~TT', 'TT..,,,,~~~~TT',
+      'TT........,,TT', 'TTvvvvvvvv""TT', 'TT,,,,,,,,..TT', 'TT,,,,,,....TT', 'TTTTTT..TTTTTT', 'TTTTTT..TTTTTT'
+    ],
+    trainers: [[9, 3, 'left'], [5, 16, 'up']], house: [2, 2],
+    finds: { 'route3-berries': [5, 4] }, apricorn: [5, 20], hidden: [4, 21],
+    nook: { gate: [3, 10], items: [[3, 9], [3, 8]] },
+    tree: [11, 4], pond: [8, 14]
+  },
+  // Coral Reach's road to Thistle Wood crosses a lake on a causeway (the bridge is the only way over the water), with a band of tall grass on the near shore.
+  route10: {
+    rows: [
+      'TTTTTT..TTTTTT', 'TTTTTT..TTTTTT', 'TT,,,,..,,,,TT', 'TT,,,*..,*,,TT', 'TT,,,,..,,,,TT', 'TTTTT".."TTTTT',
+      'TT,,,,..,,,,TT', 'TT,"",..,"",TT', 'TT,"",..,"",TT', 'TT,,,,..,,,,TT', 'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT',
+      'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT', 'TT~~~~BB~~~~TT',
+      'TT""""""""""TT', 'TT""""""""""TT', 'TT,,,,..,,,,TT', 'TT,,,,..,,,YTT', 'TT,,,,..,,,TTT', 'TTTTT,..~BjdTT',
+      'TTTTT,..~d~~TT', 'TTT,T,..~~~~TT', 'TTT,T,..~~~~TT', 'TT,q,,..,,,,TT', 'TT,,,,..,,,,TT', 'TTTTT,..,TTTTT',
+      'TTTTTT..TTTTTT', 'TTTTTT..TTTTTT'
+    ],
+    trainers: [[9, 3, 'left'], [3, 8, 'left']], house: [2, 2],
+    finds: { 'route10-gem': [10, 2], 'route10-net': [11, 9] }, apricorn: [9, 28], hidden: [4, 21],
+    nook: { gate: [3, 27], items: [[3, 26], [3, 25]] },
+    tree: [11, 21], pond: [8, 23]
   }
 };
 // Builds the same result as owBlockRoute (24vb) from a hand-drawn route, or null when a person or find of the route's file has no place in it.
@@ -66,5 +95,5 @@ function owHandRoute(L, spec) {
   objects.push({ id: L.routeIn + '-surf', type: 'pickup', x: px + 3, y: py, give: 'ultranet' });
   objects.push({ id: L.routeIn + '-apricorns', type: 'pickup', x: spec.apricorn[0], y: spec.apricorn[1], give: 'apricorn' });
   objects.push({ id: L.routeIn + '-hidden', type: 'pickup', hidden: true, x: spec.hidden[0], y: spec.hidden[1], give: L.routeIn.length % 2 ? 'net' : 'gems' });
-  return { n: rows.length, rows: rows, npcs: npcs, objects: objects, trees: trees, score: 99, house: null, pond: { x: px + 1, y: py + 1 }, bridge: { x: px + 1, y: py }, hand: true };
+  return { n: rows.length, rows: rows, npcs: npcs, objects: objects, trees: trees, score: 99, house: { x: spec.house[0], y: spec.house[1] }, pond: { x: px + 1, y: py + 1 }, bridge: { x: px + 1, y: py }, hand: true };
 }

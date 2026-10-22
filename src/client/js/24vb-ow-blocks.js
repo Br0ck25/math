@@ -12,7 +12,7 @@ const OW_ROAD_PLANS = [
   [3, 3, 1, 1, 1, 3, 3, 5, 5, 5, 3, 3], [3, 3, 5, 5, 5, 3, 3, 1, 1, 1, 3, 3]
 ];
 // What fills the land beside the road: the share of trees, rocks, flowers and little ornaments, so routes read as a wood, a rocky pass, a flower meadow, open country or a stony flat.
-const OW_ROUTE_THEMES = [{ name: 'wood', tree: 0.4, rock: 0, flower: 0.04, deco: 0.02 }, { name: 'rocky', tree: 0.08, rock: 0.2, flower: 0.02, deco: 0.06 }, { name: 'meadow', tree: 0.05, rock: 0, flower: 0.3, deco: 0.03 }, { name: 'open', tree: 0.1, rock: 0, flower: 0.1, deco: 0.04 }, { name: 'stony', tree: 0.15, rock: 0.1, flower: 0.06, deco: 0.14 }];
+const OW_ROUTE_THEMES = [{ name: 'wood', tree: 0.4, rock: 0, flower: 0.04, deco: 0.02 }, { name: 'rocky', tree: 0.06, rock: 0.4, flower: 0.02, deco: 0.06 }, { name: 'meadow', tree: 0.05, rock: 0, flower: 0.3, deco: 0.03 }, { name: 'open', tree: 0.1, rock: 0, flower: 0.1, deco: 0.04 }, { name: 'stony', tree: 0.15, rock: 0.1, flower: 0.06, deco: 0.14 }];
 // A shuffle that every browser performs the same way: sorting with a random comparator is not, so a town laid out that way would differ between Chrome and Safari (and between a phone and a computer sharing one save).
 function owShuffle(list, rnd) {
   const a = list.slice();
