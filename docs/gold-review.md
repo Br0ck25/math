@@ -49,11 +49,13 @@ Also done since the second pass: Everstone (the holder keeps the form it had whe
 Done in this pass: Game Boy style touch controls (see-through arrows bottom left, A and B bottom right), the map now shows about ten tiles across a phone as Gold does (it was seven), a side path's gap shows the side path past it (a sliding step animation was tried and removed: it made walking look glitchy), and the ground has details (worn road edges, bright pond shores, flowers, tufts and stones).
 Still missing, in the order a Gold player would notice:
 1. **(Done: two strollers per town wander near home, talk differently after dark and say a proud word with three badges and as Champion.) People who move.**
-2. **(Partly done: the Center, Mart and gym have their own roofs, the gym stone walls; houses have windows, chimneys and a mailbox. Sizes are still the same.) Building variety.** **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
-3. **(Partly done: three lamp posts per town; fences and flower beds come from the town stamps.) Town life.** Mailboxes beside houses and three villagers per town are done; Gold towns have five to eight people. **Step:** more stamps and more NPC lines per town.
+2. **(Done: the Center and gym are five wide, the Mart four, houses two or three; the gym is a row taller in a top slot; each has its own roof; houses have windows, chimneys and a mailbox; buildings sit anywhere along their slot.) Building variety.** **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
+3. **(Partly done: three lamp posts per town; fences and flower beds come from the town stamps.) Town life.** Mailboxes beside houses and five or six villagers per town are done, so towns now have seven to nine people in all. **Step:** more stamps and more NPC lines per town.
 4. **(Done: ponds shimmer, and rain falls on the map on rainy and stormy days, outdoors only; snow falls in the cold lands Mystic Peak, the Cross and the Summit.) Water and weather in the picture.**
 5. **(Done: the buddy hops behind a step, and a tap on the D-pad toward a new direction only turns the hero on the spot, holding walks.) Walking frames.**
 6. **(Partly done: every town, route and cave plays its own transposed, rotated and re-timed take on the tune of its kind.) Per-place music.** Gold has composed themes.
 7. **Still deliberately out:** Mystery Gift and linking.
 
 Also added in this pass: Settings > Options > "Questions" turns fight questions and puzzle-sign questions off for a game with no maths (duels between players still ask).
+
+Town layouts are no longer one plan: the cross street sits at rows 4-5, 5-6 or 6-7 (the rows of buildings move with it), buildings differ in size and position, and leftover slots can hold a park or a market as well as a pond, garden, grove, plaza, orchard, paddock or boulder field. Towns are still 16 wide with their edge gaps where the side games expect them.

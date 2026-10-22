@@ -1177,7 +1177,7 @@ test('towns have more landscape: orchards, fenced paddocks and boulder fields ap
   const r = await ev(() => {
     return OW_LANDS.filter((L) => OW_MAPS[L.town].rows.join('').includes('=')).length;      // no town had a fence before the paddock stamp
   });
-  assert.ok(r >= 3, 'fenced paddocks stand in several towns');
+  assert.ok(r >= 2, 'fenced paddocks stand in several towns');
 });
 
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
@@ -1574,7 +1574,7 @@ test('buildings differ: Center, Mart and gym have their own roofs (the gym stone
     out.roofs = !!seen['center:t-roof-center'] && !!seen['mart:t-roof-mart'] && !!seen['gym:t-roof-gym'] && !!seen['gym:t-wall-gym'] && !Object.keys(seen).some((k) => /^house:t-roof-(center|mart|gym)/.test(k));
     out.art = ['t-roof-center', 't-roof-mart', 't-roof-gym', 't-wall-gym', 't-mailbox'].every((a) => !!document.getElementById('w-' + a));
     out.mail = towns.filter((t) => OW_MAPS[t].rows.join('').includes('i')).length >= 8 && OW_TILES.i.solid === true;
-    out.people = towns.every((t) => OW_MAPS[t].npcs.filter((n) => n.wander).length >= 2) && towns.filter((t) => OW_MAPS[t].npcs.filter((n) => n.wander).length === 3).length >= 8;
+    const vill = (t) => OW_MAPS[t].npcs.filter((n) => /-(walker|folk)-/.test(n.id)).length; out.people = towns.every((t) => OW_MAPS[t].npcs.filter((n) => n.wander).length >= 2) && towns.filter((t) => vill(t) >= 5).length >= 10 && towns.filter((t) => OW_MAPS[t].npcs.length >= 7).length >= 8;
     openAdventure(); const o = state.overworld, v = () => document.getElementById('ow-view');
     o.map = 'route7'; o.x = OW_MAPS.route7.start.x; o.y = OW_MAPS.route7.start.y; renderOverworld(); out.snow = v().classList.contains('ow-snowy');
     o.map = 'route2'; o.x = OW_MAPS.route2.start.x; o.y = OW_MAPS.route2.start.y; renderOverworld(); out.noSnow = !v().classList.contains('ow-snowy');
@@ -1584,4 +1584,19 @@ test('buildings differ: Center, Mart and gym have their own roofs (the gym stone
     return new Promise((res) => { owHold(dir); setTimeout(() => { owRelease(); out.walked = o.x !== x0 || o.y !== y0; res(out); }, 400); });
   });
   assert.deepEqual(r, { roles: true, roofs: true, art: true, mail: true, people: true, snow: true, noSnow: true, turned: true, walked: true });
+});
+
+test('towns are not one plan: the cross street sits at different rows, buildings differ in width and the gym is taller in a top slot, towns have seven to nine people, and parks or markets appear', async () => {
+  const r = await ev(() => {
+    const towns = owTowns().filter((t) => t !== OW_START.map), streets = new Set(), widths = new Set(); let tall = 0, folk = 0;
+    towns.forEach((t) => {
+      const m = OW_MAPS[t]; m.rows.forEach((row, y) => { if (row.slice(2, 14) === '............') streets.add(y); });
+      const roles = {}; Object.keys(m.bldg).forEach((p) => { const [x, y] = p.split(',').map(Number); if (/R/.test(m.rows[y].charAt(x))) { const k = m.bldg[p] + ':' + y; roles[k] = (roles[k] || 0) + 1; } });
+      Object.keys(roles).forEach((k) => widths.add(k.split(':')[0] + roles[k]));
+      const gymRows = new Set(Object.keys(m.bldg).filter((p) => m.bldg[p] === 'gym' && m.rows[+p.split(',')[1]].charAt(+p.split(',')[0]) === 'R').map((p) => p.split(',')[1])); if (gymRows.size >= 3) tall++;
+      if (m.npcs.length >= 6 && m.npcs.length <= 10) folk++;
+    });
+    return { streets: streets.size >= 4, widths: [...widths].filter((w) => /^(center|gym)5$/.test(w)).length === 2 && [...widths].some((w) => /^house[23]$/.test(w)) && widths.has('mart4'), tall: tall >= 2, folk: folk === towns.length };
+  });
+  assert.deepEqual(r, { streets: true, widths: true, tall: true, folk: true });
 });

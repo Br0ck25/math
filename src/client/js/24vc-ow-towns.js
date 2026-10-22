@@ -5,22 +5,27 @@
 //  The edge columns at rows 4-8 are kept as they were: the side games (24vf and later) and the hideout doors cut their gaps there.
 //  A town that cannot be laid out in a few tries keeps its hand-written rows. Runs after the route blocks (24vb) and before the side games.
 // =====================================================================
-const OW_TOWN_SLOTS = { TL: [2, 2], TR: [10, 2], ML: [2, 7], MR: [10, 7], BL: [2, 11], BR: [10, 11], XL: [2, 15], XR: [10, 15] };      // the left column of the slot and the top row of the roof
+const OW_TOWN_SLOTS = { TL: [2, 2], TR: [10, 2], ML: [2, 7], MR: [10, 7], BL: [2, 11], BR: [10, 11], XL: [2, 15], XR: [10, 15] };      // the left column of the slot and the top row of the roof (for the usual cross street at rows 5 and 6; owBuildTown moves the rows with the street)
 function owBuildTown(L, i, attempt) {
   const m = OW_MAPS[L.town], rnd = owRng(L.town, 100 + attempt), old = m.rows, W = 16, H = L.town === 'meadow' ? 16 : [16, 18, 20][i % 3];                  // towns differ in height: the first stays small, the others are 16, 18 or 20 tall
   const g = []; for (let y = 0; y < H; y++) { g.push([]); for (let x = 0; x < W; x++) g[y].push(','); }
   for (let x = 0; x < W; x++) { g[0][x] = old[0].charAt(x); g[H - 1][x] = old[old.length - 1].charAt(x); }
   for (let y = 1; y < H - 1; y++) [0, 1, 14, 15].forEach(function (x) { g[y][x] = y >= 4 && y <= 8 ? old[y].charAt(x) : 'T'; });
   for (let y = 1; y < H - 1; y++) { g[y][7] = '.'; g[y][8] = '.'; }
-  for (let x = 2; x <= 13; x++) { g[5][x] = '.'; g[6][x] = '.'; }
+  // The cross street's place varies from town to town (rows 4-5, 5-6 or 6-7), and the rows of buildings move with it, so the towns are not all the same plan.
+  const cs = [5, 4, 6][(Math.floor(i / 2) + Math.floor(attempt / 20)) % 3], slotY = function (slot) { return cs - 3 + { T: 0, M: 5, B: 9, X: 13 }[slot.charAt(0)]; };
+  if (cs + (H === 20 ? 13 : 9) > H - 2) return null;
+  for (let x = 2; x <= 13; x++) { g[cs][x] = '.'; g[cs + 1][x] = '.'; }
   const slotNames = ['TL', 'TR', 'ML', 'MR', 'BL', 'BR'].concat(H === 20 ? ['XL', 'XR'] : []), extra = H === 18 ? ['XL', 'XR'] : [];
   const names = slotNames.sort(function () { return rnd() - 0.5; });
-  const roles = [['center', 4], ['mart', 4], ['house', 3], ['gym', 3]], doors = {}, used = {};
+  // Buildings differ in size: the Center and the gym are wide (five), the Mart four, a house two or three; the gym is also a row taller where nothing stands above it (the top slots). Each sits anywhere along its slot.
+  const roles = [['center', 5], ['mart', 4], ['house', rnd() < 0.5 ? 2 : 3], ['gym', 5]], doors = {}, used = {};
+  const topSlots = names.filter(function (n) { return n === 'TL' || n === 'TR'; }); if (topSlots.length && i % 2 === 0) { const gi = names.indexOf(topSlots[0]), k = 3, t = names[k]; names[k] = names[gi]; names[gi] = t; }          // the gym takes a top slot in every other town, so it stands tall there
   const mark = function (x, y) { used[x + ',' + y] = 1; }, ents = {}, entNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (ents[(x + dx) + ',' + (y + dy)]) return true; return false; }, usedNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (used[(x + dx) + ',' + (y + dy)]) return true; return false; };
   roles.forEach(function (r, k) {
-    const slot = names[k], sx = OW_TOWN_SLOTS[slot][0], sy = OW_TOWN_SLOTS[slot][1], w = r[1], left = slot.charAt(1) === 'L';
-    const x0 = left ? sx + (w === 3 ? Math.floor(rnd() * 2) : 0) : sx + (w === 3 ? Math.floor(rnd() * 2) : 0), d = w === 4 ? 2 : 1;
-    for (let y = 0; y < 2; y++) for (let x = 0; x < w; x++) g[sy + y][x0 + x] = 'R';
+    const slot = names[k], sx = OW_TOWN_SLOTS[slot][0], sy = slotY(slot), w = r[1], left = slot.charAt(1) === 'L';
+    const slack = 5 - w, x0 = (left ? 2 : 9) + Math.floor(rnd() * (slack + 1)), d = w >= 4 ? 2 : 1, tall = r[0] === 'gym' && (slot === 'TL' || slot === 'TR') && sy >= 2;
+    for (let y = tall ? -1 : 0; y < 2; y++) for (let x = 0; x < w; x++) g[sy + y][x0 + x] = 'R';
     for (let x = 0; x < w; x++) g[sy + 2][x0 + x] = 'W';
     g[sy + 2][x0 + d] = r[0] === 'gym' ? 'G' : 'D';
     if (r[0] === 'center') g[sy + 2][x0 + 1] = 'N'; else if (r[0] === 'mart') g[sy + 2][x0 + 1] = 'K';
@@ -52,12 +57,14 @@ function owBuildTown(L, i, attempt) {
     plaza: [3, 3, function (x, y) { return (x === 0 || x === 2) && (y === 0 || y === 2) ? '*' : 'd'; }],
     orchard: [3, 3, function (x, y) { return (x + y) % 2 ? ',' : 'T'; }],
     paddock: [4, 3, function (x, y) { return (x === 0 || x === 3 || y === 0 || y === 2) && !(y === 2 && x === 1) ? '=' : ','; }],
-    boulders: [3, 3, function (x, y) { return (x + y) % 3 === 0 ? '#' : '*'; }]
+    boulders: [3, 3, function (x, y) { return (x + y) % 3 === 0 ? '#' : '*'; }],
+    park: [5, 3, function (x, y) { return y === 0 ? (x % 2 ? 'T' : '*') : x === 2 ? '.' : (x + y) % 2 ? '*' : ','; }],
+    market: [5, 3, function (x, y) { return y === 0 ? '=' : y === 1 ? (x % 2 ? 'd' : '*') : 'd'; }]
   };
   const pool = Object.keys(STAMPS), free = names.slice(4).concat(extra);
   let water = null;
   free.forEach(function (slot, k) {
-    const sx = OW_TOWN_SLOTS[slot][0], sy = OW_TOWN_SLOTS[slot][1], pick = k === 0 && (/tide|coral/.test(L.land) || m.npcs.some(function (n) { return /fisher/.test(n.id); })) ? 'pond' : pool[Math.floor(rnd() * pool.length)], st = STAMPS[pick];
+    const sx = OW_TOWN_SLOTS[slot][0], sy = slotY(slot), pick = k === 0 && (/tide|coral/.test(L.land) || m.npcs.some(function (n) { return /fisher/.test(n.id); })) ? 'pond' : pool[Math.floor(rnd() * pool.length)], st = STAMPS[pick];
     let sw = st, s = take(spots(st[0], st[1], sx, sy, sx + 4, sy + 3));
     if (!s) { sw = STAMPS.plaza; s = take(spots(3, 3, sx, sy, sx + 4, sy + 3)); }
     if (!s) return;
@@ -65,7 +72,7 @@ function owBuildTown(L, i, attempt) {
   });
   if (!water && (/tide|coral/.test(L.land) || m.npcs.some(function (n) { return /fisher/.test(n.id); }))) return null;      // a harbour town and the fisher's town must have water
   // people, signs and finds: on plain ground near the road, never on a lane row or beside another
-  const lanes = { 5: 1, 6: 1, 10: 1, 14: 1, 18: 1 };
+  const lanes = {}; [cs, cs + 1, cs + 5, cs + 9, cs + 13].forEach(function (r) { lanes[r] = 1; });
   const cells = []; for (let y = 1; y < H - 1; y++) for (let x = 2; x < W - 2; x++) if (plain(x, y) && !lanes[y] && x !== 7 && x !== 8) cells.push([x, y]);
   const place = function (score, pred) {
     const ok = cells.filter(function (c) { return plain(c[0], c[1]) && !entNear(c[0], c[1]) && (!pred || pred(c)); });
@@ -73,12 +80,12 @@ function owBuildTown(L, i, attempt) {
     let best = null, bs = Infinity; ok.forEach(function (c) { const s = score(c) + rnd() * 0.5; if (s < bs) { bs = s; best = c; } });
     mark(best[0], best[1]); ents[best[0] + ',' + best[1]] = 1; return best;
   };
-  const station = function (c) { return Math.abs(Math.abs(c[0] - 7.5) - 2.5) + Math.abs(c[1] - 12) * 0.6; };
+  const station = function (c) { return Math.abs(Math.abs(c[0] - 7.5) - 2.5) + Math.abs(c[1] - (cs + 7)) * 0.6; };
   const npcs = m.npcs.map(function (n) { return Object.assign({}, n); });
   for (let k = 0; k < npcs.length; k++) {
     const n = npcs[k]; let c;
     if (n.id === L.town + '-fisher' && water) c = place(function (cc) { return Math.abs(cc[0] - water[0]) + Math.abs(cc[1] - water[1]); });
-    else if (n.kind === 'trainer') c = place(station, function (cc) { const s = cc[0] < 7 ? 1 : -1, d = (cc[0] < 7 ? 7 : 8) - cc[0] > 0 ? 7 - cc[0] : cc[0] - 8; if (d > 4) return false; for (let t = 1; t <= d; t++) if (solid(at(cc[0] + s * t, cc[1]))) return false; return true; });      // a trainer looks at the road along a clear row
+    else if (n.kind === 'trainer') c = place(station, function (cc) { if (cc[1] >= H - 2) return false; const s = cc[0] < 7 ? 1 : -1, d = (cc[0] < 7 ? 7 : 8) - cc[0] > 0 ? 7 - cc[0] : cc[0] - 8; if (d > 4) return false; for (let t = 1; t <= d; t++) if (solid(at(cc[0] + s * t, cc[1]))) return false; return true; });      // a trainer looks at the road along a clear row
     else c = place(station);
     if (!c) return null; n.x = c[0]; n.y = c[1]; n.face = c[0] < 7 ? 'right' : 'left';
   }

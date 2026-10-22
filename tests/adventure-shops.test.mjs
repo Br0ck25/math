@@ -29,12 +29,13 @@ const toNurse = () => put('meadow-center', 3, 2, 'up');
 const toClerk = () => put('meadow-mart', 3, 3, 'up');
 
 test('the Buddy Center and the Mart are the doors at the top of Meadow Town, and the way out lands in front of them', async () => {
-  await put('meadow', 4, 5, 'up');
+  const C = await page.evaluate(() => where.door('meadow', 'meadow-center')), M = await page.evaluate(() => where.door('meadow', 'meadow-mart'));          // towns are laid out from blocks
+  await put('meadow', C.x, C.y + 1, 'up');
   await page.evaluate(() => owMove('up'));
   assert.equal(await page.evaluate(() => state.overworld.map), 'meadow-center');
   await page.evaluate(() => { owMove('down'); });
-  assert.deepEqual(await page.evaluate(() => [state.overworld.map, state.overworld.x, state.overworld.y]), ['meadow', 4, 5]);
-  await put('meadow', 12, 5, 'up');
+  assert.deepEqual(await page.evaluate(() => [state.overworld.map, state.overworld.x, state.overworld.y]), ['meadow', C.x, C.y + 1]);
+  await put('meadow', M.x, M.y + 1, 'up');
   await page.evaluate(() => owMove('up'));
   assert.equal(await page.evaluate(() => state.overworld.map), 'meadow-mart');
   assert.equal(await page.evaluate(() => document.getElementById('ow-title').innerText), 'Mart');
@@ -90,17 +91,18 @@ test('visiting the nurse remembers the Center: the tile outside its door', async
   await toNurse();
   assert.deepEqual(await page.evaluate(() => state.overworld.center), { map: 'hollow', x: 7, y: 9 }, 'the default is the start');
   await page.evaluate(() => owMove('up'));
-  assert.deepEqual(await page.evaluate(() => state.overworld.center), { map: 'meadow', x: 4, y: 5 });
-  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('math_quest_save')).overworld.center), { map: 'meadow', x: 4, y: 5 });
+  const C = await page.evaluate(() => where.door('meadow', 'meadow-center')), want = { map: 'meadow', x: C.x, y: C.y + 1 };
+  assert.deepEqual(await page.evaluate(() => state.overworld.center), want);
+  assert.deepEqual(await page.evaluate(() => JSON.parse(localStorage.getItem('math_quest_save')).overworld.center), want);
 });
 
 test('a saved Center that is not a place to stand falls back to the start', async () => {
   const r = await page.evaluate(() => {
-    const run = (center) => { state.overworld = { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center }; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return JSON.parse(JSON.stringify(state.overworld.center)); };
-    return [run({ map: 'meadow', x: 4, y: 5 }), run({ map: 'nowhere', x: 4, y: 5 }), run({ map: 'meadow', x: 3, y: 4 }), run({ map: 'meadow-center', x: 3, y: 1 }), run(null), run({ map: 'meadow', x: 'a', y: 1.5 })];
+    const C = where.door('meadow', 'meadow-center'), run = (center) => { state.overworld = { map: 'hollow', x: 7, y: 9, face: 'down', fight: false, found: [], signs: { day: '', ids: [] }, center }; NORMALIZERS.forEach((fn) => { if (fn.name === 'overworld') fn(state); }); return JSON.parse(JSON.stringify(state.overworld.center)); };
+    return [C, run({ map: 'meadow', x: C.x, y: C.y + 1 }), run({ map: 'nowhere', x: 4, y: 5 }), run({ map: 'meadow', x: C.x, y: C.y - 1 }), run({ map: 'meadow-center', x: 3, y: 1 }), run(null), run({ map: 'meadow', x: 'a', y: 1.5 })];
   });
-  assert.deepEqual(r[0], { map: 'meadow', x: 4, y: 5 });
-  r.slice(1).forEach((c) => assert.deepEqual(c, { map: 'hollow', x: 7, y: 9 }));
+  assert.deepEqual(r[1], { map: 'meadow', x: r[0].x, y: r[0].y + 1 });
+  r.slice(2).forEach((c) => assert.deepEqual(c, { map: 'hollow', x: 7, y: 9 }));
 });
 
 test('the Mart opens more items as badges are won, and has no Boss Whistle', async () => {
