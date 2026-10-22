@@ -34,7 +34,7 @@ Object.assign(OW_MAPS, {
       'TTTTTT..TTTTTT'
     ],
     warps: [
-      { x: 6, y: 23, to: 'cinder', tx: 7, ty: 1 }, { x: 7, y: 23, to: 'cinder', tx: 7, ty: 1 },
+      { x: 6, y: 23, to: 'cinder', tx: 7, ty: 1 }, { x: 7, y: 23, to: 'cinder', tx: 8, ty: 1 },
       { x: 6, y: 0, to: 'coral', tx: 7, ty: 14 }, { x: 7, y: 0, to: 'coral', tx: 8, ty: 14 }
     ],
     npcs: [

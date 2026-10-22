@@ -27,8 +27,8 @@ function owBlockRoute(L, i, attempt) {
     for (let by = r[0]; by <= r[1]; by++) B[by][3] = 'g';
     for (let bx = 1; bx < 6; bx++) if (bx !== 3 && B[m][bx] !== 'p') B[m][bx] = 'T';                       // a tree wall across the bend, with the lane's Trim-charm tree in it
   });
-  for (let by = 1; by < 11; by++) if (plan[by] === 3 && plan[by - 1] === 3 && !lanes.some(function (r) { return by >= r[0] && by <= r[1]; }) && bands.length < 1) bands.push(by);
-  bands.forEach(function (by) { for (let bx = 1; bx < 6; bx++) B[by][bx] = bx === 3 ? 'G' : 'T'; });
+  [10].forEach(function (by) { if (plan[by] === 3 && plan[by - 1] === 3 && !lanes.some(function (r) { return by >= r[0] && by <= r[1]; }) && bands.length < 1) bands.push(by); });          // in the last block row that finds are never placed in, so it takes no room from them
+  bands.forEach(function (by) { for (let bx = 1; bx < 6; bx++) B[by][bx] = bx === 3 ? 'G' : 'T'; });          // a wall of trees across the straight road with a gap of tall grass (the grass you must cross); kept off the rows beside the exits, so the road is plain where a route meets a town
   const free = function (bx, by, w, h) { for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (at(x, y) !== 'g') return false; return true; };
   const spots = function (w, h) { const out = []; for (let by = 2; by < 10 - h + 1; by++) for (let bx = 1; bx < 6 - w + 1; bx++) if (free(bx, by, w, h)) out.push([bx, by]); return out; };
   const take = function (list) { return list.length ? list[Math.floor(rnd() * list.length)] : null; };
@@ -130,7 +130,7 @@ function owBlockRoute(L, i, attempt) {
 }
 OW_LANDS.forEach(function (L, i) {
   const m = OW_MAPS[L.routeIn]; let best = null;
-  for (let attempt = 0; attempt < 80 && (!best || best.score < 3); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
+  for (let attempt = 0; attempt < 80 && (!best || best.score < 4); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
   if (!best) return;
   m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.house = best.house;
   m.npcs.push({ id: L.routeIn + '-swimmer', kind: 'trainer', name: 'Swimmer ' + OW_SIDE_FOLK_NAME(i), x: best.pond.x, y: best.pond.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });

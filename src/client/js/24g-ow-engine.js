@@ -100,6 +100,8 @@ function owBeyond(map, x, y) {
   const w = map.warps.filter(function (p) { return (sideways ? p.x : p.y) === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return sideways ? Math.abs(a.y - y) - Math.abs(b.y - y) : Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
   if (!w) return null;
   const nm = OW_MAPS[w.to], rx = x + w.tx - w.x, ry = w.ty + (y - w.y);
+  const nW = nm.rows[0].length, nH = nm.rows.length;
+  if (sideways ? (w.x === 0 ? w.tx < nW - 3 : w.tx > 2) : (w.y === 0 ? w.ty < nH - 3 : w.ty > 2)) return null;          // a door that lands on another kind of edge (a road that ends at a town's side) does not line up, so nothing is drawn past it
   if (sideways && (ry < 0 || ry >= nm.rows.length)) return null;                                         // beside a side path's gap, past the neighbour's own edge: the wood goes on
   const nx = clamp(rx, 0, nm.rows[0].length - 1), ny = clamp(ry, 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
   return t ? { t: t, style: owPaletteCss(nm.palette), map: nm, x: rx, y: ry } : null;
@@ -112,6 +114,17 @@ function owFruitDay() {
   const bushes = owIds('pickup').filter(function (id) { return /-(berries|apricorns)$/.test(id); });
   o.found = o.found.filter(function (id) { return bushes.indexOf(id) === -1; });
   o.fruitDay = today;
+}
+// The tile drawn at x,y of this map, and the map and place it really belongs to: past an edge Gold shows the next map (the same cell the warp lands on), never black, and its looks (windows, chimneys,
+// edges) are those of its own place, so a house is the same house before and after the step that crosses the edge. A room is surrounded by black, as in Gold.
+function owCellAt(map, x, y) {
+  const t = owTileAt(map, x, y);
+  if (t) return { tile: t, map: map, x: x, y: y, beyond: null };
+  const beyond = owBeyond(map, x, y);
+  if (beyond && beyond.t) return { tile: beyond.t, map: beyond.map, x: clamp(beyond.x, 0, beyond.map.rows[0].length - 1), y: clamp(beyond.y, 0, beyond.map.rows.length - 1), beyond: beyond };
+  if (map.room) return { tile: null, map: map, x: x, y: y, beyond: null };
+  const cx = clamp(x, 0, map.rows[0].length - 1), cy = clamp(y, 0, map.rows.length - 1);
+  return { tile: owTileAt(map, cx, cy), map: map, x: cx, y: cy, beyond: null };
 }
 // Houses are not all alike: some wall cells have a window, and a roof's top row may carry a chimney (fixed by place, so a house looks the same every time).
 function owVariant(map, x, y, art) {
@@ -141,9 +154,8 @@ function renderOverworld() {
   for (let vy = 0; vy < g.rows; vy++) {
     for (let vx = 0; vx < g.cols; vx++) {
       const x = o.x - hx + vx, y = o.y - hy + vy;
-      const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
-      const shown = t || (beyond && beyond.t) || (map.room ? null : owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1)));      // a room is surrounded by black, as in Gold
-      h += '<span class="ow-cell' + owCellLook(map, x, y, shown) + '"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(owVariant(map, x, y, shown.t)) : '') + '</span>';
+      const c = owCellAt(map, x, y), shown = c.tile, beyond = c.beyond;
+      h += '<span class="ow-cell' + owCellLook(c.map, c.x, c.y, shown) + '"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(owVariant(c.map, c.x, c.y, shown.t)) : '') + '</span>';
       if (beyond) farActors.push([beyond, vx, vy]);
     }
   }
@@ -160,7 +172,7 @@ function renderOverworld() {
     if (npc && owNpcActive(npc)) h += owActorHtml('ow-npc', f[1], f[2], g, heroSprite(heroLookColors(npc.look), npc.face, 0));
     else if (pick) h += owActorHtml('ow-pickup', f[1], f[2], g, worldSprite('o-sparkle'));
   });
-  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow' + (owStepped ? ' ow-hop' : ''), owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
+  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow' + (owStepped ? ' ow-hop' : ''), owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, '<span class="ow-lag" style="transform:translate(' + (owTrail.x - o.x) * 14 + '%,' + (owTrail.y - o.y) * 14 + '%)">' + owFollowerHtml() + '</span>');
   h += owActorHtml('ow-hero' + (owTileAt(map, o.x, o.y).water ? ' ow-surfing' : ''), hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;

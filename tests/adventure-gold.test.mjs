@@ -712,6 +712,7 @@ test('the routes have big grass fields, a house with a room on most, and Trim-ch
 test('past the top or bottom edge of a route the map shows the next town, lined up with where the warp lands', async () => {
   const r = await ev(() => OW_LANDS.map((L) => {
     const m = OW_MAPS[L.routeIn], up = m.warps.find((w) => w.y === 0), down = m.warps.find((w) => w.y === m.rows.length - 1);
+    if (down.ty > 2) return true;                                              // the road that ends at a town's side (Cinder Route to Skyreach) does not line up, so nothing is drawn past it
     const above = owBeyond(m, up.x, -1), below = owBeyond(m, down.x, m.rows.length), nu = OW_MAPS[up.to], nd = OW_MAPS[down.to];
     return !!above && !!below && above.t === owTileAt(nu, up.tx, up.ty - 1) && below.t === owTileAt(nd, down.tx, down.ty + 1) && above.style === owPaletteCss(nu.palette);
   }));
@@ -1522,4 +1523,44 @@ test('each town and route plays its own take on its tune; villagers say a proud 
     return out;
   });
   assert.deepEqual(r, { differ: true, same: true, len: true, fixed: true, words: true, idle: true, hop: true, rest: true });
+});
+
+test('between scenes nothing changes: a cell past an edge is drawn as the neighbour\'s own cell (same windows, chimneys and edges), the road is plain (no tall grass, no wall) where every route meets a town, and the road lines up across every seam', async () => {
+  const r = await ev(() => {
+    const out = { cells: 0, mismatch: [], gap: [], seams: [] };
+    Object.keys(OW_MAPS).forEach((k) => {
+      const m = OW_MAPS[k]; if (m.room) return; const W = m.rows[0].length, H = m.rows.length;
+      m.warps.forEach((w) => {
+        const n = OW_MAPS[w.to]; if (!n || n.room || !(w.x === 0 || w.y === 0 || w.x === W - 1 || w.y === H - 1)) return;
+        for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+          const x = w.x + dx, y = w.y + dy; if (x >= 0 && x < W && y >= 0 && y < H) continue;
+          const c = owCellAt(m, x, y), rx = x + w.tx - w.x, ry = w.ty + (y - w.y);
+          if (rx < 0 || ry < 0 || rx >= n.rows[0].length || ry >= n.rows.length || !c.beyond) continue;
+          out.cells++; const own = owCellAt(n, rx, ry);
+          if (c.map !== own.map || c.x !== own.x || c.y !== own.y || owVariant(c.map, c.x, c.y, c.tile.t) !== owVariant(own.map, own.x, own.y, own.tile.t) || owCellLook(c.map, c.x, c.y, c.tile) !== owCellLook(own.map, own.x, own.y, own.tile)) out.mismatch.push(k + '>' + w.to);
+        }
+      });
+    });
+    OW_LANDS.forEach((L) => {
+      const m = OW_MAPS[L.routeIn], H = m.rows.length, ok = (x, y) => { const t = OW_TILES[(m.rows[y] || '').charAt(x)]; return t && !t.solid && !t.grass && !t.gate; };
+      for (let y = 0; y < H; y++) if ((y < 2 || y >= H - 2) && [6, 7].some((x) => m.rows[y].charAt(x) === '"' || OW_TILES[m.rows[y].charAt(x)].solid && y < 2)) out.gap.push(L.routeIn + ' row ' + y);          // the road is plain where a route meets a town, and no wall stands in its mouth
+      m.warps.filter((w) => (w.y === 0 || w.y === H - 1) && OW_MAPS[w.to]).forEach((w) => { const n = OW_MAPS[w.to], inY = w.y === 0 ? 1 : H - 2, inN = w.ty === 0 ? 1 : (w.ty === n.rows.length - 1 ? n.rows.length - 2 : w.ty + (w.y === 0 ? -1 : 1)); const t1 = OW_TILES[m.rows[inY].charAt(w.x)], t2 = OW_TILES[(n.rows[w.y === 0 ? w.ty - 1 : w.ty + 1] || '').charAt(w.tx)]; if (!t1 || t1.solid || t1.grass) out.seams.push(L.routeIn + ' ' + w.to + ' this side'); if (t2 && (t2.solid || t2.grass)) out.seams.push(L.routeIn + ' ' + w.to + ' far side'); });
+    });
+    return out;
+  });
+  assert.ok(r.cells > 100, 'there are seams to compare: ' + r.cells);
+  assert.deepEqual([r.mismatch, r.gap, r.seams], [[], [], []]);
+});
+
+test('the buddy follows a little behind and smaller, on the side away from the hero, so it never lands on the hero', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const o = state.overworld, out = {};
+    const sp = nextTo('route1', 7, 12); o.map = 'route1'; o.x = sp.x; o.y = sp.y; o.face = sp.face; renderOverworld();
+    ['down', 'up', 'left', 'right'].forEach((d) => { const dd = OW_STEP[d]; if (!owWalkable(OW_MAPS.route1, o.x + dd[0], o.y + dd[1]) || owNpcAt(OW_MAPS.route1, o.x + dd[0], o.y + dd[1]) || owWarpAt(OW_MAPS.route1, o.x + dd[0], o.y + dd[1])) return; owMove(d); const lag = document.querySelector('.ow-follow .ow-lag'); out[d] = lag ? lag.style.transform : null; });
+    const f = document.querySelector('.ow-follow .ow-buddy'), cs = f && getComputedStyle(f); out.small = !!f && parseFloat(cs.width) < parseFloat(getComputedStyle(document.querySelector('.ow-hero')).width);
+    return out;
+  });
+  const moves = Object.entries(r).filter(([k]) => k !== 'small');
+  assert.ok(moves.length >= 1 && r.small);
+  moves.forEach(([k, v]) => assert.ok(v && /translate\((-?[\d.]+)%,\s*(-?[\d.]+)%\)/.test(v), k + ': ' + v));
 });

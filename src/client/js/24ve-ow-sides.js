@@ -15,8 +15,9 @@ function owSideBuild(L, i) {
   const edge = east ? 13 : 0, inner = east ? 12 : 1, inner2 = east ? 11 : 2;
   const busy = function (x, y) { return (route.npcs || []).some(function (n) { return n.x === x && n.y === y; }) || (route.objects || []).some(function (o) { return o.x === x && o.y === y; }) || Object.keys(route.signs || {}).indexOf(x + ',' + y) !== -1 || Object.keys(route.trees || {}).indexOf(x + ',' + y) !== -1; };
   let y = -1;
+  const nearHouse = function (c) { const h = route.house; return !!h && c >= h.y - 1 && c <= h.y + 3 && (east ? h.x + 3 >= 9 : h.x <= 4); };          // the route's house (stamped after this) must not stand in front of the gap
   const reach = route.blocks ? owReachSet(route) : null;                                                // a block route has to be walked to the gap, not just dug into
-  for (let d = 0; d < 12 && y < 0; d++) [10 + d, 10 - d].forEach(function (c) { if (y < 0 && c > 2 && c < route.rows.length - 3 && (!reach || reach[inner2 + ',' + c]) && (route.blocks ? ok(route.rows[c].charAt(inner2)) && ok(route.rows[c].charAt(east ? 10 : 3)) : ok(route.rows[c].charAt(inner)) && ok(route.rows[c].charAt(inner2))) && !busy(inner, c) && !busy(inner2, c) && route.rows[c].charAt(edge) === 'T') y = c; });
+  for (let d = 0; d < 12 && y < 0; d++) [10 + d, 10 - d].forEach(function (c) { if (y < 0 && c > 2 && c < route.rows.length - 3 && !nearHouse(c) && (!reach || reach[inner2 + ',' + c]) && (route.blocks ? ok(route.rows[c].charAt(inner2)) && ok(route.rows[c].charAt(east ? 10 : 3)) : ok(route.rows[c].charAt(inner)) && ok(route.rows[c].charAt(inner2))) && !busy(inner, c) && !busy(inner2, c) && route.rows[c].charAt(edge) === 'T') y = c; });
   if (y < 0) return;
   owSetTile(L.routeIn, edge, y, '.');
   if (route.blocks) owSetTile(L.routeIn, inner, y, '.');                                                // the thick border of a block route is two trees deep

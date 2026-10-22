@@ -62,7 +62,7 @@ Object.assign(OW_MAPS, {
     id: 'champwalk', name: "Champion's Walk", region: 'skyreach', start: { x: 6, y: 18 }, palette: OW_SKYREACH_PALETTE,
     rows: ['TTTTTTTTTTTTTT', 'T,,,RRRR,,,,,T', 'T,,,RRRR,,,,,T', 'T,,,WWGW,,,,,T', 'T,,,,s..,,,,,T', 'T,,,,,..,,,*,T', 'T,,,,,..,,,,,T', 'T,*,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,*,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,*,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'TTTTTT..TTTTTT'],
-    warps: [{ x: 6, y: 19, to: 'skyreach', tx: 7, ty: 1 }, { x: 7, y: 19, to: 'skyreach', tx: 7, ty: 1 }],
+    warps: [{ x: 6, y: 19, to: 'skyreach', tx: 7, ty: 1 }, { x: 7, y: 19, to: 'skyreach', tx: 8, ty: 1 }],
     npcs: [
       Object.assign({ id: 'walk-joule', kind: 'trainer', name: 'Ace Joule', x: 3, y: 15, face: 'right', look: { skin: 2, hair: 0, outfit: 4, style: 0 }, lines: ['This is the Champion\'s Walk. Only strong trainers get this far!'], win: ['Superb! Keep walking. The Hall is at the end.'] }, OW_ACE),
       Object.assign({ id: 'walk-brook', kind: 'trainer', name: 'Ace Brook', x: 10, y: 11, face: 'left', look: { skin: 1, hair: 3, outfit: 0, style: 1 }, lines: ['I have waited here all week for a worthy battle!'], win: ['What a match! I hope we meet again.'] }, OW_ACE),

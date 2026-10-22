@@ -10,7 +10,7 @@ Object.assign(OW_MAPS, {
     id: 'peak', name: 'Silver Peak', region: 'summit', start: { x: 6, y: 18 }, palette: OW_SUMMIT_PALETTE,
     rows: ['TTTTTTTTTTTTTT', 'T,,,RRRR,,,,,T', 'T,,,RRRR,,,,,T', 'T,,,WWGW,,,,,T', 'T,,,,s..,,,,,T', 'T,,,,,..,,,*,T', 'T,,,,,..,,,,,T', 'T,*,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T',
       'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,*,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,*,,..,,,,,T', 'T,,,,,..,,,,,T', 'T,,,,,..,,,,,T', 'TTTTTT..TTTTTT'],
-    warps: [{ x: 6, y: 19, to: 'summit', tx: 7, ty: 1 }, { x: 7, y: 19, to: 'summit', tx: 7, ty: 1 }],
+    warps: [{ x: 6, y: 19, to: 'summit', tx: 7, ty: 1 }, { x: 7, y: 19, to: 'summit', tx: 8, ty: 1 }],
     npcs: [],
     objects: [{ id: 'peak-gem', type: 'pickup', x: 11, y: 5, give: 'gems' }],
     gyms: { '6,3': 'master' },
