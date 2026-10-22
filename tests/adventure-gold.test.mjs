@@ -1196,6 +1196,16 @@ test('routes are filled in different ways: a wood, a rocky pass, a flower meadow
   assert.deepEqual(r, { themes: 'meadow,open,rocky,stony,wood', rocks: true, wood: true, meadow: true, plans: 8 });
 });
 
+test('the land is a web with towns of different sizes: nine link roads (three cross a river by a bridge), towns from 18 to 30 tall, and the tall ones have a second district of closed houses', async () => {
+  const r = await ev(() => {
+    const hs = owTowns().filter((t) => t !== OW_START.map).map((t) => OW_MAPS[t].rows.length), tall = owTowns().filter((t) => OW_MAPS[t].rows.length >= 26);
+    const exits = {}; owTowns().forEach((t) => { exits[t] = OW_MAPS[t].warps.length; });
+    return { links: OW_LINKS.length, built: OW_LINKS.every((d) => !!OW_MAPS[d.id]), rivers: OW_LINKS.filter((d) => d.river && /B/.test(OW_MAPS[d.id].rows.join('')) && /~/.test(OW_MAPS[d.id].rows.join(''))).length, min: Math.min(...hs), max: Math.max(...hs), tall: tall.length >= 3,
+      closed: tall.every((t) => OW_MAPS[t].rows.some((row, y) => y > 12 && /WWW/.test(row) && !/D/.test(row))), moreExits: owTowns().filter((t) => OW_MAPS[t].warps.some((w) => /^link-/.test(w.to))).length };
+  });
+  assert.deepEqual(r, { links: 9, built: true, rivers: 3, min: 18, max: 30, tall: true, closed: true, moreExits: 13 });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

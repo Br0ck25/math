@@ -247,7 +247,7 @@ test('link roads join two towns by a second road: closed until both towns are se
     // walk end to end
     const seen = {}, q = [[1, 6]]; seen['1,6'] = 1;
     while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach((v) => { const x = c[0] + v[0], y = c[1] + v[1]; if (!seen[x + ',' + y] && owWalkable(L, x, y) && !owNpcAt(L, x, y)) { seen[x + ',' + y] = 1; q.push([x, y]); } }); }
-    out.through = !!seen[(OW_LINK_W - 2) + ',6']; out.stuff = L.objects.every((o) => seen[o.x + ',' + o.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some((v) => seen[(o.x + v[0]) + ',' + (o.y + v[1])]));
+    out.through = !!seen[(OW_MAPS[d.id].rows[0].length - 2) + ',6']; out.stuff = L.objects.every((o) => seen[o.x + ',' + o.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some((v) => seen[(o.x + v[0]) + ',' + (o.y + v[1])]));
     // closed until the other town is seen
     grantKeyItem('gizmo'); grantKeyItem('map-card'); state.hero.made = true; openAdventure();
     const o = state.overworld; o.seen = [d.from]; o.map = d.from; o.x = 14; o.y = 6; owSetRegion(A); renderOverworld(); owMove('right');

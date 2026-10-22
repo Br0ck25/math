@@ -5,10 +5,10 @@
 //  as the fall-back (and Meadow Town's plan). The main road is always columns 7 and 8 from the bottom edge to the top gate, so the routes line up with the towns.
 // =====================================================================
 const OW_TOWN_PLANS = {
-  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 22 }, tide: { style: 'harbour', h: 22 }, grove: { style: 'forest', h: 20 }, volt: { style: 'grid', h: 22 },
-  gloom: { style: 'marsh', h: 22 }, mystic: { style: 'staircase', h: 22, mirror: true }, skyreach: { style: 'plaza', h: 22, mirror: true }, cinder: { style: 'river', h: 22 },
-  coral: { style: 'lagoon', h: 22 }, thistle: { style: 'park', h: 22, mirror: true }, spark: { style: 'avenues', h: 22 }, dusk: { style: 'lake', h: 22, mirror: true },
-  prism: { style: 'diamond', h: 22 }, cross: { style: 'crossroads', h: 22, mirror: true }, summit: { style: 'terrace', h: 22, mirror: true, frozen: true }
+  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 24 }, tide: { style: 'harbour', h: 22 }, grove: { style: 'forest', h: 18 }, volt: { style: 'grid', h: 26 },
+  gloom: { style: 'marsh', h: 22 }, mystic: { style: 'staircase', h: 28, mirror: true }, skyreach: { style: 'plaza', h: 24, mirror: true }, cinder: { style: 'river', h: 20 },
+  coral: { style: 'lagoon', h: 24 }, thistle: { style: 'park', h: 18, mirror: true }, spark: { style: 'avenues', h: 30 }, dusk: { style: 'lake', h: 26, mirror: true },
+  prism: { style: 'diamond', h: 24 }, cross: { style: 'crossroads', h: 20, mirror: true }, summit: { style: 'terrace', h: 22, mirror: true, frozen: true }
 };
 // The helpers a style draws with (x is as drawn for the unmirrored town; a mirrored town is the same picture flipped left to right).
 function owTownTools(g, W, H, doors, mirror, rnd) {
@@ -145,9 +145,25 @@ const OW_TOWN_STYLES = {
   }
 };
 // Runs a plan on the grid: the edge columns of the old map are kept (the side games cut their doors there), the style draws, and every kept gap in the edge is joined to the road.
+// A tall town (Gold's bigger cities) has a second district below the street its buildings stand on: a few houses without doors (closed houses, as in Gold), a pond and a flower bed, all on plain grass beside the road.
+function owDistrict(g, W, H, rnd) {
+  let last = 0; for (let y = 1; y < H - 3; y++) if (/[DWR]/.test(g[y].slice(2, 14).join(''))) last = y;
+  const y0 = last + 3, put = function (x, y, w, h, ch) { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) g[yy][xx] = ch; };
+  const clear = function (x, y, w, h) { for (let yy = y - 1; yy <= y + h; yy++) for (let xx = x - 1; xx <= x + w; xx++) { const c = g[yy] && g[yy][xx], ring = yy < y || yy >= y + h || xx < x || xx >= x + w; if (!c || (ring ? /[RWDNKGv~BjzyqnxX]/.test(c) : ',*'.indexOf(c) === -1)) return false; } return true; };
+  let pond = false, n = 0;
+  for (let y = y0; y + 3 < H - 2; y += 4) [[2, 6], [9, 13]].forEach(function (side) {
+    const w = 3 + Math.floor(rnd() * 2), xs = []; for (let x = side[0]; x + w - 1 <= side[1]; x++) xs.push(x);
+    const spots = owShuffle(xs, rnd), house = n++ % 3 !== 2 ? spots.find(function (x) { return clear(x, y, w, 2); }) : undefined;
+    if (house !== undefined) { put(house, y, w, 1, 'R'); put(house, y + 1, w, 1, 'W'); if (clear(house, y + 2, w, 1) && rnd() < 0.6) put(house + Math.floor(w / 2), y + 3, 1, 1, 'a'); return; }
+    const x = spots.find(function (c) { return clear(c, y, 3, 2); });
+    if (x === undefined) return;
+    if (!pond) { put(x, y, 3, 2, '~'); pond = true; } else put(x, y + 1, 3, 1, '*');
+  });
+}
 function owRunPlan(plan, g, W, H, doors, rnd, old) {
   const T = owTownTools(g, W, H, doors, !!plan.mirror, rnd); T.frozen = !!plan.frozen;
   OW_TOWN_STYLES[plan.style](T, H);
+  if (H > 22) owDistrict(g, W, H, rnd);
   for (let y = 1; y < H - 1; y++) [0, 1, 14, 15].forEach(function (x) { g[y][x] = y >= 4 && y <= 8 ? old[y].charAt(x) : 'T'; });
   for (let y = 1; y < H - 1; y++) { if (g[y][7] === 'T' || g[y][7] === ',') g[y][7] = '.'; if (g[y][8] === 'T' || g[y][8] === ',') g[y][8] = '.'; }
   if (Object.keys(doors).length < 4) return false;
