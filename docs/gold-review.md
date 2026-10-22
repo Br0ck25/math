@@ -58,4 +58,6 @@ Still missing, in the order a Gold player would notice:
 
 Also added in this pass: Settings > Options > "Questions" turns fight questions and puzzle-sign questions off for a game with no maths (duels between players still ask).
 
+Route fills: each route has a theme (wood, rocky pass, flower meadow, open country, stony flat) and eight road plans, so routes differ in what lines the road as well as in bends (`24vb-ow-blocks.js`).
+
 Town layouts: every town now has its own hand-picked plan (`24vbz-ow-town-plans.js`), as Gold's towns are each drawn by hand: a village green with a pond (Meadow), terraces with a ledge (Ember, Summit with a frozen pond), a harbour with a quay and bridge (Tide), a lagoon with a pier (Coral), a wood (Grove, Thistle's park), a grid of three avenues (Volt), a marsh of ponds (Gloom), a staircase of stepped columns (Mystic), a plaza with fountains (Skyreach), a river with a bridge (Cinder), two avenues with a market strip (Spark), a lake with a ring path (Dusk), a diamond garden (Prism) and a crossroads of diagonal paths (Cross). Mirroring, building order and sizes differ too, and towns are 18 to 22 tall. The slot layout stays as the fall-back. Towns are still 16 wide with their edge gaps where the side games expect them.

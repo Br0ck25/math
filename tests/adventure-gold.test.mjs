@@ -1185,6 +1185,16 @@ test('each town is laid out its own way: terraces with a ledge, a harbour with a
   assert.deepEqual(r, { kinds: 'avenues,crossroads,diamond,forest,green,grid,harbour,lagoon,lake,marsh,park,plaza,river,staircase,terrace', meadow: 'green', planned: true, terrace: true, harbour: true, plaza: true, lake: true, river: true, tall: true });
 });
 
+test('routes are filled in different ways: a wood, a rocky pass, a flower meadow, open country and a stony flat, and the road bends several ways', async () => {
+  const r = await ev(() => {
+    const routes = Object.keys(OW_MAPS).filter((k) => OW_MAPS[k].theme), themes = {}; routes.forEach((k) => { themes[OW_MAPS[k].theme] = (themes[OW_MAPS[k].theme] || 0) + 1; });
+    const rows = (k) => OW_MAPS[k].rows.join(''), count = (k, c) => rows(k).split(c).length - 1;
+    const rocky = routes.filter((k) => OW_MAPS[k].theme === 'rocky'), wood = routes.filter((k) => OW_MAPS[k].theme === 'wood'), meadow = routes.filter((k) => OW_MAPS[k].theme === 'meadow');
+    return { themes: Object.keys(themes).sort().join(), rocks: rocky.some((k) => count(k, '#') > 0), wood: wood.every((k) => count(k, 'T') > 150), meadow: meadow.some((k) => count(k, '*') > 4), plans: OW_ROAD_PLANS.length };
+  });
+  assert.deepEqual(r, { themes: 'meadow,open,rocky,stony,wood', rocks: true, wood: true, meadow: true, plans: 8 });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

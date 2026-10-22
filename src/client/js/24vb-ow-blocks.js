@@ -4,19 +4,22 @@
 //  The people, finds, shake tree and nook that the route's own file lists are then stood on the new land (each still reachable, trainers looking at the road).
 //  A route that cannot be laid out in a few tries keeps its hand-written rows. Runs after every route and story file, before the side paths (24ve).
 // =====================================================================
-const OW_BLOCKS = { T: ['TT', 'TT'], g: [',,', ',,'], G: ['""', '""'], p: ['..', '..'], f: ['*,', ',*'], w: ['~~', '~~'], l: ['vv', ',,'], h: [',,', ',,'], r: [',,', ',,'], d: ['dd', 'dd'] };
+const OW_BLOCKS = { T: ['TT', 'TT'], g: [',,', ',,'], G: ['""', '""'], p: ['..', '..'], k: ['##', '##'], f: ['*,', ',*'], w: ['~~', '~~'], l: ['vv', ',,'], h: [',,', ',,'], r: [',,', ',,'], d: ['dd', 'dd'] };
 // The block column of the road for each of the 12 block rows, top to bottom (3 is the middle, where the road leaves the map). Bends jump two or more columns so the straight lane between them stays apart from the road.
 const OW_ROAD_PLANS = [
   [3, 3, 1, 1, 1, 1, 1, 3, 3, 3, 3, 3], [3, 3, 5, 5, 5, 5, 5, 3, 3, 3, 3, 3], [3, 3, 3, 3, 1, 1, 1, 1, 3, 3, 3, 3], [3, 3, 3, 3, 5, 5, 5, 5, 3, 3, 3, 3],
-  [3, 1, 1, 1, 3, 3, 5, 5, 5, 3, 3, 3], [3, 5, 5, 5, 3, 3, 1, 1, 1, 3, 3, 3]
+  [3, 1, 1, 1, 3, 3, 5, 5, 5, 3, 3, 3], [3, 5, 5, 5, 3, 3, 1, 1, 1, 3, 3, 3],
+  [3, 3, 1, 1, 1, 3, 3, 5, 5, 5, 3, 3], [3, 3, 5, 5, 5, 3, 3, 1, 1, 1, 3, 3]
 ];
+// What fills the land beside the road: the share of trees, rocks, flowers and little ornaments, so routes read as a wood, a rocky pass, a flower meadow, open country or a stony flat.
+const OW_ROUTE_THEMES = [{ name: 'wood', tree: 0.4, rock: 0, flower: 0.04, deco: 0.02 }, { name: 'rocky', tree: 0.08, rock: 0.2, flower: 0.02, deco: 0.06 }, { name: 'meadow', tree: 0.05, rock: 0, flower: 0.3, deco: 0.03 }, { name: 'open', tree: 0.1, rock: 0, flower: 0.1, deco: 0.04 }, { name: 'stony', tree: 0.15, rock: 0.1, flower: 0.06, deco: 0.14 }];
 function owRng(text, k) {
   let a = k * 7919 + 17; for (let i = 0; i < text.length; i++) a = (a * 31 + text.charCodeAt(i)) | 0;
   return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 // One try at laying a route out; returns its new rows, people and finds, or null when something could not be placed.
 function owBlockRoute(L, i, attempt) {
-  const m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n');
+  const theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length], m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n');
   const B = []; for (let by = 0; by < 12; by++) { B.push([]); for (let bx = 0; bx < 7; bx++) B[by].push(bx === 0 || bx === 6 || by === 0 || by === 11 ? 'T' : 'g'); }
   const at = function (bx, by) { return B[by] && B[by][bx]; }, roadNear = function (bx, by, r) { for (let y = by - r; y <= by + r; y++) for (let x = bx - r; x <= bx + r; x++) if (at(x, y) === 'p') return true; return false; };
   for (let by = 0; by < 12; by++) { B[by][plan[by]] = 'p'; if (by) for (let c = Math.min(plan[by], plan[by - 1]); c <= Math.max(plan[by], plan[by - 1]); c++) B[by][c] = 'p'; }
@@ -46,7 +49,7 @@ function owBlockRoute(L, i, attempt) {
   if (ledge) { score += 2; for (let x = 0; x < ledgeW; x++) B[ledge[1]][ledge[0] + x] = 'l'; }
 
   for (let k = 0; k < 3; k++) { const f = take(spots(2, rnd() < 0.5 ? 2 : 1)); if (f) { const w = 2; for (let y = 0; y < 2; y++) for (let x = 0; x < w; x++) if (at(f[0] + x, f[1] + y) === 'g') B[f[1] + y][f[0] + x] = 'G'; } }
-  for (let by = 1; by < 11; by++) for (let bx = 1; bx < 6; bx++) if (B[by][bx] === 'g' && !roadNear(bx, by, 1)) { const r = rnd(); if (r < 0.2) B[by][bx] = 'T'; else if (r < 0.3) B[by][bx] = 'f'; else if (r < 0.36) B[by][bx] = 'd'; }
+  for (let by = 1; by < 11; by++) for (let bx = 1; bx < 6; bx++) if (B[by][bx] === 'g' && roadNear(bx, by, 1) && rnd() < theme.flower) B[by][bx] = 'f'; else if (B[by][bx] === 'g' && !roadNear(bx, by, 1)) { let r = rnd(); if (r < theme.tree) B[by][bx] = 'T'; else if ((r -= theme.tree) < theme.rock) B[by][bx] = 'k'; else if ((r -= theme.rock) < theme.flower) B[by][bx] = 'f'; else if ((r - theme.flower) < theme.deco) B[by][bx] = 'd'; }
   const g = []; for (let y = 0; y < 24; y++) g.push(new Array(14).fill(','));
   for (let by = 0; by < 12; by++) for (let bx = 0; bx < 7; bx++) { const blk = OW_BLOCKS[B[by][bx]]; for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) g[by * 2 + y][bx * 2 + x] = blk[y].charAt(x); }
   const px = pond[0] * 2, py = pond[1] * 2;
@@ -132,7 +135,7 @@ OW_LANDS.forEach(function (L, i) {
   const m = OW_MAPS[L.routeIn]; let best = null;
   for (let attempt = 0; attempt < 80 && (!best || best.score < 4); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
   if (!best) return;
-  m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.house = best.house;
+  m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length].name; m.house = best.house;
   m.npcs.push({ id: L.routeIn + '-swimmer', kind: 'trainer', name: 'Swimmer ' + OW_SIDE_FOLK_NAME(i), x: best.pond.x, y: best.pond.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });
   m.objects.push({ id: L.routeIn + '-islet', type: 'pickup', x: best.bridge.x, y: best.bridge.y, give: i % 2 ? 'net' : 'gems' });
 });

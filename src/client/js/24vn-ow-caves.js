@@ -45,8 +45,8 @@ function owCaveCut(g, from, to, block) {
 function owBuildCave(L, i, attempt) {
   const R = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, 300 + attempt);
   const at = function (x, y) { return R.rows[y] ? R.rows[y].charAt(x) : ''; };
-  const cands = [];
-  for (let y = 4; y < R.rows.length - 3; y++) for (let x = 1; x < 13; x++) if (at(x, y) === 'T' && at(x, y - 1) === 'T' && ',."*d'.indexOf(at(x, y + 1)) !== -1 && !owNear(R, x, y + 1, 1) && !owNear(R, x, y, 1) && !owSeenByTrainer(R, x, y + 1)) cands.push([x, y]);
+  const cands = [], reach = R.blocks ? owReachSet(R) : null;
+  for (let y = 4; y < R.rows.length - 3; y++) for (let x = 1; x < 13; x++) if (at(x, y) === 'T' && at(x, y - 1) === 'T' && ',."*d'.indexOf(at(x, y + 1)) !== -1 && !owNear(R, x, y + 1, 1) && !owNear(R, x, y, 1) && !owSeenByTrainer(R, x, y + 1) && (!reach || reach[x + ',' + (y + 1)])) cands.push([x, y]);
   if (!cands.length) return false;
   const mouth = cands[Math.floor(rnd() * cands.length)], W = 14, H = 14, entrance = [7, H - 2];
   const id1 = L.routeIn + '-cave1', id2 = L.routeIn + '-cave2', base = { region: R.region, palette: R.palette, dark: true, room: true };
