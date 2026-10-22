@@ -246,10 +246,10 @@ test('all sixteen gym lands have a town, in story order, chained by roads: each 
       const seen = new Set([OW_START.map]), q = [OW_START.map];
       while (q.length) {
         const k = q.shift(), m = OW_MAPS[k], tiles = new Set(), w = [m.start];
-        Object.keys(OW_MAPS).forEach((o) => OW_MAPS[o].warps.forEach((x) => { if (x.to === k && seen.has(o)) w.push({ x: x.tx, y: x.ty }); }));
+        Object.keys(OW_MAPS).forEach((o) => OW_MAPS[o].warps.forEach((x) => { if (x.to === k && seen.has(o) && !x.needs) w.push({ x: x.tx, y: x.ty }); }));
         const st = []; w.forEach((a) => { if (owWalkable(m, a.x, a.y) && !tiles.has(a.x + ',' + a.y)) { tiles.add(a.x + ',' + a.y); st.push([a.x, a.y]); } });
         while (st.length) { const [cx, cy] = st.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (owWalkable(m, nx, ny) && !owNpcAt(m, nx, ny) && !tiles.has(nx + ',' + ny)) { tiles.add(nx + ',' + ny); st.push([nx, ny]); } }); }
-        m.warps.forEach((x) => { if (tiles.has(x.x + ',' + x.y) && !seen.has(x.to)) { seen.add(x.to); q.push(x.to); } });
+        m.warps.forEach((x) => { if (tiles.has(x.x + ',' + x.y) && !seen.has(x.to) && !x.needs) { seen.add(x.to); q.push(x.to); } });      // a link road (24vr) only joins two towns already seen, so it never leads somewhere new
       }
       return seen;
     };

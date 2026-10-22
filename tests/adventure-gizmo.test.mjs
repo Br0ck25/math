@@ -62,7 +62,7 @@ test('the Gizmo Town Map draws the towns, marks where you are and travels from a
   await page.evaluate(() => { grantKeyItem('gizmo'); });
   await page.evaluate(() => { state.overworld.seen = ['hollow']; state.overworld.map = 'meadow'; owSetRegion(OW_MAPS.meadow); openGizmo(); });
   assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-town').length), await page.evaluate(() => OW_LANDS.length + 2));
-  assert.deepEqual(await page.evaluate(() => ['.gm-land', '.gm-river', '.gm-water', '.gm-tree', '.gm-peak', '.gm-hill'].map((q) => document.querySelectorAll('#gizmo-body svg.gm-map ' + q).length > 0)), [true, true, true, true, true, true]);   // coast, river, lakes, woods and mountains under the roads
+  assert.deepEqual(await page.evaluate(() => ['.gm-land', '.gm-river', '.gm-water', '.gm-tree', '.gm-peak', '.gm-mtn'].map((q) => document.querySelectorAll('#gizmo-body svg.gm-map ' + q).length > 0)), [true, true, true, true, true, true]);   // coast, river, lakes, woods and mountains under the roads
   assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-me').length), 1);
   assert.equal(await page.evaluate(() => document.querySelectorAll('#gizmo-body svg.gm-map .gm-town:not(.gm-dim)').length), 2);   // Cozy Hollow and Meadow Town only
   await page.evaluate(() => document.querySelector('#gizmo-body svg.gm-map g[onclick*="hollow"]').dispatchEvent(new MouseEvent('click', { bubbles: true })));
@@ -236,6 +236,31 @@ test('the Gizmo Phone lists the numbers you have and a Call opens their words; a
   });
   assert.deepEqual(r.names.slice(0, 3), ['Mom', 'Prof. Pi', 'Fisher Gil']);
   assert.match(r.said, /fish are biting/); assert.equal(r.potions, 1); assert.ok(r.mom);
+  assert.deepEqual(errors, []);
+});
+
+test('link roads join two towns by a second road: closed until both towns are seen, walkable end to end, and drawn on the Town Map with the caves', async () => {
+  const r = await page.evaluate(() => {
+    const out = { built: OW_LINKS.every((d) => !!OW_MAPS[d.id]) };
+    const d = OW_LINKS[0], A = OW_MAPS[d.from], B = OW_MAPS[d.to], L = OW_MAPS[d.id];
+    out.gaps = [A.warps.some((w) => w.x === 15 && w.y === 6 && w.to === d.id && w.needs === d.to), B.warps.some((w) => w.x === 0 && w.y === 6 && w.to === d.id && w.needs === d.from)];
+    // walk end to end
+    const seen = {}, q = [[1, 6]]; seen['1,6'] = 1;
+    while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach((v) => { const x = c[0] + v[0], y = c[1] + v[1]; if (!seen[x + ',' + y] && owWalkable(L, x, y) && !owNpcAt(L, x, y)) { seen[x + ',' + y] = 1; q.push([x, y]); } }); }
+    out.through = !!seen[(OW_LINK_W - 2) + ',6']; out.stuff = L.objects.every((o) => seen[o.x + ',' + o.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some((v) => seen[(o.x + v[0]) + ',' + (o.y + v[1])]));
+    // closed until the other town is seen
+    grantKeyItem('gizmo'); grantKeyItem('map-card'); state.hero.made = true; openAdventure();
+    const o = state.overworld; o.seen = [d.from]; o.map = d.from; o.x = 14; o.y = 6; owSetRegion(A); renderOverworld(); owMove('right');
+    out.closed = o.map === d.from;
+    o.seen = [d.from, d.to]; o.x = 14; o.y = 6; owMove('right');
+    out.open = o.map === d.id;
+    state.overworld.map = d.id; gizmoTab = 'map'; openGizmo();
+    out.road = document.querySelectorAll('#gizmo-body svg.gm-map .gm-road').length; out.caves = document.querySelectorAll('#gizmo-body svg.gm-map .gm-cave').length;
+    out.here = gizmoNodeOf(d.id).from === d.from;
+    return out;
+  });
+  assert.deepEqual([r.built, r.gaps, r.through, r.stuff, r.closed, r.open, r.here], [true, [true, true], true, true, true, true, true]);
+  assert.ok(r.road > 0 && r.caves > 0, JSON.stringify(r));
   assert.deepEqual(errors, []);
 });
 

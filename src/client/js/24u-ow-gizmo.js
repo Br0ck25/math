@@ -54,6 +54,7 @@ const GIZMO_NODES = {
 function gizmoNodeOf(mapId) {
   if (GIZMO_NODES[mapId]) return { id: mapId };
   const m = OW_MAPS[mapId]; if (!m) return { id: 'hollow' };
+  if (m.link) return { id: m.link.to, from: m.link.from };
   const base = mapId.replace(/-side$/, ''), i = OW_LANDS.findIndex(function (L) { return L.routeIn === base; });
   if (i >= 0) { const to = OW_LANDS[i].town, from = i ? OW_LANDS[i - 1].town : 'hollow'; return { id: to, from: from }; }
   if (mapId === 'peak') return { id: 'peak' };
@@ -63,17 +64,17 @@ function gizmoNodeOf(mapId) {
   const byRegion = OW_LANDS.find(function (L) { return L.land === m.region; });
   return { id: byRegion ? byRegion.town : 'hollow' };
 }
-// The land under the roads: coast, a river with the roads bridging it, lakes, woods and mountains, so the map reads like Gold's and not like a bare diagram.
+// The land under the roads: sea with waves round a green coast, brown mountain country, a river the roads bridge, lakes and woods, as on Gold's Pokégear map.
 function gizmoTerrain() {
-  const tri = function (x, y, c) { return '<polygon class="' + c + '" points="' + (x - 3.2) + ',' + (y + 2.6) + ' ' + x + ',' + (y - 2.8) + ' ' + (x + 3.2) + ',' + (y + 2.6) + '"/>'; };
-  const tree = function (x, y) { return '<circle class="gm-tree" cx="' + x + '" cy="' + y + '" r="1.7"/>'; };
-  const peaks = [[62, 37], [68, 35], [74, 38], [80, 35], [86, 39], [66, 41], [78, 42]].map(function (p) { return tri(p[0], p[1], 'gm-peak'); }).join('');
-  const hills = [[15, 64], [20, 68], [15, 72], [21, 73]].map(function (p) { return tri(p[0], p[1], 'gm-hill'); }).join('');
-  const woods = [[32, 68], [36, 66], [40, 70], [34, 73], [39, 75], [43, 67], [31, 76], [22, 40], [26, 37], [30, 41], [34, 38], [40, 36], [52, 38], [56, 41], [50, 73], [57, 74], [60, 68]].map(function (p) { return tree(p[0], p[1]); }).join('');
-  return '<path class="gm-land" d="M6,16 Q14,11 40,13 T86,15 Q92,22 91,48 Q92.5,78 85,86 Q60,91 30,89 Q9,91 5,80 Q2,50 6,16Z"/>' +
+  const tri = function (x, y, c) { return '<polygon class="' + c + '" points="' + (x - 2.6) + ',' + (y + 2.2) + ' ' + x + ',' + (y - 2.4) + ' ' + (x + 2.6) + ',' + (y + 2.2) + '"/>'; };
+  const ridges = [[66, 20], [72, 18], [80, 21], [86, 19], [14, 20], [20, 18], [62, 38], [70, 40], [78, 39], [86, 42], [12, 64], [17, 68], [14, 73], [80, 74], [86, 72]].map(function (p) { return tri(p[0], p[1], 'gm-peak'); }).join('');
+  const woods = [[32, 68], [36, 66], [40, 70], [34, 73], [39, 75], [31, 76], [22, 40], [26, 37], [30, 41], [34, 38], [40, 36], [52, 38], [56, 41], [50, 73], [57, 74], [60, 68]].map(function (p) { return '<circle class="gm-tree" cx="' + p[0] + '" cy="' + p[1] + '" r="1.6"/>'; }).join('');
+  return '<defs><pattern id="gm-wave" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#2f5fd8"/><path d="M0,4 L3,1 L6,4" fill="none" stroke="#9ec1ff" stroke-width="0.7"/></pattern></defs><rect x="0" y="0" width="94" height="94" rx="2" fill="url(#gm-wave)"/>' +
+    '<path class="gm-land" d="M6,16 Q14,11 40,13 T86,15 Q92,22 91,48 Q92.5,78 85,86 Q60,91 30,89 Q9,91 5,80 Q2,50 6,16Z"/>' +
+    '<path class="gm-mtn" d="M5,17 Q18,12 32,15 L28,24 L16,26 L6,31Z"/><path class="gm-mtn" d="M58,14 L90,15 L91,45 L77,42 L66,38 L60,28Z"/><path class="gm-mtn" d="M5,57 L24,58 L23,76 L9,75 L5,70Z"/><path class="gm-mtn" d="M70,70 L90,69 L88,84 L72,84Z"/>' +
     '<path class="gm-river" d="M5,55 Q16,50 28,54 T52,55 T74,53 T92,55"/>' +
     '<ellipse class="gm-water" cx="19" cy="38" rx="6" ry="3"/><ellipse class="gm-water" cx="56" cy="68" rx="5" ry="3"/><ellipse class="gm-water" cx="92" cy="66" rx="4" ry="9"/><ellipse class="gm-water" cx="46" cy="22" rx="9" ry="2.6"/>' +
-    '<path class="gm-sand" d="M91,52 Q92.5,78 85,86"/>' + hills + peaks + woods;
+    '<path class="gm-sand" d="M91,52 Q92.5,78 85,86"/>' + ridges + woods;
 }
 function gizmoMapHtml() {
   if (!hasKeyItem('map-card')) return '<p class="d" style="margin:10px 0">The Gizmo has no map yet. Guide Ivy in Meadow Town gives you a Map Card after her tour of the town.</p>';
@@ -83,6 +84,16 @@ function gizmoMapHtml() {
     const a = GIZMO_NODES[towns[i - 1]], b = GIZMO_NODES[towns[i]];
     line.push('<polyline class="gm-road" points="' + a[0] + ',' + a[1] + ' ' + (a[0] === b[0] ? b[0] : b[0]) + ',' + (a[0] === b[0] ? b[1] : a[1]) + ' ' + b[0] + ',' + b[1] + '"/>');
   }
+  OW_LINKS.forEach(function (d) {                                                                  // the second roads (24vr), drawn once you have stood in both towns; one beside a main road bows out so the two stay apart
+    if (!OW_MAPS[d.id] || !seen(d.from) || !seen(d.to)) return;
+    const a = GIZMO_NODES[d.from], b = GIZMO_NODES[d.to], near = Math.abs(towns.indexOf(d.from) - towns.indexOf(d.to)) === 1;
+    line.push(near ? '<path class="gm-road" d="M' + a[0] + ',' + a[1] + ' Q' + (a[0] + 7) + ',' + ((a[1] + b[1]) / 2) + ' ' + b[0] + ',' + b[1] + '"/>' : '<polyline class="gm-road" points="' + a[0] + ',' + a[1] + ' ' + b[0] + ',' + b[1] + '"/>');
+  });
+  const caves = OW_LANDS.map(function (L, i) {                                                     // a cave mouth by each route that has one (a dark arch, as Gold marks them), once you know the town it leads to
+    if (!OW_MAPS[L.routeIn + '-cave1'] || !seen(L.town)) return '';
+    const a = GIZMO_NODES[i ? OW_LANDS[i - 1].town : 'hollow'], b = GIZMO_NODES[L.town], c = a[0] === b[0] ? [a[0] + 3.4, (a[1] + b[1]) / 2] : [(a[0] + b[0]) / 2, a[1] - 3.4];
+    return '<path class="gm-cave" d="M' + (c[0] - 1.9) + ',' + (c[1] + 1.5) + ' A1.9,1.9 0 0 1 ' + (c[0] + 1.9) + ',' + (c[1] + 1.5) + 'Z"><title>Cave on ' + escHtml(OW_MAPS[L.routeIn].name) + '</title></path>';
+  }).join('');
   const sk = GIZMO_NODES.summit, pk = GIZMO_NODES.peak;
   line.push('<polyline class="gm-road" points="' + sk[0] + ',' + sk[1] + ' ' + pk[0] + ',' + pk[1] + '"/>');
   const nodes = towns.concat(['peak']).map(function (id) {
@@ -96,7 +107,7 @@ function gizmoMapHtml() {
   const rows = owTowns().filter(function (id) { return o.seen.indexOf(id) !== -1; }).map(function (id) {
     return '<div class="gizmo-row"><div><b>' + escHtml(OW_MAPS[id].name) + '</b></div>' + (id === o.map ? '<span class="d">You are here</span>' : '<button type="button" class="claim-btn" onclick="gizmoTravel(\'' + id + '\')">Go</button>') + '</div>';
   }).join('');
-  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you."><rect class="gm-sea" x="0" y="0" width="94" height="94" rx="2"/>' + gizmoTerrain() + '<text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + nodes + dot + '</svg>' +
+  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you.">' + gizmoTerrain() + '<text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + caves + nodes + dot + '</svg>' +
     '<p class="d" style="margin:6px 0">Tap a town you have visited to travel there. The red dot is you.</p>' + rows;
 }
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.

@@ -74,3 +74,9 @@ Still different, in the order a Gold player would notice:
 6. **Music and sound:** each place has its own re-timed tune of its kind, but no composed themes or cries per species.
 7. **The Pokédex area map** (where each buddy lives) is only a list of lands.
 8. **Still deliberately out:** Mystery Gift, linking and trading between players, real-world clock events beyond day and night.
+
+## Fifth pass (after comparing the Johto town map, trainer card and phone)
+Done: the Gizmo Town Map now looks like Gold's (wave-pattern sea round the coast, brown mountain country, a river the roads bridge, lakes and woods, dark cave arches by each route that has a cave, second roads drawn between linked towns). The Trainer Card is Gold's: name, five-digit number, gems, play time and a case of all sixteen badges, dim until won. The Gizmo has a Phone tab: Mom, Prof. Pi, friends who gave you a key item and trainers you have beaten, each with a Call button.
+Second roads (`24vr-ow-links.js`): the land is a web, not a single chain. Five link roads join towns by their east and west gaps (Meadow to Leaf Grove, Tide Bay to Coral Reach, Volt Valley to Gloom Marsh, Coral Reach to the Crossroads, Cinder Mesa to the Summit). Each is a wide winding road with grass, a pond, signs, two trainers and two finds, and opens only once both towns have been seen, so it is a shortcut and never a way past a gym.
+Starting money: Gold gives 3000 on the card; we start with 0 gems because every price in the Marts matches Gold's and gems are earned from fights (Gold's Mom saves for you too). Left as is on purpose.
+Still different: real second regions beside the first, more link roads (only five so far), and per-route hand-drawn maps. Gold's routes are hand-drawn to fit their places; ours are generated from blocks and themes.

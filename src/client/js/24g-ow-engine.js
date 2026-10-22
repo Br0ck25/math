@@ -230,6 +230,7 @@ function owMove(dir) {
   owStepped = true;                                                         // the buddy hops along behind on the next picture
   owFrame = owFrame ? 0 : 1;
   let warp = owWarpAt(map, o.x, o.y);
+  if (warp && warp.needs && o.seen.indexOf(warp.needs) === -1) { toast('The way is overgrown. Visit ' + OW_MAPS[warp.needs].name + ' first, then this road opens.'); warp = null; }      // a link road (24vr) is a shortcut between two towns you have both seen
   if (warp && warp.gate) warp = null;                                       // a gym door is not a walk-through: the door itself asks (owEnterGym)
   if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); const gd = OW_MAPS[o.map].guard; if (gd && !hasKeyItem(gd.key)) { o.map = gd.to; o.x = gd.x; o.y = gd.y; toast('The open sea needs the Water Steps charm, from the Tide Bay Gym.'); } }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);

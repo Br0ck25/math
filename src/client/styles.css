@@ -945,12 +945,14 @@ body.trivia .math-only { display: none; }
 /* the Town Map in the Gizmo (24u-ow-gizmo.js) */
 .gm-map { width: 100%; max-height: 52vh; display: block; }
 .gm-sea { fill: #5fa8d8; stroke: #1e293b; stroke-width: 0.8; }
+.gm-mtn { fill: #b98a52; stroke: #7a5a2b; stroke-width: 0.5; stroke-linejoin: round; }
+.gm-cave { fill: #1e1b4b; stroke: #f8fafc; stroke-width: 0.5; }
 .gm-land { fill: #8fd0a0; stroke: #3f8a5c; stroke-width: 0.8; }
 .gm-river { fill: none; stroke: #5fa8d8; stroke-width: 2.4; stroke-linecap: round; }
 .gm-water { fill: #5fa8d8; stroke: #3f86b8; stroke-width: 0.5; }
 .gm-sand { fill: none; stroke: #f1e2a8; stroke-width: 1.2; stroke-linecap: round; }
 .gm-tree { fill: #3f9a5c; stroke: #2a6e40; stroke-width: 0.4; }
-.gm-peak { fill: #a8a29e; stroke: #57534e; stroke-width: 0.5; stroke-linejoin: round; }
+.gm-peak { fill: #d6b98c; stroke: #6b4a22; stroke-width: 0.5; stroke-linejoin: round; }
 .gm-hill { fill: #d6a066; stroke: #8a5a2b; stroke-width: 0.5; stroke-linejoin: round; }
 .gm-road { fill: none; stroke: #f1e7b6; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
 .gm-town { fill: #f97316; stroke: #7c2d12; stroke-width: 0.9; }
@@ -1040,9 +1042,9 @@ body.trivia .math-only { display: none; }
 
 /* Trainer Card (24z-ow-menu.js): Gold's card, a checked border, big plain type and a case of eight badges to a row */
 .tc-card { background: #f8f8f0; color: #111; border: 6px solid #4a4ad8; font-family: ui-monospace, Menlo, Consolas, monospace; }
-.tc-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; border-bottom: 3px solid #111; padding-bottom: 8px; }
+.tc-top { text-align: left; display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; border-bottom: 3px solid #111; padding-bottom: 8px; }
 .tc-line { font-size: 1rem; font-weight: 700; letter-spacing: 0.04em; margin: 4px 0; }
-.tc-hero svg { width: 72px; height: 72px; display: block; image-rendering: pixelated; }
+.tc-hero { width: 84px; height: 84px; flex: none; }
 .tc-title { background: #4a4ad8; color: #fff; display: inline-block; padding: 2px 10px; margin: 10px 0 6px; font-weight: 800; }
 .tc-badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 10px; }
 .tc-badge { position: relative; min-height: 64px; border: 2px solid #aaa; border-radius: 6px; padding: 14px 2px 2px; text-align: center; opacity: 0.5; font-size: 0.62rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
