@@ -242,7 +242,7 @@ test('the Gizmo Phone lists the numbers you have and a Call opens their words; a
 test('link roads join two towns by a second road: closed until both towns are seen, walkable end to end, and drawn on the Town Map with the caves', async () => {
   const r = await page.evaluate(() => {
     const out = { built: OW_LINKS.every((d) => !!OW_MAPS[d.id]) };
-    const d = OW_LINKS[0], A = OW_MAPS[d.from], B = OW_MAPS[d.to], L = OW_MAPS[d.id];
+    const d = OW_LINKS.find((x) => !x.block), A = OW_MAPS[d.from], B = OW_MAPS[d.to], L = OW_MAPS[d.id];
     out.gaps = [A.warps.some((w) => w.x === 15 && w.y === 6 && w.to === d.id && w.needs === d.to), B.warps.some((w) => w.x === 0 && w.y === 6 && w.to === d.id && w.needs === d.from)];
     // walk end to end
     const seen = {}, q = [[1, 6]]; seen['1,6'] = 1;

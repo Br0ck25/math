@@ -59,6 +59,8 @@ const OW_TILES = {
   'a': { t: 't-lamp', solid: true },
   'i': { t: 't-mailbox', solid: true },
   'I': { t: 't-ice', ice: true },
+  't': { t: 't-odd-tree', solid: true, blocker: 'tree' },
+  'A': { t: 't-toll-bar', solid: true, blocker: 'toll' },
   '%': { t: 't-boulder', solid: true, boulder: true },
   'u': { t: 't-ladder' },
   'e': { t: 't-bed', solid: true },

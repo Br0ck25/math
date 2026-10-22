@@ -356,3 +356,48 @@ function owTower(d) {
   groundsLines: ['The Tin Tower rises five floors. The view from the top is worth every stair.', 'Sages watch over each floor.'], sign: 'Tin Tower. Five floors. Mind the stairs.',
   sages: ['Sage Hu', 'Sage Mei', 'Sage Tao', 'Sage Ren', 'Elder Quan'], floorLines: [['A long climb ahead. Rest when you need to.'], ['Every floor has its own quiet.'], ['Halfway. The tower is older than the town.'], ['Nearly there. One more flight.'], ['The top! The old stone beside me asks five questions in a row. It is a hard one, but the gift is good.']],
   quizText: 'An old stone with numbers on it. Answer five questions in a row and it gives up a gift.' }].forEach(owTower);
+
+// The red fish of the Lake of Rage (Gold's red Gyarados): once, with the Fishing Rod, Fisher Rin lets you cast into the middle of the lake. A shiny shark bites, at a level well above the lake.
+OW_STORY.push('rage-fish');
+OW_SERVICES.lakefish = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), done = state.overworld.story.indexOf('rage-fish') !== -1;
+  if (done) { openTalk({ name: npc.name, art: art, lines: ['The red fish is gone from the lake. I will wait for the next one.'] }); return; }
+  if (!hasKeyItem('fishing-rod')) { openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['You need a Fishing Rod to cast into the deep water. Fisher Gil in Meadow Town gives one.']) }); return; }
+  openTalk({ name: npc.name, art: art, lines: ['Cast into the middle, where the water is darkest...', 'Something big is pulling on the line!'], onClose: function () { owStoryDone('rage-fish'); abStart({ kind: 'wild', fished: true, foes: [{ id: 'shark', level: 44, shiny: true }] }); } });
+};
+Object.assign(OW_MAPS['lake-of-rage'].npcs.find(function (n) { return n.id === 'rage-fisher'; }), { kind: 'lakefish' });
+
+// Sleeping buddies in the Slowpoke Well (Gold's dozing Slowpoke): three buddies asleep on the shore. A tune on the Gizmo radio wakes one at a time and sends it on its way.
+['well-nap1', 'well-nap2', 'well-nap3'].forEach(function (id, i) {
+  OW_STORY.push(id + '-woken');
+  OW_MAPS['slowpoke-well'].npcs.push({ id: id, kind: 'sleeper', name: 'Sleeping buddy', x: [4, 15, 14][i], y: [9, 9, 11][i], face: 'down', story: id + '-woken', vanish: true, look: OW_CHERRY_LOOK(i + 1), lines: ['A buddy is fast asleep. It is far too peaceful to disturb. A lively tune might wake it.'] });
+});
+
+// The Burned Tower (Gold's burned-out tower in Ecruteak City): a scorched courtyard beside the Tin Tower, a ruined ground floor and upper floor, and a cellar where three beasts sleep. Reached from the Tin Tower's courtyard.
+(function () {
+  const g = []; for (let y = 0; y < 12; y++) { g.push([]); for (let x = 0; x < 16; x++) g[y].push(y === 0 || y === 11 || x === 0 || x === 15 ? 'T' : '_'); }
+  const put = function (x, y, w, h, c) { for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) g[yy][xx] = c; };
+  put(5, 1, 6, 2, 'R'); put(5, 3, 6, 1, 'W'); g[3][8] = 'D';
+  for (let y = 4; y < 8; y++) g[y][8] = '.';
+  for (let x = 6; x < 16; x++) g[8][x] = '.';
+  [[2, 2], [3, 2], [12, 6], [13, 6], [3, 9], [12, 9], [2, 5]].forEach(function (p) { g[p[1]][p[0]] = '#'; });
+  g[6][4] = ',';
+  const rows = g.map(function (r) { return r.join(''); });
+  OW_MAPS['burned-grounds'] = { id: 'burned-grounds', name: 'Burned Tower grounds', region: 'grove', start: { x: 14, y: 8 }, palette: OW_MAPS.grove.palette, annex: { near: 'grove' }, rows: rows,
+    warps: [{ x: 8, y: 3, to: 'burned-1', tx: 5, ty: 8 }],
+    npcs: [{ id: 'burned-watcher', name: 'Watcher Mio', x: 5, y: 6, face: 'right', look: OW_CHERRY_LOOK(3), lines: ['A fire took the tower long ago. They say three beasts live in the cellar, asleep since the flames.', 'Leave them be, and be careful on the old floors.'] }],
+    objects: [{ id: 'burned-gems', type: 'pickup', x: 4, y: 6, give: 'gems' }], trees: {}, signs: { '9,6': 'Burned Tower. The floors are old and the cellar is deep. Visitors take care.' } };
+  OW_MAPS['burned-grounds'].rows[6] = OW_MAPS['burned-grounds'].rows[6].slice(0, 9) + 's' + OW_MAPS['burned-grounds'].rows[6].slice(10);
+  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
+  const dress = function (m, near) { m.region = 'grove'; m.palette = OW_MAPS.grove.palette; m.annex = { near: near }; return m; };
+  const f1 = dress(owRoom('burned-1', 'Burned Tower, ground floor', { to: 'burned-grounds', tx: 8, ty: 4 }, [{ id: 'burned-f1-sage', name: 'Sage Ko', x: 4, y: 4, face: 'down', look: OW_CHERRY_LOOK(1), lines: ['Black beams overhead. The floor is thin in places.'] }], [], stairs(true, false)), 'grove');
+  f1.warps.push({ x: 6, y: 1, to: 'burned-2', tx: 1, ty: 2 });
+  f1.rows[7] = f1.rows[7].slice(0, 9) + 'u' + f1.rows[7].slice(10); f1.warps.push({ x: 9, y: 7, to: 'burned-cellar', tx: 5, ty: 2 });      // a hole in the floor leads down
+  const f2 = dress(owRoom('burned-2', 'Burned Tower, upper floor', { to: 'burned-grounds', tx: 8, ty: 4 }, [{ id: 'burned-f2-sage', name: 'Sage Ume', x: 6, y: 4, face: 'left', look: OW_CHERRY_LOOK(5), lines: ['From here you can see the Tin Tower. They were once one tower.'] }], [{ id: 'burned-relic', type: 'pickup', x: 9, y: 4, give: 'net' }], stairs(false, true)), 'grove');
+  f2.warps = [{ x: 1, y: 1, to: 'burned-1', tx: 6, ty: 2 }];
+  const cellar = dress(owRoom('burned-cellar', 'Burned Tower cellar', { to: 'burned-1', tx: 9, ty: 6 }, [], [{ id: 'burned-cellar-gems', type: 'pickup', x: 9, y: 4, give: 'gems' }]), 'grove');
+  cellar.dark = true; cellar.warps = [{ x: 5, y: 9, to: 'burned-1', tx: 9, ty: 6 }];
+  ['burned-beast1', 'burned-beast2', 'burned-beast3'].forEach(function (id, i) { OW_STORY.push(id + '-woken'); cellar.npcs.push({ id: id, kind: 'sleeper', name: 'Sleeping beast', x: [2, 5, 8][i], y: 5, face: 'down', story: id + '-woken', vanish: true, look: OW_CHERRY_LOOK(i + 2), lines: ['A great beast sleeps here, as it has for years. A lively tune might stir it.'] }); });
+  OW_MAPS['burned-1'] = f1; OW_MAPS['burned-2'] = f2; OW_MAPS['burned-cellar'] = cellar;
+  owJoin('tin-grounds', 0, 5, 'burned-grounds', 8);
+})();

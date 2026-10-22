@@ -1327,6 +1327,30 @@ test('Gold\'s night trees: after dark a shaken tree only drops dark and magic bu
   assert.deepEqual(r, { night: true, day: true });
 });
 
+test('Gold\'s two road blockers: an odd tree that sleeps across Hillside Road (the Gizmo radio wakes it) and a toll bar across Fog Road (1000 gems, once); each is a wall of trees with one gap, and a blocker is gone for good once done', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = { toll: ECON.toll.gems };
+    const find = (id, ch) => { const m = OW_MAPS[id]; return { m, pos: Object.keys(m.blockers)[0] }; };
+    const tree = find('link-meadow-grove'), toll = find('link-mystic-cinder');
+    const at = (b) => b.pos.split(',').map(Number);
+    out.kinds = [tree.m.blockers[tree.pos].kind, toll.m.blockers[toll.pos].kind];
+    out.solid = [owWalkable(tree.m, ...at(tree)), owWalkable(toll.m, ...at(toll))];
+    // the tree stays asleep without the Radio Card, and wakes with it
+    const o = state.overworld; o.story = o.story.filter((x) => !/-tree$|-toll$/.test(x));
+    state.keyItems = state.keyItems.filter((k) => k !== 'radio-card'); owInteract(tree.m, ...at(tree)); out.asleep = /tune/.test(talk.lines.join(' ')) && !o.story.includes('link-meadow-grove-tree'); closeTalk();
+    grantKeyItem('radio-card'); owInteract(tree.m, ...at(tree)); closeTalk();
+    out.woken = o.story.includes('link-meadow-grove-tree') && owWalkable(tree.m, ...at(tree));
+    // the toll: too poor, then paid once
+    state.gems = 10; owInteract(toll.m, ...at(toll)); talkChoose(0); out.poor = [state.gems, o.story.includes('link-mystic-cinder-toll')]; closeTalk();
+    state.gems = 2500; owInteract(toll.m, ...at(toll)); talkChoose(0); out.paid = [state.gems, o.story.includes('link-mystic-cinder-toll'), owWalkable(toll.m, ...at(toll))];
+    // walls of trees across the whole road
+    const wall = (b) => { const [x] = at(b); let n = 0; for (let y = 2; y < b.m.rows.length - 2; y++) if (/[TtA]/.test(b.m.rows[y].charAt(x))) n++; return n === b.m.rows.length - 4; };
+    out.walls = [wall(tree), wall(toll)];
+    return out;
+  });
+  assert.deepEqual(r, { toll: 1000, kinds: ['tree', 'toll'], solid: [false, false], asleep: true, woken: true, poor: [10, false], paid: [1500, true, true], walls: [true, true] });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

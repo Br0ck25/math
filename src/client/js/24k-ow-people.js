@@ -14,9 +14,28 @@ function owNpcWords(npc) {
   if (p && state.badges.length >= 3) return fill(p.badges);
   return npc.night && owTimeOfDay() === 'night' ? npc.night : npc.lines;
 }
+// Gold's two road blockers: the odd tree that sleeps in the way (Sudowoodo: a tune on the Gizmo radio wakes it) and the toll gate (ECON.toll.gems, once). Either is gone for good when done.
+function owBlocker(map, x, y, kind) {
+  const b = map.blockers[x + ',' + y], art = worldSprite(kind === 'tree' ? 't-odd-tree' : 't-toll-bar');
+  if (kind === 'tree') {
+    if (!hasKeyItem('radio-card')) { openTalk({ name: 'Odd tree', art: art, lines: ['A tree stands right in the way. Its branches are a little too still, and it never sways in the wind.', 'Maybe a tune would wake it. The Radio Card on your Gizmo plays music.'] }); return; }
+    openTalk({ name: 'Odd tree', art: art, lines: ['You tune the Gizmo radio to a lively song...', 'The tree shakes itself awake, hops out of the way and hurries off!'], onClose: function () { owStoryDone(b.story); renderOverworld(); } });
+    return;
+  }
+  const cost = ECON.toll.gems;
+  openTalk({ name: 'Toll gate', art: art, lines: ['A gate keeper nods. "The way through costs ' + cost + ' gems, once. After that it is always open."'], choices: [
+    { label: 'Pay ' + cost + ' gems', run: function () {
+      closeTalk();
+      if (state.gems < cost) { openTalk({ name: 'Toll gate', art: art, lines: ['"Come back with ' + cost + ' gems."'] }); return; }
+      state.gems -= cost; owStoryDone(b.story); saveState(); updateStatsUI(); renderOverworld(); toast('The gate swings open.');
+    } },
+    { label: 'Not now', run: function () { closeTalk(); } }
+  ] });
+}
 function owInteract(map, x, y) {
   const gap = owTileAt(map, x, y);
   if (gap && gap.overgrown) { toast('The way is overgrown. Visit ' + OW_MAPS[gap.overgrown].name + ' first, then this road opens.'); return; }
+  if (gap && gap.blocker) { owBlocker(map, x, y, gap.blocker); return; }
   const npc = owNpcAt(map, x, y);
   if (npc) {
     if (npc.kind === 'trainer' || npc.kind === 'boss') { owTrainerTalk(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)

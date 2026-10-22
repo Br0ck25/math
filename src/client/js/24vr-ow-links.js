@@ -4,14 +4,14 @@
 //  never a way past a gym). The maps are built here from the towns, after the towns, routes and side games have been laid out.
 // =====================================================================
 const OW_LINKS = [
-  { id: 'link-meadow-grove', name: 'Hillside Road', from: 'meadow', to: 'grove', w: 26, h: 13 },
+  { id: 'link-meadow-grove', name: 'Hillside Road', from: 'meadow', to: 'grove', w: 26, h: 13, block: 'tree' },
   { id: 'link-tide-coral', name: 'Shore Road', from: 'tide', to: 'coral', w: 30, h: 14, river: true },
   { id: 'link-volt-gloom', name: 'Pylon Road', from: 'volt', to: 'gloom', w: 26, h: 13 },
   { id: 'link-coral-cross', name: 'Frost Pass', from: 'coral', to: 'cross', w: 28, h: 16 },
   { id: 'link-cinder-summit', name: 'Ash Road', from: 'cinder', to: 'summit', w: 24, h: 13 },
   { id: 'link-ember-tide', name: 'Furnace Road', from: 'ember', to: 'tide', w: 28, h: 15, river: true },
   { id: 'link-grove-volt', name: 'Orchard Road', from: 'grove', to: 'volt', w: 32, h: 13 },
-  { id: 'link-mystic-cinder', name: 'Fog Road', from: 'mystic', to: 'cinder', w: 26, h: 16, river: true },
+  { id: 'link-mystic-cinder', name: 'Fog Road', from: 'mystic', to: 'cinder', w: 26, h: 16, river: true, block: 'toll' },
   { id: 'link-thistle-prism', name: 'Thistle Lane', from: 'thistle', to: 'prism', w: 24, h: 14 },
   { id: 'link-grove-mystic', name: 'Mortar Pass', from: 'grove', to: 'mystic', w: 30, h: 19, fromRow: 14, toRow: 14 },
   { id: 'link-cross-dusk', name: 'Crossway', from: 'cross', to: 'dusk', w: 28, h: 15 },
@@ -48,6 +48,15 @@ function owBuildLink(def, i, attempt) {
     const rx = 8 + Math.floor(rnd() * (W - 18));
     for (let yy = 2; yy < H - 2; yy++) for (let xx = rx; xx < rx + 2; xx++) g[yy][xx] = g[yy][xx] === '.' ? 'B' : '~';
   }
+  let blocker = null;
+  if (def.block) {                                                                                       // a wall of trees across the whole road with one gap, and the thing that blocks the gap: an odd tree that sleeps in it (woken by the Gizmo radio) or a toll bar (paid once)
+    const sp = spans.filter(function (q) { return q[0] > 6 && q[1] < W - 7 && q[1] - q[0] >= 2; }).sort(function (a, b) { return Math.abs((a[0] + a[1]) / 2 - W / 2) - Math.abs((b[0] + b[1]) / 2 - W / 2); })[0];
+    if (!sp) return null;
+    const bx = Math.floor((sp[0] + sp[1]) / 2);
+    for (let yy = 2; yy < H - 2; yy++) g[yy][bx] = 'T';
+    g[sp[2]][bx] = '.';
+    blocker = [bx, sp[2]];
+  }
   const pond = patch('~', 4, 2, 60); if (!pond) return null;
   for (let k = 0; k < 3; k++) patch('"', 4, 2, 30);
   for (let yy = 2; yy < H - 2; yy++) for (let xx = 1; xx < W - 1; xx++) if (g[yy][xx] === ',' && !nearRoad(xx, yy, 1)) { const r = rnd(); if (r < 0.22) g[yy][xx] = 'T'; else if (r < 0.3) g[yy][xx] = '*'; }
@@ -77,6 +86,12 @@ function owBuildLink(def, i, attempt) {
   const reach = owReachSet(map);
   const reachable = function (p) { return reach[p.x + ',' + p.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return reach[(p.x + d[0]) + ',' + (p.y + d[1])]; }); };
   if (!map.objects.every(reachable) || !reach[(W - 2) + ',' + tr]) return null;
+  if (blocker) {
+    const id = def.id + (def.block === 'tree' ? '-tree' : '-toll');
+    map.rows[blocker[1]] = map.rows[blocker[1]].slice(0, blocker[0]) + (def.block === 'tree' ? 't' : 'A') + map.rows[blocker[1]].slice(blocker[0] + 1);
+    map.blockers = {}; map.blockers[blocker[0] + ',' + blocker[1]] = { story: id, kind: def.block };
+    if (OW_STORY.indexOf(id) === -1) OW_STORY.push(id);
+  }
   return map;
 }
 // Opens a town's east (x 15) or west (x 0) edge at row 6 and cuts a way in along row 6 until it meets ground the town's entrance already reaches (trees and water are cut, buildings are not).

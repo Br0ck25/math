@@ -19,6 +19,7 @@ function owTileAt(map, x, y) {
   const row = map.rows[y], t = row && OW_TILES[row.charAt(x)];
   if (!t) return null;
   if ((x === 0 || x === row.length - 1) && map.warps) { const w = map.warps.find(function (p) { return p.x === x && p.y === y && p.needs; }); if (w && state.overworld.seen.indexOf(w.needs) === -1) return { t: 't-bush', solid: true, overgrown: w.needs }; }      // a link road (24vr) whose far town you have not seen is overgrown with bushes
+  if (t.blocker) { const b = map.blockers && map.blockers[x + ',' + y]; return b && state.overworld.story.indexOf(b.story) !== -1 ? { t: 't-path' } : t; }      // a blocker is gone once its story is done
   if (t.road) { const b = map.roads && map.roads[x + ',' + y]; return b && owRoadOpen(b) ? { t: 't-path', open: true } : t; }
   if (t.door) { const need = [].concat(map.doors && map.doors[x + ',' + y] || []); return need.every(function (s) { return state.overworld.story.indexOf(s) !== -1; }) ? { t: 't-open-switch', open: true } : t; }          // a gym's switch door opens once its puzzle is solved
   return t.gate && hasKeyItem(t.gate) ? { t: OW_GATES[t.gate].open, open: true } : t;
