@@ -1277,6 +1277,18 @@ test('Gold\'s landmarks off the roads: the Lake of Rage (west of Mystic Peak), t
   assert.deepEqual(r, { joined: [true, true, true], sizes: ['22x18', '20x16', '24x18'], chamber: true, guard: 'water', islets: 5, dot: ['mystic', 'ember', 'gloom'], bounced: 'gloom', went: 'whirl-islands' });
 });
 
+test('Gold\'s caves and wells: the Dark Cave and Union Cave each have two mouths in trees (a loop, never a way past a gym), a boulder in the Dark Cave hides a find, and the Dragon\'s Den and Slowpoke Well are lit caverns with a pool and a bridge', async () => {
+  const r = await ev(() => {
+    const out = {};
+    ['dark-cave', 'union-cave'].forEach((id) => { const c = OW_MAPS[id]; out[id] = !!c && c.dark && c.warps.length === 2 && c.warps.every((w) => OW_MAPS[w.to].rows[w.ty - 1].charAt(w.tx) === 'O' && OW_MAPS[w.to].warps.some((p) => p.to === id)); });
+    out.boulder = OW_MAPS['dark-cave'].rows[5].charAt(6) === '%' && OW_MAPS['dark-cave'].objects.some((o) => o.id === 'dark-cave-boulder' && o.x === 6 && o.y === 5);
+    out.pools = ['dragons-den', 'slowpoke-well'].map((id) => /~/.test(OW_MAPS[id].rows.join('')) && /B/.test(OW_MAPS[id].rows.join('')) && /d/.test(OW_MAPS[id].rows.join('')) && !OW_MAPS[id].dark);
+    out.joined = [OW_MAPS.skyreach.warps.some((w) => w.to === 'dragons-den' && w.x === 15), OW_MAPS.ember.warps.some((w) => w.to === 'slowpoke-well' && w.x === 15)];
+    return out;
+  });
+  assert.deepEqual(r, { 'dark-cave': true, 'union-cave': true, boulder: true, pools: [true, true], joined: [true, true] });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

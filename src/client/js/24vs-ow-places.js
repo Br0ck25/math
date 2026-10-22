@@ -141,3 +141,122 @@ OW_MAPS['whirl-islands'] = {
 owJoin('mystic', 0, 6, 'lake-of-rage', 8);
 owJoin('ember', 0, 6, 'ruins-of-alph', 7);
 owJoin('gloom', 0, 18, 'whirl-islands', 8);
+
+// A mouth cut into a tree wall of `mapId` (the same kind of spot a route's own cave uses, and a way a walker reaches): returns [x, y] or null.
+function owRouteMouth(mapId, fromY) {
+  const R = OW_MAPS[mapId], reach = owReachSet(R), at = function (x, y) { return R.rows[y] ? R.rows[y].charAt(x) : ''; };
+  for (let y = fromY; y < R.rows.length - 3; y++) for (let x = 2; x < R.rows[0].length - 2; x++) if (at(x, y) === 'T' && at(x, y - 1) === 'T' && ',."*d'.indexOf(at(x, y + 1)) !== -1 && reach[x + ',' + (y + 1)] && !owNear(R, x, y + 1, 1) && !owNear(R, x, y, 1) && !owSeenByTrainer(R, x, y + 1)) return [x, y];
+  return null;
+}
+// A cave with two mouths, one in each of two roads (Gold's Union Cave and Dark Cave). `a` is the mouth at the cave's bottom exit and `b` the one at its top.
+function owJoinCave(id, a, b) {
+  const C = OW_MAPS[id], ma = owRouteMouth(a[0], a[1]), mb = owRouteMouth(b[0], b[1]);
+  if (!ma || !mb) return false;
+  [[a[0], ma], [b[0], mb]].forEach(function (p, k) { owSetTile(p[0], p[1][0], p[1][1], 'O'); OW_MAPS[p[0]].warps.push({ x: p[1][0], y: p[1][1], to: id, tx: C.exits[k][0], ty: C.exits[k][1] }); });
+  C.warps[0].tx = ma[0]; C.warps[0].ty = ma[1] + 1; C.warps[1].tx = mb[0]; C.warps[1].ty = mb[1] + 1;
+  C.warps[0].to = a[0]; C.warps[1].to = b[0];
+  return true;
+}
+// Dark Cave (Gold's cave between Route 31 and Route 45): a winding dark cave between two places on the road home from Skyreach, with a boulder in a side branch (Strength) and a dead end.
+OW_MAPS['dark-cave'] = {
+  id: 'dark-cave', name: 'Dark Cave', region: 'skyreach', dark: true, room: true, palette: OW_MAPS.skyreach.palette, annex: { near: 'skyreach' }, start: { x: 3, y: 14 }, exits: [[3, 14], [18, 1]],
+  rows: [
+    '##################m###',
+    '#################ccc##',
+    '#################ccc##',
+    '###ccc###########ccc##',
+    '###ccc###########ccc##',
+    '###ccc%ccccccccccccc##',
+    '###ccccccccccccccccc##',
+    '#########ccc##########',
+    '#########ccc#cccccc###',
+    '##ccccccccccccccccc###',
+    '##ccccccccccccccccc###',
+    '##cccccccccc#cccccc###',
+    '##ccc########cccccc###',
+    '##ccc#################',
+    '##ccc#################',
+    '###m##################'
+  ],
+  warps: [{ x: 3, y: 15, to: 'link-skyreach-hollow', tx: 0, ty: 0 }, { x: 18, y: 0, to: 'link-skyreach-hollow', tx: 0, ty: 0 }],
+  npcs: [{ id: 'dark-delver', name: 'Delver Ash', x: 14, y: 10, face: 'left', look: OW_CHERRY_LOOK(2), lines: ['It is easy to lose the way in here. Keep the walls on your left.', 'A big boulder sits in the little side branch. It looks like it could be pushed.'] }],
+  objects: [{ id: 'dark-cave-gem', type: 'pickup', x: 4, y: 3, give: 'gems' }, { id: 'dark-cave-boulder', type: 'pickup', x: 6, y: 5, give: 'ultranet' }, { id: 'dark-cave-net', type: 'pickup', x: 16, y: 11, give: 'net' }],
+  trees: {}, signs: {}
+};
+// Union Cave (Gold's cave between Route 32 and Route 33): a cave through the hill between two ends of Route 2, saving the long way round.
+OW_MAPS['union-cave'] = {
+  id: 'union-cave', name: 'Union Cave', region: 'ember', dark: true, room: true, palette: OW_MAPS.ember.palette, annex: { near: 'ember' }, start: { x: 2, y: 12 }, exits: [[2, 12], [21, 1]],
+  rows: [
+    '#####################m##',
+    '####################ccc#',
+    '##########ccccccccccccc#',
+    '##########ccccccccccccc#',
+    '##########ccccccccccccc#',
+    '##########cccc##########',
+    '####cccccccccc##########',
+    '####cccccccccc##########',
+    '####cccccccccccc########',
+    '####ccc#####ccccccccc###',
+    '#cccccc#######ccccccc###',
+    '#cccccc#######ccccccc###',
+    '#cccccc#######ccccccc###',
+    '##m#####################'
+  ],
+  warps: [{ x: 2, y: 13, to: 'route2', tx: 0, ty: 0 }, { x: 21, y: 0, to: 'route2', tx: 0, ty: 0 }],
+  npcs: [{ id: 'union-hiker', name: 'Hiker Flint', x: 12, y: 3, face: 'down', look: OW_CHERRY_LOOK(4), lines: ['This cave goes straight through the hill. Saves a long walk round!', 'Water buddies like the cool back of the cave.'] }],
+  objects: [{ id: 'union-gem', type: 'pickup', x: 16, y: 11, give: 'gems' }, { id: 'union-net', type: 'pickup', x: 6, y: 7, give: 'net' }],
+  trees: {}, signs: {}
+};
+// The Dragon's Den (Gold's shrine pool under Blackthorn): a lit cavern with a pool and a shrine on an island reached by a bridge, east of Skyreach.
+OW_MAPS['dragons-den'] = {
+  id: 'dragons-den', name: "Dragon's Den", region: 'skyreach', room: true, palette: OW_MAPS.skyreach.palette, annex: { near: 'skyreach' }, start: { x: 1, y: 8 },
+  rows: [
+    '####################',
+    '####################',
+    '######ccccccccccccc#',
+    '######ccccccccccccc#',
+    '######ccccccccccccc#',
+    '######ccc~~~B~~~ccc#',
+    '#cccccccc~~~B~~~ccc#',
+    '#cccccccc~~ddd~~ccc#',
+    '.cccccccc~~ddd~~ccc#',
+    '#cccccccc~~~~~~~ccc#',
+    '#cccccccc~~~~~~~ccc#',
+    '######ccccccccccccc#',
+    '######ccccccccccccc#',
+    '######ccccccccccccc#',
+    '####################',
+    '####################'
+  ],
+  warps: [],
+  npcs: [{ id: 'den-elder', name: 'Elder Drake', x: 12, y: 8, face: 'up', look: OW_CHERRY_LOOK(5), lines: ['This pool is the shrine of the old dragons. Only the patient come all the way here.', 'Those who walk the road with care are welcome. Sit as long as you like.'] }],
+  objects: [{ id: 'den-gems', type: 'pickup', x: 16, y: 4, give: 'gems' }, { id: 'den-net', type: 'pickup', x: 3, y: 7, give: 'net' }],
+  trees: {}, signs: {}
+};
+// The Slowpoke Well (Gold's well under Azalea Town): a cavern with a pool and a bridge to a small island, east of Ember Hills.
+OW_MAPS['slowpoke-well'] = {
+  id: 'slowpoke-well', name: 'Slowpoke Well', region: 'ember', room: true, palette: OW_MAPS.ember.palette, annex: { near: 'ember' }, start: { x: 1, y: 7 },
+  rows: [
+    '##################',
+    '##################',
+    '#####cccccccccccc#',
+    '#####cccccccccccc#',
+    '#####cc~~~B~~~~cc#',
+    '#cccccc~~~B~~~~cc#',
+    '#cccccc~~dddd~~cc#',
+    '.cccccc~~dddd~~cc#',
+    '#cccccc~~~~~~~~cc#',
+    '#cccccc~~~~~~~~cc#',
+    '#####cccccccccccc#',
+    '#####cccccccccccc#',
+    '##################',
+    '##################'
+  ],
+  warps: [],
+  npcs: [{ id: 'well-keeper', name: 'Well Keeper Moe', x: 11, y: 7, face: 'up', look: OW_CHERRY_LOOK(1), lines: ['The well is dry on top but wet underneath. Buddies nap down here all day.', 'Do not wake them. They are grumpy before lunch.'] }],
+  objects: [{ id: 'well-gems', type: 'pickup', x: 15, y: 3, give: 'gems' }, { id: 'well-net', type: 'pickup', x: 3, y: 6, give: 'net' }],
+  trees: {}, signs: {}
+};
+[['dark-cave', ['link-skyreach-hollow', 4], ['link-skyreach-hollow', 6]], ['union-cave', ['route2', 1], ['route2', 3]]].forEach(function (c) { if (!owJoinCave(c[0], c[1], c[2])) delete OW_MAPS[c[0]]; });
+owJoin('skyreach', 15, 14, 'dragons-den', 8);
+owJoin('ember', 15, 14, 'slowpoke-well', 7);
