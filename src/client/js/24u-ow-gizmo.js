@@ -63,6 +63,18 @@ function gizmoNodeOf(mapId) {
   const byRegion = OW_LANDS.find(function (L) { return L.land === m.region; });
   return { id: byRegion ? byRegion.town : 'hollow' };
 }
+// The land under the roads: coast, a river with the roads bridging it, lakes, woods and mountains, so the map reads like Gold's and not like a bare diagram.
+function gizmoTerrain() {
+  const tri = function (x, y, c) { return '<polygon class="' + c + '" points="' + (x - 3.2) + ',' + (y + 2.6) + ' ' + x + ',' + (y - 2.8) + ' ' + (x + 3.2) + ',' + (y + 2.6) + '"/>'; };
+  const tree = function (x, y) { return '<circle class="gm-tree" cx="' + x + '" cy="' + y + '" r="1.7"/>'; };
+  const peaks = [[62, 37], [68, 35], [74, 38], [80, 35], [86, 39], [66, 41], [78, 42]].map(function (p) { return tri(p[0], p[1], 'gm-peak'); }).join('');
+  const hills = [[15, 64], [20, 68], [15, 72], [21, 73]].map(function (p) { return tri(p[0], p[1], 'gm-hill'); }).join('');
+  const woods = [[32, 68], [36, 66], [40, 70], [34, 73], [39, 75], [43, 67], [31, 76], [22, 40], [26, 37], [30, 41], [34, 38], [40, 36], [52, 38], [56, 41], [50, 73], [57, 74], [60, 68]].map(function (p) { return tree(p[0], p[1]); }).join('');
+  return '<path class="gm-land" d="M6,16 Q14,11 40,13 T86,15 Q92,22 91,48 Q92.5,78 85,86 Q60,91 30,89 Q9,91 5,80 Q2,50 6,16Z"/>' +
+    '<path class="gm-river" d="M5,55 Q16,50 28,54 T52,55 T74,53 T92,55"/>' +
+    '<ellipse class="gm-water" cx="19" cy="38" rx="6" ry="3"/><ellipse class="gm-water" cx="56" cy="68" rx="5" ry="3"/><ellipse class="gm-water" cx="92" cy="66" rx="4" ry="9"/><ellipse class="gm-water" cx="46" cy="22" rx="9" ry="2.6"/>' +
+    '<path class="gm-sand" d="M91,52 Q92.5,78 85,86"/>' + hills + peaks + woods;
+}
 function gizmoMapHtml() {
   if (!hasKeyItem('map-card')) return '<p class="d" style="margin:10px 0">The Gizmo has no map yet. Guide Ivy in Meadow Town gives you a Map Card after her tour of the town.</p>';
   const o = state.overworld, here = gizmoNodeOf(o.map), seen = function (id) { return o.seen.indexOf(id) !== -1 || id === here.id; };
@@ -84,7 +96,7 @@ function gizmoMapHtml() {
   const rows = owTowns().filter(function (id) { return o.seen.indexOf(id) !== -1; }).map(function (id) {
     return '<div class="gizmo-row"><div><b>' + escHtml(OW_MAPS[id].name) + '</b></div>' + (id === o.map ? '<span class="d">You are here</span>' : '<button type="button" class="claim-btn" onclick="gizmoTravel(\'' + id + '\')">Go</button>') + '</div>';
   }).join('');
-  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you."><rect class="gm-sea" x="0" y="0" width="94" height="94" rx="2"/><text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + nodes + dot + '</svg>' +
+  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you."><rect class="gm-sea" x="0" y="0" width="94" height="94" rx="2"/>' + gizmoTerrain() + '<text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + nodes + dot + '</svg>' +
     '<p class="d" style="margin:6px 0">Tap a town you have visited to travel there. The red dot is you.</p>' + rows;
 }
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.

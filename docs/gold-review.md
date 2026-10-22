@@ -61,3 +61,16 @@ Also added in this pass: Settings > Options > "Questions" turns fight questions 
 Route fills: each route has a theme (wood, rocky pass, flower meadow, open country, stony flat) and eight road plans, so routes differ in what lines the road as well as in bends (`24vb-ow-blocks.js`).
 
 Town layouts: every town now has its own hand-picked plan (`24vbz-ow-town-plans.js`), as Gold's towns are each drawn by hand: a village green with a pond (Meadow), terraces with a ledge (Ember, Summit with a frozen pond), a harbour with a quay and bridge (Tide), a lagoon with a pier (Coral), a wood (Grove, Thistle's park), a grid of three avenues (Volt), a marsh of ponds (Gloom), a staircase of stepped columns (Mystic), a plaza with fountains (Skyreach), a river with a bridge (Cinder), two avenues with a market strip (Spark), a lake with a ring path (Dusk), a diamond garden (Prism) and a crossroads of diagonal paths (Cross). Mirroring, building order and sizes differ too, and towns are 18 to 22 tall. The slot layout stays as the fall-back. Towns are still 16 wide with their edge gaps where the side games expect them.
+
+## Fourth pass (after the Gizmo map, town and route layouts)
+Done since the third pass: every town has its own plan, routes are filled as a wood, rocky pass, flower meadow, open country or stony flat, and the Gizmo Town Map now has a coast, a river the roads bridge, lakes, woods, hills and mountains under the towns (as Gold's Pokégear map has sea and land).
+Present and close to Gold (found by searching the code): Pokégear-style Gizmo with map, clock, calls (phone) and tips, radio, Apricorn-style balls and Kurt, Day Care and eggs, Move Deleter and Tutor, bicycle, fishing rods, shake trees, Safari Zone, Bug-Catching-style contest, Itemfinder, Repel, Escape Rope, Rock Smash, Fly, a second journey and Silver Peak.
+Still different, in the order a Gold player would notice:
+1. **A real second region.** Gold sends you to Kanto with eight more gyms; ours is "Beyond the Peak", built from the same engine, with its own towns and gyms but no old-region revisit.
+2. **Berry trees you plant and water**, and Sweet Scent. Not found; shake trees and finds stand in.
+3. **Set pieces:** Red Gyarados at the Lake of Rage, the Slowpoke Well, the Radio Tower takeover (our Radio Tower is a visit), Ho-Oh and Lugia quests, the Magnet Train. Roaming legends and sleepers stand in.
+4. **Move variety:** no Thief, Mean Look, Perish Song, Baton Pass or Rain Dance style team play.
+5. **Maps:** screen-by-screen routes with edge warps, not Gold's seamless scrolling, and every town 16 tiles wide.
+6. **Music and sound:** each place has its own re-timed tune of its kind, but no composed themes or cries per species.
+7. **The Pokédex area map** (where each buddy lives) is only a list of lands.
+8. **Still deliberately out:** Mystery Gift, linking and trading between players, real-world clock events beyond day and night.
