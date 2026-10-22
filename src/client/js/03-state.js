@@ -16,6 +16,7 @@ function freshState() {
     safari: { active: false, steps: 0, balls: 0, night: false },   // a visit to the Safari Zone
     coins: 0,                                        // Game Corner coins
     tower: { day: '', best: 0, longDay: '' },                      // the Battle Tower: the day of the last prize and the best streak
+    playSecs: 0, trainerId: 0,                                          // the Trainer Card (24z-ow-menu.js): seconds played (counted while the page is showing) and the card's five-digit number, made on first look
     phone: { day: '', ready: '', known: [], gift: '' },                   // the trainer who called today for a rematch (24vh-ow-phone.js)
     contest: null,                                   // today's Catching Contest: { day, balls, best: { name, score }, done }
     stoned: {},                                      // buddy id -> 1 once an Evolution Stone was used on it

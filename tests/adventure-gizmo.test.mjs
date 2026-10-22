@@ -225,3 +225,17 @@ test('Apricorn trees grow back daily and Kurt makes a special net from two of th
   assert.match(r.short[2], /You need 2 Apricorns/);
   assert.deepEqual([r.short[0], r.short[1], r.made], [1, 0, [3, 1]]);
 });
+
+test('the Gizmo Phone lists the numbers you have and a Call opens their words; a friend with a gift hands it over', async () => {
+  const r = await page.evaluate(() => {
+    grantKeyItem('gizmo'); grantKeyItem('fishing-rod'); state.phone.gift = ''; state.potions = 0; gizmoTab = 'phone'; openGizmo();
+    const names = Array.from(document.querySelectorAll('#gizmo-body .gizmo-row b')).map((b) => b.textContent);
+    const i = gizmoContacts().findIndex((c) => c.name === 'Fisher Gil'); gizmoCall(i);
+    const out = { names, said: talk.lines.join(' '), potions: state.potions, open: !document.getElementById('talk-modal').classList.contains('hidden') };
+    closeTalk(); gizmoCall(0); out.mom = /gems/.test(talk.lines.join(' ')); closeTalk(); return out;
+  });
+  assert.deepEqual(r.names.slice(0, 3), ['Mom', 'Prof. Pi', 'Fisher Gil']);
+  assert.match(r.said, /fish are biting/); assert.equal(r.potions, 1); assert.ok(r.mom);
+  assert.deepEqual(errors, []);
+});
+

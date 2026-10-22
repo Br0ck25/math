@@ -227,6 +227,7 @@ const NORMALIZERS = [
     const st = {}; Object.keys(isPlainObject(s.stoned) ? s.stoned : {}).forEach(function (id) { if (STONE_EVOLVERS.indexOf(id) !== -1 && s.stoned[id]) st[id] = 1; });
     s.stoned = st;
     s.coins = asInt(s.coins, 0, 9999, 0);
+    s.playSecs = asInt(s.playSecs, 0, 359999 * 10, 0); s.trainerId = asInt(s.trainerId, 0, 65535, 0);
     const sf = isPlainObject(s.safari) ? s.safari : {}; s.safari = { active: sf.active === true, steps: asInt(sf.steps, 0, ECON.safari.steps, 0), balls: asInt(sf.balls, 0, ECON.safari.balls, 0), night: sf.night === true };
     if (!s.safari.active || s.overworld.map !== 'safari-zone') { s.safari.active = false; if (s.overworld.map === 'safari-zone') { s.overworld.map = 'thistle-gate'; s.overworld.x = 3; s.overworld.y = 5; } }
     const tw = isPlainObject(s.tower) ? s.tower : {}; s.tower = { day: typeof tw.day === 'string' ? tw.day.slice(0, 10) : '', best: asInt(tw.best, 0, 14, 0), longDay: typeof tw.longDay === 'string' ? tw.longDay.slice(0, 10) : '' };

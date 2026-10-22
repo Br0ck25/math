@@ -3,7 +3,7 @@
 //  Map (travel back to a town you have stood in), Clock (weather and time of day),
 //  Calls (notes from people in the game, never real players) and Tips (a math tip a day, and more on tap).
 // =====================================================================
-const GIZMO_TABS = [['map', 'Map'], ['clock', 'Clock'], ['calls', 'Calls'], ['tips', 'Tips']];
+const GIZMO_TABS = [['map', 'Map'], ['clock', 'Clock'], ['phone', 'Phone'], ['calls', 'Calls'], ['tips', 'Tips']];
 let gizmoTab = 'map', gizmoTip = 0;
 
 // Notes that unlock as the story goes on. `when` is a function of the save, so nothing here is stored.
@@ -43,7 +43,7 @@ function renderGizmo() {
   document.getElementById('gizmo-tabs').innerHTML = GIZMO_TABS.map(function (t) {
     return '<button type="button" class="hero-chip' + (gizmoTab === t[0] ? ' active' : '') + '" role="tab" aria-selected="' + (gizmoTab === t[0]) + '" onclick="gizmoSetTab(\'' + t[0] + '\')">' + t[1] + '</button>';
   }).join('');
-  document.getElementById('gizmo-body').innerHTML = { map: gizmoMapHtml, clock: gizmoClockHtml, calls: gizmoCallsHtml, tips: gizmoTipsHtml }[gizmoTab]();
+  document.getElementById('gizmo-body').innerHTML = { map: gizmoMapHtml, clock: gizmoClockHtml, phone: gizmoPhoneHtml, calls: gizmoCallsHtml, tips: gizmoTipsHtml }[gizmoTab]();
 }
 
 // The Town Map (Gold's Pokegear map): every town is a square on a winding road, in the order you meet them; the routes join them, you are the red dot, and a visited town can be tapped to travel there.
@@ -119,6 +119,25 @@ function gizmoClockHtml() {
 }
 
 
+// Gold's phone: everyone whose number you have, with a Call button. Mom and Prof. Pi are there from the start, friends once they have given you a key item, trainers once you have beaten them.
+function gizmoContacts() {
+  const list = [{ name: 'Mom', look: { skin: 1, hair: 3, outfit: 4, style: 2 }, lines: function () { return ['Hello, dear! Are you eating well? You have ' + state.gems + ' gems, and I am keeping some safe at home.']; } },
+    { name: 'Prof. Pi', look: { skin: 2, hair: 6, outfit: 7, style: 1 }, lines: function () { return ['You have caught ' + getOwnedIds().length + ' buddies so far. Come by the lab and I will rate your Dex!']; } }];
+  PHONE_FRIENDS.forEach(function (f) { if (hasKeyItem(f.key)) list.push({ name: f.name, look: { skin: (f.name.length + 1) % 6, hair: f.name.length % 8, outfit: (f.name.length * 3) % 8, style: 0 }, lines: function () { return [f.text]; }, gift: f }); });
+  phoneTrainers().slice(-12).reverse().forEach(function (t) {
+    list.push({ name: t.npc.name, look: t.npc.look || { skin: 0, hair: 0, outfit: 0, style: 0 }, lines: function () { return phoneReady() === t.npc.id ? ['I have been training since our battle! Meet me on ' + OW_MAPS[t.map].name + ' for a rematch!'] : ['Hello! I am on ' + OW_MAPS[t.map].name + '. Come back when you are stronger and we will battle again.']; } });
+  });
+  return list;
+}
+function gizmoPhoneHtml() {
+  return gizmoContacts().map(function (c, i) { return '<div class="gizmo-row"><div><b>' + escHtml(c.name) + '</b></div><button type="button" class="claim-btn" onclick="gizmoCall(' + i + ')">Call</button></div>'; }).join('');
+}
+function gizmoCall(i) {
+  const c = gizmoContacts()[i]; if (!c) return;
+  const lines = c.lines();
+  if (c.gift && phoneFriend() === c.gift) { phoneClaim(); lines.push('I sent you a little gift!'); }
+  openTalk({ name: c.name, art: heroSprite(heroLookColors(c.look), 'down', 0), lines: lines });
+}
 function gizmoCallsHtml() {
   return GIZMO_CALLS.filter(function (c) { return c.when(); }).map(function (c) {
     return '<div class="gizmo-row"><div><b>' + escHtml(c.from) + '</b><div class="d">' + escHtml(c.dyn ? c.dyn() : c.text) + '</div></div>' + (c.claim ? '<button type="button" class="claim-btn" onclick="phoneClaim()">Take the gift</button>' : '') + '</div>';

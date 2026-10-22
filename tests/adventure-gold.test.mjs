@@ -1129,15 +1129,16 @@ test('the Whirlpool Charm (Skyreach badge) opens the nook gates of the second jo
   assert.deepEqual(r, { many: true, chars: 'y,n', none: false, have: true });
 });
 
-test('the Menu has a Trainer Card (name, badges, buddies, gems) and a Save button', async () => {
+test('the Menu has a Trainer Card (name, number, gems, play time, a badge case) and a Save button', async () => {
   const r = await ev(() => {
-    state.hero.made = true; state.hero.name = 'Sam'; state.badges = ['meadow', 'ember']; state.gems = 42; openAdventure();
-    menuGo('openTrainerCard'); const card = document.getElementById('talk-name').innerText + ' ' + talk.lines.join(' '); closeTalk();
+    state.hero.made = true; state.hero.name = 'Sam'; state.badges = ['meadow', 'ember']; state.gems = 42; state.playSecs = 3 * 3600 + 25 * 60; state.trainerId = 0; openAdventure();
+    menuGo('openTrainerCard'); const card = document.getElementById('trainer-body').innerText.replace(/\s+/g, ' '), id = state.trainerId, got = document.querySelectorAll('#trainer-body .tc-badge.got').length, all = document.querySelectorAll('#trainer-body .tc-badge').length; closeTrainerCard();
+    state.playSecs = 1e12; state.trainerId = 99999; NORMALIZERS.forEach((fn) => fn(state));
     state.gems = 43; menuGo('menuSave'); const saved = JSON.parse(localStorage.getItem('math_quest_save')).gems;
-    return { card, saved };
+    return { card, id: id > 0 && id <= 65535, got, all: all === allGymRegions().length, saved, clamped: [state.playSecs <= 3599990, state.trainerId <= 65535] };
   });
-  assert.match(r.card, /^Sam Badges: 2 of 8\. Buddies: \d+\. Gems: 42\.$/);
-  assert.equal(r.saved, 43);
+  assert.match(r.card, /NAME\/SAM ID No \d{5} GEMS 42 PLAY TIME 3:25 BADGES 2\/\d+/);
+  assert.deepEqual([r.id, r.got, r.all, r.saved, r.clamped], [true, 2, true, 43, [true, true]]);
 });
 
 test('the Tower Marathon: fourteen trainers (the second seven four levels stronger), a Max Revive once a day', async () => {
