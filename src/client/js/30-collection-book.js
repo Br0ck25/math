@@ -49,10 +49,6 @@ function bossHintColor(m, e) {
   return e.wins > 0 ? '#6ee7b7' : '#fbbf24';
 }
 
-const BOOK_MILESTONES = [
-  { at: 10, gems: 20 }, { at: 25, gems: 40 }, { at: 50, gems: 75 }, { at: 100, gems: 150 },
-  { at: 150, gems: 250 }, { at: 200, gems: 400 }, { at: 250, gems: 600 }
-];
 let bookTab = 'buddy';
 let bookMissingOnly = false;
 function toggleBookFilter() { soundClick(); bookMissingOnly = !bookMissingOnly; renderBook(); }
@@ -71,16 +67,6 @@ function bookCounts() {
   };
 }
 
-function claimBookReward(i) {
-  const m = BOOK_MILESTONES[i];
-  const c = bookCounts();
-  if (!m || c.all.found < m.at || state.bookClaims.indexOf(m.at) !== -1) return;
-  state.bookClaims.push(m.at);
-  grantGems(m.gems, '📖 Collection reward! +' + m.gems + ' 💎', true);
-  renderBook();
-}
-
-// A pack is complete when you own every buddy in it. It pays once: gems per member and some Catch Nets.
 
 function setBookTab(t) { soundClick(); bookTab = t; renderBook(); }
 
@@ -109,18 +95,6 @@ function bookBuddy(sp, lockedHint) {
 function renderBook() {
   const c = bookCounts();
   document.getElementById('book-progress').innerText = '👀 Seen ' + c.seen + ' · ✅ Caught ' + c.buddy.found + ' / ' + c.buddy.total + (Object.keys(state.shinies).length ? ' · ✨ Shiny ' + Object.keys(state.shinies).length : '') + '  ·  ' + c.all.found + ' / ' + c.all.total + ' with bosses';
-
-  const ms = document.getElementById('book-milestones');
-  ms.innerHTML = '';
-  BOOK_MILESTONES.forEach(function (m, i) {
-    const claimed = state.bookClaims.indexOf(m.at) !== -1;
-    const ready = !claimed && c.all.found >= m.at;
-    const b = document.createElement('button');
-    b.className = 'ms' + (ready ? ' ready' : '') + (claimed ? ' claimed' : '');
-    b.innerHTML = (claimed ? '✅' : (ready ? '🎁' : '🔒')) + ' ' + m.at + '<br>+' + m.gems + ' 💎';
-    if (ready) b.onclick = function () { claimBookReward(i); };
-    ms.appendChild(b);
-  });
 
   const tabs = [['buddy', '🐾 Buddies'], ['boss', '👾 Bosses']];
   const tb = document.getElementById('book-tabs');

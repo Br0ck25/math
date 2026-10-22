@@ -38,3 +38,7 @@ Checked by searching the code for each feature; "not found" means no match in `s
 5. **Gym mechanics beyond the riddle and sky** (switches, ice, mazes) and a different team style per trainer class.
 6. **Set pieces:** Red Gyarados at the Lake of Rage, the Slowpoke Well, Ho-Oh and Lugia quests. Not found as such; roaming legends and the sleepers stand in for some.
 7. **Still deliberately out:** Mystery Gift and linking (no sharing between players), seamless scrolling maps and wider towns (too many hard-coded edges).
+
+## Economy check (against Gold)
+- **Prices:** every Mart item's price matches Gold's (Potion 300 up to Full Restore 3000, Revive 1500, status heals 100 to 600, Poké Ball 200 / Great 600 / Ultra 1200, Repel 350 / Max 700, vitamins 9800, Ether 1200, X items 350 to 550). A test lists them. Items sell for half.
+- **Earning:** only trainers pay (class base x the level of the last buddy: 16, or 100 for leaders, the Elite Four, the Champion and the Master), plus Mom's savings, selling items and the Game Corner (50 coins for 1000 gems, slots paying back about nine tenths). The Dex gem milestones were removed because Gold pays no money for the Dex; Prof. Pi's rating gives items instead. Online duel stakes are the only other gem flow and are between players.

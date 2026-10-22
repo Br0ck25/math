@@ -298,6 +298,16 @@ function abFx(att, def, mv, hit) {
 // A hard hit rattles the whole screen.
 function abBump() { const f = document.querySelector('#ab-modal .ab-field'); if (!f) return; f.classList.remove('ab-bump'); void f.offsetWidth; f.classList.add('ab-bump'); setTimeout(function () { f.classList.remove('ab-bump'); }, 500); }
 // A stat move: it moves one stat of the user or the target by stages, with Gold's messages when it cannot go further.
+// The picture of a stat move on the buddy it changes: smoke clouds for accuracy (Smokescreen), otherwise arrows that rise (up) or sink (down) in the stat's colour.
+function abStatFx(who, mv) {
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const el = document.getElementById(ab.party.indexOf(who) !== -1 ? 'ab-me-icon' : 'ab-foe-icon');
+  if (!el) return;
+  const fx = document.createElement('span'); fx.className = 'ab-sfx s-' + mv.fx.stat + (mv.fx.n > 0 ? ' up' : ' down');
+  for (let k = 0; k < 5; k++) { const q = document.createElement('i'); q.style.setProperty('--k', k); fx.appendChild(q); }
+  el.appendChild(fx);
+  setTimeout(function () { fx.remove(); }, 1200);
+}
 function abStatMove(att, def, mv, next) {
   const who = mv.fx.on === 'self' ? att : def, stat = mv.fx.stat;
   who.stg = who.stg || {};
@@ -305,7 +315,7 @@ function abStatMove(att, def, mv, next) {
   if (to === now) abSteps([[who.name + "'s " + AB_STAT_NAME[stat] + " won't go any " + (mv.fx.n > 0 ? 'higher' : 'lower') + '!', null, 1000]]);
   else {
     who.stg[stat] = to;
-    abSteps([[who.name + "'s " + AB_STAT_NAME[stat] + ' ' + (mv.fx.n > 0 ? (mv.fx.n > 1 ? 'rose sharply!' : 'rose!') : (mv.fx.n < -1 ? 'fell sharply!' : 'fell!')), function () { abFx(att, def, mv, false); if (mv.fx.n > 0) soundLevelUp(); else soundWrong(); }, 1000]]);
+    abSteps([[who.name + "'s " + AB_STAT_NAME[stat] + ' ' + (mv.fx.n > 0 ? (mv.fx.n > 1 ? 'rose sharply!' : 'rose!') : (mv.fx.n < -1 ? 'fell sharply!' : 'fell!')), function () { abFx(att, def, mv, false); abStatFx(who, mv); if (mv.fx.n > 0) soundLevelUp(); else soundWrong(); }, 1000]]);
   }
   next();
 }

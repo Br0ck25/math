@@ -53,7 +53,6 @@ function freshState() {
     dexSeen: {},                                     // buddy id -> 1 once met (wild or as a boss); owned buddies always count as seen
     spares: {},                                      // buddy id -> extra copies that can be sold
     bossBook: {},
-    bookClaims: [],
     shinies: {},                                     // buddy id -> 1 once its golden (shiny) version was caught; the buddy then glows
     study: { level: 6, subjects: [], seen: {}, miss: [], paid: {}, day: '', gems: 0, rounds: 0 },   // Study (38-study.js): chosen level and subject, question id -> [right, wrong, day number], ids to review, id -> day it last paid, gems earned today, rounds finished
     egg: null,                                       // Incubating elemental egg: { element, rarity, steps, target } or null

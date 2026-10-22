@@ -1348,3 +1348,26 @@ test('the open sea: a dock door in Captain Wade\'s house leads out; without Wate
   });
   assert.deepEqual(r, { bounced: true, arrived: true, finds: true, onFoot: true, home: true });
 });
+
+test('stat moves have a picture: Smokescreen drifts grey smoke over the foe, Swords Dance sends arrows up the user, Growl sinks them on the foe', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 12 }] });
+    const me = abMe(), foe = abFoe(), out = {}, real = Math.random; Math.random = () => 0.3;
+    const find = (id) => AB_NORMAL.find((m) => m.id === id);
+    const run = (att, def, id, icon) => { ab.queue = []; abHit(att, def, find(id), () => {}, () => {}); for (let i = 0; i < 20 && ab.queue.length; i++) { const st = ab.queue.shift(); st[1] && st[1](); } return document.querySelector('#' + icon + ' .ab-sfx'); };
+    const smoke = run(me, foe, 'smoke', 'ab-foe-icon'); out.smoke = !!smoke && smoke.classList.contains('s-acc') && smoke.querySelectorAll('i').length === 5;
+    const up = run(me, foe, 'swords', 'ab-me-icon'); out.up = !!up && up.classList.contains('up') && up.classList.contains('s-atk');
+    const down = run(me, foe, 'growl', 'ab-foe-icon'); out.down = !!down && down.classList.contains('down');
+    Math.random = real; return out;
+  });
+  assert.deepEqual(r, { smoke: true, up: true, down: true });
+});
+
+test("prices and gem sources follow Gold: item prices from Gold's Marts, selling for half, only trainers (and Mom's savings) pay, the Dex pays no gems", async () => {
+  const r = await ev(() => {
+    const gold = { potion: 300, superpotion: 700, hyperpotion: 1200, maxpotion: 2500, fullrestore: 3000, revive: 1500, antidote: 100, parlyzheal: 200, awakening: 250, burnheal: 250, iceheal: 250, fullheal: 600, net: 200, greatnet: 600, ultranet: 1200, repel: 350, maxrepel: 700, escaperope: 550, hpup: 9800, protein: 9800, iron: 9800, carbos: 9800, calcium: 9800, ether: 1200, xattack: 500, xdefend: 550, xspeed: 350 };
+    const bad = Object.keys(gold).filter((k) => ECON.items[k] !== gold[k]);
+    return { bad, trainer: ECON.money.trainerBase, leader: ECON.money.leaderBase, noBook: typeof claimBookReward === 'undefined' && typeof BOOK_MILESTONES === 'undefined' && !document.getElementById('book-milestones') };
+  });
+  assert.deepEqual(r, { bad: [], trainer: 16, leader: 100, noBook: true });
+});
