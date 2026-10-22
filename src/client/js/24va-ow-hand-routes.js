@@ -75,6 +75,40 @@ const OW_HAND_ROUTES = {
     nook: { gate: [3, 27], items: [[3, 26], [3, 25]] },
     tree: [11, 21], pond: [8, 23]
   }
+  ,
+  // Summit Citadel's road is an ice field (Gold's Ice Path): the hero slides until something stops them, and rocks are set so that the way over takes seven slides and no square is a trap.
+  route15: {
+    rows: [
+      'TTTTTT..TTTTTT',
+      'TTTTTT..TTTTTT',
+      'TT,,,,..,,,YTT',
+      'TT,,,,..,,,,TT',
+      'TT,,,,..,,,,TT',
+      'TT,,,,..,,,,TT',
+      'TTI#III#IIIITT',
+      'TTII#IIIII#ITT',
+      'TTIIIIIIIIIITT',
+      'TTII#IIIIIIITT',
+      'TT#IIIIIII#ITT',
+      'TTIIIIII#IIITT',
+      'TTIII#I#I#I#TT',
+      'TTIIIIIIIIIITT',
+      'TTIIIIIIIIIITT',
+      'TTIIIIIIIIIITT',
+      'TTIIII#III#ITT',
+      'TTTTTT""""TTTT',
+      'TTT,T,""~BjdTT',
+      'TTT,T,..~d~~TT',
+      'TT,q,,..~~~~TT',
+      'TT,,,,..~~~~TT',
+      'TTTTTT..TTTTTT',
+      'TTTTTT..TTTTTT'
+    ],
+    trainers: [[9, 3, 'left'], [6, 17, 'right']],
+    finds: { 'route15-gem': [2, 3], 'route15-net': [4, 3] }, apricorn: [3, 4], hidden: [5, 21],
+    nook: { gate: [3, 20], items: [[3, 19], [3, 18]] },
+    tree: [11, 2], pond: [8, 18]
+  }
 };
 // Builds the same result as owBlockRoute (24vb) from a hand-drawn route, or null when a person or find of the route's file has no place in it.
 function owHandRoute(L, spec) {
@@ -95,5 +129,5 @@ function owHandRoute(L, spec) {
   objects.push({ id: L.routeIn + '-surf', type: 'pickup', x: px + 3, y: py, give: 'ultranet' });
   objects.push({ id: L.routeIn + '-apricorns', type: 'pickup', x: spec.apricorn[0], y: spec.apricorn[1], give: 'apricorn' });
   objects.push({ id: L.routeIn + '-hidden', type: 'pickup', hidden: true, x: spec.hidden[0], y: spec.hidden[1], give: L.routeIn.length % 2 ? 'net' : 'gems' });
-  return { n: rows.length, rows: rows, npcs: npcs, objects: objects, trees: trees, score: 99, house: { x: spec.house[0], y: spec.house[1] }, pond: { x: px + 1, y: py + 1 }, bridge: { x: px + 1, y: py }, hand: true };
+  return { n: rows.length, rows: rows, npcs: npcs, objects: objects, trees: trees, score: 99, house: spec.house ? { x: spec.house[0], y: spec.house[1] } : null, pond: { x: px + 1, y: py + 1 }, bridge: { x: px + 1, y: py }, hand: true };
 }

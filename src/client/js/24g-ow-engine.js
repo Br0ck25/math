@@ -227,6 +227,11 @@ function owMove(dir) {
   }
   owTrail = { x: o.x, y: o.y };
   o.x = nx; o.y = ledge ? ny + 1 : ny;
+  for (let slide = 0; owTileAt(map, o.x, o.y).ice && slide < 40; slide++) {                          // Gold's ice: the hero keeps sliding the way they were going until something is in the way or the ice ends
+    const sx = o.x + d[0], sy = o.y + d[1];
+    if (!owWalkable(map, sx, sy) || owNpcAt(map, sx, sy) || owWarpAt(map, sx, sy)) break;
+    o.x = sx; o.y = sy;
+  }
   owStepped = true;                                                         // the buddy hops along behind on the next picture
   owFrame = owFrame ? 0 : 1;
   let warp = owWarpAt(map, o.x, o.y);

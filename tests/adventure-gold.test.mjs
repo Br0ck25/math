@@ -1222,7 +1222,28 @@ test('Leaf Grove\'s road is a hand-drawn forest maze (and Route 3 a ledge run, R
     const m = OW_MAPS.route5, spec = OW_HAND_ROUTES.route5, ids = m.npcs.map((n) => n.id), objs = m.objects.map((o) => o.id);
     return { hand: m.hand, tall: m.rows.length, same: spec.rows.slice(0, 2).join() === m.rows.slice(0, 2).join(), people: ['route5-amp', 'route5-ohm', 'route5-swimmer'].every((i) => ids.includes(i)), finds: ['route5-ore', 'route5-nook-gem', 'route5-nook-net', 'route5-surf', 'route5-apricorns', 'route5-hidden', 'route5-islet'].every((i) => objs.includes(i)), gate: OW_GATE_CHARS[m.rows[16].charAt(10)] !== undefined, others: Object.keys(OW_HAND_ROUTES).length };
   });
-  assert.deepEqual(r, { hand: true, tall: 32, same: true, people: true, finds: true, gate: true, others: 3 });
+  assert.deepEqual(r, { hand: true, tall: 32, same: true, people: true, finds: true, gate: true, others: 4 });
+});
+
+test('Gold\'s ice: stepping onto ice slides the hero until something stops them, and Summit Citadel\'s road is an ice field that can be crossed (and never traps)', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure();
+    const m = OW_MAPS.route15, o = state.overworld, out = { ice: !!OW_TILES.I.ice, hand: m.hand };
+    window.__noWander = true; o.map = 'route15'; o.x = 5; o.y = 17; owSetRegion(m); renderOverworld();
+    // the field is solvable by sliding: breadth-first over the squares a slide can stop on, and every one of them leads on to the far shore
+    const ice = (x, y) => !!owTileAt(m, x, y) && !!owTileAt(m, x, y).ice, open = (x, y) => owWalkable(m, x, y) && !owNpcAt(m, x, y);
+    const slide = (p, d) => { let x = p[0] + d[0], y = p[1] + d[1]; if (!open(x, y)) return null; while (ice(x, y) && open(x + d[0], y + d[1])) { x += d[0]; y += d[1]; } return [x, y]; };
+    const starts = [7, 8, 9].map((x) => [x, 17]), dist = {}, edges = {}, q = starts.slice(); starts.forEach((p) => { dist[p] = 0; });
+    while (q.length) { const p = q.shift(); edges[p] = []; [[0, -1], [0, 1], [1, 0], [-1, 0]].forEach((d) => { const n = slide(p, d); if (n) { edges[p].push(n.join()); if (dist[n] === undefined) { dist[n] = dist[p] + 1; q.push(n); } } }); }
+    const keys = Object.keys(dist), good = new Set(keys.filter((k) => +k.split(',')[1] === 5)); let grew = true;
+    while (grew) { grew = false; keys.forEach((k) => { if (!good.has(k) && (edges[k] || []).some((n) => good.has(n))) { good.add(k); grew = true; } }); }
+    out.far = Math.min(...[...keys].filter((k) => +k.split(',')[1] === 5).map((k) => dist[k])); out.noTrap = good.size === keys.length;
+    // a real slide: the hero pressed up from the shore ends where the model says
+    out.moved = []; [7, 8, 9].forEach((x) => { o.x = x; o.y = 17; o.face = 'down'; renderOverworld(); owMove('up'); const want = slide([x, 17], [0, -1]); out.moved.push(want ? o.x === want[0] && o.y === want[1] && o.y < 16 : o.y === 17); });
+    return out;
+  });
+  assert.equal(r.ice, true); assert.equal(r.hand, true); assert.ok(r.far >= 5, 'the way over takes several slides: ' + r.far); assert.equal(r.noTrap, true);
+  assert.deepEqual(r.moved, [true, true, true]);
 });
 
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
