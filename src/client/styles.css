@@ -1024,3 +1024,9 @@ body.trivia .math-only { display: none; }
 /* The buddy keeps a little behind and smaller, so it never lands on the hero's feet or head */
 .ow-lag { display: block; width: 100%; height: 100%; }
 .ow-actor.ow-follow .ow-buddy { width: 64%; height: 64%; margin: 18%; }
+
+/* Snow in the cold lands (Mystic Peak, the Cross and the Summit) */
+.ow-view.ow-snowy::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6; background: radial-gradient(circle, #fff 0 1.6px, transparent 2.4px) 0 0 / 38px 38px, radial-gradient(circle, rgba(255, 255, 255, 0.85) 0 1.2px, transparent 2px) 19px 19px / 52px 52px; animation: owSnow 4.5s linear infinite; }
+.ow-view.ow-snowy { filter: brightness(1.05) saturate(0.8); }
+@keyframes owSnow { from { background-position: 0 0, 19px 19px; } to { background-position: -14px 38px, 5px 71px; } }
+.reduce-motion .ow-view.ow-snowy::after { animation: none; }

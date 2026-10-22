@@ -190,6 +190,7 @@ test('the D-pad buttons walk (a press steps once, a keyboard click steps once) a
   const labels = await page.evaluate(() => Array.from(document.querySelectorAll('.ow-key:not(.ow-side)')).map((b) => b.getAttribute('aria-label')));
   assert.deepEqual(labels, ['Walk up', 'Walk left', 'Walk down', 'Walk right']);
   const up = page.locator('.ow-key.up');
+  await page.evaluate(() => { state.overworld.face = 'up'; });                                            // a press on a new direction only turns the hero (Gold); facing the way, a press steps
   await up.dispatchEvent('pointerdown');
   await up.dispatchEvent('pointerup');
   await up.dispatchEvent('click');                                                                          // the click that follows a press is ignored, so this is the same step...

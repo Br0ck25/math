@@ -129,7 +129,8 @@ function owCellAt(map, x, y) {
 // Houses are not all alike: some wall cells have a window, and a roof's top row may carry a chimney (fixed by place, so a house looks the same every time).
 function owVariant(map, x, y, art) {
   if (map.room || (art !== 't-house-wall' && art !== 't-roof')) return art;
-  const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+  const role = map.bldg && map.bldg[x + ',' + y], h = ((x * 73856093) ^ (y * 19349663)) >>> 0;          // a Center, Mart or gym has its own roof (and the gym its stone wall); a house gets windows and chimneys
+  if (role === 'center' || role === 'mart' || role === 'gym') return art === 't-roof' ? 't-roof-' + role : role === 'gym' ? 't-wall-gym' : art;
   if (art === 't-house-wall') return h % 3 === 0 ? 't-house-window' : art;
   return h % 4 === 0 && (map.rows[y - 1] || '').charAt(x) !== 'R' ? 't-roof-chimney' : art;
 }
@@ -144,6 +145,7 @@ function owCellLook(map, x, y, tile) {
   const same = function (dx, dy) { const n = map.rows[y + dy] && owTileAt(map, x + dx, y + dy); return !n || (kind === 'ground' ? OW_WALK_GROUND.indexOf(n.t) !== -1 || /door|gym|mat|bridge|rug/.test(n.t) : n.t === 't-water' || n.t === 't-bridge'); };
   return (kind === 'water' ? ' wv' : '') + (same(0, -1) ? '' : ' ed-n') + (same(1, 0) ? '' : ' ed-e') + (same(0, 1) ? '' : ' ed-s') + (same(-1, 0) ? '' : ' ed-w') + (kind === 'water' ? ' sh' : '');
 }
+const OW_SNOW_LANDS = ['mystic', 'cross', 'summit'];          // the cold lands, where snow falls on the map outdoors whatever the weather
 let owStepped = false;
 function renderOverworld() {
   owFruitDay();
@@ -176,8 +178,8 @@ function renderOverworld() {
   h += owActorHtml('ow-hero' + (owTileAt(map, o.x, o.y).water ? ' ow-surfing' : ''), hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
-  const wx = map.room || map.dark ? '' : weatherToday().id;
-  view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '') + (wx === 'rainy' || wx === 'stormy' ? ' ow-' + wx : '');          // rain falls on the map on a rainy or stormy day (outdoors only)
+  const wx = map.room || map.dark ? '' : weatherToday().id, snowy = !map.room && !map.dark && OW_SNOW_LANDS.indexOf(map.region) !== -1;
+  view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '') + (snowy ? ' ow-snowy' : wx === 'rainy' || wx === 'stormy' ? ' ow-' + wx : '');          // rain falls on the map on a rainy or stormy day (outdoors only)
   if (map.dark) view.style.setProperty('--dark-r', ((hasKeyItem('lamp') ? 5 : 2.6) * g.tile).toFixed(0) + 'px');
   owStepped = false;
   view.setAttribute('aria-label', map.name + ' map');
@@ -261,6 +263,12 @@ function owStepMs() { return hasKeyItem('bicycle') ? ECON.overworld.bikeMs : has
 function owHold(dir) {
   owPointerUsed = true;
   owRelease();
+  const o = state.overworld;
+  if (owOpen() && !owBusy && o.face !== dir) {                           // Gold: a tap on a new direction only turns the hero on the spot (a mid-step frame); holding it on walks that way
+    o.face = dir; owFrame = 1; renderOverworld();
+    owHoldTimer = setTimeout(function () { owHold(dir); }, 130);
+    return;
+  }
   owMove(dir);
   owHoldTimer = setTimeout(function () { owHoldTimer = setInterval(function () { owMove(dir); }, owStepMs()); }, 260);
 }

@@ -1,5 +1,5 @@
 // =====================================================================
-//  TOWNSFOLK WHO MOVE (Gold's NPCs wander): every town gets two villagers who stroll about near where they stand, a step now and then, and talk differently after dark. They only walk on plain ground,
+//  TOWNSFOLK WHO MOVE (Gold's NPCs wander): every town gets three villagers who stroll about near where they stand, a step now and then, and talk differently after dark. They only walk on plain ground,
 //  never onto a door, a gym door, a find, grass, the hero or each other, and stay within two tiles of home. Runs after the walled gyms (24vp) so the towns are finished.
 // =====================================================================
 const OW_STROLLERS = [
@@ -18,11 +18,11 @@ function owPlaceStrollers(town, k) {
     if ((c === '.' || c === ',') && reach[x + ',' + y] && !owNear(m, x, y, 1) && !landings.some(function (l) { return Math.abs(l[0] - x) <= 1 && Math.abs(l[1] - y) <= 1; }) && !(m.gyms && m.gyms[x + ',' + y]) && [[1, 0], [-1, 0], [0, 1], [0, -1]].every(function (d) { const t = OW_TILES[(m.rows[y + d[1]] || '').charAt(x + d[0])]; return t && !t.solid; })) spots.push([x, y]);
   }
   const out = [];
-  for (let n = 0; n < 2 && spots.length; n++) {
-    const s = spots.splice(Math.floor(rnd() * spots.length), 1)[0], who = OW_STROLLERS[(k + n * 2) % OW_STROLLERS.length];
+  for (let n = 0; n < 3 && spots.length; n++) {
+    const s = spots.splice(Math.floor(rnd() * spots.length), 1)[0], who = OW_STROLLERS[(k + n) % OW_STROLLERS.length];
     out.push({ id: town + '-walker-' + n, name: who[0], x: s[0], y: s[1], face: 'down', wander: true, home: { x: s[0], y: s[1] }, look: { skin: (k + n * 3) % 6, hair: (k * 3 + n) % 8, outfit: (k + n * 5) % 8, style: (k + n) % 4 },
       lines: [who[1].replace('{t}', m.name), who[2].replace('{t}', m.name)], night: [who[3]], proud: OW_PROUD });
-    for (let i = spots.length - 1; i >= 0; i--) if (Math.abs(spots[i][0] - s[0]) + Math.abs(spots[i][1] - s[1]) < 5) spots.splice(i, 1);          // the two stand well apart
+    for (let i = spots.length - 1; i >= 0; i--) if (Math.abs(spots[i][0] - s[0]) + Math.abs(spots[i][1] - s[1]) < 5) spots.splice(i, 1);          // they stand well apart
   }
   m.npcs.push.apply(m.npcs, out);
 }
@@ -62,3 +62,31 @@ function owPlaceLamps(town, k) {
   }
 }
 owTowns().forEach(function (t, k) { if (t !== OW_START.map) owPlaceLamps(t, k); });
+
+// Which cells belong to a Center, a Mart, a gym or a house, so each can have its own look: the wall row either side of its door and the roof rows above it.
+function owTagBuildings(town) {
+  const m = OW_MAPS[town], tag = {}, doors = [];
+  m.warps.forEach(function (w) { const n = OW_MAPS[w.to], role = /-center$/.test(w.to) ? 'center' : /-mart$/.test(w.to) ? 'mart' : /-house$/.test(w.to) ? 'house' : ''; if (n && n.room && role) doors.push([w.x, w.y, role]); });
+  Object.keys(m.gyms || {}).forEach(function (p) { doors.push([+p.split(',')[0], +p.split(',')[1], 'gym']); });
+  doors.forEach(function (d) {
+    const wall = function (x, y) { return 'WDGNK'.indexOf((m.rows[y] || '').charAt(x)) !== -1; };
+    let x0 = d[0], x1 = d[0]; while (wall(x0 - 1, d[1])) x0--; while (wall(x1 + 1, d[1])) x1++;
+    for (let x = x0; x <= x1; x++) { tag[x + ',' + d[1]] = d[2]; for (let y = d[1] - 1; y >= 0 && (m.rows[y] || '').charAt(x) === 'R'; y--) tag[x + ',' + y] = d[2]; }
+  });
+  m.bldg = tag; return doors.filter(function (d) { return d[2] === 'house'; });
+}
+// A mailbox stands beside each house, on the plain grass next to its wall, where it shuts nothing in.
+function owPlaceMailboxes(town) {
+  const m = OW_MAPS[town], houses = owTagBuildings(town);
+  houses.forEach(function (d) {
+    let x0 = d[0], x1 = d[0]; while ('WDGNK'.indexOf(m.rows[d[1]].charAt(x0 - 1)) !== -1) x0--; while ('WDGNK'.indexOf(m.rows[d[1]].charAt(x1 + 1)) !== -1) x1++;
+    [x0 - 1, x1 + 1].some(function (x) {
+      const y = d[1], row = m.rows[y], before = Object.keys(owReachSet(m)).length;
+      if (row.charAt(x) !== ',' || owNear(m, x, y, 0)) return false;
+      m.rows[y] = row.slice(0, x) + 'i' + row.slice(x + 1);
+      if (Object.keys(owReachSet(m)).length === before - 1) return true;
+      m.rows[y] = row; return false;
+    });
+  });
+}
+owTowns().forEach(function (t) { if (t !== OW_START.map) owPlaceMailboxes(t); else owTagBuildings(t); });
