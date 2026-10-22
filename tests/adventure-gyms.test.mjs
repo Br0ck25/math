@@ -49,24 +49,24 @@ test('every gym door on a map is on a gym tile, and every gym tile has a land wi
   assert.deepEqual(bad, []);
 });
 
-test('stepping on the Meadow gym door offers the gym; Enter starts the gym run on the battle screen with the first trainer', async () => {
+test('stepping on the Meadow gym door offers the gym; Enter walks you into the gym where its trainers wait', async () => {
   const G = await page.evaluate(() => (window.__G = where.gym('meadow')));
   await put('meadow', G.x, G.y + 1, 'up');
   await page.evaluate(() => owMove('up'));
   assert.equal(await shown('talk-modal'), true);
   assert.equal(await page.evaluate(() => document.getElementById('talk-name').innerText), 'Sunny Meadow Gym');
-  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Beat 3 trainers/);
+  assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Find your way past its trainers/);
   await page.click('#talk-next');
   assert.match(await page.evaluate(() => document.getElementById('talk-text').innerText), /Losing costs nothing/);
-  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Enter the gym', 'Solve the gym puzzle']);
+  assert.deepEqual(await page.evaluate(() => Array.from(document.querySelectorAll('#talk-choices button')).map((b) => b.innerText)), ['Enter the gym']);
   await page.click('#talk-choices button');
-  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
-  const r = await page.evaluate(() => ({ gym: state.gym, rounds: ab.rounds.map((x) => x.kind), first: ab.name, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-modal').style.display }));
-  assert.equal(r.gym, null, 'the gym run lives on the battle screen, not in state.gym');
-  assert.deepEqual(r.rounds, ['trainer', 'trainer', 'trainer', 'leader']);
-  assert.equal(r.first, 'Picnicker Daisy');
-  assert.notEqual(r.ow, 'flex');
+  const r = await page.evaluate(() => ({ gym: state.gym, map: state.overworld.map, battle: !!ab, ow: document.getElementById('overworld-modal').style.display, talk: document.getElementById('talk-modal').style.display, names: OW_MAPS['meadow-gym'].npcs.map((n) => n.name) }));
+  assert.equal(r.gym, null, 'the gym run lives on the map and the battle screen, not in state.gym');
+  assert.equal(r.map, 'meadow-gym');
+  assert.equal(r.battle, false);
+  assert.equal(r.ow, 'flex');
   assert.notEqual(r.talk, 'flex');
+  assert.deepEqual(r.names.slice(0, 2), ['Picnicker Daisy', 'Rival Riley']);
   assert.deepEqual(errors, []);
 });
 

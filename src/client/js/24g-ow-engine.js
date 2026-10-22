@@ -19,6 +19,7 @@ function owTileAt(map, x, y) {
   const row = map.rows[y], t = row && OW_TILES[row.charAt(x)];
   if (!t) return null;
   if (t.road) { const b = map.roads && map.roads[x + ',' + y]; return b && owRoadOpen(b) ? { t: 't-path', open: true } : t; }
+  if (t.door) { const need = [].concat(map.doors && map.doors[x + ',' + y] || []); return need.every(function (s) { return state.overworld.story.indexOf(s) !== -1; }) ? { t: 't-open-switch', open: true } : t; }          // a gym's switch door opens once its puzzle is solved
   return t.gate && hasKeyItem(t.gate) ? { t: OW_GATES[t.gate].open, open: true } : t;
 }
 // The road to the next land opens with the badge of the land before it, or any later badge (a save that already went on).
@@ -187,8 +188,9 @@ function owMove(dir) {
   owTrail = { x: o.x, y: o.y };
   o.x = nx; o.y = ledge ? ny + 1 : ny;
   owFrame = owFrame ? 0 : 1;
-  const warp = owWarpAt(map, o.x, o.y);
-  if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); if (o.map === 'tide-sea' && !hasKeyItem('water')) { o.map = 'tide-house'; o.x = 5; o.y = 1; toast('The open sea needs Water Steps, from the Tide Bay Gym.'); } }
+  let warp = owWarpAt(map, o.x, o.y);
+  if (warp && warp.gate) warp = null;                                       // a gym door is not a walk-through: the door itself asks (owEnterGym)
+  if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); const gd = OW_MAPS[o.map].guard; if (gd && !hasKeyItem(gd.key)) { o.map = gd.to; o.x = gd.x; o.y = gd.y; toast('The open sea needs the Water Steps charm, from the Tide Bay Gym.'); } }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
@@ -200,7 +202,7 @@ function owMove(dir) {
   const gym = here.gyms && here.gyms[o.x + ',' + o.y];
   if (gym) { owEnterGym(gym); return; }
   if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
-  else if (owTileAt(here, o.x, o.y).water && owGrassStep()) startAdventureFight(owWaterBuddy(owRodTier()), here.id === 'tide-sea' ? 3 : 0, true);      // water buddies bite while surfing
+  else if (owTileAt(here, o.x, o.y).water && owGrassStep()) startAdventureFight(owWaterBuddy(owRodTier()), here.sea || 0, true);      // water buddies bite while surfing
 }
 // Space or Enter: talk to or read what the hero faces.
 function owInteractFacing() {

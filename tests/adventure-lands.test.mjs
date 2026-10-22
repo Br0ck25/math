@@ -156,15 +156,14 @@ test('Ember Hills: its gym door explains the level, the steam nook waits for the
   assert.deepEqual(await page.evaluate(() => state.overworld.center), { map: 'ember', x: door.x, y: door.y + 1 });
 });
 
-test('the Ember gym opens at its level and starts the fire gym run with the first trainer', async () => {
+test('the Ember gym opens at its level and walks you into the fire gym, where the first trainer waits', async () => {
   const G = await page.evaluate(() => (window.__G = where.gym('ember')));
   await put('ember', G.x, G.y + 1, 'up');
   await page.evaluate(() => { state.buddyXp.dog = xpForLevel(20); owMove('up'); });
   await page.click('#talk-next');
   await page.click('#talk-choices button');
-  await page.waitForFunction(() => typeof ab !== 'undefined' && ab);
-  const r = await page.evaluate(() => ({ first: ab.name, rounds: ab.rounds.length, el: ab.foes.every((f) => f.element === 'fire'), gym: state.gym }));
-  assert.deepEqual(r, { first: 'Scout Mia', rounds: 4, el: true, gym: null });
+  const r = await page.evaluate(() => { const m = OW_MAPS[state.overworld.map], t = m.npcs.find((n) => n.kind === 'trainer'); return { map: state.overworld.map, first: t.name, el: OW_TEAMS[t.id].every((b) => getSpecies(b[0]).element === 'fire'), battle: !!ab, gym: state.gym }; });
+  assert.deepEqual(r, { map: 'ember-gym', first: 'Scout Mia', el: true, battle: false, gym: null });
   assert.deepEqual(errors, []);
 });
 

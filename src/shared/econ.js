@@ -35,7 +35,7 @@ const ECON = {
   // Winning the gym gives a badge and gems; all the gym badges open the Champion's Hall.
   map: {
     levels: { meadow: 1, ember: 8, tide: 16, grove: 24, volt: 32, gloom: 40, mystic: 48, skyreach: 56, cinder: 60, coral: 64, thistle: 68, spark: 72, dusk: 76, prism: 80, cross: 85, summit: 90 },
-    trainers: 3, puzzleRounds: 3, regionShare: 0.8,
+    trainers: 3, regionShare: 0.8,
     // After becoming Champion any gym can be fought again as a rematch: the same trainers (Riley too) and leader, `levels` stronger.
     // The first clear of a land each day pays `gems`, for at most `perDay` lands a day (the fights themselves are free to repeat).
     rematch: { levels: 4 },
@@ -59,7 +59,7 @@ const ECON = {
          // Adventure battles (24w-ow-battle-data.js): a Catch Net is a Poke Ball, the Great and Ultra Nets multiply the catch value (ballMult), a Potion heals potionHeal HP
     mart: [{ type: 'potion', badges: 0 }, { type: 'net', badges: 0 }, { type: 'greatnet', badges: 2 }, { type: 'ultranet', badges: 4 }, { type: 'levelnet', badges: 3 }, { type: 'fastnet', badges: 3 }, { type: 'lurenet', badges: 3 }, { type: 'friendnet', badges: 4 }, { type: 'repel', badges: 1 }, { type: 'fullheal', badges: 1 }, { type: 'antidote', badges: 0 }, { type: 'burnheal', badges: 1 }, { type: 'iceheal', badges: 1 }, { type: 'awakening', badges: 1 }, { type: 'parlyzheal', badges: 1 }, { type: 'superpotion', badges: 2 }, { type: 'hyperpotion', badges: 4 }, { type: 'maxpotion', badges: 6 }, { type: 'fullrestore', badges: 7 }, { type: 'revive', badges: 3 }, { type: 'elixir', badges: 2 }, { type: 'xattack', badges: 1 }, { type: 'xdefend', badges: 1 }, { type: 'xspeed', badges: 1 }, { type: 'maxrepel', badges: 3 }, { type: 'stone', badges: 4 }, { type: 'ether', badges: 2 }, { type: 'escaperope', badges: 1 }, { type: 'ppup', badges: 5 }, { type: 'hpup', badges: 5 }, { type: 'protein', badges: 5 }, { type: 'iron', badges: 5 }, { type: 'carbos', badges: 5 }, { type: 'calcium', badges: 5 }] },    // holdMs: a held D-pad key steps this often (shoeMs with the Running Shoes).
   // Held items (25b-held.js): prices in gems, and how much the Oran Berry heals.
-  held: { cost: { berry: 400, leftovers: 600, claw: 500, lens: 500, charm: 600, focus: 800, egg: 1500, amulet: 1500, smoke: 500, kings: 900, powder: 700, share: 1500 }, berryHeal: 10 },
+  held: { cost: { berry: 400, leftovers: 600, claw: 500, lens: 500, charm: 600, focus: 800, egg: 1500, amulet: 1500, smoke: 500, kings: 900, powder: 700, share: 1500, everstone: 600 }, berryHeal: 10 },
   // The team: how many buddies go into battle (Adventure fights, tournaments and Practice swaps).
   team: { max: 6 },
   // Trails (24e-trail.js): every land has a daily Trail of spots. A chest gives `berries` berries, `ore` ore or a Catch Net; the Trail pays `gems` gems for the first `trailsPerDay` trails of a day once `finishAt` of its spots are open (two gates, so one can wait for another day).

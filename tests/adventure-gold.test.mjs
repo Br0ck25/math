@@ -1102,24 +1102,6 @@ test('a fight opens with a wipe (bars for wild buddies, a circle for trainers) a
   assert.deepEqual(r, { wild: true, cried: true });
 });
 
-test('the gym puzzle: three right answers (wrong ones are free) let you past the first trainer of a first-time gym', async () => {
-  const r = await ev(() => {
-    state.hero.made = true; openAdventure(); const out = {};
-    owEnterGym('meadow'); talkNext(); out.choices = [...document.querySelectorAll('#talk-choices button')].map((b) => b.innerText);
-    talk.onClose = null; closeTalk();
-    const full = abGymRounds('meadow', false).length;
-    let seen = null; const real = abStart; abStart = (o) => { seen = o; return true; };
-    owGymPuzzle('meadow', 'Meadow Gym');
-    for (let i = 0; i < 3; i++) {
-      const wrong = talk.quiz.q.opts.find((o) => o !== talk.quiz.q.ans); answerSignQuiz(wrong); if (i === 0) out.free = talk.quiz.round === 1;
-      answerSignQuiz(talk.quiz.q.ans);
-    }
-    out.done = talk.quiz.done; closeTalk();
-    return new Promise((res) => setTimeout(() => { abStart = real; out.skipped = seen && seen.rounds.length === full - 1; res(out); }, 600));
-  });
-  assert.deepEqual(r, { choices: ['Enter the gym', 'Solve the gym puzzle'], free: true, done: true, skipped: true });
-});
-
 test('the ruin signs in every fourth cave: four answers in a row pay one Evolution Stone, once', async () => {
   const r = await ev(() => {
     const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn + '-cave2']).filter((m) => m && Object.values(m.signs).some((s) => /-ruin$/.test(s.id)));
@@ -1329,24 +1311,27 @@ test("trainers' buddies use status moves: a level 15+ trainer buddy of a status-
   assert.deepEqual(r, { elements: 5, trainer: true, low: true, wild: true });
 });
 
-test('the open sea: a dock door in Captain Wade\'s house leads out; without Water Steps the sea sends you back, with them you can surf to every islet find and walk home', async () => {
+test('the open seas: a dock door in a harbour house leads out; without Water Steps the sea sends you back, with them you can surf to every islet find and walk home', async () => {
   const r = await ev(() => {
-    state.hero.made = true; openAdventure(); const out = {}, sea = OW_MAPS['tide-sea'], o = state.overworld;
-    state.badges = []; o.map = 'tide-house'; o.x = 5; o.y = 1; o.face = 'up'; owMove('up'); closeTalk();
-    out.bounced = o.map === 'tide-house' && o.y === 1;
-    state.badges = ['tide']; o.map = 'tide-house'; o.x = 5; o.y = 1; owMove('up');
-    out.arrived = o.map === 'tide-sea' && o.x === sea.start.x && o.y === sea.start.y;
-    // every find is on land, with water between it and the start, and a surfer can ride there (a flood that allows water)
-    const seen = new Set([o.x + ',' + o.y]), q = [[o.x, o.y]];
-    while (q.length) { const [cx, cy] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy, t = owTileAt(sea, nx, ny); if (t && (!t.solid || t.water) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); }
-    out.finds = sea.objects.every((p) => seen.has(p.x + ',' + p.y));
-    state.badges = []; const walk = new Set([sea.start.x + ',' + sea.start.y]), w = [[sea.start.x, sea.start.y]];
-    while (w.length) { const [cx, cy] = w.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (owWalkable(sea, nx, ny) && !walk.has(nx + ',' + ny)) { walk.add(nx + ',' + ny); w.push([nx, ny]); } }); }
-    out.onFoot = sea.objects.every((p) => !walk.has(p.x + ',' + p.y));
-    out.home = !!owWarpAt(sea, 7, 14) && walk.has('7,14');
-    return out;
+    state.hero.made = true; openAdventure(); const all = {};
+    [['tide-sea', 'tide-house'], ['coral-sea', 'coral-house']].forEach(([id, house]) => {
+      const out = {}, sea = OW_MAPS[id], o = state.overworld;
+      state.badges = []; o.map = house; o.x = 5; o.y = 1; o.face = 'up'; owMove('up'); closeTalk();
+      out.bounced = o.map === house && o.y === 1;
+      state.badges = ['tide']; o.map = house; o.x = 5; o.y = 1; owMove('up');
+      out.arrived = o.map === id && o.x === sea.start.x && o.y === sea.start.y;
+      const flood = (surf) => { const seen = new Set([sea.start.x + ',' + sea.start.y]), q = [[sea.start.x, sea.start.y]]; while (q.length) { const [cx, cy] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy, t = owTileAt(sea, nx, ny); if (t && (!t.solid || (surf && t.water)) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); } return seen; };
+      const surfed = flood(true), walked = flood(false);
+      out.finds = sea.objects.length >= 3 && sea.objects.every((p) => surfed.has(p.x + ',' + p.y));
+      out.onFoot = sea.objects.every((p) => !walked.has(p.x + ',' + p.y));
+      out.home = !!owWarpAt(sea, 7, 14) && walked.has('7,14');
+      out.bonus = sea.sea >= 3;
+      all[id] = out;
+    });
+    return all;
   });
-  assert.deepEqual(r, { bounced: true, arrived: true, finds: true, onFoot: true, home: true });
+  const ok = { bounced: true, arrived: true, finds: true, onFoot: true, home: true, bonus: true };
+  assert.deepEqual(r, { 'tide-sea': ok, 'coral-sea': ok });
 });
 
 test('stat moves have a picture: Smokescreen drifts grey smoke over the foe, Swords Dance sends arrows up the user, Growl sinks them on the foe', async () => {
@@ -1370,4 +1355,50 @@ test("prices and gem sources follow Gold: item prices from Gold's Marts, selling
     return { bad, trainer: ECON.money.trainerBase, leader: ECON.money.leaderBase, noBook: typeof claimBookReward === 'undefined' && typeof BOOK_MILESTONES === 'undefined' && !document.getElementById('book-milestones') };
   });
   assert.deepEqual(r, { bad: [], trainer: 16, leader: 100, noBook: true });
+});
+
+test('an Everstone keeps the holder in its current form however high its level goes; without it the form follows the level', async () => {
+  const r = await ev(() => {
+    const sp = getSpecies('fox'), out = { has: HELD_ITEMS.some((i) => i.id === 'everstone') && ECON.held.cost.everstone > 0 };
+    const high = sp.forms[sp.forms.length - 1].minLevel + 5;
+    state.held = {}; state.stoneForm = {}; out.free = getFormIndex(sp, high) === sp.forms.length - 1;
+    state.unlockedPets = ['fox'].concat(state.unlockedPets); state.heldOwned = ['everstone']; state.buddyXp.fox = xpForLevel(1); hubPet = 'fox'; giveHeld('everstone');
+    out.held = state.held.fox === 'everstone' && state.stoneForm.fox === 0; out.locked = getFormIndex(sp, high) === 0;
+    giveHeld('everstone'); out.released = getFormIndex(sp, high) === sp.forms.length - 1;
+    state.stoneForm = { fox: 99, dog: 'x' }; NORMALIZERS.forEach((fn) => fn(state)); out.clamped = state.stoneForm.fox;
+    return out;
+  });
+  assert.deepEqual(r, { has: true, free: true, held: true, locked: true, released: true, clamped: 4 });
+});
+
+test('trainer classes have their own style: Hikers are tougher, Swimmers quicker, and the same buddy under another name is unchanged', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure();
+    const mk = (name) => { ab = null; abStart({ rounds: [{ kind: 'trainer', name, foes: [{ id: 'fox', level: 20 }] }] }); const f = ab.foes[0]; return { max: f.max, def: f.def, spd: f.spd, hp: f.hp }; };
+    const plain = mk('Clerk Bob'), hiker = mk('Hiker Brick'), swim = mk('Swimmer Ana');
+    return { hiker: hiker.max > plain.max && hiker.def > plain.def && hiker.hp === hiker.max, swim: swim.spd > plain.spd && swim.max === plain.max };
+  });
+  assert.deepEqual(r, { hiker: true, swim: true });
+});
+
+test('walkable gyms: every gym has an inside with its trainers and leader, three layouts take turns, a switch door shuts the leader in until its math switches are thrown, and the leader fights as the last round', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = {}, ids = allGymRegions().filter((g) => OW_MAPS[g.id + '-gym']).map((g) => g.id);
+    out.count = ids.length >= 15;
+    out.styles = new Set(ids.map((id) => Object.keys(OW_MAPS[id + '-gym'].doors).length)).size;                                  // no door, one door (two switch kinds)
+    const reach = (m, from) => { const seen = new Set([from.join()]), q = [from]; while (q.length) { const [cx, cy] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (owWalkable(m, nx, ny) && !owNpcAt(m, nx, ny) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); } return seen; };
+    const m = OW_MAPS['meadow-gym'], leader = m.npcs.find((n) => n.kind === 'gymleader'), door = Object.keys(m.doors)[0];
+    state.overworld.story = []; const shut = reach(m, [m.start.x, m.start.y]); out.shut = !shut.has(leader.x + ',' + (leader.y + 1)) && OW_TILES[m.rows[5].charAt(6)].door === true;
+    const tr = m.npcs.find((n) => n.kind === 'trainer'); out.seen = owTrainerSeeing(m, 6, tr.y) === tr || !!owTrainerSeeing(m, 6, tr.y);
+    const sign = Object.values(m.signs)[0]; state.overworld.beat = []; openSignQuiz(sign); out.locked = !talk.quiz; closeTalk();
+    m.doors[door].forEach((s) => owStoryDone(s)); const open = reach(m, [m.start.x, m.start.y]); out.open = open.has(leader.x + ',' + (leader.y + 1));
+    const real = abStart; let o; abStart = (x) => { o = x; return true; }; state.buddyXp.dog = xpForLevel(30);
+    OW_SERVICES.gymleader(leader); document.querySelectorAll('#talk-choices button')[0].click(); abStart = real;
+    out.leaderOnly = !!o && o.rounds.length === 1 && o.rounds[0].kind === 'leader';
+    out.exit = m.warps[0].to === 'meadow' && m.warps[0].ty === Object.keys(OW_MAPS.meadow.gyms)[0].split(',')[1] * 1 + 1;
+    out.gate = OW_MAPS.meadow.warps.some((w) => w.gate && w.to === 'meadow-gym');
+    return out;
+  });
+  assert.deepEqual(r, { count: true, styles: r.styles, shut: true, seen: true, locked: true, open: true, leaderOnly: true, exit: true, gate: true });
+  assert.ok(r.styles >= 2, 'some gyms have a door and some do not');
 });

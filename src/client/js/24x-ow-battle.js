@@ -41,6 +41,14 @@ function abWipe() {
   c.classList.remove('ab-wipe-wild', 'ab-wipe-trainer'); void c.offsetWidth;
   c.classList.add(ab.kind === 'wild' ? 'ab-wipe-wild' : 'ab-wipe-trainer');
 }
+// Trainer classes fight in their own style (the first word of the name): the stats they favour, in percent. Hikers are tough, Swimmers and Pilots quick, Sailors hit hard.
+const AB_CLASSES = { Hiker: { max: 115, def: 110 }, Swimmer: { spd: 110 }, Pilot: { spd: 115 }, Glider: { spd: 115 }, Sailor: { atk: 110, spc: 110 }, Ace: { atk: 105, def: 105, spd: 105, spc: 105 }, Scrambler: { atk: 108 }, Bug: { max: 90, spd: 115 }, Camper: { atk: 105 }, Scout: { spd: 105 } };
+function abClassStyle(name, m) {
+  const st = AB_CLASSES[String(name).split(' ')[0]], full = m.hp >= m.max;
+  if (!st) return;
+  Object.keys(st).forEach(function (k) { m[k] = Math.max(1, Math.floor(m[k] * st[k] / 100)); });
+  if (full) m.hp = m.max;
+}
 // Gold's trainers use status moves: a trainer's buddy of level 15 or more knows one for its element (it takes the place of its weakest move when the set is full) (the same moves your TMs teach).
 const AB_TRICKS = { electric: 'thunderwave', dark: 'sleeppowder', nature: 'leechseed', magic: 'confuseray', water: 'toxic' };
 function abTrainerTrick(m) {
@@ -57,6 +65,7 @@ function abLoadRound() {
   ab.kind = r.kind; ab.name = r.name; ab.npc = r.npc || null;
   ab.foes = r.foes.map(abFoeMon);
   if (r.kind !== 'wild') ab.foes.forEach(abTrainerTrick);
+  if (r.kind === 'trainer') ab.foes.forEach(function (m) { abClassStyle(r.name, m); });
   ab.i = 0; ab.part = [abMe().id];
   if (ab.gymWeather) ab.weather = { k: ab.gymWeather, n: 5 };                        // a gym's own sky: it comes back with every round
   abSeen();

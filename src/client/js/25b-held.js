@@ -15,6 +15,7 @@ const HELD_ITEMS = [
   { id: 'kings',     icon: '👑', name: "King's Rock", text: 'Its hits may make a slower foe flinch' },
   { id: 'powder',    icon: '✨', name: 'Bright Powder', text: 'Foes miss it a little more often' },
   { id: 'share',     icon: '📻', name: 'Exp. Share', text: 'The holder gets half the experience of a fight without taking part' },
+  { id: 'everstone', icon: '🪨', name: 'Everstone', text: 'The holder stays in the form it has, however high its level gets' },
   { id: 'charm',     icon: '🔮', name: 'Type Charm', text: 'Moves of its own type do 10% more damage' }
 ];
 function heldIdOf(buddyId) { return state.held[buddyId] || ''; }
@@ -40,6 +41,7 @@ function giveHeld(id) {
   if (state.heldOwned.indexOf(id) === -1) return;
   const was = heldIdOf(hubPet) === id;
   Object.keys(state.held).forEach(function (b) { if (state.held[b] === id) delete state.held[b]; });
+  if (!was && id === 'everstone') state.stoneForm[hubPet] = getFormIndex(getSpecies(hubPet), getBuddyLevel(hubPet));          // an Everstone keeps the form it has now
   if (!was) state.held[hubPet] = id;
   soundClick();
   saveState();

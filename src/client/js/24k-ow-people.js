@@ -65,15 +65,8 @@ function renderTalk() {
     const qz = talk.quiz;
     document.getElementById('talk-q').innerHTML = qz.q.html;
     fillOptButtons(document.getElementById('talk-opts'), qz.q.opts, answerSignQuiz);
-    document.getElementById('talk-note').innerText = qz.story || qz.puzzle ? 'Question ' + qz.round + ' of ' + qz.rounds + '. A wrong answer is free: try again!' : 'A math sign for practice. A wrong answer is free: try again!';
+    document.getElementById('talk-note').innerText = qz.story ? 'Question ' + qz.round + ' of ' + qz.rounds + '. A wrong answer is free: try again!' : 'A math sign for practice. A wrong answer is free: try again!';
   }
-}
-// Gold's gym puzzles let you walk past some of the trainers: solve the gym's riddle (three questions, a wrong answer is free) and the first trainer lets you through.
-function owGymPuzzle(id, name) {
-  let solved = false;
-  talk = { name: name, art: worldSprite('t-gym-door'), lines: ['Solve the gym puzzle: answer ' + ECON.map.puzzleRounds + ' questions and the first trainer lets you pass.'], i: 0, onClose: function () { if (solved) abStartGym(id, true); },
-    quiz: { id: id + '-puzzle', q: makeMcq({ count: 3 }), done: false, story: '', puzzle: true, round: 1, rounds: ECON.map.puzzleRounds, onSolved: function () { solved = true; } } };
-  showModal('talk-modal', renderTalk);
 }
 function talkChoose(i) { const c = talk && talk.choices && talk.choices[i]; if (c) c.run(); }
 function talkNext() {
@@ -107,7 +100,6 @@ function answerSignQuiz(value) {
   soundCorrect(1);
   Array.prototype.forEach.call(document.querySelectorAll('#talk-opts button'), function (b) { b.disabled = true; });
   if (qz.story) { owStoryReward(qz.story); note.innerText = 'All fixed! Thank you!'; return; }
-  if (qz.onSolved) { qz.onSolved(); note.innerText = 'Solved! Close this to go in.'; return; }
   note.innerText = 'Correct! Well done.';                           // a math sign is practice: Gold pays nothing for a sign
 }
 
@@ -167,9 +159,11 @@ function owEnterGym(id) {
   if (!regionUnlocked(r)) { say(['The gym leader smiles: "Come back a little stronger!"', 'Your team is level ' + journeyLevel() + ' and this gym opens at level ' + regionLevel(r) + '. Train in the tall grass and visit again.']); return; }
   const have = hasBadge(id);
   if (have && !isChampion()) { say(['You already have the ' + r.name + ' Badge. Well done!', 'Champions can come back for rematches.']); return; }
-  const go = function (skip) { talk.onClose = null; closeTalk(); abStartGym(id, skip === true); };
+  const go = function () { talk.onClose = null; closeTalk(); abStartGym(id); };
   if (have) { say(['Welcome back, Champion! Want a rematch? The trainers and the leader are stronger now.'], [{ label: 'Rematch!', run: go }]); return; }
-  say(['This is the ' + r.name + ' Gym. Beat ' + ECON.map.trainers + ' trainers, then the gym leader, to win a badge.', 'Losing costs nothing, and you can leave any time. Ready?'], [{ label: 'Enter the gym', run: function () { go(false); } }, { label: 'Solve the gym puzzle', run: function () { owGymPuzzle(id, name); } }]);
+  const door = OW_MAPS[state.overworld.map].warps.find(function (w) { return w.gate && w.to === id + '-gym'; });          // a gym with an inside: walk in and meet its trainers and its puzzle
+  const enter = function () { talk.onClose = null; closeTalk(); if (!door) { abStartGym(id); return; } const o = state.overworld; o.map = door.to; o.x = door.tx; o.y = door.ty; o.face = 'up'; owTrail = null; saveState(); renderOverworld(); };
+  say(['This is the ' + r.name + ' Gym. Find your way past its trainers to the gym leader, to win a badge.', 'Losing costs nothing, and you can leave any time. Ready?'], [{ label: 'Enter the gym', run: enter }]);
 }
 
 // ----- a gift: the person gives a key item the first time (Fisher Gil's rod), and says something else after -----

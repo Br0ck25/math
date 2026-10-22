@@ -56,6 +56,7 @@ function getFormIndex(sp, level) {
   if (idx < 1 && sp.forms.length > 1 && STONE_EVOLVERS.indexOf(sp.id) !== -1 && state.stoned && state.stoned[sp.id]) idx = 1;          // an Evolution Stone: the first evolution at once
   if (idx < 1 && sp.forms.length > 1 && HAPPY_EVOLVERS.indexOf(sp.id) !== -1 && happyOf(sp.id) >= HAPPY_EVO_AT) idx = 1;
   if (idx > 1 && TRADE_EVOLVERS.indexOf(sp.id) !== -1 && !(state.tradedUp && state.tradedUp[sp.id])) idx = 1;
+  if (state.held && state.held[sp.id] === 'everstone' && state.stoneForm && state.stoneForm[sp.id] !== undefined) idx = Math.min(idx, state.stoneForm[sp.id]);          // an Everstone holds the form
   return idx;
 }
 
