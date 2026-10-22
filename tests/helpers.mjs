@@ -38,7 +38,7 @@ export const launch = () => chromium.launch();
 // A fresh browser context whose network goes straight to the built Worker (so real headers, incl. the CSP, apply).
 // opts.fast shrinks every setTimeout 20x so animations and pauses do not slow the tests down.
 export async function openGame(browser, worker, env, opts = {}) {
-  const context = await browser.newContext({ viewport: opts.viewport || { width: 420, height: 800 }, serviceWorkers: 'block' });
+  const context = await browser.newContext({ viewport: opts.viewport || { width: 420, height: 800 }, serviceWorkers: 'block', ...(opts.touch ? { hasTouch: true, isMobile: true } : {}) });      // opts.touch: a phone, so (pointer: coarse) applies
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));

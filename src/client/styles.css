@@ -875,13 +875,22 @@ body.trivia .math-only { display: none; }
 #overworld-modal .ow-content { width: 100%; max-width: 720px; height: 100%; max-height: none; margin: 0 auto; border: 0; border-radius: 0; box-shadow: none; display: flex; flex-direction: column; padding: max(8px, env(safe-area-inset-top, 0px)) 8px max(8px, env(safe-area-inset-bottom, 0px)); overflow: hidden; }
 .ow-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; }
 @media (pointer: coarse) {
-#overworld-modal .ow-pad { display: none; }
-
-
- 
-
-
+/* Like an old Game Boy: see-through arrows at the bottom left, A and B at the bottom right (the Menu has Team and Bag) */
+#overworld-modal .ow-content { position: relative; }
+#overworld-modal .ow-pad { display: grid; position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); grid-template-columns: repeat(3, 62px); grid-template-rows: repeat(3, 62px); gap: 0; margin: 0; z-index: 5; pointer-events: none; }
+#overworld-modal .ow-pad .ow-side, #overworld-modal .ow-hint { display: none; }
+#overworld-modal .ow-pad .ow-key { pointer-events: auto; min-width: 0; min-height: 0; opacity: 0.55; background: rgba(15, 23, 42, 0.35); border-color: rgba(255, 255, 255, 0.55); border-radius: 14px; user-select: none; -webkit-user-select: none; }
+#overworld-modal .ow-pad .ow-key:active { opacity: 0.9; background: rgba(34, 197, 94, 0.5); }
+#overworld-modal .ow-pad .ow-key.up { grid-column: 2; grid-row: 1; }
+#overworld-modal .ow-pad .ow-key.left { grid-column: 1; grid-row: 2; }
+#overworld-modal .ow-pad .ow-key.right { grid-column: 3; grid-row: 2; }
+#overworld-modal .ow-pad .ow-key.down { grid-column: 2; grid-row: 3; }
+#overworld-modal .ow-ab { display: flex; position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: max(26px, env(safe-area-inset-bottom, 0px)); gap: 14px; align-items: flex-end; z-index: 5; pointer-events: none; }
+#overworld-modal .ow-btn { pointer-events: auto; width: 68px; height: 68px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.6); background: rgba(15, 23, 42, 0.4); color: #fff; font-weight: 900; font-size: 1.4rem; opacity: 0.6; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: pointer; }
+#overworld-modal .ow-btn.a { margin-bottom: 30px; }
+#overworld-modal .ow-btn:active { opacity: 0.95; background: rgba(34, 197, 94, 0.55); }
 }
+@media (pointer: fine) { #overworld-modal .ow-ab { display: none; } }
 @media (pointer: fine) {
 #overworld-modal .ow-hint { display: block; }
 
@@ -984,3 +993,15 @@ body.trivia .math-only { display: none; }
 @keyframes abArrowUp { 0% { opacity: 0; transform: translateY(70%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-80%); } }
 @keyframes abArrowDown { 0% { opacity: 0; transform: translateY(-70%); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(80%); } }
 @keyframes abSmoke { 0% { opacity: 0; transform: scale(0.3); } 35% { opacity: 0.95; } 100% { opacity: 0; transform: scale(1.5) translateY(-12%); } }
+
+/* Ground details on the map (owCellLook in 24g-ow-engine.js): a worn edge on roads, a bright shore on ponds, a flower or a tuft on plain grass */
+.ow-cell { position: relative; --ed: rgba(120, 92, 52, 0.45); }
+.ow-cell.sh { --ed: rgba(235, 248, 255, 0.75); }
+.ow-cell[class*="ed-"]::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(var(--en, transparent), var(--en, transparent)) 0 0 / 100% 3px no-repeat, linear-gradient(var(--es, transparent), var(--es, transparent)) 0 100% / 100% 3px no-repeat,
+    linear-gradient(var(--ew, transparent), var(--ew, transparent)) 0 0 / 3px 100% no-repeat, linear-gradient(var(--ee, transparent), var(--ee, transparent)) 100% 0 / 3px 100% no-repeat; }
+.ow-cell.ed-n { --en: var(--ed); } .ow-cell.ed-e { --ee: var(--ed); } .ow-cell.ed-s { --es: var(--ed); } .ow-cell.ed-w { --ew: var(--ed); }
+.ow-cell.gv1::after, .ow-cell.gv2::after, .ow-cell.gv3::after { content: ''; position: absolute; pointer-events: none; }
+.ow-cell.gv1::after { left: 22%; top: 58%; width: 14%; height: 14%; border-radius: 50%; background: #fff7ae; box-shadow: 0 0 0 2px #f9a8d4 inset, 14px -9px 0 -1px #fff, -4px -12px 0 -2px #fde68a; }
+.ow-cell.gv2::after { left: 52%; top: 40%; width: 10%; height: 26%; border-radius: 3px 3px 0 0; background: rgba(34, 120, 50, 0.7); box-shadow: -8px 6px 0 rgba(34, 120, 50, 0.7), 8px 8px 0 rgba(34, 120, 50, 0.7); }
+.ow-cell.gv3::after { left: 30%; top: 62%; width: 22%; height: 16%; border-radius: 50% 50% 40% 40%; background: rgba(148, 163, 184, 0.75); box-shadow: 1px 2px 0 rgba(71, 85, 105, 0.55); }

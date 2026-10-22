@@ -34,6 +34,10 @@
         <button type="button" class="ow-key down" aria-label="Walk down" onpointerdown="owHold('down')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('down')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
         <button type="button" class="ow-key right" aria-label="Walk right" onpointerdown="owHold('right')" onpointerup="owRelease()" onpointercancel="owRelease()" onpointerleave="owRelease()" onclick="owClick('right')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5l8 13H4z"/></svg></button>
       </div>
+      <div class="ow-ab" aria-label="Action buttons">
+        <button type="button" class="ow-btn b" aria-label="Menu (B)" onclick="openMenu()">B</button>
+        <button type="button" class="ow-btn a" aria-label="Talk or read (A)" onclick="owInteractFacing()">A</button>
+      </div>
       <p class="ow-hint">Touch and hold the map to walk, and tap your hero to talk. Arrow keys work too.</p>
     </div>
   </div>

@@ -1402,3 +1402,55 @@ test('walkable gyms: every gym has an inside with its trainers and leader, three
   assert.deepEqual(r, { count: true, styles: r.styles, shut: true, seen: true, locked: true, open: true, leaderOnly: true, exit: true, gate: true });
   assert.ok(r.styles >= 2, 'some gyms have a door and some do not');
 });
+
+test('a side path is walked into, not jumped to: past the gap you see the side path (its colours and tiles) lined up, and the way back shows the route', async () => {
+  const r = await ev(() => {
+    const out = {}, route = OW_MAPS.route1, w = route.warps.find((x) => /-side$/.test(x.to)), side = OW_MAPS[w.to], back = side.warps[0];
+    const east = w.x === 13, dx = east ? 1 : -1;
+    const b = owBeyond(route, w.x + dx, w.y);                                      // the cell just past the gap
+    out.ahead = !!b && b.map === side && b.x === w.tx + dx && b.y === w.ty;
+    const far = owBeyond(route, w.x + dx * 2, w.y);
+    out.deeper = !!far && far.map === side && far.x === w.tx + dx * 2;
+    out.walls = owBeyond(route, w.x + dx, w.y + 9) === null;                      // beside the gap, past the side path's own edge, the wood goes on
+    const bb = owBeyond(side, back.x - dx, back.y);                                 // from the side path, the cell past its gap shows the route
+    out.back = !!bb && bb.map === route && bb.y === back.ty && bb.x === back.tx - dx;
+    out.inside = owBeyond(route, 5, 5) === null;
+    return out;
+  });
+  assert.deepEqual(r, { ahead: true, deeper: true, walls: true, back: true, inside: true });
+});
+
+test('on a phone the map has Game Boy style controls: see-through arrows at the bottom left, A and B at the bottom right, and A talks to what the hero faces', async () => {
+  const { page: ph, errors: pe } = await openGame(browser, worker, { MATH_KV: fakeKV() }, { fast: true, wildStart: true, touch: true, viewport: { width: 390, height: 780 } });
+  await ph.evaluate(() => { state.hero.made = true; });
+  for (const [w, h] of [[390, 780], [320, 568]]) {
+    await ph.setViewportSize({ width: w, height: h });
+    const hero = await ph.evaluate(() => { state.overworld.map = 'hollow-house'; state.overworld.x = 3; state.overworld.y = 3; state.overworld.face = 'left'; openAdventure(); renderOverworld(); return true; });
+    const r = await ph.evaluate(() => {
+      const box = (s) => { const e = document.querySelector(s), b = e.getBoundingClientRect(), cs = getComputedStyle(e); return { l: b.left, r: b.right, t: b.top, b: b.bottom, op: +cs.opacity, shown: cs.display !== 'none' }; };
+      const up = box('#overworld-modal .ow-key.up'), left = box('#overworld-modal .ow-key.left'), down = box('#overworld-modal .ow-key.down'), a = box('#overworld-modal .ow-btn.a'), bb = box('#overworld-modal .ow-btn.b');
+      return { arrows: up.shown && left.l < innerWidth / 2 && down.b <= innerHeight && up.op < 1 && left.op < 1, ab: a.shown && bb.shown && a.l > innerWidth / 2 && bb.l > innerWidth * 0.4 && a.r <= innerWidth && a.b <= innerHeight, order: left.l < up.l + 1 && bb.l < a.l && a.t < bb.t, noSide: !document.querySelector('#overworld-modal .ow-key.team') || getComputedStyle(document.querySelector('#overworld-modal .ow-key.team')).display === 'none', noScroll: document.documentElement.scrollWidth <= innerWidth };
+    });
+    assert.deepEqual(r, { arrows: true, ab: true, order: true, noSide: true, noScroll: true }, w + 'x' + h);
+  }
+  await ph.setViewportSize({ width: 390, height: 780 });
+  await ph.evaluate(() => { state.overworld.map = 'hollow-house'; state.overworld.x = 3; state.overworld.y = 3; state.overworld.face = 'left'; renderOverworld(); });
+  await ph.click('#overworld-modal .ow-btn.a');
+  assert.equal(await ph.evaluate(() => document.getElementById('talk-modal').style.display), 'flex');
+  assert.deepEqual(pe, []);
+});
+
+test('the ground has details: roads get a worn edge where they meet grass, ponds a shore, plain grass a flower, tuft or stone here and there, the same every time, and rooms none', async () => {
+  const r = await ev(() => {
+    const m = OW_MAPS.meadow, out = { road: false, shore: false, deco: 0, same: true, room: true };
+    for (let y = 0; y < m.rows.length; y++) for (let x = 0; x < m.rows[0].length; x++) {
+      const t = owTileAt(m, x, y), c = owCellLook(m, x, y, t);
+      if (t.t === 't-path' && /ed-/.test(c)) out.road = true;
+      if (t.t === 't-water' && / sh/.test(c)) out.shore = true;
+      if (/gv\d/.test(c)) { out.deco++; if (owCellLook(m, x, y, t) !== c) out.same = false; }
+    }
+    const room = OW_MAPS['meadow-house']; out.room = owCellLook(room, 3, 3, owTileAt(room, 3, 3)) === '';
+    return out;
+  });
+  assert.ok(r.road && r.shore && r.same && r.room && r.deco >= 5, JSON.stringify(r));
+});

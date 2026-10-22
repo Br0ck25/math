@@ -78,7 +78,7 @@ function owOpen() {
 function owGrid() {
   const stage = document.getElementById('ow-stage'), w = (stage && stage.clientWidth) || window.innerWidth - 16, h = (stage && stage.clientHeight) || Math.round(window.innerHeight * 0.55);
   const odd = function (n) { return n % 2 ? n : n - 1; };
-  const cols = clamp(odd(Math.round(w / 46)), 7, 15), tile = w / cols;
+  const cols = clamp(odd(Math.round(w / 38)), 7, 15), tile = w / cols;                  // about ten tiles across a phone, as Gold shows
   return { cols: cols, rows: Math.max(5, odd(Math.floor(h / tile))), tile: tile };
 }
 
@@ -90,14 +90,19 @@ function owFollowerHtml() {
   const art = BUDDY_ART[state.activePet];
   return art ? '<img class="ow-buddy" alt="" src="' + art + '">' : worldSprite('o-paw', 'ow-buddy');
 }
-// What lies past the top or bottom edge of a map: the tile of the neighbour that the edge warp leads to, lined up so that stepping through the warp does not move the view
+// What lies past the edge of a map (top, bottom, or beside a side path's gap): the tile of the neighbour that the edge warp leads to, lined up so that stepping through the warp does not move the view
 // (route y -1 is the town's row ty - 1). Returns the tile and the neighbour's colours, or null when the edge has no way on.
 function owBeyond(map, x, y) {
   if (map.room) return null;                                                                              // inside a building nothing shows past the wall
-  const n = map.rows.length, edge = y < 0 ? 0 : n - 1, w = (y < 0 || y >= n) && map.warps.filter(function (p) { return p.y === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
+  const n = map.rows.length, wd = map.rows[0].length, sideways = y >= 0 && y < n && (x < 0 || x >= wd), edge = sideways ? (x < 0 ? 0 : wd - 1) : (y < 0 ? 0 : n - 1);
+  if (!sideways && !(y < 0 || y >= n)) return null;
+  // the edge warp nearest to this cell: along the top and bottom edge by column, along the side edges (a side path's gap) by row
+  const w = map.warps.filter(function (p) { return (sideways ? p.x : p.y) === edge && OW_MAPS[p.to]; }).sort(function (a, b) { return sideways ? Math.abs(a.y - y) - Math.abs(b.y - y) : Math.abs(a.x - x) - Math.abs(b.x - x); })[0];
   if (!w) return null;
-  const nm = OW_MAPS[w.to], nx = clamp(x + w.tx - w.x, 0, nm.rows[0].length - 1), ny = clamp(w.ty + (y - w.y), 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
-  return t ? { t: t, style: owPaletteCss(nm.palette), map: nm, x: x + w.tx - w.x, y: w.ty + (y - w.y) } : null;
+  const nm = OW_MAPS[w.to], rx = x + w.tx - w.x, ry = w.ty + (y - w.y);
+  if (sideways && (ry < 0 || ry >= nm.rows.length)) return null;                                         // beside a side path's gap, past the neighbour's own edge: the wood goes on
+  const nx = clamp(rx, 0, nm.rows[0].length - 1), ny = clamp(ry, 0, nm.rows.length - 1), t = owTileAt(nm, nx, ny);
+  return t ? { t: t, style: owPaletteCss(nm.palette), map: nm, x: rx, y: ry } : null;
 }
 function owPaletteCss(palette) { return Object.keys(palette || {}).map(function (k) { return '--w-' + k.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase(); }) + ':' + palette[k]; }).join(';'); }
 // Berry bushes (a pickup whose id ends in -berries) grow back each new day, like Gold's fruit trees: on a new day their ids leave the found list.
@@ -107,6 +112,17 @@ function owFruitDay() {
   const bushes = owIds('pickup').filter(function (id) { return /-(berries|apricorns)$/.test(id); });
   o.found = o.found.filter(function (id) { return bushes.indexOf(id) === -1; });
   o.fruitDay = today;
+}
+// Small touches that make the ground look lived in: roads and sand get a worn edge where they meet grass, ponds a bright shore, and plain grass a flower or a tuft here and there (fixed by place, so
+// nothing flickers). Classes only; the pictures are CSS (.ow-cell.ed-*, .gv*).
+const OW_WALK_GROUND = ['t-path', 't-dirt', 't-sand'];
+function owCellLook(map, x, y, tile) {
+  if (!tile || map.room) return '';
+  const kind = OW_WALK_GROUND.indexOf(tile.t) !== -1 ? 'ground' : tile.t === 't-water' ? 'water' : tile.t === 't-grass' ? 'grass' : '';
+  if (!kind) return '';
+  if (kind === 'grass') { const h = (x * 73856093 ^ y * 19349663 ^ map.id.length * 83492791) >>> 0, k = h % 11; return k < 3 ? ' gv' + (k + 1) : ''; }
+  const same = function (dx, dy) { const n = map.rows[y + dy] && owTileAt(map, x + dx, y + dy); return !n || (kind === 'ground' ? OW_WALK_GROUND.indexOf(n.t) !== -1 || /door|gym|mat|bridge|rug/.test(n.t) : n.t === 't-water' || n.t === 't-bridge'); };
+  return (same(0, -1) ? '' : ' ed-n') + (same(1, 0) ? '' : ' ed-e') + (same(0, 1) ? '' : ' ed-s') + (same(-1, 0) ? '' : ' ed-w') + (kind === 'water' ? ' sh' : '');
 }
 function renderOverworld() {
   owFruitDay();
@@ -119,7 +135,7 @@ function renderOverworld() {
       const x = o.x - hx + vx, y = o.y - hy + vy;
       const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
       const shown = t || (beyond && beyond.t) || (map.room ? null : owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1)));      // a room is surrounded by black, as in Gold
-      h += '<span class="ow-cell"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
+      h += '<span class="ow-cell' + owCellLook(map, x, y, shown) + '"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
       if (beyond) farActors.push([beyond, vx, vy]);
     }
   }
