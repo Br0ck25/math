@@ -1302,6 +1302,20 @@ test('Tide Bay is the hub city (Gold\'s Goldenrod): 28 tall, a five-floor Dept. 
   assert.deepEqual(r, { tall: true, plan: 'harbour', floors: true, stairs: true, kinds: ['clerk', 'rater', 'clerk'], doors: [true, true], back: true });
 });
 
+test('Sprout Tower (three floors, east of Meadow Town) and Tin Tower (five floors, west of Leaf Grove): a courtyard, stairs between the floors, a sage on each, and an old stone on the top floor that asks questions in a row and pays a stone once', async () => {
+  const r = await ev(() => {
+    const out = {};
+    [['sprout', 3, 'meadow', 15], ['tin', 5, 'grove', 0]].forEach(([id, n, host, edge]) => {
+      const g = OW_MAPS[id + '-grounds'], top = OW_MAPS[id + '-' + n];
+      out[id] = [!!g, OW_MAPS[host].warps.some((w) => w.to === id + '-grounds' && w.x === edge), g.warps[0].to === id + '-1' && g.rows[g.warps[0].y].charAt(g.warps[0].x) === 'D',
+        [...Array(n).keys()].every((k) => !!OW_MAPS[id + '-' + (k + 1)] && OW_MAPS[id + '-' + (k + 1)].npcs.length === 1), [...Array(n - 1).keys()].every((k) => OW_MAPS[id + '-' + (k + 1)].warps.some((w) => w.to === id + '-' + (k + 2))),
+        !!top.signs['5,6'] && top.signs['5,6'].quiz === true && top.signs['5,6'].rounds === (n === 3 ? 3 : 5) && OW_STORY.includes(id + '-sage') && OW_STORY_ITEMS[id + '-sage'] === 'stone', gizmoNodeOf(id + '-grounds').id === host];
+    });
+    return out;
+  });
+  assert.deepEqual(r, { sprout: [true, true, true, true, true, true, true], tin: [true, true, true, true, true, true, true] });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

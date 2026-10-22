@@ -5,6 +5,14 @@
 // Joins `host` (its east edge when hostEdge is 15, its west edge when 0) at hostRow to `place` (the opposite edge) at placeRow.
 function owJoin(host, hostEdge, hostRow, place, placeRow) {
   if (!owOpenGap(host, hostEdge, hostRow)) return false;
+  const hm = OW_MAPS[host];                                                                            // a walker standing in the way in is moved off it (its home moves too)
+  (hm.npcs || []).forEach(function (n) {
+    if (Math.abs(n.y - hostRow) > 1 || (hostEdge === 15 ? n.x < 11 : n.x > 4)) return;
+    for (let d = 3; d <= 8; d++) [1, -1].forEach(function (sgn) {
+      const y = hostRow + sgn * d;
+      if (Math.abs(n.y - hostRow) <= 1 && hm.rows[y] && ',*'.indexOf(hm.rows[y].charAt(n.x)) !== -1 && !owNpcAt(hm, n.x, y)) { n.y = y; if (n.home) n.home = { x: n.x, y: y }; }
+    });
+  });
   const P = OW_MAPS[place], placeEdge = hostEdge === 15 ? 0 : P.rows[0].length - 1;
   owSetTile(place, placeEdge, placeRow, '.');
   OW_MAPS[host].warps.push({ x: hostEdge, y: hostRow, to: place, tx: placeEdge === 0 ? 1 : placeEdge - 1, ty: placeRow });
@@ -301,3 +309,50 @@ owJoin('ember', 15, 14, 'slowpoke-well', 7);
   owSetTile('tide', door[0], door[1], 'D');
   T.warps.push({ x: door[0], y: door[1], to: 'tide-underground', tx: OW_MAPS['tide-underground'].warps[0].x, ty: OW_MAPS['tide-underground'].warps[0].y - 1 });
 })();
+
+// Towers (Gold's Sprout Tower and Tin Tower): a courtyard with the tower in it, joined to a town by a gap in its edge, and a tower of floors joined by stairs. A sage waits on every floor and the
+// top one has an old stone sign that asks questions in a row and pays an Evolution Stone once.
+const OW_TOWER_GROUNDS = [
+  'TTTTTTTTTTTTTTTT',
+  'T,,,,RRRRRR,,,,T',
+  'T,TT,RRRRRR,,T,T',
+  'T,,,,WWWDWW,*,,T',
+  'T,,,,,,,.,,,,,,T',
+  'T,,*,,,,.,,~~~,T',
+  'T,,,,s*,.,,~~~,T',
+  'T,,,,,,,.,,,,,,T',
+  '..........,,,,*T',
+  'T,TT,,,,,,,,TT,T',
+  'T,,,,*,,,,,,,,,T',
+  'TTTTTTTTTTTTTTTT'
+];
+function owTower(d) {
+  const mirror = d.hostEdge === 0, gid = d.id + '-grounds', H = OW_MAPS[d.host], doorX = mirror ? 7 : 8, rows = OW_TOWER_GROUNDS.map(function (r) { return mirror ? r.split('').reverse().join('') : r; });
+  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
+  OW_MAPS[gid] = { id: gid, name: d.name + ' grounds', region: d.region, start: { x: mirror ? 14 : 1, y: 8 }, palette: H.palette, annex: { near: d.host }, rows: rows,
+    warps: [{ x: doorX, y: 3, to: d.id + '-1', tx: 5, ty: 8 }],
+    npcs: [{ id: d.id + '-keeper', name: d.keeper, x: mirror ? 10 : 5, y: 5, face: 'down', look: OW_CHERRY_LOOK(d.look), lines: d.groundsLines }],
+    objects: [{ id: d.id + '-grounds-gems', type: 'pickup', x: mirror ? 5 : 10, y: 10, give: 'gems' }], trees: {}, signs: {} };
+  OW_MAPS[gid].signs[(mirror ? 10 : 5) + ',6'] = d.sign;
+  for (let n = 1; n <= d.floors; n++) {
+    const id = d.id + '-' + n, top = n === d.floors;
+    const m = owRoom(id, d.name + (top ? ', top' : ', floor ' + n), { to: gid, tx: doorX, ty: 4 }, [{ id: id + '-sage', name: d.sages[(n - 1) % d.sages.length], x: 4, y: 4, face: 'down', look: OW_CHERRY_LOOK(d.look + n), lines: d.floorLines[(n - 1) % d.floorLines.length] }],
+      n === 2 ? [{ id: id + '-gems', type: 'pickup', x: 9, y: 4, give: 'gems' }] : n === 3 ? [{ id: id + '-net', type: 'pickup', x: 2, y: 8, give: 'net' }] : [], stairs(!top, n > 1));
+    m.region = d.region; m.palette = H.palette; m.annex = { near: d.host }; m.warps = n === 1 ? m.warps : [];
+    if (!top) m.warps.push({ x: 6, y: 1, to: d.id + '-' + (n + 1), tx: 1, ty: 2 });
+    if (n > 1) m.warps.push({ x: 1, y: 1, to: d.id + '-' + (n - 1), tx: 6, ty: 2 });
+    if (top) { Object.assign(m.npcs[0], { kind: 'trainer', x: 6, y: 2, face: 'left', win: d.win }); OW_TEAMS[id + '-sage'] = d.team; }
+    if (top) { m.rows[6] = m.rows[6].slice(0, 5) + 's' + m.rows[6].slice(6); m.signs['5,6'] = { id: d.id + '-quiz', text: d.quizText, quiz: true, rounds: d.rounds, story: d.id + '-sage', after: id + '-sage', locked: 'The elder beside the stone watches you. Beat them first!' }; }
+    OW_MAPS[id] = m;
+  }
+  OW_STORY.push(d.id + '-sage'); OW_STORY_ITEMS[d.id + '-sage'] = 'stone';
+  return owJoin(d.host, d.hostEdge, d.hostRow, gid, 8);
+}
+[{ id: 'sprout', name: 'Sprout Tower', host: 'meadow', hostEdge: 15, hostRow: 14, region: 'meadow', floors: 3, keeper: 'Monk Sen', look: 2, rounds: 3, team: [['hedwig', 14], ['bunny', 13]], win: ['A fine battle. The stone is yours to try.'],
+  groundsLines: ['The tower sways in the wind, they say. Come in and see for yourself.', 'Each floor has a sage. The top one has a puzzle.'], sign: 'Sprout Tower. Three floors of quiet. Visitors welcome.',
+  sages: ['Sage Bo', 'Sage Wen', 'Elder Li'], floorLines: [['Welcome. Walk softly on the stairs.'], ['The tower sways a little in the wind. Do not be alarmed.'], ['Welcome to the top. The old stone beside me asks questions. Three right in a row and it gives up a gift.']],
+  quizText: 'An old stone with numbers on it. Answer three questions in a row and it gives up a gift.' },
+ { id: 'tin', name: 'Tin Tower', host: 'grove', hostEdge: 0, hostRow: 20, region: 'grove', floors: 5, keeper: 'Monk Rei', look: 4, rounds: 5, team: [['phoenix', 32], ['pegasus', 31], ['griffin', 32]], win: ['Well fought. Go on, try the stone.'],
+  groundsLines: ['The Tin Tower rises five floors. The view from the top is worth every stair.', 'Sages watch over each floor.'], sign: 'Tin Tower. Five floors. Mind the stairs.',
+  sages: ['Sage Hu', 'Sage Mei', 'Sage Tao', 'Sage Ren', 'Elder Quan'], floorLines: [['A long climb ahead. Rest when you need to.'], ['Every floor has its own quiet.'], ['Halfway. The tower is older than the town.'], ['Nearly there. One more flight.'], ['The top! The old stone beside me asks five questions in a row. It is a hard one, but the gift is good.']],
+  quizText: 'An old stone with numbers on it. Answer five questions in a row and it gives up a gift.' }].forEach(owTower);

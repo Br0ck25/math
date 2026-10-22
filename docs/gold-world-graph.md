@@ -7,12 +7,12 @@ The aim: the same layout and flow as Gold's Johto (the lettered key on the Johto
 |---|---|---|
 | New Bark Town (A) | Cozy Hollow | done (start town) |
 | Route 29 / Cherrygrove (B, C) / Routes 30, 31 (D, E) | Route 1 (one road) | Cherrygrove done (village east of Cozy Hollow, `24vs-ow-places.js`); two more routes to do |
-| Violet City, Sprout Tower (F) | Meadow Town | town done; tower to do |
+| Violet City, Sprout Tower (F) | Meadow Town | town done; Sprout Tower done (three floors) |
 | Route 32, Ruins of Alph, Union Cave (G, H, I) | Route 2 (Ember road) | Ruins of Alph done (courtyard and chamber, west of Ember Hills); its puzzle and a Union-Cave link to do |
 | Azalea Town, Slowpoke Well, Ilex Forest (J, K) | Ember Hills; Leaf Grove's road is already an Ilex-style maze | town done; Slowpoke Well done |
 | Route 34, Goldenrod City, Radio Tower (L, M) | Tide Bay (the hub city: 28 tall, five-floor Dept. Store, Underground); Spark City has the Radio Tower | hub city done (width stays 16) |
 | Routes 35 to 37, National Park (N, O, P, Q) | Route 4; the Park beside Meadow Town | Park done; Route 36 tree to do |
-| Ecruteak City, Tin and Burned Towers (R) | Leaf Grove | town done; towers to do |
+| Ecruteak City, Tin and Burned Towers (R) | Leaf Grove | town done; Tin Tower done (five floors) |
 | Routes 38 and 39, Olivine, Lighthouse (S, T, U) | Volt Valley; the Lighthouse is in Tide Bay | to move |
 | Routes 40 and 41, Whirl Islands, Cianwood (V, W, X, Y) | Gloom Marsh and the Open Seas | Open Seas and the Whirl Islands (five islets, surfers only) done |
 | Route 42, Mt. Mortar, Mahogany (Z, a, b) | Mystic Peak; Mortar Pass link road | link done; cave to do |
@@ -30,6 +30,6 @@ Gold's loops done so far: Violet to Ecruteak (Route 36), Ecruteak to Mahogany (R
 1. **Graph and map (done this pass):** the Gizmo map is laid out like Johto's key; the loops above exist as roads.
 2. **Small places done:** Cherrygrove, Lake of Rage, Ruins of Alph, the Whirl Islands, Dark Cave (two mouths on the road home from Skyreach, a boulder in a side branch), Union Cave (two mouths on Route 2), the Dragon's Den and the Slowpoke Well (lit caverns with a pool and a bridge). The Ruins quiz stones already live in the route caves. Still to do: the red fish at the Lake of Rage, sleeping buddies in the Well. Each is a hand-drawn map in `24va-` or a new file.
 3. **The hub city (done except width):** Tide Bay is 28 tall with a five-floor Dept. Store and an Underground; it stays 16 wide because the edge gaps and side games are fixed to that width.
-4. **Towers:** Sprout Tower and the Tin Tower as multi-floor climbs.
+4. **Towers (done):** Sprout Tower (three floors, east of Meadow Town) and Tin Tower (five floors, west of Leaf Grove), each with a courtyard, a sage per floor, an elder to beat on the top floor and a quiz stone beside them that pays an Evolution Stone once. Leaf Grove is now 24 tall. Burned Tower is not built.
 5. **Per-route tricks:** the Sudowoodo tree, Route 29's night tree, toll gate, bug-catching park days.
 6. **Second journey on a Kanto-like graph:** ring with a central city.
