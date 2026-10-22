@@ -151,9 +151,10 @@ function owResizeRoute(L, n) {
 }
 OW_LANDS.forEach(function (L, i) {
   const m = OW_MAPS[L.routeIn]; let best = null;
-  for (let attempt = 0; attempt < 80 && (!best || best.score < 4); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
+  if (OW_HAND_ROUTES[L.routeIn]) best = owHandRoute(L, OW_HAND_ROUTES[L.routeIn]);
+  for (let attempt = 0; attempt < 80 && !best; attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
   if (!best) return;
-  owResizeRoute(L, best.n); m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length].name; m.house = best.house;
+  owResizeRoute(L, best.n); m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.hand = !!best.hand; m.theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length].name; m.house = best.house;
   m.npcs.push({ id: L.routeIn + '-swimmer', kind: 'trainer', name: 'Swimmer ' + OW_SIDE_FOLK_NAME(i), x: best.pond.x, y: best.pond.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });
   m.objects.push({ id: L.routeIn + '-islet', type: 'pickup', x: best.bridge.x, y: best.bridge.y, give: i % 2 ? 'net' : 'gems' });
 });

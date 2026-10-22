@@ -1217,6 +1217,14 @@ test('routes are of different lengths (24 to 36 tall): the way back, the start a
   assert.deepEqual([r.min, r.max, r.kinds >= 4, r.bad], [24, 36, true, []]);
 });
 
+test('Leaf Grove\'s road is a hand-drawn forest maze: its own rows, every person and find of the route placed in it, a nook behind the charm gate, and it is 32 tall', async () => {
+  const r = await ev(() => {
+    const m = OW_MAPS.route5, spec = OW_HAND_ROUTES.route5, ids = m.npcs.map((n) => n.id), objs = m.objects.map((o) => o.id);
+    return { hand: m.hand, tall: m.rows.length, same: spec.rows.slice(0, 2).join() === m.rows.slice(0, 2).join(), people: ['route5-amp', 'route5-ohm', 'route5-swimmer'].every((i) => ids.includes(i)), finds: ['route5-ore', 'route5-nook-gem', 'route5-nook-net', 'route5-surf', 'route5-apricorns', 'route5-hidden', 'route5-islet'].every((i) => objs.includes(i)), gate: OW_GATE_CHARS[m.rows[16].charAt(10)] !== undefined, others: Object.keys(OW_HAND_ROUTES).length };
+  });
+  assert.deepEqual(r, { hand: true, tall: 32, same: true, people: true, finds: true, gate: true, others: 1 });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};
