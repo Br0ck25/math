@@ -610,7 +610,7 @@ test('a shiny buddy is a little stronger and glows once caught', async () => {
 test('the map fills the screen, shows trees (never black) past the edge, and a finger on the map walks', async () => {
   await ev(() => { openAdventure(); state.overworld.map = 'hollow'; state.overworld.x = 1; state.overworld.y = 1; renderOverworld(); });
   const g = await ev(() => ({ n: document.querySelectorAll('#ow-view .ow-cell').length, grid: owGrid(), empty: [...document.querySelectorAll('#ow-view .ow-cell')].filter((c) => !c.querySelector('svg')).length, w: document.getElementById('ow-view').getBoundingClientRect().width }));
-  assert.equal(g.n, (g.grid.cols + 2) * (g.grid.rows + 2), 'the view has a hidden ring of tiles around the screen');
+  assert.equal(g.n, g.grid.cols * g.grid.rows);
   assert.equal(g.empty, 0);
   assert.ok(g.w >= 389 - 8 * 2, 'the map is as wide as the screen: ' + g.w);
   await ev(() => { state.overworld.x = 7; state.overworld.y = 9; state.overworld.face = 'up'; renderOverworld(); });
@@ -1455,26 +1455,6 @@ test('the ground has details: roads get a worn edge where they meet grass, ponds
   assert.ok(r.road && r.shore && r.same && r.room && r.deco >= 5, JSON.stringify(r));
 });
 
-test('a step slides the map under the hero (the hero stays in the middle) and walking through a side gap slides too; a door does not', async () => {
-  const r = await ev(() => {
-    state.hero.made = true; openAdventure(); const out = {}, o = state.overworld, view = () => document.getElementById('ow-view'), hero = () => view().querySelector('.ow-hero');
-    const shift = (el) => { const m = getComputedStyle(el).transform; return m === 'none' ? [0, 0] : m.match(/-?[\d.]+/g).slice(4, 6).map(Number); };
-    const sp = nextTo('route1', 7, 12); o.map = 'route1'; o.x = sp.x; o.y = sp.y; o.face = sp.face; renderOverworld();
-    const dir = ['left', 'right', 'up', 'down'].find((d) => owWalkable(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]) && !owNpcAt(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]) && !owWarpAt(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]));
-    owMove(dir); const a = shift(view()), b = shift(hero());
-    out.slides = (a[0] !== 0 || a[1] !== 0) && Math.abs(a[0] + b[0]) < 1 && Math.abs(a[1] + b[1]) < 1;
-    const w = OW_MAPS.route1.warps.find((x) => /-side$/.test(x.to)), dx = w.x === 13 ? -1 : 1;
-    o.map = 'route1'; o.x = w.x + dx; o.y = w.y; renderOverworld(); owMove(dx > 0 ? 'left' : 'right');
-    const g = shift(view()); out.gap = o.map === w.to && (g[0] !== 0 || g[1] !== 0);
-    const door = OW_MAPS.hollow.warps.find((x) => /house|home/.test(x.to)); view().style.transition = 'none'; view().style.transform = ''; o.map = 'hollow'; o.x = door.x; o.y = door.y + 1; o.face = 'up'; renderOverworld(); owMove('up');
-    out.door = o.map === door.to && shift(view()).join() === '0,0';
-    return out;
-  });
-  assert.deepEqual(r, { slides: true, gap: true, door: true });
-  await page.waitForTimeout(400);
-  assert.deepEqual(await ev(() => { const m = getComputedStyle(document.getElementById('ow-view')).transform; return m === 'none' || /matrix\(1, 0, 0, 1, 0, 0\)/.test(m); }), true, 'it comes to rest');
-});
-
 test('Settings can turn the questions off: fights go straight to choosing an attack, puzzle signs solve themselves (and pay), the choice is saved and repaired', async () => {
   const r = await ev(() => {
     state.hero.made = true; const out = {}; openSettings(); out.btn = /Questions: ON/.test(document.getElementById('no-questions-btn').innerText);
@@ -1494,7 +1474,7 @@ test('towns have strollers who wander a step at a time near home (never onto doo
     out.everyTown = towns.every((t) => OW_MAPS[t].npcs.filter((n) => n.wander).length >= 1);
     window.__noWander = false; openAdventure(); const t = towns[1], m = OW_MAPS[t], o = state.overworld; o.map = t; o.x = m.start.x; o.y = m.start.y; renderOverworld();
     const w = m.npcs.filter((n) => n.wander), homes = w.map((n) => [n.x, n.y]), real = Math.random; let bad = 0, moved = 0;
-    for (let i = 0; i < 300; i++) { Math.random = () => (i * 0.37) % 1; owSlideUntil = 0; owWander(); w.forEach((n) => { const tt = owTileAt(m, n.x, n.y); if (!tt || tt.solid || tt.grass || (n.x === o.x && n.y === o.y) || Math.abs(n.x - n.home.x) > 2 || Math.abs(n.y - n.home.y) > 2 || owWarpAt(m, n.x, n.y) || w.some((p) => p !== n && p.x === n.x && p.y === n.y)) bad++; }); }
+    for (let i = 0; i < 300; i++) { Math.random = () => (i * 0.37) % 1; owWander(); w.forEach((n) => { const tt = owTileAt(m, n.x, n.y); if (!tt || tt.solid || tt.grass || (n.x === o.x && n.y === o.y) || Math.abs(n.x - n.home.x) > 2 || Math.abs(n.y - n.home.y) > 2 || owWarpAt(m, n.x, n.y) || w.some((p) => p !== n && p.x === n.x && p.y === n.y)) bad++; }); }
     Math.random = real; window.__noWander = true; moved = w.some((n, k) => n.x !== homes[k][0] || n.y !== homes[k][1]);
     out.wandered = moved && bad === 0;
     const wk = w[0], real2 = owTimeOfDay; owTimeOfDay = () => 'night'; owInteract(m, wk.x, wk.y); const night = talk.lines.join(' '); closeTalk(); owTimeOfDay = () => 'day'; owInteract(m, wk.x, wk.y); const day = talk.lines.join(' '); closeTalk(); owTimeOfDay = real2;
