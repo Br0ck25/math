@@ -89,9 +89,9 @@ function owPlaceMailboxes(town) {
   const m = OW_MAPS[town], houses = owTagBuildings(town);
   houses.forEach(function (d) {
     let x0 = d[0], x1 = d[0]; while ('WDGNK'.indexOf(m.rows[d[1]].charAt(x0 - 1)) !== -1) x0--; while ('WDGNK'.indexOf(m.rows[d[1]].charAt(x1 + 1)) !== -1) x1++;
-    [x0 - 1, x1 + 1].some(function (x) {
-      const y = d[1], row = m.rows[y], before = Object.keys(owReachSet(m)).length;
-      if (row.charAt(x) !== ',' || owNear(m, x, y, 0) || owByGate(m, x, y)) return false;
+    [[x0 - 1, d[1]], [x1 + 1, d[1]], [x0 - 1, d[1] - 1], [x1 + 1, d[1] - 1], [x0 - 1, d[1] + 1], [x1 + 1, d[1] + 1]].some(function (p) {
+      const x = p[0], y = p[1], row = m.rows[y], before = Object.keys(owReachSet(m)).length;
+      if (!row || row.charAt(x) !== ',' || owNear(m, x, y, 0) || owByGate(m, x, y)) return false;
       m.rows[y] = row.slice(0, x) + 'i' + row.slice(x + 1);
       if (Object.keys(owReachSet(m)).length === before - 1) return true;
       m.rows[y] = row; return false;

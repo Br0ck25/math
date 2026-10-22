@@ -165,7 +165,7 @@ test('Route 1 leads to Meadow Town, which is painted in its own colours, and bac
   await put('route1', 6, 1, 'up');
   await page.evaluate(() => owMove('up'));
   const o = await state_();
-  assert.deepEqual([o.map, o.x, o.y], ['meadow', 7, 14]);
+  assert.deepEqual([o.map, o.x, o.y], ['meadow', 7, await page.evaluate(() => OW_MAPS.meadow.rows.length - 2)], 'the road lands on the town\'s bottom gap, whatever its height');
   assert.equal(await page.evaluate(() => document.getElementById('ow-title').innerText), 'Meadow Town');
   assert.equal(await page.evaluate(() => document.getElementById('ow-view').style.getPropertyValue('--w-roof')), '#4F8FE0');
   await page.evaluate(() => { owMove('down'); });

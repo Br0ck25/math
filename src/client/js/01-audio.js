@@ -245,7 +245,7 @@ function bgmContext() {
     if (!m) return 'route';
     if (m.dark) return 'cave';
     if (m.room) return 'room';
-    return m.rows.length <= 20 && /^[a-z]+$/.test(m.id) && typeof owTowns === 'function' && owTowns().indexOf(m.id) !== -1 ? 'town' : 'route';
+    return typeof owTowns === 'function' && owTowns().indexOf(m.id) !== -1 ? 'town' : 'route';
   } catch (e) { return 'route'; }
 }
 function stepBgm() {

@@ -25,7 +25,7 @@ export const MAP = [
   [/js\/(01-|01b-|05-|06-|11-|17-|32-|34-|97-|97b-|97c-|97d-|97e-|98-|99-)/, ['speech', 'windows', 'adventure-boot']],
   [/scripts\/(build|lint)\.mjs|tests\/helpers\.mjs/, ['adventure-boot', 'server']],
   [/scripts\/art|art\//, ['art', 'art-generated']],
-  [/js\/24[g-z][a-z]?-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'adventure-battle', 'adventure-gold', 'art-world']],
+  [/js\/24[g-z][a-z]{0,2}-ow-/, ['overworld', 'adventure-boot', 'adventure-hero', 'adventure-towns', 'adventure-shops', 'adventure-trainers', 'adventure-gyms', 'adventure-gates', 'adventure-lands', 'adventure-story', 'adventure-gizmo', 'adventure-battle', 'adventure-gold', 'art-world']],
   [/js\/24f-ow-|scripts\/(make-)?world-art|art\/world/, ['art-world', 'overworld', 'adventure-hero', 'adventure-towns']]
 ];
 const FALLBACK = ['overworld', 'adventure-battle'];

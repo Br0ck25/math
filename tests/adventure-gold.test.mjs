@@ -870,7 +870,7 @@ test('a Max Revive wakes a resting buddy with all its HP', async () => {
   assert.equal(await ev(() => __down.hp === __down.max && __down.max > 0), true);
 });
 
-test('towns differ in height (16, 18 or 20), and the road into each still lands on its bottom gap and the way back leads to the route', async () => {
+test('towns differ in height (16 to 22), and the road into each still lands on its bottom gap and the way back leads to the route', async () => {
   const r = await ev(() => {
     const towns = OW_LANDS.map((L) => ({ L, m: OW_MAPS[L.town], route: OW_MAPS[L.routeIn] }));
     const heights = new Set(towns.map((t) => t.m.rows.length));
@@ -880,7 +880,8 @@ test('towns differ in height (16, 18 or 20), and the road into each still lands 
     });
     return { heights: [...heights].sort(), ok };
   });
-  assert.deepEqual(r, { heights: [16, 18, 20], ok: true });
+  assert.ok(r.heights.length >= 3 && r.heights[r.heights.length - 1] >= 22, 'the towns differ in height: ' + r.heights);
+  assert.equal(r.ok, true);
 });
 
 test('caves: most routes have a mouth in the trees leading to a dark two-floor cave with a hiker, a ladder and two finds; cave floor starts fights with the route\'s buddies', async () => {
@@ -1173,11 +1174,15 @@ test('gym skies: the Ember gym is under harsh sun and the Tide gym in rain (ever
   assert.deepEqual(r, { ember: 'sun', tide: 'rain', meadow: '', start: 'sun', again: 'sun' });
 });
 
-test('towns have more landscape: orchards, fenced paddocks and boulder fields appear among the leftover slots', async () => {
+test('each town is laid out its own way: terraces with a ledge, a harbour with a bridge, a plaza with fountains, a lake with a bridge and ring path, a wood, a park, a river with a bridge, and a village green for Meadow Town', async () => {
   const r = await ev(() => {
-    return OW_LANDS.filter((L) => OW_MAPS[L.town].rows.join('').includes('=')).length;      // no town had a fence before the paddock stamp
+    const towns = owTowns().filter((t) => t !== OW_START.map), styles = {}; towns.forEach((t) => { styles[OW_MAPS[t].plan] = (styles[OW_MAPS[t].plan] || 0) + 1; });
+    const has = (t, re) => re.test(OW_MAPS[t].rows.join(''));
+    const by = (style) => towns.filter((t) => OW_MAPS[t].plan === style);
+    return { kinds: Object.keys(styles).sort().join(), meadow: OW_MAPS.meadow.plan, planned: towns.every((t) => OW_MAPS[t].plan !== 'slots'), terrace: by('terrace').every((t) => has(t, /vvvv/)), harbour: by('harbour').every((t) => has(t, /~{3,}[\s\S]*B|B[\s\S]*~{3,}/) && OW_MAPS[t].rows.some((r) => /~~B+~~|BB/.test(r))), plaza: by('plaza').every((t) => has(t, /d{3}/) && has(t, /~~/)),
+      lake: by('lake').every((t) => OW_MAPS[t].rows.some((r) => /~{3,}B+~{3,}|~{3,}BB/.test(r))), river: by('river').every((t) => OW_MAPS[t].rows.some((r) => /B{2}/.test(r)) && has(t, /~~/)), tall: towns.filter((t) => OW_MAPS[t].rows.length >= 20).length >= 10 };
   });
-  assert.ok(r >= 2, 'fenced paddocks stand in several towns');
+  assert.deepEqual(r, { kinds: 'forest,green,harbour,lake,park,plaza,river,terrace', meadow: 'green', planned: true, terrace: true, harbour: true, plaza: true, lake: true, river: true, tall: true });
 });
 
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
