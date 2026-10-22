@@ -131,6 +131,7 @@ function owCellLook(map, x, y, tile) {
   const same = function (dx, dy) { const n = map.rows[y + dy] && owTileAt(map, x + dx, y + dy); return !n || (kind === 'ground' ? OW_WALK_GROUND.indexOf(n.t) !== -1 || /door|gym|mat|bridge|rug/.test(n.t) : n.t === 't-water' || n.t === 't-bridge'); };
   return (kind === 'water' ? ' wv' : '') + (same(0, -1) ? '' : ' ed-n') + (same(1, 0) ? '' : ' ed-e') + (same(0, 1) ? '' : ' ed-s') + (same(-1, 0) ? '' : ' ed-w') + (kind === 'water' ? ' sh' : '');
 }
+let owStepped = false;
 function renderOverworld() {
   owFruitDay();
   const o = state.overworld, map = OW_MAPS[o.map], g = owGrid(), hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
@@ -159,13 +160,14 @@ function renderOverworld() {
     if (npc && owNpcActive(npc)) h += owActorHtml('ow-npc', f[1], f[2], g, heroSprite(heroLookColors(npc.look), npc.face, 0));
     else if (pick) h += owActorHtml('ow-pickup', f[1], f[2], g, worldSprite('o-sparkle'));
   });
-  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
+  if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow' + (owStepped ? ' ow-hop' : ''), owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
   h += owActorHtml('ow-hero' + (owTileAt(map, o.x, o.y).water ? ' ow-surfing' : ''), hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
   const wx = map.room || map.dark ? '' : weatherToday().id;
   view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '') + (wx === 'rainy' || wx === 'stormy' ? ' ow-' + wx : '');          // rain falls on the map on a rainy or stormy day (outdoors only)
   if (map.dark) view.style.setProperty('--dark-r', ((hasKeyItem('lamp') ? 5 : 2.6) * g.tile).toFixed(0) + 'px');
+  owStepped = false;
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;
   document.getElementById('ow-gizmo-btn').style.display = hasKeyItem('gizmo') ? '' : 'none';
@@ -211,6 +213,7 @@ function owMove(dir) {
   }
   owTrail = { x: o.x, y: o.y };
   o.x = nx; o.y = ledge ? ny + 1 : ny;
+  owStepped = true;                                                         // the buddy hops along behind on the next picture
   owFrame = owFrame ? 0 : 1;
   let warp = owWarpAt(map, o.x, o.y);
   if (warp && warp.gate) warp = null;                                       // a gym door is not a walk-through: the door itself asks (owEnterGym)

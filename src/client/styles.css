@@ -1015,3 +1015,8 @@ body.trivia .math-only { display: none; }
 .ow-view.ow-night.ow-rainy, .ow-view.ow-night.ow-stormy { filter: brightness(0.55) saturate(0.75) hue-rotate(12deg); }
 @keyframes owRain { from { background-position: 0 0; } to { background-position: -18px 46px; } }
 .reduce-motion .ow-cell.wv::before, .reduce-motion .ow-view.ow-rainy::after, .reduce-motion .ow-view.ow-stormy::after { animation: none; }
+
+/* The buddy hops a little as it follows a step (only on the picture that a step draws, never while standing) */
+.ow-follow.ow-hop .ow-buddy { animation: owHop 0.22s ease-out; }
+@keyframes owHop { 0% { transform: translateY(0); } 45% { transform: translateY(-22%); } 100% { transform: translateY(0); } }
+.reduce-motion .ow-follow.ow-hop .ow-buddy { animation: none; }

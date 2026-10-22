@@ -8,6 +8,8 @@ const OW_STROLLERS = [
   ['Grandpa Wren', 'I have lived in {t} all my life.', 'Back in my day we counted every step.', 'Mind the dark, young one. Stay on the road!'],
   ['Kid Moss', 'I am practising my walking!', 'Race you to the sign! Okay, no I will not.', 'I am not allowed out this late. Do not tell!']
 ];
+// What a villager says once you have a few badges, and once you are the Champion.
+const OW_PROUD = { badges: ['{n} badges already? The whole town is talking about you!', 'Everyone here is cheering for you.'], champ: ['The Champion walks past our house! Can I shake your hand?', 'Nobody in {t} will ever forget this day.'] };
 function owPlaceStrollers(town, k) {
   const m = OW_MAPS[town], rnd = owRng(town, 700 + k), reach = owReachSet(m), spots = [], landings = [];
   Object.keys(OW_MAPS).forEach(function (id) { OW_MAPS[id].warps.forEach(function (w) { if (w.to === town) landings.push([w.tx, w.ty]); }); });          // where the hero arrives from anywhere
@@ -19,7 +21,7 @@ function owPlaceStrollers(town, k) {
   for (let n = 0; n < 2 && spots.length; n++) {
     const s = spots.splice(Math.floor(rnd() * spots.length), 1)[0], who = OW_STROLLERS[(k + n * 2) % OW_STROLLERS.length];
     out.push({ id: town + '-walker-' + n, name: who[0], x: s[0], y: s[1], face: 'down', wander: true, home: { x: s[0], y: s[1] }, look: { skin: (k + n * 3) % 6, hair: (k * 3 + n) % 8, outfit: (k + n * 5) % 8, style: (k + n) % 4 },
-      lines: [who[1].replace('{t}', m.name), who[2].replace('{t}', m.name)], night: [who[3]] });
+      lines: [who[1].replace('{t}', m.name), who[2].replace('{t}', m.name)], night: [who[3]], proud: OW_PROUD });
     for (let i = spots.length - 1; i >= 0; i--) if (Math.abs(spots[i][0] - s[0]) + Math.abs(spots[i][1] - s[1]) < 5) spots.splice(i, 1);          // the two stand well apart
   }
   m.npcs.push.apply(m.npcs, out);

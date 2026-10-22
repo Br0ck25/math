@@ -228,7 +228,16 @@ const BGM_TUNES = {
   cave:   { notes: [220.0, 261.63, 329.63, 261.63, 220.0, 196.0, 220.0, 261.63, 246.94, 293.66, 369.99, 293.66, 246.94, 220.0, 196.0, 164.81], ms: 420, wave: 'triangle', vol: 0.045 },
   battle: { notes: [392.0, 466.16, 392.0, 349.23, 392.0, 466.16, 523.25, 466.16, 440.0, 523.25, 440.0, 392.0, 440.0, 523.25, 587.33, 523.25], ms: 190, wave: 'square', vol: 0.02 }
 };
-let bgmCtx = 'route';
+let bgmCtx = 'route', bgmKey = 'route';
+// Every town, route and cave plays its own take on the tune of its kind: the same notes in another key, started at another place, a little quicker or slower.
+function bgmTune(ctx, mapId) {
+  const base = BGM_TUNES[ctx];
+  if (!mapId || ctx === 'battle' || ctx === 'room') return base;
+  let h = 7; for (let i = 0; i < mapId.length; i++) h = (h * 31 + mapId.charCodeAt(i)) % 10007;
+  const shift = [0, 2, 3, 5, 7, 9, -2, -4][h % 8], rot = (h >> 3) % 8, k = Math.pow(2, shift / 12);
+  return { notes: base.notes.map(function (_, i) { return base.notes[(i + rot) % base.notes.length] * k; }), ms: Math.round(base.ms * (0.9 + (h % 5) * 0.05)), wave: base.wave, vol: base.vol };
+}
+function bgmKeyNow() { const ctx = bgmContext(), m = typeof OW_MAPS !== 'undefined' && state && state.overworld && state.overworld.map; return ctx + ':' + (m || ''); }
 function bgmContext() {
   try {
     if (typeof ab !== 'undefined' && ab) return 'battle';
@@ -242,9 +251,9 @@ function bgmContext() {
 function stepBgm() {
   if (!bgmOn || isMuted) return;
   initAudio();
-  const ctx = bgmContext();
-  if (ctx !== bgmCtx) { bgmCtx = ctx; bgmStep = 0; if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = setInterval(stepBgm, BGM_TUNES[ctx].ms); } }
-  const tune = BGM_TUNES[bgmCtx];
+  const ctx = bgmContext(), key = bgmKeyNow();
+  if (key !== bgmKey) { bgmCtx = ctx; bgmKey = key; bgmStep = 0; if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = setInterval(stepBgm, bgmTune(ctx, key.split(':')[1]).ms); } }
+  const tune = bgmTune(bgmCtx, bgmKey.split(':')[1]);
   try {
     const freq = tune.notes[bgmStep % tune.notes.length];
     bgmStep++;
@@ -266,7 +275,7 @@ function toggleMusic() {
   if (bgmTimer) { clearInterval(bgmTimer); bgmTimer = null; }
   if (bgmOn && !isMuted) {
     stepBgm();
-    bgmCtx = bgmContext(); bgmTimer = setInterval(stepBgm, BGM_TUNES[bgmCtx].ms);
+    bgmCtx = bgmContext(); bgmKey = bgmKeyNow(); bgmTimer = setInterval(stepBgm, bgmTune(bgmCtx, bgmKey.split(':')[1]).ms);
   }
   const btn = document.getElementById('music-icon');
   if (btn) btn.innerText = bgmOn ? '🎵' : '🔕';

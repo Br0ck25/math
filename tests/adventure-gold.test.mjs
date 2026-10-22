@@ -1505,3 +1505,21 @@ test('the map moves and has weather: ponds shimmer, rain falls outdoors on a rai
   assert.deepEqual(r, { shimmer: true, rain: true, storm: true, room: true, cave: true, sun: true, lamps: true, art: true });
   assert.ok(await ev(() => getComputedStyle(document.querySelector('.ow-cell.wv'), '::before').animationName === 'owShimmer'));
 });
+
+test('each town and route plays its own take on its tune; villagers say a proud word with three badges and as Champion; the buddy hops only on the picture a step draws', async () => {
+  const r = await ev(() => {
+    const out = {}, a = bgmTune('town', 'ember'), b = bgmTune('town', 'tide'), a2 = bgmTune('town', 'ember');
+    out.differ = JSON.stringify(a.notes) !== JSON.stringify(b.notes) || a.ms !== b.ms; out.same = JSON.stringify(a) === JSON.stringify(a2); out.len = a.notes.length === 16;
+    out.fixed = bgmTune('battle', 'ember') === BGM_TUNES.battle && bgmTune('room', 'ember-center') === BGM_TUNES.room;
+    state.hero.made = true; const town = owTowns().filter((t) => t !== OW_START.map)[1], m = OW_MAPS[town], w = m.npcs.find((n) => n.wander), o = state.overworld;
+    o.map = town; const say = () => owNpcWords(w).join(' '); state.badges = []; state.storySeen.champion = 0; const plain = say();
+    state.badges = ['meadow', 'ember', 'tide']; const proud = say(); state.storySeen.champion = 1; const champ = say(); state.storySeen.champion = 0; state.badges = [];
+    out.words = /3 badges/.test(proud) && /Champion/.test(champ) && plain !== proud && plain !== champ;
+    openAdventure(); const sp = nextTo('route1', 7, 12); o.map = 'route1'; o.x = sp.x; o.y = sp.y; o.face = sp.face; renderOverworld();
+    out.idle = !document.querySelector('.ow-follow.ow-hop');
+    const dir = ['left', 'right', 'up', 'down'].find((d) => owWalkable(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]) && !owNpcAt(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]) && !owWarpAt(OW_MAPS.route1, o.x + OW_STEP[d][0], o.y + OW_STEP[d][1]));
+    owMove(dir); out.hop = !!document.querySelector('.ow-follow.ow-hop'); renderOverworld(); out.rest = !document.querySelector('.ow-follow.ow-hop');
+    return out;
+  });
+  assert.deepEqual(r, { differ: true, same: true, len: true, fixed: true, words: true, idle: true, hop: true, rest: true });
+});

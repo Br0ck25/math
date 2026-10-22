@@ -48,12 +48,12 @@ Also done since the second pass: Everstone (the holder keeps the form it had whe
 ## Third pass (after playing the map on a phone)
 Done in this pass: Game Boy style touch controls (see-through arrows bottom left, A and B bottom right), the map now shows about ten tiles across a phone as Gold does (it was seven), a side path's gap shows the side path past it (a sliding step animation was tried and removed: it made walking look glitchy), and the ground has details (worn road edges, bright pond shores, flowers, tufts and stones).
 Still missing, in the order a Gold player would notice:
-1. **(Partly done: two strollers per town wander near home and talk differently after dark; no badge-based lines yet.) People who move.**
+1. **(Done: two strollers per town wander near home, talk differently after dark and say a proud word with three badges and as Champion.) People who move.**
 2. **(Partly done: windows and chimneys on some walls and roofs.) Building variety.** Every house, Center and Mart is still the same 2-by-3 block with a coloured roof and a small icon. **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
 3. **(Partly done: three lamp posts per town; fences and flower beds come from the town stamps.) Town life.** Gold towns also have mailboxes and five to eight people; ours have four to six. **Step:** more stamps and more NPC lines per town.
 4. **(Done: ponds shimmer, and rain falls on the map on rainy and stormy days, outdoors only; no snow.) Water and weather in the picture.**
-5. **Walking frames.** The hero has two frames and no turn-in-place step; the buddy follows but does not animate.
-6. **Per-place music.** One tune per kind of place; Gold has a theme per town and route.
+5. **(Partly done: the buddy hops along behind a step.) Walking frames.** The hero still has two frames and no turn-in-place step.
+6. **(Partly done: every town, route and cave plays its own transposed, rotated and re-timed take on the tune of its kind.) Per-place music.** Gold has composed themes.
 7. **Still deliberately out:** Mystery Gift and linking.
 
 Also added in this pass: Settings > Options > "Questions" turns fight questions and puzzle-sign questions off for a game with no maths (duels between players still ask).

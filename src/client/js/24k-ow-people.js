@@ -7,6 +7,13 @@ let talk = null;
 function talkOpen() { const open = openOverlays(); return !!open.length && open[open.length - 1].id === 'talk-modal'; }
 
 // What the hero bumped into: a person talks, a sign tells its words or asks its question.
+// What a person says now: something else after dark, and a proud word once you hold three badges or the Champion's title.
+function owNpcWords(npc) {
+  const p = npc.proud, fill = function (list) { return list.map(function (t) { return t.replace('{n}', state.badges.length).replace('{t}', OW_MAPS[state.overworld.map].name); }); };
+  if (p && isChampion()) return fill(p.champ);
+  if (p && state.badges.length >= 3) return fill(p.badges);
+  return npc.night && owTimeOfDay() === 'night' ? npc.night : npc.lines;
+}
 function owInteract(map, x, y) {
   const npc = owNpcAt(map, x, y);
   if (npc) {
@@ -18,7 +25,7 @@ function owInteract(map, x, y) {
     if (npc.kind === 'nurse') { openCenter(npc); return; }
     if (npc.kind === 'clerk') { openMart(npc); return; }
     if (OW_SERVICES[npc.kind]) { OW_SERVICES[npc.kind](npc); return; }
-    openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.night && owTimeOfDay() === 'night' ? npc.night : npc.lines });          // some people say something else after dark
+    openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: owNpcWords(npc) });
     return;
   }
   const sign = map.signs && map.signs[x + ',' + y];
