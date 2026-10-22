@@ -1246,6 +1246,37 @@ test('Gold\'s ice: stepping onto ice slides the hero until something stops them,
   assert.deepEqual(r.moved, [true, true, true]);
 });
 
+test('Cherrygrove is a village east of Cozy Hollow (Gold\'s second stop): a Buddy Center, a Mart and two houses, joined both ways by a gap, with no gym', async () => {
+  const r = await ev(() => {
+    const v = OW_MAPS.cherrygrove, h = OW_MAPS.hollow, out = {};
+    out.joined = [h.warps.some((w) => w.x === 15 && w.y === 9 && w.to === 'cherrygrove' && w.tx === 1 && w.ty === 7), v.warps.some((w) => w.x === 0 && w.y === 7 && w.to === 'hollow' && w.tx === 14 && w.ty === 9)];
+    out.rooms = ['cherry-center', 'cherry-mart', 'cherry-house1', 'cherry-house2'].every((id) => OW_MAPS[id] && v.warps.some((w) => w.to === id) && OW_MAPS[id].warps[0].to === 'cherrygrove');
+    out.services = [OW_MAPS['cherry-center'].npcs[0].kind, OW_MAPS['cherry-mart'].npcs[0].kind];
+    out.gym = !v.gyms && !owTowns().includes('cherrygrove');
+    out.node = gizmoNodeOf('cherrygrove').id;
+    state.hero.made = true; openAdventure(); const o = state.overworld; o.map = 'hollow'; o.x = 14; o.y = 9; o.face = 'right'; owSetRegion(h); renderOverworld(); owMove('right');
+    out.walked = [o.map, o.x, o.y];
+    return out;
+  });
+  assert.deepEqual(r, { joined: [true, true], rooms: true, services: ['nurse', 'clerk'], gym: true, node: 'hollow', walked: ['cherrygrove', 1, 7] });
+});
+
+test('Gold\'s landmarks off the roads: the Lake of Rage (west of Mystic Peak), the Ruins of Alph (west of Ember Hills) and the Whirl Islands (west of Gloom Marsh, surfers only) are hand-drawn places joined by gaps', async () => {
+  const r = await ev(() => {
+    const join = (host, place) => OW_MAPS[host].warps.some((w) => w.to === place && w.x === 0) && OW_MAPS[place].warps.some((w) => w.to === host) || (place === 'whirl-islands' && OW_MAPS[host].warps.some((w) => w.to === place));
+    const out = { joined: [join('mystic', 'lake-of-rage'), join('ember', 'ruins-of-alph'), join('gloom', 'whirl-islands')] };
+    out.sizes = ['lake-of-rage', 'ruins-of-alph', 'whirl-islands'].map((k) => OW_MAPS[k].rows[0].length + 'x' + OW_MAPS[k].rows.length);
+    out.chamber = OW_MAPS['ruins-of-alph'].warps.some((w) => w.to === 'ruins-chamber') && OW_MAPS['ruins-chamber'].warps[0].to === 'ruins-of-alph';
+    out.guard = OW_MAPS['whirl-islands'].guard.key; out.islets = OW_MAPS['whirl-islands'].objects.length;
+    out.dot = ['lake-of-rage', 'ruins-of-alph', 'whirl-islands'].map((k) => gizmoNodeOf(k).id);
+    state.hero.made = true; openAdventure(); const real = hasKeyItem; hasKeyItem = () => false; const o = state.overworld;
+    o.map = 'gloom'; o.x = 1; o.y = 18; o.face = 'left'; owSetRegion(OW_MAPS.gloom); renderOverworld(); owMove('left'); out.bounced = o.map;
+    hasKeyItem = (id) => id === 'water'; o.map = 'gloom'; o.x = 1; o.y = 18; owMove('left'); out.went = o.map; hasKeyItem = real;
+    return out;
+  });
+  assert.deepEqual(r, { joined: [true, true, true], sizes: ['22x18', '20x16', '24x18'], chamber: true, guard: 'water', islets: 5, dot: ['mystic', 'ember', 'gloom'], bounced: 'gloom', went: 'whirl-islands' });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

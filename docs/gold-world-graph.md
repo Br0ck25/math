@@ -6,17 +6,17 @@ The aim: the same layout and flow as Gold's Johto (the lettered key on the Johto
 | Gold | Ours | State |
 |---|---|---|
 | New Bark Town (A) | Cozy Hollow | done (start town) |
-| Route 29 / Cherrygrove (B, C) / Routes 30, 31 (D, E) | Route 1 (one road) | to do: a village (Cherrygrove) and two more routes |
+| Route 29 / Cherrygrove (B, C) / Routes 30, 31 (D, E) | Route 1 (one road) | Cherrygrove done (village east of Cozy Hollow, `24vs-ow-places.js`); two more routes to do |
 | Violet City, Sprout Tower (F) | Meadow Town | town done; tower to do |
-| Route 32, Ruins of Alph, Union Cave (G, H, I) | Route 2 (Ember road) | to do: Ruins puzzle, Union-Cave link between two routes |
+| Route 32, Ruins of Alph, Union Cave (G, H, I) | Route 2 (Ember road) | Ruins of Alph done (courtyard and chamber, west of Ember Hills); its puzzle and a Union-Cave link to do |
 | Azalea Town, Slowpoke Well, Ilex Forest (J, K) | Ember Hills; Leaf Grove's road is already an Ilex-style maze | town done; Well to do |
 | Route 34, Goldenrod City, Radio Tower (L, M) | Tide Bay (hub city to build); Spark City has the Radio Tower | hub city to do |
 | Routes 35 to 37, National Park (N, O, P, Q) | Route 4; the Park beside Meadow Town | Park done; Route 36 tree to do |
 | Ecruteak City, Tin and Burned Towers (R) | Leaf Grove | town done; towers to do |
 | Routes 38 and 39, Olivine, Lighthouse (S, T, U) | Volt Valley; the Lighthouse is in Tide Bay | to move |
-| Routes 40 and 41, Whirl Islands, Cianwood (V, W, X, Y) | Gloom Marsh and the Open Seas | Open Seas done; Whirl Islands to do |
+| Routes 40 and 41, Whirl Islands, Cianwood (V, W, X, Y) | Gloom Marsh and the Open Seas | Open Seas and the Whirl Islands (five islets, surfers only) done |
 | Route 42, Mt. Mortar, Mahogany (Z, a, b) | Mystic Peak; Mortar Pass link road | link done; cave to do |
-| Route 43, Lake of Rage (c, d) | none yet | to do |
+| Route 43, Lake of Rage (c, d) | Lake of Rage (shore path round a lake, west of Mystic Peak) | place done; its red fish to do |
 | Route 44, Ice Path, Blackthorn, Dragon's Den (e, f) | Skyreach; Summit Citadel's road is an ice field | Dragon's Den to do |
 | Routes 45 and 46, Dark Cave (g, h, i) | link road Skyreach to Cozy Hollow (the way home) | link done; Dark Cave to do |
 | Mt. Silver, Route 28 (j, k) | Silver Peak, the second journey | done |
@@ -28,7 +28,7 @@ Gold's loops done so far: Violet to Ecruteak (Route 36), Ecruteak to Mahogany (R
 
 ## 3. Stages
 1. **Graph and map (done this pass):** the Gizmo map is laid out like Johto's key; the loops above exist as roads.
-2. **Missing small places:** a village between Hollow and Meadow (Cherrygrove), Lake of Rage, the Whirl Islands, Ruins of Alph (a sliding-tile puzzle), Dark Cave, Dragon's Den. Each is a hand-drawn map in `24va-` or a new file.
+2. **Missing small places (Cherrygrove, Lake of Rage, Ruins of Alph and the Whirl Islands are done):** Dark Cave, Dragon's Den, the Ruins puzzle, Slowpoke Well, Union Cave. Each is a hand-drawn map in `24va-` or a new file.
 3. **The hub city:** Tide Bay becomes a Goldenrod-style city: wide, with a Dept. Store of five floors and an Underground.
 4. **Towers:** Sprout Tower and the Tin Tower as multi-floor climbs.
 5. **Per-route tricks:** the Sudowoodo tree, Route 29's night tree, toll gate, bug-catching park days.

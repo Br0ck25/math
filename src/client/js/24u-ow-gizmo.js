@@ -63,6 +63,7 @@ function gizmoNodeOf(mapId) {
   if (GIZMO_NODES[mapId]) return { id: mapId };
   const m = OW_MAPS[mapId]; if (!m) return { id: 'hollow' };
   if (m.link) return { id: m.link.to, from: m.link.from };
+  if (m.annex) return { id: m.annex.near };
   const base = mapId.replace(/-side$/, ''), i = OW_LANDS.findIndex(function (L) { return L.routeIn === base; });
   if (i >= 0) { const to = OW_LANDS[i].town, from = i ? OW_LANDS[i - 1].town : 'hollow'; return { id: to, from: from }; }
   if (mapId === 'peak') return { id: 'peak' };
