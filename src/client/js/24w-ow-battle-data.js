@@ -175,7 +175,9 @@ function abVitamins(m) {
   ['atk', 'def', 'spd', 'spc'].forEach(function (k) { m[k] += (v[k] || 0) * ECON.vitamins.stat; });
   return m;
 }
-function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.held = state.held[id] || ''; return abBadgeBoost(abVitamins(m)); }
+// Nicknames are chosen from this fixed list at the Name Rater (no typing, so nothing but these words can ever be shown).
+const NICK_NAMES = ['Sparky', 'Bean', 'Pip', 'Biscuit', 'Comet', 'Nugget', 'Pepper', 'Maple', 'Sunny', 'Button', 'Ziggy', 'Clover', 'Waffles', 'Echo', 'Tango', 'Mochi'];
+function abPartyMon(id) { const m = abMon(id, getBuddyLevel(id), state.advHp[id], state.advPp[id], state.advMoves[id]); m.sname = m.name; if (state.nicks[id]) m.name = state.nicks[id]; m.held = state.held[id] || ''; return abBadgeBoost(abVitamins(m)); }
 // Gold's damage formula, step by step. Normal moves are physical (Attack against Defense); every other type is special (Special against Special), as in Gold.
 // A burn halves a physical Attack. A critical hit doubles the damage before the +2; then the same-type bonus, type effectiveness and luck follow, each rounded down.
 const AB_CRIT = 17 / 256, AB_CRIT_LENS = 32 / 256;     // the critical hit chance, and with a Scope Lens (one stage up)

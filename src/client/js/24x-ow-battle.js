@@ -431,9 +431,10 @@ function abGainXp(mon, amt) {
   addHappy(mon.id, 3 + (now > before ? 5 : 0));
   mon.leveled = now > before; mon.evolved = ''; mon.learned = []; mon.pending = mon.pending || [];
   if (!mon.leveled) return;
-  const fresh = abMon(mon.id, now), oldName = mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
+  const fresh = abMon(mon.id, now), oldName = mon.sname || mon.name, hp = Math.min(fresh.max, mon.hp + fresh.max - mon.max);
   fresh.moves = mon.moves;                                        // it keeps the moves it has, with their PP
   Object.assign(mon, abBadgeBoost(fresh), { hp: hp, status: mon.status, sleep: mon.sleep, leveled: true, evolved: fresh.name !== oldName ? oldName : '', learned: [], pending: mon.pending });
+  mon.sname = fresh.name; if (state.nicks[mon.id]) mon.name = state.nicks[mon.id];                  // a nickname stays through an evolution
   abKnownMoves(mon.element, now, mon.type, mon.id).filter(function (m) { return knownBefore.indexOf(m.id) === -1; }).forEach(function (m) {
     if (mon.moves.length < 4) { mon.moves.push(Object.assign({}, m, { left: m.pp })); mon.learned.push(m.name); } else mon.pending.push(m);     // with four moves it asks which to forget
   });

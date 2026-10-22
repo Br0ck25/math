@@ -1267,3 +1267,17 @@ test("King's Rock, Bright Powder and Exp. Share: flinch on any hit, foes miss a 
   });
   assert.ok(x.dog > 0 && x.cat > 0 && x.cat === Math.floor(x.dog / 2), 'the Exp. Share holder gets half without fighting: ' + JSON.stringify(x));
 });
+
+test('the Name Rater: a nickname from a fixed list for the lead buddy, kept in battle and through a level-up, removable, repaired if tampered', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; const npc = OW_MAPS['mystic-house'].npcs.find((n) => n.id === 'mystic-rater'), out = { there: !!npc };
+    const id = state.activePet, real = abPartyMon(id).name;
+    OW_SERVICES.rater(npc); out.offers = [...document.querySelectorAll('#talk-choices button')].length; talk.i = talk.lines.length - 1; renderTalk();
+    const first = document.querySelectorAll('#talk-choices button')[0]; const nick = first.innerText; first.click(); out.set = state.nicks[id] === nick && NICK_NAMES.includes(nick);
+    out.named = abPartyMon(id).name === nick; closeTalk();
+    state.nicks = { dog: '<img src=x>', fox: 'Pip' }; NORMALIZERS.forEach((fn) => fn(state)); out.clean = JSON.stringify(state.nicks);
+    state.nicks = {}; out.back = abPartyMon(id).name === real;
+    return out;
+  });
+  assert.deepEqual(r, { there: true, offers: 4, set: true, named: true, clean: '{"fox":"Pip"}', back: true });
+});

@@ -146,3 +146,12 @@ OW_SERVICES.rate = function (npc) {
   } else lines.push(state.dexRate >= DEX_PRIZES.length ? 'Your Dex is wonderful. I could not ask for more!' : 'Catch ' + (Math.ceil((state.dexRate + 1) * all.length / 4) - caught) + ' more and I will have a prize for you.');
   openTalk({ name: npc.name, art: art, lines: lines });
 };
+
+// Gold's Name Rater: gives the lead buddy a nickname from a short list of friendly names (no typing), or its own name back. A few new names are offered each day.
+OW_SERVICES.rater = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), id = state.activePet, sp = getSpecies(id), name = sp.forms[getFormIndex(sp, getBuddyLevel(id))].name;
+  const offer = NICK_NAMES.map(function (n, i) { return [dayHash('nick' + id + dayKey() + i), n]; }).sort(function (a, b) { return a[0] - b[0]; }).slice(0, 4).map(function (p) { return p[1]; });
+  const set = function (n) { return function () { closeTalk(); if (n) state.nicks[id] = n; else delete state.nicks[id]; saveState(); openTalk({ name: npc.name, art: art, lines: [n ? 'A fine name! ' + n + ' it is.' : 'Back to ' + name + '. A good name too!'] }); }; };
+  openTalk({ name: npc.name, art: art, lines: ['Hello! I rate names. Shall ' + (state.nicks[id] || name) + ' have a new one?'], choices: offer.map(function (n) { return { label: n, run: set(n) }; }).concat(state.nicks[id] ? [{ label: 'Back to ' + name, run: set('') }] : []) });
+};
+owAddNpc('mystic-house', { id: 'mystic-rater', kind: 'rater', name: 'Name Rater Odette', x: 8, y: 2, face: 'down', look: { skin: 2, hair: 1, outfit: 5, style: 2 }, lines: ['I rate names.'] });
