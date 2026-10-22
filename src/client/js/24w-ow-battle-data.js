@@ -64,6 +64,8 @@ const AB_TMS = {
   thunderwave: { name: 'Thunder Wave', el: '', type: 'normal', power: 0, acc: 100, pp: 20, inflict: 'paralysis' }, sleeppowder: { name: 'Sleep Powder', el: '', type: 'normal', power: 0, acc: 75, pp: 15, inflict: 'sleep' },
   toxic: { name: 'Toxic', el: '', type: 'normal', power: 0, acc: 85, pp: 10, inflict: 'poison' }, confuseray: { name: 'Confuse Ray', el: '', type: 'normal', power: 0, acc: 100, pp: 10, inflict: 'confusion' },
   leechseed: { name: 'Leech Seed', el: '', type: 'normal', power: 0, acc: 90, pp: 10, seed: true }, headbutt: { name: 'Headbutt', el: '', type: 'normal', power: 70, acc: 100, pp: 15, flinch: 30 },
+  // Counter hits back twice the physical damage taken this round (it moves last); Hidden Power's type depends on the buddy itself
+  counter: { name: 'Counter', el: '', type: 'normal', power: 0, acc: 100, pp: 20, counter: true, pri: -1 }, hiddenpower: { name: 'Hidden Power', el: '', type: 'normal', power: 60, acc: 100, pp: 15, hidden: true },
   // Gold's Fly and Dig: charge a turn out of reach (`vanish`: the foe's attack misses meanwhile), then strike
   fly: { name: 'Fly', el: '', type: 'normal', power: 70, acc: 95, pp: 15, charge: true, vanish: true }, dig: { name: 'Dig', el: '', type: 'normal', power: 60, acc: 100, pp: 10, charge: true, vanish: true },
   // utility moves (Gold's Rain Dance, Sunny Day, Protect and Rest): `util` is handled by abUtil in 24x-ow-battle.js

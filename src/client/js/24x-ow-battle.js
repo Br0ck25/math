@@ -324,6 +324,12 @@ function abInflict(att, def, mv, next) {
   else abSteps([[def.name + ' ' + AB_STATUS_TEXT[mv.inflict], function () { def.status = mv.inflict; def.sleep = rnd(2, 7); }, 1000]]);
   next();
 }
+// Gold's Counter: twice the physical damage this buddy took earlier in the round, whatever the type; it fails if nothing hit it.
+function abCounter(att, def, mv, down, next) {
+  const d = (att.lastHit || 0) * 2;
+  if (!d) { abSteps([['But it failed!', null, 900]]); next(); return; }
+  abSteps([['', function () { def.hp = Math.max(0, def.hp - d); if (ab.party.indexOf(def) !== -1) state.advHp[def.id] = def.hp; abHitSound(att, mv); }, 600], ['', function () { if (def.hp <= 0) down(); else next(); }, 0]]);
+}
 function abHit(att, def, mv, down, next) {
   if (mv.util) { abUtil(att, def, mv, next); return; }
   if (mv.charge && !att.charging && !(mv.id === 'solarbeam' && ab.weather && ab.weather.k === 'sun')) { att.charging = mv; abSteps([[att.name + (mv.vanish ? (mv.id === 'dig' ? ' dug underground!' : ' flew up high!') : ' is gathering power!'), null, 1100]]); next(); return; }      // two-turn moves: charge now, hit next turn (Solar Beam skips the charge in the sun)
@@ -333,11 +339,14 @@ function abHit(att, def, mv, down, next) {
   if (def.protect && !(mv.fx && mv.fx.on === 'self')) { abSteps([[def.name + ' protected itself!', null, 1000]]); next(); return; }
   if (mv.fx) { abStatMove(att, def, mv, next); return; }
   if (mv.inflict || mv.seed) { abInflict(att, def, mv, next); return; }
+  if (mv.counter) { abCounter(att, def, mv, down, next); return; }
+  if (mv.hidden) { let h = 7; for (let i = 0; i < att.id.length; i++) h = (h * 31 + att.id.charCodeAt(i)) % 997; mv = Object.assign({}, mv, { type: Object.keys(AB_STATUS)[h % 6] }); }      // Hidden Power: a type fixed by the buddy
   if (Math.random() * 100 >= mv.acc * AB_ACC_PCT[clamp(abStage(att, 'acc') - abStage(def, 'eva'), -6, 6) + 6] / 100 * (def.held === 'powder' ? 0.9 : 1)) { abSteps([['', function () { abFx(att, def, mv, false); }, 300], [att.name + "'s attack missed!", null, 900]]); next(); return; }
   const crit = Math.random() < (att.held === 'lens' ? AB_CRIT_LENS : AB_CRIT), r = abDamage(att, def, mv, crit);
   abSteps([['', function () {
     abFx(att, def, mv, true);
     def.hp = Math.max(0, def.hp - r.dmg);
+    def.lastHit = mv.type === 'normal' ? r.dmg : 0;
     if (def.hp === 0 && def.held === 'focus' && Math.random() < 0.12) def.hp = 1;                       // a Focus Band: hangs on
     if (mv.recoil) att.hp = Math.max(1, att.hp - Math.max(1, Math.floor(r.dmg / 4)));
     abBerry(def);
@@ -380,7 +389,7 @@ function abEndRound() {
       const other = m === abMe() ? abFoe() : abMe();
       if (m.seeded && m.hp > 0 && other.hp > 0) list.push([m.name + "'s health is sapped by Leech Seed!", function () { const d = Math.max(1, Math.floor(m.max / 8)); m.hp = Math.max(0, m.hp - d); other.hp = Math.min(other.max, other.hp + d); [m, other].forEach(function (x) { if (ab.party.indexOf(x) !== -1) state.advHp[x.id] = x.hp; }); }, 900]);
     });
-    ab.party.concat(ab.foes).forEach(function (m) { m.flinched = false; m.moved = false; });
+    ab.party.concat(ab.foes).forEach(function (m) { m.flinched = false; m.moved = false; m.lastHit = 0; });
     if (ab.weather) { ab.weather.n -= 1; if (ab.weather.n <= 0) { const k = ab.weather.k; list.push([k === 'rain' ? 'The rain stopped.' : 'The sunlight faded.', function () { ab.weather = null; }, 900]); } }
     ab.party.concat(ab.foes).forEach(function (m) { m.protect = false; });
     list.push(['', function () { if (abFoe().hp <= 0) abFoeFainted(); else if (abMe().hp <= 0) abMeFainted(); else abBackToMenu(); }, 0]);

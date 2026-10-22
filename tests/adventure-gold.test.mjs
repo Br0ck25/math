@@ -1296,3 +1296,20 @@ test('Surf: with the Water Steps charm the hero rides over water (and water budd
   });
   assert.deepEqual(r, { spot: true, wall: true, rode: true, ring: true });
 });
+
+test('Counter returns twice the physical damage taken this round (and fails with none); Hidden Power takes a type from the buddy', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 12 }] });
+    const me = abMe(), foe = abFoe(), out = {}, drain = () => { for (let i = 0; i < 60 && ab.queue.length; i++) { const st = ab.queue.shift(); st[1] && st[1](); } ab.queue = []; };
+    foe.max = foe.hp = 9999; me.max = me.hp = 9999; const tackle = { id: 'tackle', name: 'Tackle', type: 'normal', power: 60, acc: 100, pp: 10 }, real = Math.random; Math.random = () => 0.3;
+    abHit(foe, me, abTmMove('counter', me.element, me.type), () => {}, () => {}); drain(); out.failed = foe.hp === 9999;
+    abHit(foe, me, tackle, () => {}, () => {}); drain(); const taken = me.lastHit; out.took = taken > 0;
+    abHit(me, foe, abTmMove('counter', me.element, me.type), () => {}, () => {}); drain(); out.back = 9999 - foe.hp === taken * 2;
+    const seen = new Set(), realDmg = abDamage; abDamage = (a, d, m, c) => { seen.add(m.type); return realDmg(a, d, m, c); };
+    ['fox', 'dog', 'cat', 'wolf', 'bear', 'owl', 'hen', 'cow'].forEach((id) => { abHit({ ...me, id }, foe, abTmMove('hiddenpower', 'fire', 'normal'), () => {}, () => {}); drain(); });
+    abDamage = realDmg; out.varied = seen.size >= 3 && [...seen].every((t) => ['fire', 'water', 'nature', 'electric', 'dark', 'magic'].includes(t));
+    drain(); Math.random = real; out.hp = AB_TMS.hiddenpower.hidden && AB_TMS.counter.pri === -1 && CORNER_PRIZES.some((p) => p[0] === 'counter');
+    return out;
+  });
+  assert.deepEqual(r, { failed: true, took: true, back: true, varied: true, hp: true });
+});
