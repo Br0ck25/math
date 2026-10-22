@@ -48,10 +48,12 @@ Also done since the second pass: Everstone (the holder keeps the form it had whe
 ## Third pass (after playing the map on a phone)
 Done in this pass: Game Boy style touch controls (see-through arrows bottom left, A and B bottom right), the map now shows about ten tiles across a phone as Gold does (it was seven), a side path's gap shows the side path past it and a step through it slides like any other step (the map glides under the hero, drawn with a hidden ring of tiles so nothing is blank), and the ground has details (worn road edges, bright pond shores, flowers, tufts and stones).
 Still missing, in the order a Gold player would notice:
-1. **People who move.** Gold's townsfolk wander, face you as you pass and change what they say by time and badges; ours stand still. **Step:** a few idle walkers per town (a short random walk within a box) and day/night lines.
-2. **Building variety.** Every house, Center and Mart is the same 2-by-3 block with a coloured roof and a small icon. **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
+1. **(Partly done: two strollers per town wander near home and talk differently after dark; no badge-based lines yet.) People who move.**
+2. **(Partly done: windows and chimneys on some walls and roofs.) Building variety.** Every house, Center and Mart is still the same 2-by-3 block with a coloured roof and a small icon. **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
 3. **Town life.** Gold towns have lamp posts, mailboxes, fences, flower beds and a few more people (five to eight). Ours have two to four. **Step:** more stamps and more NPC lines per town.
 4. **Water and weather in the picture.** Water does not move; rain and snow are only battle effects. **Step:** a two-frame water shimmer and a rain overlay on the map.
 5. **Walking frames.** The hero has two frames and no turn-in-place step; the buddy follows but does not animate.
 6. **Per-place music.** One tune per kind of place; Gold has a theme per town and route.
 7. **Still deliberately out:** Mystery Gift and linking.
+
+Also added in this pass: Settings > Options > "Questions" turns fight questions and puzzle-sign questions off for a game with no maths (duels between players still ask).

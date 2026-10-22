@@ -209,7 +209,9 @@ function abRecordAnswer(ok) {
   if (ok) return;
   if (q.kind === 'challenge') state.adapt.calm[q.op] = true; else state.adapt.easy[q.op] = true;       // after a miss the next one is a gentler warm-up
 }
-function abFight() { if (!ab.q || ab.q.done) ab.q = abQuestion();      // Back and Fight again keeps the same question until it is answered
+function abFight() {
+  if (state.noQuestions) { ab.phase = 'moves'; document.getElementById('ab-text').innerText = 'Choose an attack.'; abRender(); return; }          // questions are off: straight to the attacks
+  if (!ab.q || ab.q.done) ab.q = abQuestion();      // Back and Fight again keeps the same question until it is answered
    ab.phase = 'question'; abRender(); speakCurrentProblem(); }
 function abAnswer(v) {
   if (ab.phase !== 'question') return;

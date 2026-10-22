@@ -114,6 +114,13 @@ function owFruitDay() {
   o.fruitDay = today;
 }
 // (renderOverworld draws one extra ring of tiles around what the screen shows; the stage hides it, and the slide of a step brings it in.)
+// Houses are not all alike: some wall cells have a window, and a roof's top row may carry a chimney (fixed by place, so a house looks the same every time).
+function owVariant(map, x, y, art) {
+  if (map.room || (art !== 't-house-wall' && art !== 't-roof')) return art;
+  const h = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+  if (art === 't-house-wall') return h % 3 === 0 ? 't-house-window' : art;
+  return h % 4 === 0 && (map.rows[y - 1] || '').charAt(x) !== 'R' ? 't-roof-chimney' : art;
+}
 // Small touches that make the ground look lived in: roads and sand get a worn edge where they meet grass, ponds a bright shore, and plain grass a flower or a tuft here and there (fixed by place, so
 // nothing flickers). Classes only; the pictures are CSS (.ow-cell.ed-*, .gv*).
 const OW_WALK_GROUND = ['t-path', 't-dirt', 't-sand'];
@@ -136,7 +143,7 @@ function renderOverworld() {
       const x = o.x - hx + vx, y = o.y - hy + vy;
       const t = owTileAt(map, x, y), beyond = t ? null : owBeyond(map, x, y);                  // past the edge Gold shows the next map (the same cell the warp lands on), never black
       const shown = t || (beyond && beyond.t) || (map.room ? null : owTileAt(map, clamp(x, 0, map.rows[0].length - 1), clamp(y, 0, map.rows.length - 1)));      // a room is surrounded by black, as in Gold
-      h += '<span class="ow-cell' + owCellLook(map, x, y, shown) + '"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(shown.t) : '') + '</span>';
+      h += '<span class="ow-cell' + owCellLook(map, x, y, shown) + '"' + (beyond && beyond.style ? ' style="' + beyond.style + '"' : '') + '>' + (shown ? worldSprite(owVariant(map, x, y, shown.t)) : '') + '</span>';
       if (beyond) farActors.push([beyond, vx, vy]);
     }
   }
@@ -246,6 +253,7 @@ function owSlide(dir) {
   put(view, d[0] * tile, d[1] * tile, false); if (hero) put(hero, -d[0] * tile, -d[1] * tile, false);
   void view.offsetWidth;
   put(view, 0, 0, true); if (hero) put(hero, 0, 0, true);
+  owSlideUntil = Date.now() + ms + 60;
 }
 function owHold(dir) {
   owPointerUsed = true;

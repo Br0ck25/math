@@ -1474,3 +1474,35 @@ test('a step slides the map under the hero (the hero stays in the middle) and wa
   await page.waitForTimeout(400);
   assert.deepEqual(await ev(() => { const m = getComputedStyle(document.getElementById('ow-view')).transform; return m === 'none' || /matrix\(1, 0, 0, 1, 0, 0\)/.test(m); }), true, 'it comes to rest');
 });
+
+test('Settings can turn the questions off: fights go straight to choosing an attack, puzzle signs solve themselves (and pay), the choice is saved and repaired', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; const out = {}; openSettings(); out.btn = /Questions: ON/.test(document.getElementById('no-questions-btn').innerText);
+    toggleNoQuestions(); out.on = state.noQuestions === true && /OFF/.test(document.getElementById('no-questions-btn').innerText) && JSON.parse(localStorage.getItem('math_quest_save')).noQuestions === true;
+    closeSettings(); openAdventure(); abStart({ kind: 'wild', foes: [{ id: 'fox', level: 5 }] });
+    return new Promise((res) => { const wait = () => { if (ab.phase === 'menu' && !ab.busy) { abFight(); out.fight = ab.phase === 'moves' && !ab.q; ab = null;
+      const maps = OW_LANDS.map((L) => OW_MAPS[L.routeIn + '-cave2']).filter((m) => m && Object.values(m.signs).some((s) => /-ruin$/.test(s.id))), sign = Object.values(maps[0].signs).find((s) => /-ruin$/.test(s.id));
+      state.overworld.beat.push(sign.after); state.items.stone = 0; openSignQuiz(sign); out.sign = !talk.quiz && state.items.stone === 1 && state.overworld.story.includes(sign.story); closeTalk();
+      state.noQuestions = 'yes'; NORMALIZERS.forEach((fn) => fn(state)); out.fixed = state.noQuestions === false; res(out); } else setTimeout(wait, 100); }; wait(); });
+  });
+  assert.deepEqual(r, { btn: true, on: true, fight: true, sign: true, fixed: true });
+});
+
+test('towns have strollers who wander a step at a time near home (never onto doors, finds, grass, the hero or each other) and talk differently after dark; houses have windows and chimneys', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; mountWorldArt(); const out = {}, towns = owTowns().filter((t) => t !== OW_START.map);
+    out.everyTown = towns.every((t) => OW_MAPS[t].npcs.filter((n) => n.wander).length >= 1);
+    window.__noWander = false; openAdventure(); const t = towns[1], m = OW_MAPS[t], o = state.overworld; o.map = t; o.x = m.start.x; o.y = m.start.y; renderOverworld();
+    const w = m.npcs.filter((n) => n.wander), homes = w.map((n) => [n.x, n.y]), real = Math.random; let bad = 0, moved = 0;
+    for (let i = 0; i < 300; i++) { Math.random = () => (i * 0.37) % 1; owSlideUntil = 0; owWander(); w.forEach((n) => { const tt = owTileAt(m, n.x, n.y); if (!tt || tt.solid || tt.grass || (n.x === o.x && n.y === o.y) || Math.abs(n.x - n.home.x) > 2 || Math.abs(n.y - n.home.y) > 2 || owWarpAt(m, n.x, n.y) || w.some((p) => p !== n && p.x === n.x && p.y === n.y)) bad++; }); }
+    Math.random = real; window.__noWander = true; moved = w.some((n, k) => n.x !== homes[k][0] || n.y !== homes[k][1]);
+    out.wandered = moved && bad === 0;
+    const wk = w[0], real2 = owTimeOfDay; owTimeOfDay = () => 'night'; owInteract(m, wk.x, wk.y); const night = talk.lines.join(' '); closeTalk(); owTimeOfDay = () => 'day'; owInteract(m, wk.x, wk.y); const day = talk.lines.join(' '); closeTalk(); owTimeOfDay = real2;
+    out.lines = night !== day && night === wk.night.join(' ');
+    out.art = !!document.getElementById('w-t-house-window') && !!document.getElementById('w-t-roof-chimney');
+    const all = OW_LANDS.map((L) => OW_MAPS[L.town]); let win = 0, chim = 0; all.forEach((mm) => { for (let y = 0; y < mm.rows.length; y++) for (let x = 0; x < mm.rows[0].length; x++) { const v = owVariant(mm, x, y, owTileAt(mm, x, y).t); if (v === 't-house-window') win++; if (v === 't-roof-chimney') chim++; } });
+    out.houses = win > 5 && chim > 3;
+    return out;
+  });
+  assert.deepEqual(r, { everyTown: true, wandered: true, lines: true, art: true, houses: true });
+});

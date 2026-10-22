@@ -18,7 +18,7 @@ function owInteract(map, x, y) {
     if (npc.kind === 'nurse') { openCenter(npc); return; }
     if (npc.kind === 'clerk') { openMart(npc); return; }
     if (OW_SERVICES[npc.kind]) { OW_SERVICES[npc.kind](npc); return; }
-    openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.lines });
+    openTalk({ name: npc.name, art: heroSprite(heroLookColors(npc.look), 'down', 0), lines: npc.night && owTimeOfDay() === 'night' ? npc.night : npc.lines });          // some people say something else after dark
     return;
   }
   const sign = map.signs && map.signs[x + ',' + y];
@@ -88,6 +88,11 @@ function openSignQuiz(sign) {
   const art = worldSprite('t-sign');
   if (sign.story && state.overworld.story.indexOf(sign.story) !== -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.done || 'Everything is in order again. Thank you!'] }); return; }
   if (sign.after && state.overworld.beat.indexOf(sign.after) === -1) { openTalk({ name: 'Math sign', art: art, lines: [sign.locked || 'A Scrambler is guarding this. Beat them first!'] }); return; }
+  if (state.noQuestions) {                                           // questions are off in Settings: a puzzle sign solves itself and pays what it pays
+    if (sign.story) owStoryReward(sign.story);
+    openTalk({ name: 'Math sign', art: art, lines: [sign.text, sign.story ? 'Questions are switched off, so this puzzle solved itself!' : 'Questions are switched off in Settings.'] });
+    return;
+  }
   talk = { name: 'Math sign', art: art, lines: [sign.text], i: 0, quiz: { id: sign.id, q: makeMcq({ count: 3 }), done: false, story: sign.story || '', round: 1, rounds: sign.rounds || 1 } };
   showModal('talk-modal', renderTalk);
 }

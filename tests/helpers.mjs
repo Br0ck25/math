@@ -47,6 +47,7 @@ export async function openGame(browser, worker, env, opts = {}) {
   if (!opts.wildStart) await page.addInitScript(() => {
     try { if (!localStorage.getItem('math_quest_save')) localStorage.setItem('math_quest_save', JSON.stringify({ v: 1, currentMonsterIndex: 0, bossLevel: 5, recentBossTypes: ['fire'] })); } catch (e) { /* no storage */ }
   });
+  await page.addInitScript(() => { window.__noWander = true; });            // townsfolk stand still unless a test wants them to stroll
   if (!opts.adventureBoot) await page.addInitScript(() => { window.__noAdventureBoot = true; });      // the game starts on the Adventure map; most tests are about the main screen
   // Routes are laid out from blocks, so tests ask the map where to stand: window.grassSpot(map) is the tile just below two tall-grass tiles in a column that no trainer can see.
   await page.addInitScript(() => {

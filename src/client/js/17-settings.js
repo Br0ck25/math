@@ -17,8 +17,17 @@ function renderTypeChart() {
   }).join('') + '<div style="margin-top:6px;">🌟 Shadow deals x1.25 damage to everything<br>🛡️ Resisted hits do less damage; super-effective hits do +1 (never more than 40% of max HP)</div>';
 }
 
+// Play without questions: fights go straight to choosing an attack and puzzle signs solve themselves. Duels are between players and still ask.
+function renderNoQuestions() {
+  const b = document.getElementById('no-questions-btn');
+  if (!b) return;
+  b.innerText = state.noQuestions ? '🎮 Questions: OFF (just play)' : '🎮 Questions: ON';
+  b.setAttribute('aria-pressed', state.noQuestions ? 'true' : 'false');
+}
+function toggleNoQuestions() { state.noQuestions = !state.noQuestions; soundClick(); saveState(); renderNoQuestions(); }
 function renderSettings() {
   renderTypeChart();
+  renderNoQuestions();
   if (typeof applyReadAloudPref === 'function') applyReadAloudPref();
   const gg = document.getElementById('grade-grid');
   gg.innerHTML = '';

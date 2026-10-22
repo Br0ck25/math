@@ -59,6 +59,7 @@ function freshState() {
     readAloud: false,                                // whether math and study problems are read aloud
     hero: { name: '', look: { skin: 0, hair: 0, outfit: 0, style: 0 }, made: false },   // the Adventure hero (24i-ow-hero.js): a short name (letters only, never shown to other players) and the look as indexes into the palettes; made = the creator was finished
     advHp: {},                                       // Adventure battle HP by buddy id (missing = full); the Buddy Center restores it (24w-ow-battle-data.js)
+    noQuestions: false,                              // Settings > Options: play without math or study questions (fights go straight to the attack, signs solve themselves)
     stoneForm: {},                                   // buddy id -> the form index its Everstone keeps it in
     nicks: {},                                       // buddy id -> a nickname from NICK_NAMES (the Name Rater, 24v-ow-helpers.js)
     dexRate: 0,                                      // how many of Prof. Pi's Dex rating prizes were taken (24v-ow-helpers.js)
