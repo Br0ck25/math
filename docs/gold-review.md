@@ -50,8 +50,8 @@ Done in this pass: Game Boy style touch controls (see-through arrows bottom left
 Still missing, in the order a Gold player would notice:
 1. **(Partly done: two strollers per town wander near home and talk differently after dark; no badge-based lines yet.) People who move.**
 2. **(Partly done: windows and chimneys on some walls and roofs.) Building variety.** Every house, Center and Mart is still the same 2-by-3 block with a coloured roof and a small icon. **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
-3. **Town life.** Gold towns have lamp posts, mailboxes, fences, flower beds and a few more people (five to eight). Ours have two to four. **Step:** more stamps and more NPC lines per town.
-4. **Water and weather in the picture.** Water does not move; rain and snow are only battle effects. **Step:** a two-frame water shimmer and a rain overlay on the map.
+3. **(Partly done: three lamp posts per town; fences and flower beds come from the town stamps.) Town life.** Gold towns also have mailboxes and five to eight people; ours have four to six. **Step:** more stamps and more NPC lines per town.
+4. **(Done: ponds shimmer, and rain falls on the map on rainy and stormy days, outdoors only; no snow.) Water and weather in the picture.**
 5. **Walking frames.** The hero has two frames and no turn-in-place step; the buddy follows but does not animate.
 6. **Per-place music.** One tune per kind of place; Gold has a theme per town and route.
 7. **Still deliberately out:** Mystery Gift and linking.

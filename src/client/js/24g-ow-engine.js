@@ -130,7 +130,7 @@ function owCellLook(map, x, y, tile) {
   if (!kind) return '';
   if (kind === 'grass') { const h = (x * 73856093 ^ y * 19349663 ^ map.id.length * 83492791) >>> 0, k = h % 11; return k < 3 ? ' gv' + (k + 1) : ''; }
   const same = function (dx, dy) { const n = map.rows[y + dy] && owTileAt(map, x + dx, y + dy); return !n || (kind === 'ground' ? OW_WALK_GROUND.indexOf(n.t) !== -1 || /door|gym|mat|bridge|rug/.test(n.t) : n.t === 't-water' || n.t === 't-bridge'); };
-  return (same(0, -1) ? '' : ' ed-n') + (same(1, 0) ? '' : ' ed-e') + (same(0, 1) ? '' : ' ed-s') + (same(-1, 0) ? '' : ' ed-w') + (kind === 'water' ? ' sh' : '');
+  return (kind === 'water' ? ' wv' : '') + (same(0, -1) ? '' : ' ed-n') + (same(1, 0) ? '' : ' ed-e') + (same(0, 1) ? '' : ' ed-s') + (same(-1, 0) ? '' : ' ed-w') + (kind === 'water' ? ' sh' : '');
 }
 function renderOverworld() {
   owFruitDay();
@@ -164,7 +164,8 @@ function renderOverworld() {
   h += owActorHtml('ow-hero' + (owTileAt(map, o.x, o.y).water ? ' ow-surfing' : ''), hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
-  view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '');
+  const wx = map.room || map.dark ? '' : weatherToday().id;
+  view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '') + (wx === 'rainy' || wx === 'stormy' ? ' ow-' + wx : '');          // rain falls on the map on a rainy or stormy day (outdoors only)
   if (map.dark) view.style.setProperty('--dark-r', ((hasKeyItem('lamp') ? 5 : 2.6) * g.tile).toFixed(0) + 'px');
   view.setAttribute('aria-label', map.name + ' map');
   document.getElementById('ow-title').innerText = map.name;

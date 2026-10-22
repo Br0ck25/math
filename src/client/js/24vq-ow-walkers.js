@@ -42,3 +42,22 @@ function owWander() {
   if (moved) renderOverworld();
 }
 setInterval(owWander, 1400);
+// Lamp posts beside the main street, three to a town, on plain grass that touches a path; a post is only set where it cuts nothing off.
+function owPlaceLamps(town, k) {
+  const m = OW_MAPS[town], rnd = owRng(town, 900 + k), before = Object.keys(owReachSet(m)).length, landings = [];
+  Object.keys(OW_MAPS).forEach(function (id) { OW_MAPS[id].warps.forEach(function (w) { if (w.to === town) landings.push([w.tx, w.ty]); }); });
+  const cands = [];
+  for (let y = 2; y < m.rows.length - 2; y++) for (let x = 2; x < m.rows[0].length - 2; x++) {
+    if (m.rows[y].charAt(x) === ',' && [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return m.rows[y + d[1]].charAt(x + d[0]) === '.'; }) && !owNear(m, x, y, 1) && !landings.some(function (l) { return Math.abs(l[0] - x) <= 1 && Math.abs(l[1] - y) <= 1; })) cands.push([x, y]);
+  }
+  let placed = [], size = before;
+  for (let t = 0; t < 60 && placed.length < 3 && cands.length; t++) {
+    const c = cands.splice(Math.floor(rnd() * cands.length), 1)[0];
+    if (placed.some(function (p) { return Math.abs(p[0] - c[0]) + Math.abs(p[1] - c[1]) < 6; })) continue;
+    const row = m.rows[c[1]];
+    m.rows[c[1]] = row.slice(0, c[0]) + 'a' + row.slice(c[0] + 1);
+    const now = Object.keys(owReachSet(m)).length;
+    if (now === size - 1) { placed.push(c); size = now; } else m.rows[c[1]] = row;                      // it would shut something in: put the grass back
+  }
+}
+owTowns().forEach(function (t, k) { if (t !== OW_START.map) owPlaceLamps(t, k); });

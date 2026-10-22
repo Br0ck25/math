@@ -1005,3 +1005,13 @@ body.trivia .math-only { display: none; }
 .ow-cell.gv1::after { left: 22%; top: 58%; width: 14%; height: 14%; border-radius: 50%; background: #fff7ae; box-shadow: 0 0 0 2px #f9a8d4 inset, 14px -9px 0 -1px #fff, -4px -12px 0 -2px #fde68a; }
 .ow-cell.gv2::after { left: 52%; top: 40%; width: 10%; height: 26%; border-radius: 3px 3px 0 0; background: rgba(34, 120, 50, 0.7); box-shadow: -8px 6px 0 rgba(34, 120, 50, 0.7), 8px 8px 0 rgba(34, 120, 50, 0.7); }
 .ow-cell.gv3::after { left: 30%; top: 62%; width: 22%; height: 16%; border-radius: 50% 50% 40% 40%; background: rgba(148, 163, 184, 0.75); box-shadow: 1px 2px 0 rgba(71, 85, 105, 0.55); }
+
+/* Water that moves, and rain on the map (reduced motion keeps both still) */
+.ow-cell.wv::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(115deg, transparent 0 14px, rgba(255, 255, 255, 0.22) 14px 17px, transparent 17px 30px); background-size: 60px 60px; animation: owShimmer 3.2s linear infinite; }
+@keyframes owShimmer { from { background-position: 0 0; } to { background-position: 60px 0; } }
+.ow-view.ow-rainy::after, .ow-view.ow-stormy::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6; background: repeating-linear-gradient(105deg, transparent 0 11px, rgba(200, 225, 255, 0.5) 11px 12px, transparent 12px 23px); background-size: 46px 46px; animation: owRain 0.5s linear infinite; }
+.ow-view.ow-stormy::after { background-image: repeating-linear-gradient(105deg, transparent 0 7px, rgba(200, 225, 255, 0.55) 7px 8px, transparent 8px 15px); background-size: 30px 30px; }
+.ow-view.ow-rainy { filter: brightness(0.9) saturate(0.9); } .ow-view.ow-stormy { filter: brightness(0.78) saturate(0.85); }
+.ow-view.ow-night.ow-rainy, .ow-view.ow-night.ow-stormy { filter: brightness(0.55) saturate(0.75) hue-rotate(12deg); }
+@keyframes owRain { from { background-position: 0 0; } to { background-position: -18px 46px; } }
+.reduce-motion .ow-cell.wv::before, .reduce-motion .ow-view.ow-rainy::after, .reduce-motion .ow-view.ow-stormy::after { animation: none; }

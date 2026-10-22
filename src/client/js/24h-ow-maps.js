@@ -56,6 +56,7 @@ const OW_TILES = {
   'c': { t: 't-cave-floor', grass: true },
   'O': { t: 't-cave-mouth' },
   'X': { t: 't-gate-switch', solid: true, door: true },
+  'a': { t: 't-lamp', solid: true },
   '%': { t: 't-boulder', solid: true, boulder: true },
   'u': { t: 't-ladder' },
   'e': { t: 't-bed', solid: true },

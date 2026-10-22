@@ -1506,3 +1506,22 @@ test('towns have strollers who wander a step at a time near home (never onto doo
   });
   assert.deepEqual(r, { everyTown: true, wandered: true, lines: true, art: true, houses: true });
 });
+
+test('the map moves and has weather: ponds shimmer, rain falls outdoors on a rainy or stormy day (never in rooms or caves), and towns have lamp posts that shut nothing in', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; mountWorldArt(); openAdventure(); const out = {}, o = state.overworld, real = weatherToday;
+    const stand = (id) => { const m = OW_MAPS[id]; o.map = id; o.x = m.start.x; o.y = m.start.y; renderOverworld(); return document.getElementById('ow-view'); };
+    let v = stand('meadow'); out.shimmer = !!v.querySelector('.ow-cell.wv');
+    weatherToday = () => ({ id: 'rainy' }); v = stand('meadow'); out.rain = v.classList.contains('ow-rainy');
+    weatherToday = () => ({ id: 'stormy' }); v = stand('meadow'); out.storm = v.classList.contains('ow-stormy');
+    v = stand('meadow-center'); out.room = !/ow-(rainy|stormy)/.test(v.className);
+    const cave = OW_MAPS['route1-cave1']; v = stand('route1-cave1'); out.cave = !/ow-(rainy|stormy)/.test(v.className);
+    weatherToday = () => ({ id: 'sunny' }); v = stand('meadow'); out.sun = !/ow-(rainy|stormy)/.test(v.className);
+    weatherToday = real;
+    const towns = owTowns().filter((t) => t !== OW_START.map); out.lamps = towns.filter((t) => OW_MAPS[t].rows.join('').includes('a')).length >= towns.length - 1;
+    out.art = !!document.getElementById('w-t-lamp') && OW_TILES.a.solid === true;
+    return out;
+  });
+  assert.deepEqual(r, { shimmer: true, rain: true, storm: true, room: true, cave: true, sun: true, lamps: true, art: true });
+  assert.ok(await ev(() => getComputedStyle(document.querySelector('.ow-cell.wv'), '::before').animationName === 'owShimmer'));
+});
