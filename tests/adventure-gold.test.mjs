@@ -1328,3 +1328,23 @@ test("trainers' buddies use status moves: a level 15+ trainer buddy of a status-
   });
   assert.deepEqual(r, { elements: 5, trainer: true, low: true, wild: true });
 });
+
+test('the open sea: a dock door in Captain Wade\'s house leads out; without Water Steps the sea sends you back, with them you can surf to every islet find and walk home', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = {}, sea = OW_MAPS['tide-sea'], o = state.overworld;
+    state.badges = []; o.map = 'tide-house'; o.x = 5; o.y = 1; o.face = 'up'; owMove('up'); closeTalk();
+    out.bounced = o.map === 'tide-house' && o.y === 1;
+    state.badges = ['tide']; o.map = 'tide-house'; o.x = 5; o.y = 1; owMove('up');
+    out.arrived = o.map === 'tide-sea' && o.x === sea.start.x && o.y === sea.start.y;
+    // every find is on land, with water between it and the start, and a surfer can ride there (a flood that allows water)
+    const seen = new Set([o.x + ',' + o.y]), q = [[o.x, o.y]];
+    while (q.length) { const [cx, cy] = q.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy, t = owTileAt(sea, nx, ny); if (t && (!t.solid || t.water) && !seen.has(nx + ',' + ny)) { seen.add(nx + ',' + ny); q.push([nx, ny]); } }); }
+    out.finds = sea.objects.every((p) => seen.has(p.x + ',' + p.y));
+    state.badges = []; const walk = new Set([sea.start.x + ',' + sea.start.y]), w = [[sea.start.x, sea.start.y]];
+    while (w.length) { const [cx, cy] = w.shift(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => { const nx = cx + dx, ny = cy + dy; if (owWalkable(sea, nx, ny) && !walk.has(nx + ',' + ny)) { walk.add(nx + ',' + ny); w.push([nx, ny]); } }); }
+    out.onFoot = sea.objects.every((p) => !walk.has(p.x + ',' + p.y));
+    out.home = !!owWarpAt(sea, 7, 14) && walk.has('7,14');
+    return out;
+  });
+  assert.deepEqual(r, { bounced: true, arrived: true, finds: true, onFoot: true, home: true });
+});

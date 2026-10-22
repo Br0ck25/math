@@ -188,7 +188,7 @@ function owMove(dir) {
   o.x = nx; o.y = ledge ? ny + 1 : ny;
   owFrame = owFrame ? 0 : 1;
   const warp = owWarpAt(map, o.x, o.y);
-  if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); }
+  if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); if (o.map === 'tide-sea' && !hasKeyItem('water')) { o.map = 'tide-house'; o.x = 5; o.y = 1; toast('The open sea needs Water Steps, from the Tide Bay Gym.'); } }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
@@ -200,7 +200,7 @@ function owMove(dir) {
   const gym = here.gyms && here.gyms[o.x + ',' + o.y];
   if (gym) { owEnterGym(gym); return; }
   if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
-  else if (owTileAt(here, o.x, o.y).water && owGrassStep()) startAdventureFight(owWaterBuddy(owRodTier()), 0, true);      // water buddies bite while surfing
+  else if (owTileAt(here, o.x, o.y).water && owGrassStep()) startAdventureFight(owWaterBuddy(owRodTier()), here.id === 'tide-sea' ? 3 : 0, true);      // water buddies bite while surfing
 }
 // Space or Enter: talk to or read what the hero faces.
 function owInteractFacing() {

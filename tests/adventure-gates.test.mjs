@@ -158,7 +158,7 @@ test('the main road never needs a charm: with every road open and no charm, ever
       const m = OW_MAPS[k];
       Object.keys(m.gyms || {}).forEach((p) => { if (!(tiles[k] && tiles[k].has(p))) out.gyms.push(k + ':' + p); });
       (m.npcs || []).forEach((n) => { if (!near(k, n.x, n.y)) out.people.push(n.id); });
-      (m.objects || []).forEach((o) => { if (!(tiles[k] && tiles[k].has(o.x + ',' + o.y))) out.side.push(o.id); if (/-nook-|-surf$|-sleeper$|-boulder$/.test(o.id)) out.nooks.push(o.id); });
+      (m.objects || []).forEach((o) => { if (!(tiles[k] && tiles[k].has(o.x + ',' + o.y))) out.side.push(o.id); if (/-nook-|-surf$|-sleeper$|-boulder$|-sea-/.test(o.id)) out.nooks.push(o.id); });
     });
     return out;
   });

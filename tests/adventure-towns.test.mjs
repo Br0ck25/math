@@ -83,7 +83,7 @@ test('the town data is sound: unique ids, people and pickups on free walkable ti
       }
       const reachable = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => seenTiles.has((x + dx) + ',' + (y + dy)));
       (m.npcs || []).forEach((n) => { if (!reachable(n.x, n.y)) out.push(k + ': nobody can reach ' + n.id); });
-      (m.objects || []).forEach((o) => { if (!seenTiles.has(o.x + ',' + o.y) && !/-sleeper$|-boulder$/.test(o.id)) out.push(k + ': nobody can reach ' + o.id); });
+      (m.objects || []).forEach((o) => { if (!seenTiles.has(o.x + ',' + o.y) && !/-sleeper$|-boulder$|-sea-/.test(o.id)) out.push(k + ': nobody can reach ' + o.id); });
       Object.keys(m.signs || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); if (!reachable(x, y)) out.push(k + ': nobody can reach the sign ' + p); });
       Object.keys(m.trees || {}).forEach((p) => { const [x, y] = p.split(',').map(Number); if (!reachable(x, y)) out.push(k + ': nobody can reach the tree ' + p); });
     });
