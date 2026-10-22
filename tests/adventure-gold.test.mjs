@@ -1351,17 +1351,37 @@ test('Gold\'s two road blockers: an odd tree that sleeps across Hillside Road (t
   assert.deepEqual(r, { toll: 1000, kinds: ['tree', 'toll'], solid: [false, false], asleep: true, woken: true, poor: [10, false], paid: [1500, true, true], walls: [true, true] });
 });
 
-test('the hub city is two screens, as Gold\'s cities are bigger than one: Tide Bay East across a gap, with a Bike Shop, a Flower Shop, a Fan Club and a house; the Lake of Rage fish, Well sleepers and Burned Tower are in', async () => {
+test('the hub city is one wide map, as Gold\'s cities are: Tide Bay is 31 wide with a second district (a park, a Bike Shop, a Flower Shop, a Fan Club and the train station) on a street that runs straight through; the Lake of Rage fish, Well sleepers and Burned Tower are in', async () => {
   const r = await ev(() => {
-    const out = {};
-    out.east = ['tide-bikes', 'tide-flowers', 'tide-fans', 'tide-east-house'].every((id) => OW_MAPS[id] && OW_MAPS['tide-east'].warps.some((w) => w.to === id));
-    out.gap = OW_MAPS.tide.warps.some((w) => w.to === 'tide-east' && w.x === 15) && OW_MAPS['tide-east'].warps.length === 5;
+    const T = OW_MAPS.tide, out = {};
+    out.size = [T.rows[0].length, T.rows.length, !OW_MAPS['tide-east']];
+    out.east = ['tide-bikes', 'tide-flowers', 'tide-fans', 'tide-station'].every((id) => OW_MAPS[id] && T.warps.some((w) => w.to === id && w.x > 15 && T.rows[w.y].charAt(w.x) === 'D' && OW_MAPS[id].warps[0].to === 'tide' && OW_MAPS[id].warps[0].tx === w.x));
+    out.street = [19, 20, 21].every((y) => /^.{14}\.{3}/.test(T.rows[y]) || T.rows[y].slice(14, 17) === '...');
+    out.link = T.warps.some((w) => w.to === 'link-tide-coral' && w.x === 30) && OW_MAPS['link-tide-coral'].warps[0].tx === 29;
     out.fish = OW_MAPS['lake-of-rage'].npcs[0].kind === 'lakefish' && OW_STORY.includes('rage-fish');
     out.well = OW_MAPS['slowpoke-well'].npcs.filter((n) => n.kind === 'sleeper').length;
     out.burned = ['burned-grounds', 'burned-1', 'burned-2', 'burned-cellar'].every((id) => !!OW_MAPS[id]) && OW_MAPS['burned-cellar'].npcs.filter((n) => n.kind === 'sleeper').length === 3 && OW_MAPS['tin-grounds'].warps.some((w) => w.to === 'burned-grounds');
     return out;
   });
-  assert.deepEqual(r, { east: true, gap: true, fish: true, well: 3, burned: true });
+  assert.deepEqual(r, { size: [31, 28, true], east: true, street: true, link: true, fish: true, well: 3, burned: true });
+});
+
+test('the Crossroads is the second journey\'s hub city, one wide map like Tide Bay (31 wide, a street through, the Magnet Train station and a four-floor Crossroads Tower), and the Magnet Train runs between the two cities for the Champion for a fare', async () => {
+  const r = await ev(() => {
+    const C = OW_MAPS.cross, out = { size: [C.rows[0].length, C.rows.length] };
+    out.tower = [1, 2, 3, 4].every((n) => !!OW_MAPS['ctower-' + n]) && !!OW_MAPS['ctower-4'].signs['5,6'] && OW_STORY_ITEMS['ctower-sage'] === 'maxrevive';
+    out.doors = ['cross-station', 'ctower-1'].every((id) => C.warps.some((w) => w.to === id && w.x > 15 && C.rows[w.y].charAt(w.x) === 'D'));
+    out.link = C.warps.some((w) => w.to === 'link-cross-dusk' && w.x === C.rows[0].length - 1) && OW_MAPS['link-cross-dusk'].warps[0].tx === C.rows[0].length - 2;
+    state.hero.made = true; openAdventure(); const o = state.overworld, fare = ECON.train.gems; state.storySeen.champion = 0;
+    o.map = 'tide-station'; owSetRegion(OW_MAPS['tide-station']); o.x = 5; o.y = 8; renderOverworld();
+    OW_SERVICES.train(OW_MAPS['tide-station'].npcs[0]); out.closed = /only open to the Champion/.test(talk.lines.join(' ')) && !talk.choices; closeTalk();
+    state.storySeen.champion = 1; state.gems = 10; OW_SERVICES.train(OW_MAPS['tide-station'].npcs[0]); talkChoose(0); out.poor = [state.gems, o.map];
+    state.gems = 1000; OW_SERVICES.train(OW_MAPS['tide-station'].npcs[0]); talkChoose(0); out.rode = [state.gems, o.map];
+    OW_SERVICES.train(OW_MAPS['cross-station'].npcs[0]); talkChoose(0); out.back = o.map;
+    out.fare = fare;
+    return out;
+  });
+  assert.deepEqual(r, { size: [31, 20], tower: true, doors: true, link: true, closed: true, poor: [10, 'tide-station'], rode: [1000 - 300, 'cross-station'], back: 'tide-station', fare: 300 });
 });
 
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
@@ -1778,7 +1798,7 @@ test('towns are not one plan: the cross street sits at different rows, buildings
       const roles = {}; Object.keys(m.bldg).forEach((p) => { const [x, y] = p.split(',').map(Number); if (/R/.test(m.rows[y].charAt(x))) { const k = m.bldg[p] + ':' + y; roles[k] = (roles[k] || 0) + 1; } });
       Object.keys(roles).forEach((k) => widths.add(k.split(':')[0] + roles[k]));
       const gymRows = new Set(Object.keys(m.bldg).filter((p) => m.bldg[p] === 'gym' && m.rows[+p.split(',')[1]].charAt(+p.split(',')[0]) === 'R').map((p) => p.split(',')[1])); if (gymRows.size >= 3) tall++;
-      if (m.npcs.length >= 6 && m.npcs.length <= 10) folk++;
+      if (m.npcs.length >= 6 && m.npcs.length <= 13) folk++;
     });
     return { streets: streets.size >= 4, widths: [...widths].filter((w) => /^(center|gym)5$/.test(w)).length === 2 && [...widths].some((w) => /^house[23]$/.test(w)) && widths.has('mart4'), tall: tall >= 2, folk: folk === towns.length };
   });

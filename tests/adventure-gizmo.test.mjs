@@ -243,16 +243,16 @@ test('link roads join two towns by a second road: closed until both towns are se
   const r = await page.evaluate(() => {
     const out = { built: OW_LINKS.every((d) => !!OW_MAPS[d.id]) };
     const d = OW_LINKS.find((x) => !x.block), A = OW_MAPS[d.from], B = OW_MAPS[d.to], L = OW_MAPS[d.id];
-    out.gaps = [A.warps.some((w) => w.x === 15 && w.y === 6 && w.to === d.id && w.needs === d.to), B.warps.some((w) => w.x === 0 && w.y === 6 && w.to === d.id && w.needs === d.from)];
+    const gw = A.warps.find((w) => w.to === d.id); out.gaps = [!!gw && gw.x === A.rows[0].length - 1 && gw.y === 6 && gw.needs === d.to, B.warps.some((w) => w.x === 0 && w.y === 6 && w.to === d.id && w.needs === d.from)];
     // walk end to end
     const seen = {}, q = [[1, 6]]; seen['1,6'] = 1;
     while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach((v) => { const x = c[0] + v[0], y = c[1] + v[1]; if (!seen[x + ',' + y] && owWalkable(L, x, y) && !owNpcAt(L, x, y)) { seen[x + ',' + y] = 1; q.push([x, y]); } }); }
     out.through = !!seen[(OW_MAPS[d.id].rows[0].length - 2) + ',6']; out.stuff = L.objects.every((o) => seen[o.x + ',' + o.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some((v) => seen[(o.x + v[0]) + ',' + (o.y + v[1])]));
     // closed until the other town is seen
     grantKeyItem('gizmo'); grantKeyItem('map-card'); state.hero.made = true; openAdventure();
-    const o = state.overworld; o.seen = [d.from]; o.map = d.from; o.x = 14; o.y = 6; owSetRegion(A); renderOverworld(); owMove('right');
-    out.closed = o.map === d.from && o.x === 14 && owTileAt(A, 15, 6).t === 't-bush';
-    o.seen = [d.from, d.to]; o.x = 14; o.y = 6; owMove('right');
+    const o = state.overworld; o.seen = [d.from]; o.map = d.from; o.x = gw.x - 1; o.y = gw.y; owSetRegion(A); renderOverworld(); owMove('right');
+    out.closed = o.map === d.from && o.x === gw.x - 1 && owTileAt(A, gw.x, gw.y).t === 't-bush';
+    o.seen = [d.from, d.to]; o.x = gw.x - 1; o.y = gw.y; owMove('right');
     out.open = o.map === d.id;
     state.overworld.map = d.id; gizmoTab = 'map'; openGizmo();
     out.road = document.querySelectorAll('#gizmo-body svg.gm-map .gm-road').length; out.caves = document.querySelectorAll('#gizmo-body svg.gm-map .gm-cave').length;

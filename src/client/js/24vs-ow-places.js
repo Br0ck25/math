@@ -326,17 +326,12 @@ const OW_TOWER_GROUNDS = [
   'T,,,,*,,,,,,,,,T',
   'TTTTTTTTTTTTTTTT'
 ];
-function owTower(d) {
-  const mirror = d.hostEdge === 0, gid = d.id + '-grounds', H = OW_MAPS[d.host], doorX = mirror ? 7 : 8, rows = OW_TOWER_GROUNDS.map(function (r) { return mirror ? r.split('').reverse().join('') : r; });
-  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
-  OW_MAPS[gid] = { id: gid, name: d.name + ' grounds', region: d.region, start: { x: mirror ? 14 : 1, y: 8 }, palette: H.palette, annex: { near: d.host }, rows: rows,
-    warps: [{ x: doorX, y: 3, to: d.id + '-1', tx: 5, ty: 8 }],
-    npcs: [{ id: d.id + '-keeper', name: d.keeper, x: mirror ? 10 : 5, y: 5, face: 'down', look: OW_CHERRY_LOOK(d.look), lines: d.groundsLines }],
-    objects: [{ id: d.id + '-grounds-gems', type: 'pickup', x: mirror ? 5 : 10, y: 10, give: 'gems' }], trees: {}, signs: {} };
-  OW_MAPS[gid].signs[(mirror ? 10 : 5) + ',6'] = d.sign;
+// The floors of a tower (one sage on each, stairs between them, an elder to beat and a quiz stone on the top one) with the way out leading to `exitMap` at (doorX, exitY).
+function owTowerFloors(d, exitMap, doorX, exitY) {
+  const H = OW_MAPS[d.host], stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
   for (let n = 1; n <= d.floors; n++) {
     const id = d.id + '-' + n, top = n === d.floors;
-    const m = owRoom(id, d.name + (top ? ', top' : ', floor ' + n), { to: gid, tx: doorX, ty: 4 }, [{ id: id + '-sage', name: d.sages[(n - 1) % d.sages.length], x: 4, y: 4, face: 'down', look: OW_CHERRY_LOOK(d.look + n), lines: d.floorLines[(n - 1) % d.floorLines.length] }],
+    const m = owRoom(id, d.name + (top ? ', top' : ', floor ' + n), { to: exitMap, tx: doorX, ty: exitY }, [{ id: id + '-sage', name: d.sages[(n - 1) % d.sages.length], x: 4, y: 4, face: 'down', look: OW_CHERRY_LOOK(d.look + n), lines: d.floorLines[(n - 1) % d.floorLines.length] }],
       n === 2 ? [{ id: id + '-gems', type: 'pickup', x: 9, y: 4, give: 'gems' }] : n === 3 ? [{ id: id + '-net', type: 'pickup', x: 2, y: 8, give: 'net' }] : [], stairs(!top, n > 1));
     m.region = d.region; m.palette = H.palette; m.annex = { near: d.host }; m.warps = n === 1 ? m.warps : [];
     if (!top) m.warps.push({ x: 6, y: 1, to: d.id + '-' + (n + 1), tx: 1, ty: 2 });
@@ -345,7 +340,17 @@ function owTower(d) {
     if (top) { m.rows[6] = m.rows[6].slice(0, 5) + 's' + m.rows[6].slice(6); m.signs['5,6'] = { id: d.id + '-quiz', text: d.quizText, quiz: true, rounds: d.rounds, story: d.id + '-sage', after: id + '-sage', locked: 'The elder beside the stone watches you. Beat them first!' }; }
     OW_MAPS[id] = m;
   }
-  OW_STORY.push(d.id + '-sage'); OW_STORY_ITEMS[d.id + '-sage'] = 'stone';
+  OW_STORY.push(d.id + '-sage'); OW_STORY_ITEMS[d.id + '-sage'] = d.prize || 'stone';
+}
+function owTower(d) {
+  const mirror = d.hostEdge === 0, gid = d.id + '-grounds', H = OW_MAPS[d.host], doorX = mirror ? 7 : 8, rows = OW_TOWER_GROUNDS.map(function (r) { return mirror ? r.split('').reverse().join('') : r; });
+  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
+  OW_MAPS[gid] = { id: gid, name: d.name + ' grounds', region: d.region, start: { x: mirror ? 14 : 1, y: 8 }, palette: H.palette, annex: { near: d.host }, rows: rows,
+    warps: [{ x: doorX, y: 3, to: d.id + '-1', tx: 5, ty: 8 }],
+    npcs: [{ id: d.id + '-keeper', name: d.keeper, x: mirror ? 10 : 5, y: 5, face: 'down', look: OW_CHERRY_LOOK(d.look), lines: d.groundsLines }],
+    objects: [{ id: d.id + '-grounds-gems', type: 'pickup', x: mirror ? 5 : 10, y: 10, give: 'gems' }], trees: {}, signs: {} };
+  OW_MAPS[gid].signs[(mirror ? 10 : 5) + ',6'] = d.sign;
+  owTowerFloors(d, gid, doorX, 4);
   return owJoin(d.host, d.hostEdge, d.hostRow, gid, 8);
 }
 [{ id: 'sprout', name: 'Sprout Tower', host: 'meadow', hostEdge: 15, hostRow: 14, region: 'meadow', floors: 3, keeper: 'Monk Sen', look: 2, rounds: 3, team: [['hedwig', 14], ['bunny', 13]], win: ['A fine battle. The stone is yours to try.'],
@@ -402,42 +407,117 @@ Object.assign(OW_MAPS['lake-of-rage'].npcs.find(function (n) { return n.id === '
   owJoin('tin-grounds', 0, 5, 'burned-grounds', 8);
 })();
 
-// Tide Bay East (the other half of Gold's big city): a second screen of the hub across a gap in its east edge, with a Bike Shop, a Flower Shop, a Fan Club and a house along one street.
-OW_MAPS['tide-east'] = {
-  id: 'tide-east', name: 'Tide Bay East', region: 'tide', start: { x: 1, y: 9 }, palette: OW_MAPS.tide.palette, annex: { near: 'tide' },
-  rows: [
-    'TTTTTTTTTTTTTTTT',
-    'T,,,,,,,,,,,,,,T',
-    'T,RRRRRTTRRRRR,T',
-    'T,RRRRRT,RRRRR,T',
-    'T,WWDWW,,WWDWW,T',
-    'T,,,.,,,a,,.,,,T',
-    'T,,,.,,,,,,.,,,T',
-    'T*,,.,,,,,,.,,*T',
-    'T,,,.,,,,,,.,,,T',
-    '...............T',
-    'T,,,,,,,,,,,,,*T',
-    'T,,,,,,,,,,,,,,T',
-    'T,RRRRR,,,RRRR,T',
-    'T,RRRRR,,,RRRR,T',
-    'T,WWDWW,,,WDWW,T',
-    'T,,,,,,,,,,,,,,T',
-    'T,,,,,,~~~,,,,,T',
-    'T*,,,,,~~~,,,*,T',
-    'T,,,,,,,*,,,,,,T',
-    'TTTTTTTTTTTTTTTT'
-  ],
-  warps: [{ x: 4, y: 4, to: 'tide-bikes', tx: 5, ty: 8 }, { x: 11, y: 4, to: 'tide-flowers', tx: 5, ty: 8 }, { x: 4, y: 14, to: 'tide-fans', tx: 5, ty: 8 }, { x: 11, y: 14, to: 'tide-east-house', tx: 5, ty: 8 }],
-  npcs: [{ id: 'teast-walker', name: 'Walker Bo', x: 9, y: 8, face: 'down', look: OW_CHERRY_LOOK(3), lines: ['This half of the city is quieter. The big shops are across the gap, in the west.'] },
-    { id: 'teast-kid', name: 'Kid Ren', x: 6, y: 15, face: 'right', look: OW_CHERRY_LOOK(0), lines: ['Our pond has the loudest frogs in town.'] }],
-  objects: [{ id: 'teast-gems', type: 'pickup', x: 13, y: 18, give: 'gems' }], trees: {}, signs: { '8,6': 'Tide Bay East. Bike Shop, Flower Shop and Fan Club. The Dept. Store is back west.' }
+// Tide Bay East (the other half of Gold's big city): the hub is one map, so a second district is joined on beside the first, a street running straight through where the two meet.
+// It has a park with a pond and, along a street, a Bike Shop, a Flower Shop, a Fan Club and a house. The east edge, where the road to Coral Reach leaves, moves to the end of the district.
+(function () {
+  const T = OW_MAPS.tide, east = [
+  'TTTTTTTTTTTTTTTT',
+  'T,,,,,,,,,,,,,,T',
+  'T,TT,,,,,,,,TT,T',
+  'T,,,,~~~~,,,,,,T',
+  'T,,,,~~~~,*,,,,T',
+  'T,,,,~~~~,,,,,,T',
+  'T,,,,,,,,,,s,,,T',
+  'T,,*,,,,,,,,*,,T',
+  'T,,,,,,,,,,,,,,T',
+  'T,T,,,,*,,,,,T,T',
+  'T,,,,,,,T,,,,,,T',
+  'T,,,,,,,,,,,,,,T',
+  'T,T,,,*,,,,,,,TT',
+  'T,,,,,,,,,,,,,,T',
+  'T,RRRRR,,RRRRR,T',
+  'T,RRRRR,,RRRRR,T',
+  'T,WWDWW,,WWDWW,T',
+  'T,,,.,,,,,,.,,,T',
+  'T,*,.,,,a,,.,,*T',
+  'T,,,.,,,,,,.,,,T',
+  '...............T',
+  'T,,,,,,,,,,,,,,T',
+  'T,RRRRR,,,RRRR,T',
+  'T,RRRRR,,,RRRR,T',
+  'T,WWDWW,,,WDWW,T',
+  'T,,,,,,,,,,,,,,T',
+  'TT,,,,,,*,,,,T,T',
+  'TTTTTTTTTTTTTTTT'
+  ], W0 = T.rows[0].length, H = T.rows.length, off = W0 - 1;
+  if (east.length !== H) return;
+  const rows = T.rows.map(function (r, y) { return r + east[y].slice(1); });
+  const set = function (x, y, c) { rows[y] = rows[y].slice(0, x) + c + rows[y].slice(x + 1); };
+  for (let y = 19; y <= 21; y++) { set(14, y, '.'); set(15, y, '.'); set(16, y, '.'); }                  // the street runs straight through the seam
+  set(rows[0].length - 1, 6, '.'); set(rows[0].length - 2, 6, '.');
+  T.rows = rows;
+  const link = T.warps.find(function (w) { return w.to === 'link-tide-coral'; });
+  if (link) { T.warps.splice(T.warps.indexOf(link), 1); T.warps.push({ x: rows[0].length - 1, y: 6, to: link.to, tx: link.tx, ty: link.ty, needs: link.needs }); OW_MAPS['link-tide-coral'].warps[0].tx = rows[0].length - 2; }
+  const doors = [[4, 16, 'tide-bikes'], [11, 16, 'tide-flowers'], [4, 24, 'tide-fans'], [11, 24, 'tide-station']];
+  T.signs[(off + 11) + ',6'] = 'Tide Bay East. Bike Shop, Flower Shop and Fan Club. The Dept. Store is back west.';
+  T.npcs.push({ id: 'teast-walker', name: 'Walker Bo', x: off + 9, y: 19, face: 'down', look: OW_CHERRY_LOOK(3), lines: ['This half of the city is quieter. The big shops are across the street, in the west.'] },
+    { id: 'teast-kid', name: 'Kid Ren', x: off + 6, y: 21, face: 'right', look: OW_CHERRY_LOOK(0), lines: ['The pond in the park has the loudest frogs in town.'] });
+  T.objects = (T.objects || []).concat([{ id: 'teast-gems', type: 'pickup', x: off + 12, y: 26, give: 'gems' }]);
+  [['tide-bikes', 'Bike Shop', { id: 'teast-bikes-seller', name: 'Seller Ria', lines: ['Bicycles! The best ones are far too dear for a window shopper, but look all you like.'] }, { id: 'tide-bikes-net', give: 'net' }],
+   ['tide-flowers', 'Flower Shop', { id: 'teast-flower-florist', name: 'Florist Lily', lines: ['Flowers for every day of the week. The berries out the back are free to anyone who asks nicely.'] }, { id: 'tide-flowers-berries', give: 'berry' }],
+   ['tide-fans', 'Fan Club', { id: 'teast-fans-chair', name: 'Chairman Pell', lines: ['Welcome to the Buddy Fan Club! I could talk about my favourite buddy for six hours. Do sit down.', 'It is the one that sleeps in the sun. Does not sound like much, but it is magnificent.'] }, { id: 'tide-fans-gems', give: 'gems' }],
+   ['tide-station', 'Magnet Train station', { id: 'teast-station-clerk', kind: 'train', dest: 'cross-station', name: 'Station Master Jun', lines: ['The Magnet Train runs from here to the Crossroads.'] }, null]].forEach(function (r, i) {
+    const d = doors[i], npc = Object.assign({ x: 4, y: 2, face: 'down', look: OW_CHERRY_LOOK(i + 1) }, r[2]);
+    OW_MAPS[r[0]] = Object.assign(owRoom(r[0], r[1], { to: 'tide', tx: off + d[0], ty: d[1] + 1 }, [npc], r[3] ? [Object.assign({ type: 'pickup', x: 1, y: 4 }, r[3])] : []), { region: 'tide', palette: OW_TIDE_PALETTE, annex: { near: 'tide' } });
+    T.warps.push({ x: off + d[0], y: d[1], to: r[0], tx: 5, ty: 8 });
+  });
+})();
+
+// The Magnet Train (Gold's train between Goldenrod and Saffron): a station in Tide Bay and one in the Crossroads. The Champion rides between them for a fare (ECON.train.gems).
+OW_SERVICES.train = function (npc) {
+  const art = heroSprite(heroLookColors(npc.look), 'down', 0), dest = OW_MAPS[npc.dest], fare = ECON.train.gems;
+  if (!isChampion()) { openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['The line is only open to the Champion. Come back when the Hall has crowned you.']) }); return; }
+  openTalk({ name: npc.name, art: art, lines: npc.lines.concat(['A ride costs ' + fare + ' gems.']), choices: [
+    { label: 'Ride (' + fare + ' gems)', run: function () {
+      closeTalk();
+      if (state.gems < fare) { openTalk({ name: npc.name, art: art, lines: ['You need ' + fare + ' gems for the fare.'] }); return; }
+      state.gems -= fare; const o = state.overworld; o.map = npc.dest; o.x = dest.start.x; o.y = dest.start.y; o.face = 'up'; owTrail = null; owSetRegion(dest); saveState(); updateStatsUI(); renderOverworld(); toast('The train hums through the hills.');
+    } },
+    { label: 'Not now', run: function () { closeTalk(); } }
+  ] });
 };
-OW_MAPS['tide-east'].rows[6] = OW_MAPS['tide-east'].rows[6].slice(0, 8) + 's' + OW_MAPS['tide-east'].rows[6].slice(9);
-[['tide-bikes', 'Bike Shop', 4, 4, { id: 'teast-bikes-seller', name: 'Seller Ria', lines: ['Bicycles! The best ones are far too dear for a window shopper, but look all you like.'] }, { id: 'tide-bikes-net', give: 'net' }],
- ['tide-flowers', 'Flower Shop', 11, 4, { id: 'teast-flower-florist', name: 'Florist Lily', lines: ['Flowers for every day of the week. The berries out the back are free to anyone who asks nicely.'] }, { id: 'tide-flowers-berries', give: 'berry' }],
- ['tide-fans', 'Fan Club', 4, 14, { id: 'teast-fans-chair', name: 'Chairman Pell', lines: ['Welcome to the Buddy Fan Club! I could talk about my favourite buddy for six hours. Do sit down.', 'It is the one that sleeps in the sun. Does not sound like much, but it is magnificent.'] }, { id: 'tide-fans-gems', give: 'gems' }],
- ['tide-east-house', 'Tide Bay house', 11, 14, { id: 'teast-house-marn', name: 'Old Marn', lines: ['I have lived on this street since it was a path with one lamp.'] }, null]].forEach(function (r, i) {
-  const npc = Object.assign({ x: 4, y: 2, face: 'down', look: OW_CHERRY_LOOK(i + 1) }, r[4]);
-  OW_MAPS[r[0]] = Object.assign(owRoom(r[0], r[1], { to: 'tide-east', tx: r[2], ty: r[3] + 1 }, [npc], r[5] ? [Object.assign({ type: 'pickup', x: 1, y: 4 }, r[5])] : []), { region: 'tide', palette: OW_TIDE_PALETTE, annex: { near: 'tide' } });
-});
-owJoin('tide', 15, 20, 'tide-east', 9);
+OW_MAPS['tide-station'].npcs[0].dest = 'cross-station';
+
+// The Crossroads East (the Crossroads is the hub of the second journey, as Saffron is of Kanto, so it is one wide map too): a district joined on beside the town, a street straight through, a park, the Magnet Train station and the Crossroads Tower.
+(function () {
+  const C = OW_MAPS.cross, east = [
+  'TTTTTTTTTTTTTTTT',
+  'T,,,,,,,,,,,,,,T',
+  'T,TT,~~~~,,,TT,T',
+  'T,,,,~~~~,*,,,,T',
+  'T,,,,~~~~,,,,,,T',
+  'T,,*,,,,,,,,*,,T',
+  'T,T,,,,*,,,s,,,T',
+  'T,,,,,,,,,,,,,,T',
+  'T,RRRRR,,RRRRR,T',
+  'T,RRRRR,,RRRRR,T',
+  'T,WWDWW,,WWDWW,T',
+  'T,,,.,,,,,,.,,,T',
+  'T,,,.,,*a,,.,T,T',
+  'T,,,.,,,,,,.,,TT',
+  'TT,,.,,,*,,.,,,T',
+  'T,,,.,,,,,,.,,,T',
+  'T..............T',
+  'T,,,,,,,,,,,,,,T',
+  'TT,,,*,,T,,*,,TT',
+  'TTTTTTTTTTTTTTTT'
+  ], W0 = C.rows[0].length, H = C.rows.length, off = W0 - 1;
+  if (east.length !== H) return;
+  const rows = C.rows.map(function (r, y) { return r + east[y].slice(1); });
+  const set = function (x, y, c) { rows[y] = rows[y].slice(0, x) + c + rows[y].slice(x + 1); };
+  for (let y = 16; y <= 17; y++) { set(14, y, '.'); set(15, y, '.'); set(16, y, '.'); }
+  set(rows[0].length - 1, 6, '.'); set(rows[0].length - 2, 6, '.');
+  C.rows = rows;
+  const link = C.warps.find(function (w) { return w.to === 'link-cross-dusk'; });
+  if (link) { C.warps.splice(C.warps.indexOf(link), 1); C.warps.push({ x: rows[0].length - 1, y: 6, to: link.to, tx: link.tx, ty: link.ty, needs: link.needs }); OW_MAPS['link-cross-dusk'].warps[0].tx = rows[0].length - 2; }
+  C.signs[(off + 11) + ',6'] = 'Crossroads East. The Magnet Train station and the Crossroads Tower. The old town is back west.';
+  C.npcs.push({ id: 'ceast-walker', name: 'Commuter Sae', x: off + 8, y: 15, face: 'down', look: OW_CHERRY_LOOK(2), lines: ['I take the Magnet Train to Tide Bay every Friday for the Dept. Store.'] });
+  C.objects = (C.objects || []).concat([{ id: 'ceast-gems', type: 'pickup', x: off + 13, y: 18, give: 'gems' }]);
+  OW_MAPS['cross-station'] = Object.assign(owRoom('cross-station', 'Magnet Train station', { to: 'cross', tx: off + 4, ty: 11 }, [{ id: 'ceast-station-clerk', kind: 'train', dest: 'tide-station', name: 'Station Master Ola', x: 4, y: 2, face: 'down', look: OW_CHERRY_LOOK(4), lines: ['The Magnet Train runs from here to Tide Bay.'] }], []), { region: 'cross', palette: OW_CROSS_PALETTE, annex: { near: 'cross' } });
+  C.warps.push({ x: off + 4, y: 10, to: 'cross-station', tx: 5, ty: 8 });
+  OW_MAPS['tide-station'].warps[0].to = 'tide'; OW_MAPS['tide-station'].npcs[0].dest = 'cross-station';
+  owTowerFloors({ id: 'ctower', name: 'Crossroads Tower', host: 'cross', region: 'cross', floors: 4, rounds: 4, prize: 'maxrevive', look: 3,
+    sages: ['Clerk Aya', 'Analyst Tor', 'Manager Lin', 'President Vance'], floorLines: [['Welcome to the Crossroads Tower. Every road in the world ends up on one of our desks.'], ['Maps, maps and more maps.'], ['The president is on the top floor. She likes visitors who can do sums.'], ['Welcome to the top. The old stone beside me asks four questions in a row. A hard one, but the gift is a good one.']],
+    quizText: 'An old stone with numbers on it. Answer four questions in a row and it gives up a gift.', team: [['lion', 87], ['shark', 87], ['pegasus', 86]], win: ['Well fought. Try the stone.'] }, 'cross', off + 11, 11);
+  C.warps.push({ x: off + 11, y: 10, to: 'ctower-1', tx: 5, ty: 8 });
+})();

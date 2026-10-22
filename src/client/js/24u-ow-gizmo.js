@@ -93,6 +93,7 @@ function gizmoMapHtml() {
   const towns = ['hollow'].concat(OW_LANDS.map(function (L) { return L.town; })), line = [], pair = {};
   const poly = function (pts, cls) { return '<polyline class="gm-road' + (cls ? ' ' + cls : '') + '" points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '"/>'; };
   GIZMO_ROADS.forEach(function (r) { pair[r[0] + '>' + r[1]] = pair[r[1] + '>' + r[0]] = 1; line.push(poly(gizmoPts(r[0], r[1], r[2]), r[3] === 'far' ? 'gm-far' : '')); });
+  if (isChampion()) line.push(poly(gizmoPts('tide', 'cross', [[60, 58]]), 'gm-far'));                  // the Magnet Train (24vs), drawn as a dashed line once the Champion can ride it
   OW_LINKS.forEach(function (d) {                                                                  // the second roads (24vr), drawn once you have stood in both towns; one beside a main road bows out so the two stay apart
     if (!OW_MAPS[d.id] || !seen(d.from) || !seen(d.to)) return;
     const a = GIZMO_NODES[d.from], b = GIZMO_NODES[d.to];
