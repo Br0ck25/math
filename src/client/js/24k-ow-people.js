@@ -187,9 +187,13 @@ function owFish() {
   if (!hasKeyItem('fishing-rod')) { openTalk({ name: 'Water', art: worldSprite('t-water'), lines: ['The water is calm and clear.', 'Maybe something is swimming down there. A Fishing Rod would help!'] }); return; }
   const rod = owRodTier(), R = ECON.overworld.rods[rod];
   if (Math.random() >= R.bite) { toast('No bite. Try again!'); return; }
+  startAdventureFight(owWaterBuddy(rod), R.level, true);
+}
+// A water buddy for a bite or for surfing: Old Rod: the everyday ones; Good: every store buddy; Super: the rare ones too.
+function owWaterBuddy(rod) {
   const water = wildPool().filter(function (p) { return p.element === 'water'; });
-  const fit = water.filter(function (p) { return rod === 0 ? isStoreBuddy(p) && p.cost < 150 : rod === 1 ? isStoreBuddy(p) : true; });          // Old Rod: the everyday ones; Good: every store buddy; Super: the rare ones too
-  startAdventureFight(pick(fit.length ? fit : water), R.level, true);
+  const fit = water.filter(function (p) { return rod === 0 ? isStoreBuddy(p) && p.cost < 150 : rod === 1 ? isStoreBuddy(p) : true; });
+  return pick(fit.length ? fit : water);
 }
 
 // ----- shake trees: once a day each, a rare buddy falls out (the same one all day, a different one tomorrow) -----

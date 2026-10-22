@@ -1281,3 +1281,18 @@ test('the Name Rater: a nickname from a fixed list for the lead buddy, kept in b
   });
   assert.deepEqual(r, { there: true, offers: 4, set: true, named: true, clean: '{"fox":"Pip"}', back: true });
 });
+
+test('Surf: with the Water Steps charm the hero rides over water (and water buddies bite); without it water is a wall', async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure(); const out = {}, m = OW_MAPS.meadow, W = waterSpot('meadow');
+    out.spot = !!W;
+    if (!W) return out;
+    state.overworld.map = 'meadow'; state.overworld.x = W.x; state.overworld.y = W.y; state.overworld.face = W.face;
+    state.badges = []; owMove(W.face); closeTalk(); out.wall = state.overworld.x === W.x && state.overworld.y === W.y;
+    state.badges = ['tide']; const d = OW_STEP[W.face]; owMove(W.face);
+    out.rode = state.overworld.x === W.x + d[0] && state.overworld.y === W.y + d[1] && !!owTileAt(m, state.overworld.x, state.overworld.y).water;
+    out.ring = !!document.querySelector('.ow-hero.ow-surfing');
+    return out;
+  });
+  assert.deepEqual(r, { spot: true, wall: true, rode: true, ring: true });
+});

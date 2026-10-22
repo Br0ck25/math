@@ -971,3 +971,6 @@ body.trivia .math-only { display: none; }
 @keyframes abWipeTrainer { from { clip-path: circle(0 at 50% 50%); } to { clip-path: circle(80% at 50% 50%); } }
 #ab-modal .ab-content.ab-wipe-wild { animation: abWipeWild 0.7s steps(8, end); }
 #ab-modal .ab-content.ab-wipe-trainer { animation: abWipeTrainer 0.9s ease-in; }
+
+/* Surfing: the hero rides on a ring of water */
+.ow-hero.ow-surfing > .w-hero { filter: drop-shadow(0 5px 0 #1D6FB5) drop-shadow(0 0 3px #B6E3FA); }

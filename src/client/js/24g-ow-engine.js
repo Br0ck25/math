@@ -136,7 +136,7 @@ function renderOverworld() {
     else if (pick) h += owActorHtml('ow-pickup', f[1], f[2], g, worldSprite('o-sparkle'));
   });
   if (owTrail && (owTrail.x !== o.x || owTrail.y !== o.y)) h += owActorHtml('ow-follow', owTrail.x - o.x + hx, owTrail.y - o.y + hy, g, owFollowerHtml());
-  h += owActorHtml('ow-hero', hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
+  h += owActorHtml('ow-hero' + (owTileAt(map, o.x, o.y).water ? ' ow-surfing' : ''), hx, hy, g, heroSprite(heroLookColors(), o.face, owFrame));
   view.style.cssText = '--ow-cols:' + g.cols + ';--ow-rows:' + g.rows + ';--ow-tile:' + g.tile.toFixed(2) + 'px;' + owPaletteCss(map.palette);
   view.innerHTML = h;
   view.className = 'ow-view ow-' + owTimeOfDay() + (map.dark ? ' ow-dark' : '');
@@ -177,8 +177,9 @@ function owMove(dir) {
   o.face = dir;
   const nx = o.x + d[0], ny = o.y + d[1];
   if (owTileAt(map, nx, ny).boulder) owPush(map, nx, ny, d);
+  const surf = !!owTileAt(map, nx, ny).water && hasKeyItem('water') && !owNpcAt(map, nx, ny) && !owWarpAt(map, nx, ny);      // Gold's Surf: with the Water Steps charm the hero rides over water
   const ledge = dir === 'down' && owTileAt(map, nx, ny).ledge && owWalkable(map, nx, ny + 1) && !owNpcAt(map, nx, ny + 1);      // Gold's ledge: you hop down over it, never up
-  if (!ledge && (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny))) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
+  if (!ledge && !surf && (!owWalkable(map, nx, ny) || owNpcAt(map, nx, ny))) {          // a wall, a tree, a person or a sign: just turn (people talk, signs tell their words)
     renderOverworld();
     owInteract(map, nx, ny);
     return;
@@ -199,6 +200,7 @@ function owMove(dir) {
   const gym = here.gyms && here.gyms[o.x + ',' + o.y];
   if (gym) { owEnterGym(gym); return; }
   if (owTileAt(here, o.x, o.y).grass && owGrassStep()) startAdventureFight();
+  else if (owTileAt(here, o.x, o.y).water && owGrassStep()) startAdventureFight(owWaterBuddy(owRodTier()), 0, true);      // water buddies bite while surfing
 }
 // Space or Enter: talk to or read what the hero faces.
 function owInteractFacing() {
