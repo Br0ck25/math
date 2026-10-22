@@ -51,12 +51,12 @@ function renderGizmo() {
 // the last in the north-east), and the second journey is a ring of its own on the right. Each road lists the corners it turns, so it runs as it does in the game.
 const GIZMO_NODES = {
   hollow: [76, 68], meadow: [44, 43], ember: [35, 84], tide: [26, 64], grove: [35, 31], volt: [18, 43], gloom: [13, 69], mystic: [58, 34], skyreach: [75, 34],
-  cinder: [88, 80], coral: [88, 64], thistle: [88, 48], spark: [88, 32], dusk: [98, 22], prism: [107, 32], cross: [107, 48], summit: [107, 64], peak: [107, 80]
+  cinder: [88, 82], coral: [88, 66], thistle: [88, 50], spark: [88, 34], dusk: [98, 22], prism: [108, 34], cross: [98, 52], summit: [108, 66], peak: [108, 82]
 };
 const GIZMO_ROADS = [                                                                              // [from, to, corners, kind]: the main road of the story
   ['hollow', 'meadow', [[52, 68], [52, 43]]], ['meadow', 'ember', [[44, 84]]], ['ember', 'tide', [[26, 84]]], ['tide', 'grove', [[26, 31]]], ['grove', 'volt', [[18, 31]]], ['volt', 'gloom', [[13, 43]]],
-  ['gloom', 'mystic', [[13, 90], [58, 90]], 'far'], ['mystic', 'skyreach', []], ['skyreach', 'cinder', [[84, 34], [84, 80]]], ['cinder', 'coral', []], ['coral', 'thistle', []], ['thistle', 'spark', []],
-  ['spark', 'dusk', [[98, 32]]], ['dusk', 'prism', [[107, 22]]], ['prism', 'cross', []], ['cross', 'summit', []], ['summit', 'peak', []]
+  ['gloom', 'mystic', [[13, 90], [58, 90]], 'far'], ['mystic', 'skyreach', []], ['skyreach', 'cinder', [[84, 34], [84, 82]]], ['cinder', 'coral', []], ['coral', 'thistle', []], ['thistle', 'spark', []],
+  ['spark', 'dusk', [[88, 22]]], ['dusk', 'prism', [[108, 22]]], ['prism', 'cross', []], ['cross', 'summit', []], ['summit', 'peak', []]
 ];
 const GIZMO_LINK_CORNERS = { 'link-meadow-grove': [[44, 31]], 'link-grove-mystic': [[58, 31]], 'link-skyreach-hollow': [[66, 34], [66, 56], [76, 56]] };      // the other second roads run straight
 function gizmoNodeOf(mapId) {

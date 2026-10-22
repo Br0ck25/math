@@ -206,7 +206,9 @@ function owWaterBuddy(rod) {
 
 // ----- shake trees: once a day each, a rare buddy falls out (the same one all day, a different one tomorrow) -----
 function shakeSpecies(id) {
-  const pool = wildPool().filter(function (p) { return !isStoreBuddy(p) || p.cost >= 150; });          // not the everyday cheap ones
+  let pool = wildPool().filter(function (p) { return !isStoreBuddy(p) || p.cost >= 150; });          // not the everyday cheap ones
+  const dark = owTimeOfDay() === 'night' ? pool.filter(function (p) { return p.element === 'dark' || p.element === 'magic'; }) : [];          // Gold's night trees: only dark and magic buddies fall at night
+  if (dark.length) pool = dark;
   return pool[dayHash(id + dayKey()) % pool.length];
 }
 function owShake(id) {

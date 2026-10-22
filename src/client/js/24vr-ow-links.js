@@ -14,6 +14,7 @@ const OW_LINKS = [
   { id: 'link-mystic-cinder', name: 'Fog Road', from: 'mystic', to: 'cinder', w: 26, h: 16, river: true },
   { id: 'link-thistle-prism', name: 'Thistle Lane', from: 'thistle', to: 'prism', w: 24, h: 14 },
   { id: 'link-grove-mystic', name: 'Mortar Pass', from: 'grove', to: 'mystic', w: 30, h: 19, fromRow: 14, toRow: 14 },
+  { id: 'link-cross-dusk', name: 'Crossway', from: 'cross', to: 'dusk', w: 28, h: 15 },
   { id: 'link-skyreach-hollow', name: 'Dark Way Home', from: 'skyreach', to: 'hollow', w: 34, h: 15 }
 ];
 // One try at laying a link out; returns the map or null when something could not be placed.
