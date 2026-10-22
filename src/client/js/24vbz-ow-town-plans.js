@@ -32,7 +32,7 @@ function owTownTools(g, W, H, doors, mirror, rnd) {
     // Puts the four buildings in the style's slots, in an order that differs from town to town: the gym takes a tall slot (a roof row more) where there is one, and each building sits anywhere along its slot.
     assign: function (slots, roles) {
       roles = roles || ['center', 'mart', 'house', 'gym'];
-      const order = roles.slice().sort(function () { return rnd() - 0.5; }), spots = slots.slice().sort(function () { return rnd() - 0.5; }), tall = spots.findIndex(function (sl) { return sl.tall; }), gi = order.indexOf('gym');
+      const order = owShuffle(roles, rnd), spots = owShuffle(slots, rnd), tall = spots.findIndex(function (sl) { return sl.tall; }), gi = order.indexOf('gym');
       if (tall !== -1 && gi !== -1) { const t = order[tall]; order[tall] = 'gym'; order[gi] = t; }
       T.unused = spots.slice(order.length);
       order.forEach(function (role, k) {

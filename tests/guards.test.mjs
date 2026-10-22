@@ -23,3 +23,8 @@ test('every online-duel notification names its kind, so one kind never silently 
 test('test pages never register the service worker', () => {
   assert.match(fs.readFileSync('tests/helpers.mjs', 'utf8'), /serviceWorkers:\s*'block'/);
 });
+
+test('the world is laid out the same in every browser: no random-comparator sorts (their order differs between Chrome and Safari) in the Adventure files', () => {
+  const dir = 'src/client/js/';
+  fs.readdirSync(dir).filter((f) => /^24[g-z]/.test(f)).forEach((f) => assert.doesNotMatch(fs.readFileSync(dir + f, 'utf8'), /\.sort\(\s*function\s*\(\)\s*\{\s*return\s+(rnd|Math\.random)\(\)/, f + ' sorts with a random comparator; use owShuffle'));
+});

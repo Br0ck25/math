@@ -25,7 +25,7 @@ function owBuildTown(L, i, attempt, planned) {
     for (let x = 2; x <= 13; x++) { g[cs][x] = '.'; g[cs + 1][x] = '.'; }
     const slotNames = ['TL', 'TR', 'ML', 'MR', 'BL', 'BR'].concat(H === 20 ? ['XL', 'XR'] : []);
     extra = H === 18 ? ['XL', 'XR'] : [];
-    names = slotNames.sort(function () { return rnd() - 0.5; });
+    names = owShuffle(slotNames, rnd);
     // Buildings differ in size: the Center and the gym are wide (five), the Mart four, a house two or three; the gym is also a row taller where nothing stands above it (the top slots). Each sits anywhere along its slot.
     const roles = [['center', 5], ['mart', 4], ['house', rnd() < 0.5 ? 2 : 3], ['gym', 5]];
     const topSlots = names.filter(function (n) { return n === 'TL' || n === 'TR'; }); if (topSlots.length && i % 2 === 0) { const gi = names.indexOf(topSlots[0]), k = 3, t = names[k]; names[k] = names[gi]; names[gi] = t; }          // the gym takes a top slot in every other town, so it stands tall there
