@@ -10,7 +10,7 @@ The aim: the same layout and flow as Gold's Johto (the lettered key on the Johto
 | Violet City, Sprout Tower (F) | Meadow Town | town done; tower to do |
 | Route 32, Ruins of Alph, Union Cave (G, H, I) | Route 2 (Ember road) | Ruins of Alph done (courtyard and chamber, west of Ember Hills); its puzzle and a Union-Cave link to do |
 | Azalea Town, Slowpoke Well, Ilex Forest (J, K) | Ember Hills; Leaf Grove's road is already an Ilex-style maze | town done; Slowpoke Well done |
-| Route 34, Goldenrod City, Radio Tower (L, M) | Tide Bay (hub city to build); Spark City has the Radio Tower | hub city to do |
+| Route 34, Goldenrod City, Radio Tower (L, M) | Tide Bay (the hub city: 28 tall, five-floor Dept. Store, Underground); Spark City has the Radio Tower | hub city done (width stays 16) |
 | Routes 35 to 37, National Park (N, O, P, Q) | Route 4; the Park beside Meadow Town | Park done; Route 36 tree to do |
 | Ecruteak City, Tin and Burned Towers (R) | Leaf Grove | town done; towers to do |
 | Routes 38 and 39, Olivine, Lighthouse (S, T, U) | Volt Valley; the Lighthouse is in Tide Bay | to move |
@@ -29,7 +29,7 @@ Gold's loops done so far: Violet to Ecruteak (Route 36), Ecruteak to Mahogany (R
 ## 3. Stages
 1. **Graph and map (done this pass):** the Gizmo map is laid out like Johto's key; the loops above exist as roads.
 2. **Small places done:** Cherrygrove, Lake of Rage, Ruins of Alph, the Whirl Islands, Dark Cave (two mouths on the road home from Skyreach, a boulder in a side branch), Union Cave (two mouths on Route 2), the Dragon's Den and the Slowpoke Well (lit caverns with a pool and a bridge). The Ruins quiz stones already live in the route caves. Still to do: the red fish at the Lake of Rage, sleeping buddies in the Well. Each is a hand-drawn map in `24va-` or a new file.
-3. **The hub city:** Tide Bay becomes a Goldenrod-style city: wide, with a Dept. Store of five floors and an Underground.
+3. **The hub city (done except width):** Tide Bay is 28 tall with a five-floor Dept. Store and an Underground; it stays 16 wide because the edge gaps and side games are fixed to that width.
 4. **Towers:** Sprout Tower and the Tin Tower as multi-floor climbs.
 5. **Per-route tricks:** the Sudowoodo tree, Route 29's night tree, toll gate, bug-catching park days.
 6. **Second journey on a Kanto-like graph:** ring with a central city.

@@ -5,7 +5,7 @@
 //  as the fall-back (and Meadow Town's plan). The main road is always columns 7 and 8 from the bottom edge to the top gate, so the routes line up with the towns.
 // =====================================================================
 const OW_TOWN_PLANS = {
-  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 24 }, tide: { style: 'harbour', h: 22 }, grove: { style: 'forest', h: 18 }, volt: { style: 'grid', h: 26 },
+  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 24 }, tide: { style: 'harbour', h: 28 }, grove: { style: 'forest', h: 18 }, volt: { style: 'grid', h: 26 },
   gloom: { style: 'marsh', h: 22 }, mystic: { style: 'staircase', h: 28, mirror: true }, skyreach: { style: 'plaza', h: 24, mirror: true }, cinder: { style: 'river', h: 20 },
   coral: { style: 'lagoon', h: 24 }, thistle: { style: 'park', h: 18, mirror: true }, spark: { style: 'avenues', h: 30 }, dusk: { style: 'lake', h: 26, mirror: true },
   prism: { style: 'diamond', h: 24 }, cross: { style: 'crossroads', h: 20, mirror: true }, summit: { style: 'terrace', h: 22, mirror: true, frozen: true }

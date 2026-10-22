@@ -260,3 +260,44 @@ OW_MAPS['slowpoke-well'] = {
 [['dark-cave', ['link-skyreach-hollow', 4], ['link-skyreach-hollow', 6]], ['union-cave', ['route2', 1], ['route2', 3]]].forEach(function (c) { if (!owJoinCave(c[0], c[1], c[2])) delete OW_MAPS[c[0]]; });
 owJoin('skyreach', 15, 14, 'dragons-den', 8);
 owJoin('ember', 15, 14, 'slowpoke-well', 7);
+
+// The Dept. Store of Tide Bay (Gold's Goldenrod City, the hub): a five-floor shop in the biggest town, one of its closed houses given a door. Floor 1 is the reception, 2 the Mart counter,
+// 3 a Name Rater, 4 a toy floor with finds and 5 the roof. Stairs join the floors the way the Radio Tower's do.
+(function () {
+  const T = OW_MAPS.tide;
+  let door = null;
+  for (let y = 14; y < T.rows.length - 3 && !door; y++) { const m = /W{4}/.exec(T.rows[y]); if (m && T.rows[y].indexOf('D') === -1 && /R{4}/.test(T.rows[y - 1]) && ',*'.indexOf(T.rows[y + 1].charAt(m.index + 2)) !== -1) door = [m.index + 2, y]; }
+  if (!door) return;
+  const stairs = function (up, down) { return ['wwwwwwwwwwww', 'w' + (down ? 'm' : 'f') + 'ffff' + (up ? 'm' : 'f') + 'fSSfw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wfffSSSSfffw', 'wffffffffffw', 'wfSSffffSSfw', 'wffffffffffw', 'wwwwwmwwwwww']; };
+  const names = ['Reception', 'Mart', 'Names', 'Toys', 'Roof'], look = OW_CHERRY_LOOK;
+  const floor = function (n, npcs, objects) {
+    const id = 'dept-' + n, m = owRoom(id, 'Dept. Store, ' + (n === 5 ? 'roof' : 'floor ' + n) + ': ' + names[n - 1], { to: 'tide', tx: door[0], ty: door[1] + 1 }, npcs, objects, stairs(n < 5, n > 1));
+    m.region = 'tide'; m.palette = OW_TIDE_PALETTE; m.annex = { near: 'tide' }; m.warps = n === 1 ? m.warps : [];
+    if (n < 5) m.warps.push({ x: 6, y: 1, to: 'dept-' + (n + 1), tx: 1, ty: 2 });
+    if (n > 1) m.warps.push({ x: 1, y: 1, to: 'dept-' + (n - 1), tx: 6, ty: 2 });
+    OW_MAPS[id] = m;
+  };
+  floor(1, [{ id: 'dept-greeter', name: 'Greeter Lia', x: 4, y: 4, face: 'down', look: look(1), lines: ['Welcome to the Dept. Store! Floor 2 is the Mart, floor 3 rates names, floor 4 is all toys, and the roof has the best view in town.'] }], []);
+  floor(2, [{ id: 'dept-clerk', kind: 'clerk', name: 'Clerk Pine', x: 3, y: 2, face: 'down', look: look(3), lines: ['Welcome to the Mart!'] }], []);
+  floor(3, [{ id: 'dept-rater', kind: 'rater', name: 'Name Rater Ivo', x: 8, y: 4, face: 'down', look: look(4), lines: ['I rate names.'] }], []);
+  floor(4, [{ id: 'dept-kid', name: 'Kid Tam', x: 4, y: 6, face: 'down', look: look(0), lines: ['I come here every Saturday to look at the toys!'] }],
+    [{ id: 'dept-toy1', type: 'pickup', x: 9, y: 4, give: 'gems' }, { id: 'dept-toy2', type: 'pickup', x: 2, y: 8, give: 'net' }]);
+  floor(5, [{ id: 'dept-roof', name: 'Vendor Dot', x: 8, y: 4, face: 'left', look: look(5), lines: ['From up here you can see the whole bay. On a clear day, even the lighthouse.'] }], [{ id: 'dept-roof-gems', type: 'pickup', x: 6, y: 7, give: 'gems' }]);
+  owSetTile('tide', door[0], door[1], 'D');
+  T.warps.push({ x: door[0], y: door[1], to: 'dept-1', tx: OW_MAPS['dept-1'].warps[0].x, ty: OW_MAPS['dept-1'].warps[0].y - 1 });
+})();
+
+// The Underground of Tide Bay (Gold's Goldenrod Underground): a long shop passage under the town, with a bargain counter, reached by a door in one of its closed houses.
+(function () {
+  const T = OW_MAPS.tide; let door = null;
+  for (let y = 12; y < T.rows.length - 3 && !door; y++) { const re = /W{3}/g; let m; while (!door && (m = re.exec(T.rows[y]))) { const x = m.index + 1; if (T.rows[y].indexOf('D') === -1 && /R{3}/.test(T.rows[y - 1]) && ',*'.indexOf(T.rows[y + 1].charAt(x)) !== -1 && T.rows[y].charAt(x) === 'W') door = [x, y]; } }
+  if (!door) return;
+  const rows = ['wwwwwwwwwwwwwwwwwwww', 'wffffffffffffffffffw', 'wfCCCfffffffffCCCffw', 'wffffffffffffffffffw', 'wffffffffffffffffffw', 'wffffffffffffffffffw', 'wwwwwwwwwwmwwwwwwwww'];
+  OW_MAPS['tide-underground'] = Object.assign(owRoom('tide-underground', 'Underground', { to: 'tide', tx: door[0], ty: door[1] + 1 }, [
+    { id: 'under-clerk', kind: 'clerk', name: 'Bargain Bea', x: 3, y: 1, face: 'down', look: OW_CHERRY_LOOK(2), lines: ['Welcome to the bargain counter!'] },
+    { id: 'under-barber', name: 'Barber Hal', x: 15, y: 1, face: 'down', look: OW_CHERRY_LOOK(4), lines: ['A trim, a shave, and a tale! The Underground has been open since before the tower was built.'] },
+    { id: 'under-walker', name: 'Walker Ume', x: 9, y: 4, face: 'right', look: OW_CHERRY_LOOK(1), lines: ['I walk the Underground every morning. It is the only place in town with no wind.'] }
+  ], [{ id: 'under-gems', type: 'pickup', x: 17, y: 4, give: 'gems' }, { id: 'under-net', type: 'pickup', x: 1, y: 4, give: 'net' }], rows), { region: 'tide', palette: OW_TIDE_PALETTE, annex: { near: 'tide' } });
+  owSetTile('tide', door[0], door[1], 'D');
+  T.warps.push({ x: door[0], y: door[1], to: 'tide-underground', tx: OW_MAPS['tide-underground'].warps[0].x, ty: OW_MAPS['tide-underground'].warps[0].y - 1 });
+})();

@@ -1289,6 +1289,19 @@ test('Gold\'s caves and wells: the Dark Cave and Union Cave each have two mouths
   assert.deepEqual(r, { 'dark-cave': true, 'union-cave': true, boulder: true, pools: [true, true], joined: [true, true] });
 });
 
+test('Tide Bay is the hub city (Gold\'s Goldenrod): 28 tall, a five-floor Dept. Store joined by stairs (a Mart on floor 2, a Name Rater on 3, a roof) and an Underground with a bargain counter', async () => {
+  const r = await ev(() => {
+    const T = OW_MAPS.tide, out = { tall: T.rows.length === 28, plan: T.plan };
+    out.floors = [1, 2, 3, 4, 5].every((n) => !!OW_MAPS['dept-' + n]);
+    out.stairs = [1, 2, 3, 4].every((n) => OW_MAPS['dept-' + n].warps.some((w) => w.to === 'dept-' + (n + 1) && w.x === 6 && w.y === 1) && OW_MAPS['dept-' + (n + 1)].warps.some((w) => w.to === 'dept-' + n && w.x === 1 && w.y === 1));
+    out.kinds = [OW_MAPS['dept-2'].npcs[0].kind, OW_MAPS['dept-3'].npcs[0].kind, OW_MAPS['tide-underground'].npcs[0].kind];
+    out.doors = [T.warps.some((w) => w.to === 'dept-1' && T.rows[w.y].charAt(w.x) === 'D'), T.warps.some((w) => w.to === 'tide-underground' && T.rows[w.y].charAt(w.x) === 'D')];
+    out.back = ['dept-1', 'tide-underground'].every((id) => OW_MAPS[id].warps[0].to === 'tide');
+    return out;
+  });
+  assert.deepEqual(r, { tall: true, plan: 'harbour', floors: true, stairs: true, kinds: ['clerk', 'rater', 'clerk'], doors: [true, true], back: true });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};
