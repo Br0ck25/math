@@ -1313,3 +1313,18 @@ test('Counter returns twice the physical damage taken this round (and fails with
   });
   assert.deepEqual(r, { failed: true, took: true, back: true, varied: true, hp: true });
 });
+
+test("trainers' buddies use status moves: a level 15+ trainer buddy of a status-friendly element knows its trick, wild ones never do", async () => {
+  const r = await ev(() => {
+    state.hero.made = true; openAdventure();
+    const out = {}, mk = (el) => { const sp = wildPool().find((p) => p.element === el); return sp; };
+    const el = ['electric', 'dark', 'nature', 'magic', 'water'].filter((e) => mk(e));
+    out.elements = el.length;
+    const run = (kind, level) => { ab = null; abStart({ rounds: [{ kind, name: 'T', foes: el.map((e) => ({ id: mk(e).id, level })) }] }); return ab.foes.map((f) => f.moves.filter((m) => m.inflict || m.seed).length); };
+    out.trainer = run('trainer', 20).every((n) => n === 1 || n === 0) && run('trainer', 20).some((n) => n === 1);
+    out.low = run('trainer', 8).every((n) => n === 0);
+    out.wild = run('wild', 20).every((n) => n === 0);
+    return out;
+  });
+  assert.deepEqual(r, { elements: 5, trainer: true, low: true, wild: true });
+});

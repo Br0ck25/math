@@ -41,11 +41,22 @@ function abWipe() {
   c.classList.remove('ab-wipe-wild', 'ab-wipe-trainer'); void c.offsetWidth;
   c.classList.add(ab.kind === 'wild' ? 'ab-wipe-wild' : 'ab-wipe-trainer');
 }
+// Gold's trainers use status moves: a trainer's buddy of level 15 or more knows one for its element (it takes the place of its weakest move when the set is full) (the same moves your TMs teach).
+const AB_TRICKS = { electric: 'thunderwave', dark: 'sleeppowder', nature: 'leechseed', magic: 'confuseray', water: 'toxic' };
+function abTrainerTrick(m) {
+  const id = AB_TRICKS[m.element];
+  if (!id || m.level < 15 || !m.moves) return;
+  const mv = abTmMove(id, m.element, m.type), trick = Object.assign({}, mv, { left: mv.pp });
+  if (m.moves.length < 4) { m.moves.push(trick); return; }
+  const weakest = m.moves.reduce(function (w, x, i) { return x.power < m.moves[w].power ? i : w; }, 0);          // a full set: the weakest move makes room
+  m.moves[weakest] = trick;
+}
 function abLoadRound() {
   ab.party.forEach(function (m) { m.stg = {}; });                       // stat stages last one fight round
   const r = ab.rounds[ab.r];
   ab.kind = r.kind; ab.name = r.name; ab.npc = r.npc || null;
   ab.foes = r.foes.map(abFoeMon);
+  if (r.kind !== 'wild') ab.foes.forEach(abTrainerTrick);
   ab.i = 0; ab.part = [abMe().id];
   if (ab.gymWeather) ab.weather = { k: ab.gymWeather, n: 5 };                        // a gym's own sky: it comes back with every round
   abSeen();
@@ -372,6 +383,8 @@ function abFoeTurn() { abStrike(abFoe(), abMe(), abPickMove(abFoe(), abMe()), ab
 function abPickMove(foe, me) {
   if (foe.charging) return foe.charging;
   if (ab.kind === 'wild' || Math.random() < 0.2) return pick(foe.moves);
+  const trick = foe.moves.find(function (m) { return m.inflict || m.seed; });
+  if (trick && !me.status && !(trick.seed && me.seeded) && Math.random() < 0.2) return trick;
   const score = function (m) { const rel = getTypeRelation(m.type, me.type); return m.power * (m.acc / 100) * (rel === 1 ? 2 : rel === -1 ? 0.5 : 1) * (m.type === foe.type ? 1.5 : 1); };
   const best = Math.max.apply(null, foe.moves.map(score));
   return pick(foe.moves.filter(function (m) { return score(m) === best; }));
