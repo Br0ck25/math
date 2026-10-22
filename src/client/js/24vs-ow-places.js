@@ -401,3 +401,43 @@ Object.assign(OW_MAPS['lake-of-rage'].npcs.find(function (n) { return n.id === '
   OW_MAPS['burned-1'] = f1; OW_MAPS['burned-2'] = f2; OW_MAPS['burned-cellar'] = cellar;
   owJoin('tin-grounds', 0, 5, 'burned-grounds', 8);
 })();
+
+// Tide Bay East (the other half of Gold's big city): a second screen of the hub across a gap in its east edge, with a Bike Shop, a Flower Shop, a Fan Club and a house along one street.
+OW_MAPS['tide-east'] = {
+  id: 'tide-east', name: 'Tide Bay East', region: 'tide', start: { x: 1, y: 9 }, palette: OW_MAPS.tide.palette, annex: { near: 'tide' },
+  rows: [
+    'TTTTTTTTTTTTTTTT',
+    'T,,,,,,,,,,,,,,T',
+    'T,RRRRRTTRRRRR,T',
+    'T,RRRRRT,RRRRR,T',
+    'T,WWDWW,,WWDWW,T',
+    'T,,,.,,,a,,.,,,T',
+    'T,,,.,,,,,,.,,,T',
+    'T*,,.,,,,,,.,,*T',
+    'T,,,.,,,,,,.,,,T',
+    '...............T',
+    'T,,,,,,,,,,,,,*T',
+    'T,,,,,,,,,,,,,,T',
+    'T,RRRRR,,,RRRR,T',
+    'T,RRRRR,,,RRRR,T',
+    'T,WWDWW,,,WDWW,T',
+    'T,,,,,,,,,,,,,,T',
+    'T,,,,,,~~~,,,,,T',
+    'T*,,,,,~~~,,,*,T',
+    'T,,,,,,,*,,,,,,T',
+    'TTTTTTTTTTTTTTTT'
+  ],
+  warps: [{ x: 4, y: 4, to: 'tide-bikes', tx: 5, ty: 8 }, { x: 11, y: 4, to: 'tide-flowers', tx: 5, ty: 8 }, { x: 4, y: 14, to: 'tide-fans', tx: 5, ty: 8 }, { x: 11, y: 14, to: 'tide-east-house', tx: 5, ty: 8 }],
+  npcs: [{ id: 'teast-walker', name: 'Walker Bo', x: 9, y: 8, face: 'down', look: OW_CHERRY_LOOK(3), lines: ['This half of the city is quieter. The big shops are across the gap, in the west.'] },
+    { id: 'teast-kid', name: 'Kid Ren', x: 6, y: 15, face: 'right', look: OW_CHERRY_LOOK(0), lines: ['Our pond has the loudest frogs in town.'] }],
+  objects: [{ id: 'teast-gems', type: 'pickup', x: 13, y: 18, give: 'gems' }], trees: {}, signs: { '8,6': 'Tide Bay East. Bike Shop, Flower Shop and Fan Club. The Dept. Store is back west.' }
+};
+OW_MAPS['tide-east'].rows[6] = OW_MAPS['tide-east'].rows[6].slice(0, 8) + 's' + OW_MAPS['tide-east'].rows[6].slice(9);
+[['tide-bikes', 'Bike Shop', 4, 4, { id: 'teast-bikes-seller', name: 'Seller Ria', lines: ['Bicycles! The best ones are far too dear for a window shopper, but look all you like.'] }, { id: 'tide-bikes-net', give: 'net' }],
+ ['tide-flowers', 'Flower Shop', 11, 4, { id: 'teast-flower-florist', name: 'Florist Lily', lines: ['Flowers for every day of the week. The berries out the back are free to anyone who asks nicely.'] }, { id: 'tide-flowers-berries', give: 'berry' }],
+ ['tide-fans', 'Fan Club', 4, 14, { id: 'teast-fans-chair', name: 'Chairman Pell', lines: ['Welcome to the Buddy Fan Club! I could talk about my favourite buddy for six hours. Do sit down.', 'It is the one that sleeps in the sun. Does not sound like much, but it is magnificent.'] }, { id: 'tide-fans-gems', give: 'gems' }],
+ ['tide-east-house', 'Tide Bay house', 11, 14, { id: 'teast-house-marn', name: 'Old Marn', lines: ['I have lived on this street since it was a path with one lamp.'] }, null]].forEach(function (r, i) {
+  const npc = Object.assign({ x: 4, y: 2, face: 'down', look: OW_CHERRY_LOOK(i + 1) }, r[4]);
+  OW_MAPS[r[0]] = Object.assign(owRoom(r[0], r[1], { to: 'tide-east', tx: r[2], ty: r[3] + 1 }, [npc], r[5] ? [Object.assign({ type: 'pickup', x: 1, y: 4 }, r[5])] : []), { region: 'tide', palette: OW_TIDE_PALETTE, annex: { near: 'tide' } });
+});
+owJoin('tide', 15, 20, 'tide-east', 9);

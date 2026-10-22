@@ -1351,6 +1351,19 @@ test('Gold\'s two road blockers: an odd tree that sleeps across Hillside Road (t
   assert.deepEqual(r, { toll: 1000, kinds: ['tree', 'toll'], solid: [false, false], asleep: true, woken: true, poor: [10, false], paid: [1500, true, true], walls: [true, true] });
 });
 
+test('the hub city is two screens, as Gold\'s cities are bigger than one: Tide Bay East across a gap, with a Bike Shop, a Flower Shop, a Fan Club and a house; the Lake of Rage fish, Well sleepers and Burned Tower are in', async () => {
+  const r = await ev(() => {
+    const out = {};
+    out.east = ['tide-bikes', 'tide-flowers', 'tide-fans', 'tide-east-house'].every((id) => OW_MAPS[id] && OW_MAPS['tide-east'].warps.some((w) => w.to === id));
+    out.gap = OW_MAPS.tide.warps.some((w) => w.to === 'tide-east' && w.x === 15) && OW_MAPS['tide-east'].warps.length === 5;
+    out.fish = OW_MAPS['lake-of-rage'].npcs[0].kind === 'lakefish' && OW_STORY.includes('rage-fish');
+    out.well = OW_MAPS['slowpoke-well'].npcs.filter((n) => n.kind === 'sleeper').length;
+    out.burned = ['burned-grounds', 'burned-1', 'burned-2', 'burned-cellar'].every((id) => !!OW_MAPS[id]) && OW_MAPS['burned-cellar'].npcs.filter((n) => n.kind === 'sleeper').length === 3 && OW_MAPS['tin-grounds'].warps.some((w) => w.to === 'burned-grounds');
+    return out;
+  });
+  assert.deepEqual(r, { east: true, gap: true, fish: true, well: 3, burned: true });
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};
