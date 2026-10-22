@@ -251,7 +251,7 @@ test('link roads join two towns by a second road: closed until both towns are se
     // closed until the other town is seen
     grantKeyItem('gizmo'); grantKeyItem('map-card'); state.hero.made = true; openAdventure();
     const o = state.overworld; o.seen = [d.from]; o.map = d.from; o.x = 14; o.y = 6; owSetRegion(A); renderOverworld(); owMove('right');
-    out.closed = o.map === d.from;
+    out.closed = o.map === d.from && o.x === 14 && owTileAt(A, 15, 6).t === 't-bush';
     o.seen = [d.from, d.to]; o.x = 14; o.y = 6; owMove('right');
     out.open = o.map === d.id;
     state.overworld.map = d.id; gizmoTab = 'map'; openGizmo();

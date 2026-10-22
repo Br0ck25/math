@@ -15,6 +15,8 @@ function owNpcWords(npc) {
   return npc.night && owTimeOfDay() === 'night' ? npc.night : npc.lines;
 }
 function owInteract(map, x, y) {
+  const gap = owTileAt(map, x, y);
+  if (gap && gap.overgrown) { toast('The way is overgrown. Visit ' + OW_MAPS[gap.overgrown].name + ' first, then this road opens.'); return; }
   const npc = owNpcAt(map, x, y);
   if (npc) {
     if (npc.kind === 'trainer' || npc.kind === 'boss') { owTrainerTalk(npc); return; }       // a trainer keeps its way of facing (it decides what it sees)

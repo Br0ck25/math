@@ -23,7 +23,7 @@ const open = () => page.evaluate(() => { openAdventure(); return state.overworld
 
 test('every map is valid: equal rows, known tiles, warps that land on walkable non-warp tiles, signs on sign tiles', async () => {
   const bad = await page.evaluate(() => {
-    state.badges = allGymRegions().map((x) => x.id); state.storySeen.champion = 1;                                                        // every badge: the roads and gates are open
+    state.badges = allGymRegions().map((x) => x.id); state.storySeen.champion = 1; state.overworld.seen = owTowns();                                                        // every badge: the roads and gates are open (and every town seen, so the link roads are open)
     const problems = [];
     Object.keys(OW_MAPS).forEach((id) => {
       const m = OW_MAPS[id];

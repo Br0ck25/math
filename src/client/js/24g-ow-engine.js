@@ -18,6 +18,7 @@ let owHoldTimer = null, owLastMove = 0, owPointerUsed = false;
 function owTileAt(map, x, y) {
   const row = map.rows[y], t = row && OW_TILES[row.charAt(x)];
   if (!t) return null;
+  if ((x === 0 || x === row.length - 1) && map.warps) { const w = map.warps.find(function (p) { return p.x === x && p.y === y && p.needs; }); if (w && state.overworld.seen.indexOf(w.needs) === -1) return { t: 't-bush', solid: true, overgrown: w.needs }; }      // a link road (24vr) whose far town you have not seen is overgrown with bushes
   if (t.road) { const b = map.roads && map.roads[x + ',' + y]; return b && owRoadOpen(b) ? { t: 't-path', open: true } : t; }
   if (t.door) { const need = [].concat(map.doors && map.doors[x + ',' + y] || []); return need.every(function (s) { return state.overworld.story.indexOf(s) !== -1; }) ? { t: 't-open-switch', open: true } : t; }          // a gym's switch door opens once its puzzle is solved
   return t.gate && hasKeyItem(t.gate) ? { t: OW_GATES[t.gate].open, open: true } : t;
@@ -235,7 +236,6 @@ function owMove(dir) {
   owStepped = true;                                                         // the buddy hops along behind on the next picture
   owFrame = owFrame ? 0 : 1;
   let warp = owWarpAt(map, o.x, o.y);
-  if (warp && warp.needs && o.seen.indexOf(warp.needs) === -1) { toast('The way is overgrown. Visit ' + OW_MAPS[warp.needs].name + ' first, then this road opens.'); warp = null; }      // a link road (24vr) is a shortcut between two towns you have both seen
   if (warp && warp.gate) warp = null;                                       // a gym door is not a walk-through: the door itself asks (owEnterGym)
   if (warp) { if (map.rows0) map.rows = map.rows0.slice(); o.map = warp.to; o.x = warp.tx; o.y = warp.ty; owTrail = null; owSetRegion(OW_MAPS[o.map]); const gd = OW_MAPS[o.map].guard; if (gd && !hasKeyItem(gd.key)) { o.map = gd.to; o.x = gd.x; o.y = gd.y; toast('The open sea needs the Water Steps charm, from the Tide Bay Gym.'); } }
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
