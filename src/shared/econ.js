@@ -4,6 +4,7 @@
 //  Change numbers here only, then run `npm run sim` to see the effect on the economy.
 // =====================================================================
 const ECON = {
+  startGems: 3000,                                                           // a new game begins with Gold's 3000 (the Trainer Card's money); saves already made keep what they have
   boss: {
     gemBase: 8, gemPerLevels: 5,
 

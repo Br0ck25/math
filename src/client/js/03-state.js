@@ -5,7 +5,7 @@ function freshState() {
     v: SCHEMA_VERSION,
     grade: 1,
     enabledOps: GRADE_DEFAULT_OPS[1].slice(),
-    gems: 0,
+    gems: ECON.startGems,
     streak: 0,
     shields: 0,
     cloverLeft: 0,
