@@ -113,6 +113,7 @@ function owFruitDay() {
   o.found = o.found.filter(function (id) { return bushes.indexOf(id) === -1; });
   o.fruitDay = today;
 }
+// (renderOverworld draws one extra ring of tiles around what the screen shows; the stage hides it, and the slide of a step brings it in.)
 // Small touches that make the ground look lived in: roads and sand get a worn edge where they meet grass, ponds a bright shore, and plain grass a flower or a tuft here and there (fixed by place, so
 // nothing flickers). Classes only; the pictures are CSS (.ow-cell.ed-*, .gv*).
 const OW_WALK_GROUND = ['t-path', 't-dirt', 't-sand'];
@@ -126,7 +127,7 @@ function owCellLook(map, x, y, tile) {
 }
 function renderOverworld() {
   owFruitDay();
-  const o = state.overworld, map = OW_MAPS[o.map], g = owGrid(), hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
+  const o = state.overworld, map = OW_MAPS[o.map], vg = owGrid(), g = { cols: vg.cols + 2, rows: vg.rows + 2, tile: vg.tile }, hx = (g.cols - 1) / 2, hy = (g.rows - 1) / 2, view = document.getElementById('ow-view');
   const inView = function (x, y) { return Math.abs(x - o.x) <= hx && Math.abs(y - o.y) <= hy; };
   let h = '';
   const farActors = [];                                                                                   // people and finds of the next map that are in view past the edge
@@ -210,6 +211,7 @@ function owMove(dir) {
   owWalkEgg(); owDaycareStep(); owSafariStep(); if (++owStepsWalked % 50 === 0) addHappy(state.activePet, 1);
   if (++owUnsaved >= ECON.overworld.saveEvery || warp) { owUnsaved = 0; saveState(); }
   renderOverworld();
+  if (!ledge && (!warp || (!map.room && !OW_MAPS[o.map].room && (warp.x === 0 || warp.y === 0 || warp.x === map.rows[0].length - 1 || warp.y === map.rows.length - 1)))) owSlide(dir);      // a step slides the map under the hero, and so does walking through a gap in the edge
   if (warp) return;
   const here = OW_MAPS[o.map], pickup = owPickupAt(here, o.x, o.y);
   if (pickup) { owCollect(pickup); renderOverworld(); }
@@ -235,6 +237,16 @@ function owGrassStep() {
 // The D-pad: press to step, hold to keep walking. A keyboard "click" (no pointer) steps once.
 // How often a held direction steps: walking, with the Running Shoes, or on the Bicycle (Gold's fastest way on foot).
 function owStepMs() { return hasKeyItem('bicycle') ? ECON.overworld.bikeMs : hasKeyItem('running-shoes') ? ECON.overworld.shoeMs : ECON.overworld.holdMs; }
+// The map slides one tile under the hero while it steps, as Gold's screen scrolls: the new picture starts where the old one was and glides home; the hero stays in the middle.
+function owSlide(dir) {
+  if (typeof motionReduced === 'function' && motionReduced()) return;
+  const view = document.getElementById('ow-view'), hero = view && view.querySelector('.ow-hero'), d = OW_STEP[dir], tile = view ? view.clientWidth / owGrid().cols : 0;
+  if (!view || !tile) return;
+  const ms = Math.min(150, Math.round(owStepMs() * 0.9)), put = function (el, x, y, on) { el.style.transition = on ? 'transform ' + ms + 'ms linear' : 'none'; el.style.transform = on ? '' : 'translate(' + x + 'px,' + y + 'px)'; };
+  put(view, d[0] * tile, d[1] * tile, false); if (hero) put(hero, -d[0] * tile, -d[1] * tile, false);
+  void view.offsetWidth;
+  put(view, 0, 0, true); if (hero) put(hero, 0, 0, true);
+}
 function owHold(dir) {
   owPointerUsed = true;
   owRelease();

@@ -214,7 +214,7 @@ for (const [w, h] of [[320, 568], [360, 640], [420, 800]]) {
     const r = await page.evaluate(() => {
       const box = (sel) => { const b = document.querySelector(sel).getBoundingClientRect(); return { l: b.left, r: b.right, t: b.top, b: b.bottom, w: b.width, h: b.height }; };
       const keys = Array.from(document.querySelectorAll('.ow-key')).map((k) => k.getBoundingClientRect());
-      return { view: box('#ow-view'), pad: box('.ow-pad'), keys: keys.map((k) => [k.width, k.height]), scroll: document.documentElement.scrollWidth, vw: innerWidth, vh: innerHeight, hero: box('.ow-hero') };
+      return { view: box('#ow-stage'), pad: box('.ow-pad'), keys: keys.map((k) => [k.width, k.height]), scroll: document.documentElement.scrollWidth, vw: innerWidth, vh: innerHeight, hero: box('.ow-hero') };
     });
     assert.ok(r.view.l >= 0 && r.view.r <= r.vw, 'the view is inside the screen');
     assert.ok(r.pad.b <= r.vh + 1, 'the D-pad is on screen without scrolling: ' + r.pad.b + ' of ' + r.vh);

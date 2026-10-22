@@ -44,3 +44,14 @@ Checked by searching the code for each feature; "not found" means no match in `s
 - **Earning:** only trainers pay (class base x the level of the last buddy: 16, or 100 for leaders, the Elite Four, the Champion and the Master), plus Mom's savings, selling items and the Game Corner (50 coins for 1000 gems, slots paying back about nine tenths). The Dex gem milestones were removed because Gold pays no money for the Dex; Prof. Pi's rating gives items instead. Online duel stakes are the only other gem flow and are between players.
 
 Also done since the second pass: Everstone (the holder keeps the form it had when given the stone), trainer classes (Hiker tougher, Swimmer and Pilot quicker, Sailor stronger hits, Ace a little better at everything, Bug Catcher frail but fast), Smokescreen and every other stat move now have a picture, and a second open sea off Coral Reach.
+
+## Third pass (after playing the map on a phone)
+Done in this pass: Game Boy style touch controls (see-through arrows bottom left, A and B bottom right), the map now shows about ten tiles across a phone as Gold does (it was seven), a side path's gap shows the side path past it and a step through it slides like any other step (the map glides under the hero, drawn with a hidden ring of tiles so nothing is blank), and the ground has details (worn road edges, bright pond shores, flowers, tufts and stones).
+Still missing, in the order a Gold player would notice:
+1. **People who move.** Gold's townsfolk wander, face you as you pass and change what they say by time and badges; ours stand still. **Step:** a few idle walkers per town (a short random walk within a box) and day/night lines.
+2. **Building variety.** Every house, Center and Mart is the same 2-by-3 block with a coloured roof and a small icon. **Step:** per-building art (windows, awnings, a chimney, a fountain for the Center), and bigger special buildings (the Radio Tower, the gym) that stand out.
+3. **Town life.** Gold towns have lamp posts, mailboxes, fences, flower beds and a few more people (five to eight). Ours have two to four. **Step:** more stamps and more NPC lines per town.
+4. **Water and weather in the picture.** Water does not move; rain and snow are only battle effects. **Step:** a two-frame water shimmer and a rain overlay on the map.
+5. **Walking frames.** The hero has two frames and no turn-in-place step; the buddy follows but does not animate.
+6. **Per-place music.** One tune per kind of place; Gold has a theme per town and route.
+7. **Still deliberately out:** Mystery Gift and linking.
