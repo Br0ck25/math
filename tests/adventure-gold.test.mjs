@@ -1206,6 +1206,17 @@ test('the land is a web with towns of different sizes: nine link roads (three cr
   assert.deepEqual(r, { links: 9, built: true, rivers: 3, min: 18, max: 30, tall: true, closed: true, moreExits: 13 });
 });
 
+test('routes are of different lengths (24 to 36 tall): the way back, the start and every door that lands on a route follow its bottom edge', async () => {
+  const r = await ev(() => {
+    const hs = OW_LANDS.map((L) => OW_MAPS[L.routeIn].rows.length), bad = [];
+    OW_LANDS.forEach((L) => { const m = OW_MAPS[L.routeIn], n = m.rows.length;
+      if (m.start.y !== n - 2) bad.push(L.routeIn + ' start'); if (!m.warps.some((w) => w.y === n - 1)) bad.push(L.routeIn + ' exit');
+      Object.keys(OW_MAPS).forEach((k) => OW_MAPS[k].warps.forEach((w) => { if (w.to === L.routeIn && w.ty > 2 && w.ty > n - 3 === false && w.x < 2) bad.push(k + '>' + L.routeIn); })); });
+    return { min: Math.min(...hs), max: Math.max(...hs), kinds: new Set(hs).size, bad };
+  });
+  assert.deepEqual([r.min, r.max, r.kinds >= 4, r.bad], [24, 36, true, []]);
+});
+
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {
   const r = await ev(() => {
     state.gems = 1000; state.hero.made = true; openAdventure(); const out = {};

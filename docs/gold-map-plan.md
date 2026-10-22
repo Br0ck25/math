@@ -62,4 +62,5 @@ Per-route tricks (tree on a route, ledge runs, a toll gate), a daily event per w
 ## 6. Progress
 - **Step 1 (web), first part done:** nine link roads (`24vr-ow-links.js`) of different sizes (24 to 32 wide, 13 to 16 tall), three of them crossing a river by a bridge; 13 of the 17 towns now have a third exit. Still to do: cave and water links, gates on links, more links so every town has 2 to 4 exits.
 - **Step 2 (sizes), first part done:** towns now run from 18 to 30 tall, and a tall town gets a second district of closed houses, a pond and flower beds. Still to do: towns of different widths (needs the edge gaps and the side games' fixed coordinates to follow the town's own width), a village size and a true hub city.
+- **Routes (Step 3, first part):** routes are now 24 to 36 tall (block rows 12 to 18), with the road running longer before it bends. Hand-drawn landmark routes are still to do.
 - **Found on the way:** towns were laid out with a random-comparator sort, which Chrome and Safari run differently, so a phone and a computer could build different towns from one save. Fixed with a fixed shuffle and a guard test.

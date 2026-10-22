@@ -19,27 +19,31 @@ function owShuffle(list, rnd) {
   for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
   return a;
 }
+// How tall each route is, in block rows of two tiles (Gold's routes are of every length): most are 12 (24 tiles), some longer.
+const OW_ROUTE_ROWS = [12, 14, 12, 16, 12, 14, 12, 18, 12, 14, 16, 12, 14, 12, 16, 12];
+// A road plan stretched to R block rows: the extra rows repeat the first bend's row, so the road runs longer on the same side before it turns.
+function owLongPlan(plan, R) { return plan.slice(0, 6).concat(new Array(R - 12).fill(plan[5])).concat(plan.slice(6)); }
 function owRng(text, k) {
   let a = k * 7919 + 17; for (let i = 0; i < text.length; i++) a = (a * 31 + text.charCodeAt(i)) | 0;
   return function () { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 // One try at laying a route out; returns its new rows, people and finds, or null when something could not be placed.
 function owBlockRoute(L, i, attempt) {
-  const theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length], m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n');
-  const B = []; for (let by = 0; by < 12; by++) { B.push([]); for (let bx = 0; bx < 7; bx++) B[by].push(bx === 0 || bx === 6 || by === 0 || by === 11 ? 'T' : 'g'); }
+  const R = OW_ROUTE_ROWS[i % OW_ROUTE_ROWS.length], N = R * 2, theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length], m = OW_MAPS[L.routeIn], rnd = owRng(L.routeIn, attempt), plan = owLongPlan(OW_ROAD_PLANS[(i + (attempt > 6 ? attempt : 0)) % OW_ROAD_PLANS.length], R), gateChar = L.charm ? (m.rows.join('').match(/[ghjklqz]/) || ['g'])[0] : (i % 2 ? 'y' : 'n');
+  const B = []; for (let by = 0; by < R; by++) { B.push([]); for (let bx = 0; bx < 7; bx++) B[by].push(bx === 0 || bx === 6 || by === 0 || by === R - 1 ? 'T' : 'g'); }
   const at = function (bx, by) { return B[by] && B[by][bx]; }, roadNear = function (bx, by, r) { for (let y = by - r; y <= by + r; y++) for (let x = bx - r; x <= bx + r; x++) if (at(x, y) === 'p') return true; return false; };
-  for (let by = 0; by < 12; by++) { B[by][plan[by]] = 'p'; if (by) for (let c = Math.min(plan[by], plan[by - 1]); c <= Math.max(plan[by], plan[by - 1]); c++) B[by][c] = 'p'; }
+  for (let by = 0; by < R; by++) { B[by][plan[by]] = 'p'; if (by) for (let c = Math.min(plan[by], plan[by - 1]); c <= Math.max(plan[by], plan[by - 1]); c++) B[by][c] = 'p'; }
   const lanes = [], bands = [];
-  for (let a = 0; a < 12; a++) if (plan[a] !== 3 && (a === 0 || plan[a - 1] === 3)) { let b = a; while (b + 1 < 12 && plan[b + 1] !== 3) b++; if (b - a >= 2) lanes.push([a + 1, b]); a = b; }
+  for (let a = 0; a < R; a++) if (plan[a] !== 3 && (a === 0 || plan[a - 1] === 3)) { let b = a; while (b + 1 < R && plan[b + 1] !== 3) b++; if (b - a >= 2) lanes.push([a + 1, b]); a = b; }
   lanes.forEach(function (r) {
     const m = Math.floor((r[0] + r[1]) / 2);
     for (let by = r[0]; by <= r[1]; by++) B[by][3] = 'g';
     for (let bx = 1; bx < 6; bx++) if (bx !== 3 && B[m][bx] !== 'p') B[m][bx] = 'T';                       // a tree wall across the bend, with the lane's Trim-charm tree in it
   });
-  [10].forEach(function (by) { if (plan[by] === 3 && plan[by - 1] === 3 && !lanes.some(function (r) { return by >= r[0] && by <= r[1]; }) && bands.length < 1) bands.push(by); });          // in the last block row that finds are never placed in, so it takes no room from them
+  [R - 2].forEach(function (by) { if (plan[by] === 3 && plan[by - 1] === 3 && !lanes.some(function (r) { return by >= r[0] && by <= r[1]; }) && bands.length < 1) bands.push(by); });          // in the last block row that finds are never placed in, so it takes no room from them
   bands.forEach(function (by) { for (let bx = 1; bx < 6; bx++) B[by][bx] = bx === 3 ? 'G' : 'T'; });          // a wall of trees across the straight road with a gap of tall grass (the grass you must cross); kept off the rows beside the exits, so the road is plain where a route meets a town
   const free = function (bx, by, w, h) { for (let y = by; y < by + h; y++) for (let x = bx; x < bx + w; x++) if (at(x, y) !== 'g') return false; return true; };
-  const spots = function (w, h) { const out = []; for (let by = 2; by < 10 - h + 1; by++) for (let bx = 1; bx < 6 - w + 1; bx++) if (free(bx, by, w, h)) out.push([bx, by]); return out; };
+  const spots = function (w, h) { const out = []; for (let by = 2; by < R - 2 - h + 1; by++) for (let bx = 1; bx < 6 - w + 1; bx++) if (free(bx, by, w, h)) out.push([bx, by]); return out; };
   const take = function (list) { return list.length ? list[Math.floor(rnd() * list.length)] : null; };
   let score = 0;
   const bigField = take(spots(3, 2));
@@ -55,26 +59,26 @@ function owBlockRoute(L, i, attempt) {
   if (ledge) { score += 2; for (let x = 0; x < ledgeW; x++) B[ledge[1]][ledge[0] + x] = 'l'; }
 
   for (let k = 0; k < 3; k++) { const f = take(spots(2, rnd() < 0.5 ? 2 : 1)); if (f) { const w = 2; for (let y = 0; y < 2; y++) for (let x = 0; x < w; x++) if (at(f[0] + x, f[1] + y) === 'g') B[f[1] + y][f[0] + x] = 'G'; } }
-  for (let by = 1; by < 11; by++) for (let bx = 1; bx < 6; bx++) if (B[by][bx] === 'g' && roadNear(bx, by, 1) && rnd() < theme.flower) B[by][bx] = 'f'; else if (B[by][bx] === 'g' && !roadNear(bx, by, 1)) { let r = rnd(); if (r < theme.tree) B[by][bx] = 'T'; else if ((r -= theme.tree) < theme.rock) B[by][bx] = 'k'; else if ((r -= theme.rock) < theme.flower) B[by][bx] = 'f'; else if ((r - theme.flower) < theme.deco) B[by][bx] = 'd'; }
-  const g = []; for (let y = 0; y < 24; y++) g.push(new Array(14).fill(','));
-  for (let by = 0; by < 12; by++) for (let bx = 0; bx < 7; bx++) { const blk = OW_BLOCKS[B[by][bx]]; for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) g[by * 2 + y][bx * 2 + x] = blk[y].charAt(x); }
+  for (let by = 1; by < R - 1; by++) for (let bx = 1; bx < 6; bx++) if (B[by][bx] === 'g' && roadNear(bx, by, 1) && rnd() < theme.flower) B[by][bx] = 'f'; else if (B[by][bx] === 'g' && !roadNear(bx, by, 1)) { let r = rnd(); if (r < theme.tree) B[by][bx] = 'T'; else if ((r -= theme.tree) < theme.rock) B[by][bx] = 'k'; else if ((r -= theme.rock) < theme.flower) B[by][bx] = 'f'; else if ((r - theme.flower) < theme.deco) B[by][bx] = 'd'; }
+  const g = []; for (let y = 0; y < N; y++) g.push(new Array(14).fill(','));
+  for (let by = 0; by < R; by++) for (let bx = 0; bx < 7; bx++) { const blk = OW_BLOCKS[B[by][bx]]; for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) g[by * 2 + y][bx * 2 + x] = blk[y].charAt(x); }
   const px = pond[0] * 2, py = pond[1] * 2;
   g[py][px + 1] = 'B'; g[py + 1][px + 1] = 'd';
   const surf = px + 4 <= 12;                                                                              // a second islet behind a stepping stone that only the Water Steps charm opens (Gold's Surf)
   if (surf) { g[py][px + 2] = 'j'; g[py][px + 3] = 'd'; [[px + 4, py], [px + 3, py - 1]].forEach(function (p) { if (g[p[1]][p[0]] !== 'T') g[p[1]][p[0]] = 'T'; }); }
   lanes.forEach(function (r) { const y = 2 * Math.floor((r[0] + r[1]) / 2); g[y][6] = 'g'; g[y][7] = 'T'; g[y + 1][6] = 'g'; g[y + 1][7] = 'T'; });
   const solid = function (c) { return 'TYvRW~#bs=x'.indexOf(c) !== -1 || OW_GATE_CHARS[c]; };
-  const walk = function (x, y) { return x >= 0 && x < 14 && y >= 0 && y < 24 && !solid(g[y][x]); };
+  const walk = function (x, y) { return x >= 0 && x < 14 && y >= 0 && y < N && !solid(g[y][x]); };
   const npcs = m.npcs.map(function (n) { return Object.assign({}, n); }), objects = (m.objects || []).map(function (o) { return Object.assign({}, o); }), used = {};
   const mark = function (x, y) { used[x + ',' + y] = 1; }, usedNear = function (x, y) { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (used[(x + dx) + ',' + (y + dy)]) return true; return false; };
   if (house) for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) mark(house[0] * 2 + x, house[1] * 2 + y);                // the house and the way down from its door
-  for (let y = 0; y < 24; y++) for (let x = 0; x < 14; x++) if (g[y][x] === 'v') { mark(x, y - 1); mark(x, y + 1); }              // nothing stands where a ledge is hopped from or onto
-  mark(6, 22); mark(7, 22); mark(px + 1, py); mark(px + 1, py + 1);
+  for (let y = 0; y < N; y++) for (let x = 0; x < 14; x++) if (g[y][x] === 'v') { mark(x, y - 1); mark(x, y + 1); }              // nothing stands where a ledge is hopped from or onto
+  mark(6, N - 2); mark(7, N - 2); mark(px + 1, py); mark(px + 1, py + 1);
   const roadAt = function (x, y) { return g[y][x] === '.'; };
   const ground = function (x, y) { return ',"*d'.indexOf(g[y][x]) !== -1 && !usedNear(x, y); };
   // trainers (and anyone else with a name): three tiles from the road, looking at it along a clear row, spread down the route
   const people = npcs.filter(function (n) { return n.kind === 'trainer' || n.kind === 'boss'; });
-  const roadRows = []; for (let y = 3; y < 21; y++) { const xs = []; for (let x = 1; x < 13; x++) if (roadAt(x, y)) xs.push(x); if (xs.length) roadRows.push([y, xs]); }
+  const roadRows = []; for (let y = 3; y < N - 3; y++) { const xs = []; for (let x = 1; x < 13; x++) if (roadAt(x, y)) xs.push(x); if (xs.length) roadRows.push([y, xs]); }
   for (let k = 0; k < people.length; k++) {
     const n = people[k], target = 4 + Math.floor(k * 15 / people.length) + Math.floor(rnd() * 2); let done = false;
     const order = roadRows.slice().sort(function (a, b) { return Math.abs(a[0] - target) - Math.abs(b[0] - target); });
@@ -93,9 +97,10 @@ function owBlockRoute(L, i, attempt) {
     if (!done) return null;
   }
   // the shake tree and the finds that lie in the open: grass next to trees or at the edge, away from the road
-  const open = function () { const out = []; for (let y = 2; y < 22; y++) for (let x = 2; x < 12; x++) if (g[y][x] === ',' && !used[x + ',' + y] && !roadAt(x - 1, y) && !roadAt(x + 1, y) && !roadAt(x, y - 1) && !roadAt(x, y + 1)) out.push([x, y]); return out; };
+  const open = function () { const out = []; for (let y = 2; y < N - 2; y++) for (let x = 2; x < 12; x++) if (g[y][x] === ',' && !used[x + ',' + y] && !roadAt(x - 1, y) && !roadAt(x + 1, y) && !roadAt(x, y - 1) && !roadAt(x, y + 1)) out.push([x, y]); return out; };
   const treeId = Object.keys(m.trees || {}).map(function (k) { return m.trees[k]; })[0], trees = {};
-  if (treeId) { const s = take(open()); if (!s) return null; g[s[1]][s[0]] = 'Y'; trees[s[0] + ',' + s[1]] = treeId; mark(s[0], s[1]); }
+  let treeAt = null;
+  if (treeId) { const s = take(open()); if (!s) return null; treeAt = s; g[s[1]][s[0]] = 'Y'; trees[s[0] + ',' + s[1]] = treeId; mark(s[0], s[1]); }
   for (let k = 0; k < objects.length; k++) {
     const o = objects[k]; if (/nook/.test(o.id)) continue;
     const s = take(open()); if (!s) return null; o.x = s[0]; o.y = s[1]; mark(s[0], s[1]);
@@ -109,7 +114,7 @@ function owBlockRoute(L, i, attempt) {
   const nookObjs = objects.filter(function (o) { return /nook/.test(o.id); });
   if (nookObjs.length) {
     const cands = [];
-    for (let y = 6; y < 21; y++) for (let x = 3; x < 11; x++) {
+    for (let y = 6; y < N - 3; y++) for (let x = 3; x < 11; x++) {
       if (!ground(x, y)) continue;
       let ok = true; for (let yy = y - 4; ok && yy < y; yy++) for (let xx = x - 1; xx <= x + 1; xx++) if (',"*dT'.indexOf(g[yy][xx]) === -1 || usedNear(xx, yy)) ok = false;
       if (ok) cands.push([x, y]);
@@ -120,28 +125,35 @@ function owBlockRoute(L, i, attempt) {
     nookObjs.forEach(function (o, k) { g[s[1] - 2 - k][s[0]] = ','; o.x = s[0]; o.y = s[1] - 2 - k; });
   }
   // everything on the land must be reachable on foot (the nook gate and the Trim lane are opened by their charms)
-  const seen = {}, q = [[6, 22]]; seen['6,22'] = 1;
+  const seen = {}, q = [[6, N - 2]]; seen['6,' + (N - 2)] = 1;
   const blocked = function (x, y) { return npcs.some(function (n) { return n.x === x && n.y === y; }); };
   while (q.length) { const c = q.pop(); [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { const x = c[0] + d[0], y = c[1] + d[1], k = x + ',' + y; if (!seen[k] && walk(x, y) && !blocked(x, y)) { seen[k] = 1; q.push([x, y]); } }); }
   const reach = function (x, y) { return [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return seen[(x + d[0]) + ',' + (y + d[1])]; }) || seen[x + ',' + y]; };
-  if (!seen[(px + 1) + ',' + (py - 1)] || !reach(6, 0) || !reach(7, 0) || !people.every(function (n) { return reach(n.x, n.y); }) || !objects.every(function (o) { return /nook|surf/.test(o.id) || seen[o.x + ',' + o.y]; })) return null;
+  if (!seen[(px + 1) + ',' + (py - 1)] || (treeAt && !reach(treeAt[0], treeAt[1])) || !reach(6, 0) || !reach(7, 0) || !people.every(function (n) { return reach(n.x, n.y); }) || !objects.every(function (o) { return /nook|surf/.test(o.id) || seen[o.x + ',' + o.y]; })) return null;
   // the bend must cost at least two steps of tall grass wherever the whole way is grass: count the least on any walk from start to the top
-  const cost = {}, heap = [[0, 6, 22]]; cost['6,22'] = 0; let best = Infinity;
+  const cost = {}, heap = [[0, 6, N - 2]]; cost['6,' + (N - 2)] = 0; let best = Infinity;
   while (heap.length) {
     heap.sort(function (a, b) { return a[0] - b[0]; }); const c = heap.shift(); if (c[0] > cost[c[1] + ',' + c[2]]) continue;
     if (c[2] === 1 && (c[1] === 6 || c[1] === 7)) best = Math.min(best, c[0]);
-    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { const x = c[1] + d[0], y = c[2] + d[1]; if (!walk(x, y) || blocked(x, y) || (x === 6 || x === 7) && (y === 0 || y === 23)) return; const nd = c[0] + (g[y][x] === '"' ? 1 : 0), k = x + ',' + y; if (cost[k] === undefined || nd < cost[k]) { cost[k] = nd; heap.push([nd, x, y]); } });
+    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(function (d) { const x = c[1] + d[0], y = c[2] + d[1]; if (!walk(x, y) || blocked(x, y) || (x === 6 || x === 7) && (y === 0 || y === N - 1)) return; const nd = c[0] + (g[y][x] === '"' ? 1 : 0), k = x + ',' + y; if (cost[k] === undefined || nd < cost[k]) { cost[k] = nd; heap.push([nd, x, y]); } });
   }
   if (best < 2 || best >= 99) return null;
   const houseAt = house ? { x: house[0] * 2, y: house[1] * 2 } : null;
   const pondFolk = { x: px + 1, y: py + 1 };
-  return { rows: g.map(function (r) { return r.join(''); }), npcs: npcs, objects: objects, trees: trees, score: score, house: houseAt, pond: pondFolk, bridge: { x: px + 1, y: py } };
+  return { n: N, rows: g.map(function (r) { return r.join(''); }), npcs: npcs, objects: objects, trees: trees, score: score, house: houseAt, pond: pondFolk, bridge: { x: px + 1, y: py } };
+}
+// A route taller than 24 moves its bottom edge: the way back down, the start and every door that lands on it follow.
+function owResizeRoute(L, n) {
+  const m = OW_MAPS[L.routeIn]; if (n === m.rows.length) return;
+  m.warps.forEach(function (w) { if (w.y === m.rows.length - 1) w.y = n - 1; });
+  if (m.start.y === m.rows.length - 2) m.start = { x: m.start.x, y: n - 2 };
+  Object.keys(OW_MAPS).forEach(function (k) { OW_MAPS[k].warps.forEach(function (w) { if (w.to === L.routeIn && w.ty === 22) w.ty = n - 2; }); });
 }
 OW_LANDS.forEach(function (L, i) {
   const m = OW_MAPS[L.routeIn]; let best = null;
   for (let attempt = 0; attempt < 80 && (!best || best.score < 4); attempt++) { const r = owBlockRoute(L, i, attempt); if (r && (!best || r.score > best.score)) best = r; }
   if (!best) return;
-  m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length].name; m.house = best.house;
+  owResizeRoute(L, best.n); m.rows = best.rows; m.npcs = best.npcs; m.objects = best.objects; m.trees = best.trees; m.blocks = true; m.theme = OW_ROUTE_THEMES[(i * 3 + 1) % OW_ROUTE_THEMES.length].name; m.house = best.house;
   m.npcs.push({ id: L.routeIn + '-swimmer', kind: 'trainer', name: 'Swimmer ' + OW_SIDE_FOLK_NAME(i), x: best.pond.x, y: best.pond.y, face: 'down', look: { skin: (i + 2) % 6, hair: (i * 5) % 8, outfit: (i + 5) % 8, style: (i + 1) % 4 }, lines: ['Nobody swims out here! Care for a battle?'], win: ['The water is lovely. So was that fight!'] });
   m.objects.push({ id: L.routeIn + '-islet', type: 'pickup', x: best.bridge.x, y: best.bridge.y, give: i % 2 ? 'net' : 'gems' });
 });

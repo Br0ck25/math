@@ -103,7 +103,7 @@ test('with the Meadow Badge the road north opens, and Route 2 makes the grass fi
     for (let i = 0; i < 80; i++) if (getSpecies(rollWildSpecies([]).id).element === 'fire') fire++;
     return { gate, fire, visited: state.regionsVisited.slice() };
   });
-  assert.deepEqual(r.gate, ['route2', 6, 22, 'ember']);
+  assert.deepEqual(r.gate, ['route2', 6, await page.evaluate(() => OW_MAPS.route2.rows.length - 2), 'ember']);
   assert.ok(r.fire > 40, 'mostly fire buddies in the grass: ' + r.fire + ' of 80');
   assert.ok(r.visited.includes('ember'));
 });
