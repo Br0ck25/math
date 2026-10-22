@@ -1174,7 +1174,7 @@ test('gym skies: the Ember gym is under harsh sun and the Tide gym in rain (ever
   assert.deepEqual(r, { ember: 'sun', tide: 'rain', meadow: '', start: 'sun', again: 'sun' });
 });
 
-test('each town is laid out its own way: terraces with a ledge, a harbour with a bridge, a plaza with fountains, a lake with a bridge and ring path, a wood, a park, a river with a bridge, and a village green for Meadow Town', async () => {
+test('each town is laid out its own way: terraces with a ledge, a harbour with a bridge, a plaza with fountains, a lake with a bridge and ring path, a wood, a park, a river with a bridge, and a village green for Meadow Town, and a marsh, grid, staircase, lagoon, diamond, crossroads and avenues besides', async () => {
   const r = await ev(() => {
     const towns = owTowns().filter((t) => t !== OW_START.map), styles = {}; towns.forEach((t) => { styles[OW_MAPS[t].plan] = (styles[OW_MAPS[t].plan] || 0) + 1; });
     const has = (t, re) => re.test(OW_MAPS[t].rows.join(''));
@@ -1182,7 +1182,7 @@ test('each town is laid out its own way: terraces with a ledge, a harbour with a
     return { kinds: Object.keys(styles).sort().join(), meadow: OW_MAPS.meadow.plan, planned: towns.every((t) => OW_MAPS[t].plan !== 'slots'), terrace: by('terrace').every((t) => has(t, /vvvv/)), harbour: by('harbour').every((t) => has(t, /~{3,}[\s\S]*B|B[\s\S]*~{3,}/) && OW_MAPS[t].rows.some((r) => /~~B+~~|BB/.test(r))), plaza: by('plaza').every((t) => has(t, /d{3}/) && has(t, /~~/)),
       lake: by('lake').every((t) => OW_MAPS[t].rows.some((r) => /~{3,}B+~{3,}|~{3,}BB/.test(r))), river: by('river').every((t) => OW_MAPS[t].rows.some((r) => /B{2}/.test(r)) && has(t, /~~/)), tall: towns.filter((t) => OW_MAPS[t].rows.length >= 20).length >= 10 };
   });
-  assert.deepEqual(r, { kinds: 'forest,green,harbour,lake,park,plaza,river,terrace', meadow: 'green', planned: true, terrace: true, harbour: true, plaza: true, lake: true, river: true, tall: true });
+  assert.deepEqual(r, { kinds: 'avenues,crossroads,diamond,forest,green,grid,harbour,lagoon,lake,marsh,park,plaza,river,staircase,terrace', meadow: 'green', planned: true, terrace: true, harbour: true, plaza: true, lake: true, river: true, tall: true });
 });
 
 test('the Night Walk: dearer and shorter than the day walk, and only dark and magic buddies live there; it ends with the visit', async () => {

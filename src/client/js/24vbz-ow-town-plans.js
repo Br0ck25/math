@@ -5,10 +5,10 @@
 //  as the fall-back (and Meadow Town's plan). The main road is always columns 7 and 8 from the bottom edge to the top gate, so the routes line up with the towns.
 // =====================================================================
 const OW_TOWN_PLANS = {
-  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 22 }, tide: { style: 'harbour', h: 22 }, grove: { style: 'forest', h: 20 }, volt: { style: 'plaza', h: 22 }, gloom: { style: 'lake', h: 22 },
-  mystic: { style: 'terrace', h: 22, mirror: true }, skyreach: { style: 'plaza', h: 22, mirror: true }, cinder: { style: 'river', h: 22 }, coral: { style: 'harbour', h: 22, mirror: true },
-  thistle: { style: 'forest', h: 20, mirror: true }, spark: { style: 'park', h: 22 }, dusk: { style: 'lake', h: 22, mirror: true }, prism: { style: 'river', h: 22, mirror: true },
-  cross: { style: 'park', h: 22, mirror: true }, summit: { style: 'terrace', h: 22 }
+  meadow: { style: 'green', h: 18 }, ember: { style: 'terrace', h: 22 }, tide: { style: 'harbour', h: 22 }, grove: { style: 'forest', h: 20 }, volt: { style: 'grid', h: 22 },
+  gloom: { style: 'marsh', h: 22 }, mystic: { style: 'staircase', h: 22, mirror: true }, skyreach: { style: 'plaza', h: 22, mirror: true }, cinder: { style: 'river', h: 22 },
+  coral: { style: 'lagoon', h: 22 }, thistle: { style: 'park', h: 22, mirror: true }, spark: { style: 'avenues', h: 22 }, dusk: { style: 'lake', h: 22, mirror: true },
+  prism: { style: 'diamond', h: 22 }, cross: { style: 'crossroads', h: 22, mirror: true }, summit: { style: 'terrace', h: 22, mirror: true, frozen: true }
 };
 // The helpers a style draws with (x is as drawn for the unmirrored town; a mirrored town is the same picture flipped left to right).
 function owTownTools(g, W, H, doors, mirror, rnd) {
@@ -34,6 +34,7 @@ function owTownTools(g, W, H, doors, mirror, rnd) {
       roles = roles || ['center', 'mart', 'house', 'gym'];
       const order = roles.slice().sort(function () { return rnd() - 0.5; }), spots = slots.slice().sort(function () { return rnd() - 0.5; }), tall = spots.findIndex(function (sl) { return sl.tall; }), gi = order.indexOf('gym');
       if (tall !== -1 && gi !== -1) { const t = order[tall]; order[tall] = 'gym'; order[gi] = t; }
+      T.unused = spots.slice(order.length);
       order.forEach(function (role, k) {
         const sl = spots[k], w = role === 'house' ? (rnd() < 0.5 ? 2 : 3) : role === 'mart' ? 4 : 5, left = sl.x < 7, base = left ? 2 : 9, x0 = base + Math.floor(rnd() * (5 - w + 1)), isTall = role === 'gym' && sl.tall;
         T.bldg(role, x0, isTall ? sl.y - 1 : sl.y, w, isTall ? 3 : 2);
@@ -55,6 +56,7 @@ const OW_TOWN_STYLES = {
     T.assign([{ x: 2, y: 2, tall: true }, { x: 9, y: 2 }, { x: 2, y: 11 }, { x: 9, y: 11 }]); T.path(2, 5, 13, 6);
     for (let x = 2; x <= 13; x++) if (x < 7 || x > 8) T.set(x, 9, 'v');
     T.set(2, 8, '#'); T.set(13, 8, '#'); T.set(3, 10, '#');
+    if (T.frozen) T.pond(4, 15, 4, 3);
   },
   // the sea along the south: a quay, sand and a bridge on the main road
   harbour: function (T, H) {
@@ -88,6 +90,53 @@ const OW_TOWN_STYLES = {
     T.set(6, 6, 'a'); T.set(9, 11, 'a');
     T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 11 }, { x: 9, y: 11 }]); T.path(2, 14, 13, 14);
   },
+  // a marsh: little ponds with sandy banks dotted about, the buildings in two rows
+  marsh: function (T) {
+    T.path(2, 4, 13, 5); T.pond(3, 7, 3, 3); T.pond(10, 8, 4, 3); T.pond(4, 11, 3, 3);
+    T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 15 }, { x: 9, y: 12 }]); T.path(2, 18, 13, 18);
+    for (let y = 7; y <= 17; y += 3) T.set(9, y, '*');
+  },
+  // streets in a grid: three avenues across, six plots, four with buildings and the others paved squares
+  grid: function (T) {
+    T.path(2, 4, 13, 5); T.path(2, 9, 13, 10); T.path(2, 14, 13, 15);
+    T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 6 }, { x: 9, y: 6 }, { x: 2, y: 11 }, { x: 9, y: 11 }].filter(function (sl, k) { return true; }));
+    (T.unused || []).forEach(function (sl) { T.fill(sl.x, sl.y, sl.x + 4, sl.y + 2, 'd'); T.set(sl.x + 2, sl.y + 1, 'a'); });
+  },
+  // steps up a hillside: the west column steps up at one row, the east column at another
+  staircase: function (T) {
+    T.path(2, 5, 13, 6);
+    T.bldg('gym', 2, 1, 5, 3); T.bldg('center', 9, 2, 5, 2);
+    for (let x = 2; x <= 6; x++) T.set(x, 8, 'v');
+    T.bldg('mart', 9, 7, 4, 2); T.path(9, 10, 13, 10);
+    T.bldg('house', 2, 10, 3, 2); T.path(2, 13, 6, 13);
+    for (let x = 9; x <= 13; x++) T.set(x, 12, 'v');
+    T.set(13, 8, '#'); T.set(2, 14, '#'); T.set(13, 14, '#');
+  },
+  // the sea down the east side with a pier across it, sand along the shore
+  lagoon: function (T, H) {
+    T.fill(9, 8, 9, H - 4, '_'); T.fill(10, 8, 13, H - 4, '~'); T.fill(10, H - 3, 13, H - 3, '_'); T.fill(9, 8, 13, 8, '_'); T.fill(10, 9, 13, H - 4, '~');
+    T.fill(9, 12, 13, 12, 'B');
+    T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 8 }, { x: 2, y: 13 }]); T.path(2, 4, 13, 5);
+  },
+  // a flower garden in the middle with a diamond of paths to the four corners
+  diamond: function (T) {
+    T.path(2, 4, 13, 5);
+    for (let y = 6; y <= 12; y++) for (let x = 3; x <= 12; x++) if (x !== 7 && x !== 8) T.set(x, y, (x + y) % 3 ? '*' : ',');
+    for (let k = 0; k <= 4; k++) { [[7 - k, 8 + k], [8 + k, 8 + k], [7 - k, 8 - k], [8 + k, 8 - k]].forEach(function (p) { T.set(p[0], p[1], '.'); T.set(p[0] + (p[0] < 8 ? -1 : 1) * 0, p[1] + 1, '.'); }); }
+    T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 13 }, { x: 9, y: 13 }]); T.path(2, 16, 13, 16);
+  },
+  // an X of paths crossing the middle of the town, a building in each corner
+  crossroads: function (T) {
+    T.path(2, 4, 13, 5);
+    for (let k = 0; k <= 5; k++) { [[2 + k, 6 + k], [13 - k, 6 + k], [2 + k, 12 - k], [13 - k, 12 - k]].forEach(function (p) { T.set(p[0], p[1], '.'); T.set(p[0] + (p[0] < 7 ? 1 : -1), p[1], '.'); }); }
+    T.assign([{ x: 2, y: 1 }, { x: 9, y: 1 }, { x: 2, y: 13 }, { x: 9, y: 13 }]); T.path(2, 16, 13, 16);
+  },
+  // two long avenues lined with buildings and a market in the square between
+  avenues: function (T) {
+    T.path(2, 5, 13, 6); T.path(2, 11, 13, 12);
+    T.fill(3, 8, 12, 8, '='); T.fill(3, 9, 12, 9, 'd');
+    T.assign([{ x: 2, y: 2 }, { x: 9, y: 2 }, { x: 2, y: 13 }, { x: 9, y: 13 }]); T.path(2, 16, 13, 16);
+  },
   // a river down the west side with a bridge on the street; the buildings stand on the east bank, a small house between river and road
   river: function (T, H) {
     T.fill(2, 1, 2, H - 2, '_'); T.fill(3, 1, 4, H - 2, '~'); T.fill(5, 1, 5, H - 2, '_');
@@ -97,7 +146,7 @@ const OW_TOWN_STYLES = {
 };
 // Runs a plan on the grid: the edge columns of the old map are kept (the side games cut their doors there), the style draws, and every kept gap in the edge is joined to the road.
 function owRunPlan(plan, g, W, H, doors, rnd, old) {
-  const T = owTownTools(g, W, H, doors, !!plan.mirror, rnd);
+  const T = owTownTools(g, W, H, doors, !!plan.mirror, rnd); T.frozen = !!plan.frozen;
   OW_TOWN_STYLES[plan.style](T, H);
   for (let y = 1; y < H - 1; y++) [0, 1, 14, 15].forEach(function (x) { g[y][x] = y >= 4 && y <= 8 ? old[y].charAt(x) : 'T'; });
   for (let y = 1; y < H - 1; y++) { if (g[y][7] === 'T' || g[y][7] === ',') g[y][7] = '.'; if (g[y][8] === 'T' || g[y][8] === ',') g[y][8] = '.'; }
