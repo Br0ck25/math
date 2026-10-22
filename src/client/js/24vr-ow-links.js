@@ -12,25 +12,27 @@ const OW_LINKS = [
   { id: 'link-ember-tide', name: 'Furnace Road', from: 'ember', to: 'tide', w: 28, h: 15, river: true },
   { id: 'link-grove-volt', name: 'Orchard Road', from: 'grove', to: 'volt', w: 32, h: 13 },
   { id: 'link-mystic-cinder', name: 'Fog Road', from: 'mystic', to: 'cinder', w: 26, h: 16, river: true },
-  { id: 'link-thistle-prism', name: 'Thistle Lane', from: 'thistle', to: 'prism', w: 24, h: 14 }
+  { id: 'link-thistle-prism', name: 'Thistle Lane', from: 'thistle', to: 'prism', w: 24, h: 14 },
+  { id: 'link-grove-mystic', name: 'Mortar Pass', from: 'grove', to: 'mystic', w: 30, h: 19, fromRow: 14, toRow: 14 },
+  { id: 'link-skyreach-hollow', name: 'Dark Way Home', from: 'skyreach', to: 'hollow', w: 34, h: 15 }
 ];
 // One try at laying a link out; returns the map or null when something could not be placed.
 function owBuildLink(def, i, attempt) {
-  const W = def.w, H = def.h, rnd = owRng(def.id, attempt), A = OW_MAPS[def.from], B = OW_MAPS[def.to];
+  const W = def.w, H = def.h, fr = def.fromRow || 6, tr = def.toRow || 6, rnd = owRng(def.id, attempt), A = OW_MAPS[def.from], B = OW_MAPS[def.to];
   const land = OW_LANDS.find(function (L) { return L.town === def.from; }), route = OW_MAPS[land.routeIn];
   const g = []; for (let y = 0; y < H; y++) { g.push([]); for (let x = 0; x < W; x++) g[y].push(y < 2 || y > H - 3 || x === 0 || x === W - 1 ? 'T' : ','); }
   // the road: two tiles wide, level at both ends (row 5 and 6) and bending in between
-  let ry = 5, x = 1; const spans = [];
+  let ry = fr - 1, x = 1; const spans = [];
   while (x < W - 1) {
     const len = x < 4 || x > W - 6 ? 4 : 3 + Math.floor(rnd() * 4);
     for (let k = 0; k < len && x < W - 1; k++, x++) { g[ry][x] = '.'; g[ry + 1][x] = '.'; }
     spans.push([x - len, x - 1, ry]);
-    if (x >= W - 5) { if (ry !== 5) { const to = 5; for (let y = Math.min(ry, to); y <= Math.max(ry, to) + 1; y++) g[y][x - 1] = '.'; ry = 5; } continue; }
+    if (x >= W - 5) { if (ry !== tr - 1) { const to = tr - 1; for (let y = Math.min(ry, to); y <= Math.max(ry, to) + 1; y++) g[y][x - 1] = '.'; ry = tr - 1; } continue; }
     const options = [3, 4, 6, 7, 8, 9, 10].filter(function (v) { return v <= H - 5; }).filter(function (v) { return Math.abs(v - ry) >= 2; }), nry = options[Math.floor(rnd() * options.length)];
     for (let y = Math.min(ry, nry); y <= Math.max(ry, nry) + 1; y++) g[y][x - 1] = '.';
     ry = nry;
   }
-  g[6][0] = '.'; g[6][W - 1] = '.';
+  g[fr][0] = '.'; g[tr][W - 1] = '.';
   const road = function (px, py) { return g[py] && g[py][px] === '.'; };
   const nearRoad = function (px, py, r) { for (let yy = py - r; yy <= py + r; yy++) for (let xx = px - r; xx <= px + r; xx++) if (road(xx, yy)) return true; return false; };
   const patch = function (ch, w, h, tries) {
@@ -67,23 +69,23 @@ function owBuildLink(def, i, attempt) {
   const objects = [];
   ['potion', 'net'].forEach(function (k) { if (!free.length) return; const p = free.splice(Math.floor(rnd() * free.length), 1)[0]; objects.push({ id: def.id + '-' + k, type: 'pickup', x: p[0], y: p[1], give: k === 'net' ? 'net' : 'gems' }); });
   const map = {
-    id: def.id, name: def.name, region: A.region, start: { x: 1, y: 6 }, palette: route.palette, rows: g.map(function (r) { return r.join(''); }),
-    warps: [{ x: 0, y: 6, to: def.from, tx: 14, ty: 6 }, { x: W - 1, y: 6, to: def.to, tx: 1, ty: 6 }],
+    id: def.id, name: def.name, region: A.region, start: { x: 1, y: fr }, palette: route.palette, rows: g.map(function (r) { return r.join(''); }),
+    warps: [{ x: 0, y: fr, to: def.from, tx: 14, ty: fr }, { x: W - 1, y: tr, to: def.to, tx: 1, ty: tr }],
     npcs: npcs, objects: objects, trees: {}, signs: signs, link: { from: def.from, to: def.to }
   };
   const reach = owReachSet(map);
   const reachable = function (p) { return reach[p.x + ',' + p.y] || [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return reach[(p.x + d[0]) + ',' + (p.y + d[1])]; }); };
-  if (!map.objects.every(reachable) || !reach[(W - 2) + ',6']) return null;
+  if (!map.objects.every(reachable) || !reach[(W - 2) + ',' + tr]) return null;
   return map;
 }
 // Opens a town's east (x 15) or west (x 0) edge at row 6 and cuts a way in along row 6 until it meets ground the town's entrance already reaches (trees and water are cut, buildings are not).
-function owOpenGap(town, edge) {
+function owOpenGap(town, edge, row) {
   const m = OW_MAPS[town], dx = edge === 0 ? 1 : -1;
-  owSetTile(town, edge, 6, '.');
+  owSetTile(town, edge, row, '.');
   for (let x = edge + dx; x >= 1 && x <= 14; x += dx) {
-    const c = m.rows[6].charAt(x);
-    if (',".*_d'.indexOf(c) === -1) { if (c === 'T' || c === '#') owSetTile(town, x, 6, '.'); else if (c === '~') owSetTile(town, x, 6, 'B'); else if (c !== '.' && c !== 'B') return false; }
-    if (owReachSet(m)[x + ',6']) return true;
+    const c = m.rows[row].charAt(x);
+    if (',".*_d'.indexOf(c) === -1) { if (c === 'T' || c === '#') owSetTile(town, x, row, '.'); else if (c === '~') owSetTile(town, x, row, 'B'); else if (c !== '.' && c !== 'B') return false; }
+    if (owReachSet(m)[x + ',' + row]) return true;
   }
   return false;
 }
@@ -92,7 +94,8 @@ OW_LINKS.forEach(function (def, i) {
   if (!map) return;
   OW_MAPS[def.id] = map;
   // the gaps in the two towns: the east edge of the first (y 6) and the west edge of the second
-  if (!owOpenGap(def.from, 15) || !owOpenGap(def.to, 0)) { delete OW_MAPS[def.id]; return; }
-  OW_MAPS[def.from].warps.push({ x: 15, y: 6, to: def.id, tx: 1, ty: 6, needs: def.to });
-  OW_MAPS[def.to].warps.push({ x: 0, y: 6, to: def.id, tx: def.w - 2, ty: 6, needs: def.from });
+  const fr = def.fromRow || 6, tr = def.toRow || 6;
+  if (!owOpenGap(def.from, 15, fr) || !owOpenGap(def.to, 0, tr)) { delete OW_MAPS[def.id]; return; }
+  OW_MAPS[def.from].warps.push({ x: 15, y: fr, to: def.id, tx: 1, ty: fr, needs: def.to });
+  OW_MAPS[def.to].warps.push({ x: 0, y: tr, to: def.id, tx: def.w - 2, ty: tr, needs: def.from });
 });

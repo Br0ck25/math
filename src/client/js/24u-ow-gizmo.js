@@ -47,10 +47,18 @@ function renderGizmo() {
 }
 
 // The Town Map (Gold's Pokegear map): every town is a square on a winding road, in the order you meet them; the routes join them, you are the red dot, and a visited town can be tapped to travel there.
+// The Town Map is laid out like Gold's Johto map: the first journey's towns stand where Gold's do (the start at the east end, the first gym north of it, the gyms winding west and north round the land,
+// the last in the north-east), and the second journey is a ring of its own on the right. Each road lists the corners it turns, so it runs as it does in the game.
 const GIZMO_NODES = {
-  hollow: [10, 78], meadow: [28, 78], ember: [28, 62], tide: [46, 62], grove: [46, 78], volt: [64, 78], gloom: [64, 62], mystic: [82, 62], skyreach: [82, 46],
-  cinder: [64, 46], coral: [46, 46], thistle: [28, 46], spark: [10, 46], dusk: [10, 30], prism: [28, 30], cross: [46, 30], summit: [64, 30], peak: [82, 30]
+  hollow: [76, 68], meadow: [44, 43], ember: [35, 84], tide: [26, 64], grove: [35, 31], volt: [18, 43], gloom: [13, 69], mystic: [58, 34], skyreach: [75, 34],
+  cinder: [88, 80], coral: [88, 64], thistle: [88, 48], spark: [88, 32], dusk: [98, 22], prism: [107, 32], cross: [107, 48], summit: [107, 64], peak: [107, 80]
 };
+const GIZMO_ROADS = [                                                                              // [from, to, corners, kind]: the main road of the story
+  ['hollow', 'meadow', [[52, 68], [52, 43]]], ['meadow', 'ember', [[44, 84]]], ['ember', 'tide', [[26, 84]]], ['tide', 'grove', [[26, 31]]], ['grove', 'volt', [[18, 31]]], ['volt', 'gloom', [[13, 43]]],
+  ['gloom', 'mystic', [[13, 90], [58, 90]], 'far'], ['mystic', 'skyreach', []], ['skyreach', 'cinder', [[84, 34], [84, 80]]], ['cinder', 'coral', []], ['coral', 'thistle', []], ['thistle', 'spark', []],
+  ['spark', 'dusk', [[98, 32]]], ['dusk', 'prism', [[107, 22]]], ['prism', 'cross', []], ['cross', 'summit', []], ['summit', 'peak', []]
+];
+const GIZMO_LINK_CORNERS = { 'link-meadow-grove': [[44, 31]], 'link-grove-mystic': [[58, 31]], 'link-skyreach-hollow': [[66, 34], [66, 56], [76, 56]] };      // the other second roads run straight
 function gizmoNodeOf(mapId) {
   if (GIZMO_NODES[mapId]) return { id: mapId };
   const m = OW_MAPS[mapId]; if (!m) return { id: 'hollow' };
@@ -64,40 +72,40 @@ function gizmoNodeOf(mapId) {
   const byRegion = OW_LANDS.find(function (L) { return L.land === m.region; });
   return { id: byRegion ? byRegion.town : 'hollow' };
 }
-// The land under the roads: sea with waves round a green coast, brown mountain country, a river the roads bridge, lakes and woods, as on Gold's Pokégear map.
+// The land under the roads: sea with waves round a green coast, brown mountain country, lakes and woods, as on Gold's Pokégear map.
 function gizmoTerrain() {
   const tri = function (x, y, c) { return '<polygon class="' + c + '" points="' + (x - 2.6) + ',' + (y + 2.2) + ' ' + x + ',' + (y - 2.4) + ' ' + (x + 2.6) + ',' + (y + 2.2) + '"/>'; };
-  const ridges = [[66, 20], [72, 18], [80, 21], [86, 19], [14, 20], [20, 18], [62, 38], [70, 40], [78, 39], [86, 42], [12, 64], [17, 68], [14, 73], [80, 74], [86, 72]].map(function (p) { return tri(p[0], p[1], 'gm-peak'); }).join('');
-  const woods = [[32, 68], [36, 66], [40, 70], [34, 73], [39, 75], [31, 76], [22, 40], [26, 37], [30, 41], [34, 38], [40, 36], [52, 38], [56, 41], [50, 73], [57, 74], [60, 68]].map(function (p) { return '<circle class="gm-tree" cx="' + p[0] + '" cy="' + p[1] + '" r="1.6"/>'; }).join('');
-  return '<defs><pattern id="gm-wave" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#2f5fd8"/><path d="M0,4 L3,1 L6,4" fill="none" stroke="#9ec1ff" stroke-width="0.7"/></pattern></defs><rect x="0" y="0" width="94" height="94" rx="2" fill="url(#gm-wave)"/>' +
-    '<path class="gm-land" d="M6,16 Q14,11 40,13 T86,15 Q92,22 91,48 Q92.5,78 85,86 Q60,91 30,89 Q9,91 5,80 Q2,50 6,16Z"/>' +
-    '<path class="gm-mtn" d="M5,17 Q18,12 32,15 L28,24 L16,26 L6,31Z"/><path class="gm-mtn" d="M58,14 L90,15 L91,45 L77,42 L66,38 L60,28Z"/><path class="gm-mtn" d="M5,57 L24,58 L23,76 L9,75 L5,70Z"/><path class="gm-mtn" d="M70,70 L90,69 L88,84 L72,84Z"/>' +
-    '<path class="gm-river" d="M5,55 Q16,50 28,54 T52,55 T74,53 T92,55"/>' +
-    '<ellipse class="gm-water" cx="19" cy="38" rx="6" ry="3"/><ellipse class="gm-water" cx="56" cy="68" rx="5" ry="3"/><ellipse class="gm-water" cx="92" cy="66" rx="4" ry="9"/><ellipse class="gm-water" cx="46" cy="22" rx="9" ry="2.6"/>' +
-    '<path class="gm-sand" d="M91,52 Q92.5,78 85,86"/>' + ridges + woods;
+  const ridges = [[8, 22], [14, 20], [22, 22], [52, 22], [60, 20], [68, 22], [76, 20], [92, 16], [104, 14], [116, 20], [62, 40], [78, 44], [38, 88]].map(function (p) { return tri(p[0], p[1], 'gm-peak'); }).join('');
+  const woods = [[30, 76], [34, 72], [30, 68], [39, 60], [42, 66], [28, 50], [24, 36], [30, 24], [47, 52], [50, 60], [96, 56], [100, 68], [104, 40], [100, 88]].map(function (p) { return '<circle class="gm-tree" cx="' + p[0] + '" cy="' + p[1] + '" r="1.6"/>'; }).join('');
+  return '<defs><pattern id="gm-wave" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#2f5fd8"/><path d="M0,4 L3,1 L6,4" fill="none" stroke="#9ec1ff" stroke-width="0.7"/></pattern></defs><rect x="0" y="0" width="120" height="94" rx="2" fill="url(#gm-wave)"/>' +
+    '<path class="gm-land" d="M14,18 L80,18 Q82,40 80,60 Q82,80 76,88 L24,90 Q14,92 12,84 L16,76 Q22,70 18,62 L12,58 Q6,50 10,44 L14,36Z"/>' +
+    '<path class="gm-land" d="M84,12 L118,12 L118,90 L84,90Z"/>' +
+    '<path class="gm-mtn" d="M14,18 L34,18 L30,26 L18,28 L12,34Z"/><path class="gm-mtn" d="M50,18 L80,18 L80,30 L66,28 L58,26Z"/><path class="gm-mtn" d="M60,36 L80,36 L80,56 L72,52 L64,44Z"/><path class="gm-mtn" d="M86,14 L108,14 L106,26 L92,28Z"/><path class="gm-mtn" d="M30,82 L46,86 L40,90 L30,90Z"/>' +
+    '<ellipse class="gm-water" cx="58" cy="22" rx="6" ry="3"/><ellipse class="gm-water" cx="22" cy="52" rx="4" ry="2.5"/><ellipse class="gm-water" cx="96" cy="72" rx="5" ry="3"/><ellipse class="gm-water" cx="104" cy="58" rx="3" ry="6"/>' +
+    '<path class="gm-river" d="M44,50 Q46,60 52,64 T66,70"/><path class="gm-sand" d="M76,88 Q82,80 80,60"/>' + ridges + woods;
 }
+// A road as points: from a town through its corners to the next.
+function gizmoPts(a, b, corners) { return [GIZMO_NODES[a]].concat(corners || [], [GIZMO_NODES[b]]); }
 function gizmoMapHtml() {
   if (!hasKeyItem('map-card')) return '<p class="d" style="margin:10px 0">The Gizmo has no map yet. Guide Ivy in Meadow Town gives you a Map Card after her tour of the town.</p>';
   const o = state.overworld, here = gizmoNodeOf(o.map), seen = function (id) { return o.seen.indexOf(id) !== -1 || id === here.id; };
-  const towns = ['hollow'].concat(OW_LANDS.map(function (L) { return L.town; })), line = [];
-  for (let i = 1; i < towns.length; i++) {
-    const a = GIZMO_NODES[towns[i - 1]], b = GIZMO_NODES[towns[i]];
-    line.push('<polyline class="gm-road" points="' + a[0] + ',' + a[1] + ' ' + (a[0] === b[0] ? b[0] : b[0]) + ',' + (a[0] === b[0] ? b[1] : a[1]) + ' ' + b[0] + ',' + b[1] + '"/>');
-  }
+  const towns = ['hollow'].concat(OW_LANDS.map(function (L) { return L.town; })), line = [], pair = {};
+  const poly = function (pts, cls) { return '<polyline class="gm-road' + (cls ? ' ' + cls : '') + '" points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '"/>'; };
+  GIZMO_ROADS.forEach(function (r) { pair[r[0] + '>' + r[1]] = pair[r[1] + '>' + r[0]] = 1; line.push(poly(gizmoPts(r[0], r[1], r[2]), r[3] === 'far' ? 'gm-far' : '')); });
   OW_LINKS.forEach(function (d) {                                                                  // the second roads (24vr), drawn once you have stood in both towns; one beside a main road bows out so the two stay apart
     if (!OW_MAPS[d.id] || !seen(d.from) || !seen(d.to)) return;
-    const a = GIZMO_NODES[d.from], b = GIZMO_NODES[d.to], near = Math.abs(towns.indexOf(d.from) - towns.indexOf(d.to)) === 1;
-    line.push(near ? '<path class="gm-road" d="M' + a[0] + ',' + a[1] + ' Q' + (a[0] + 7) + ',' + ((a[1] + b[1]) / 2) + ' ' + b[0] + ',' + b[1] + '"/>' : '<polyline class="gm-road" points="' + a[0] + ',' + a[1] + ' ' + b[0] + ',' + b[1] + '"/>');
+    const a = GIZMO_NODES[d.from], b = GIZMO_NODES[d.to];
+    line.push(pair[d.from + '>' + d.to] ? '<path class="gm-road" d="M' + a[0] + ',' + a[1] + ' Q' + ((a[0] + b[0]) / 2 + 6) + ',' + ((a[1] + b[1]) / 2 + 6) + ' ' + b[0] + ',' + b[1] + '"/>' : poly(gizmoPts(d.from, d.to, GIZMO_LINK_CORNERS[d.id])));
   });
   const caves = OW_LANDS.map(function (L, i) {                                                     // a cave mouth by each route that has one (a dark arch, as Gold marks them), once you know the town it leads to
     if (!OW_MAPS[L.routeIn + '-cave1'] || !seen(L.town)) return '';
-    const a = GIZMO_NODES[i ? OW_LANDS[i - 1].town : 'hollow'], b = GIZMO_NODES[L.town], c = a[0] === b[0] ? [a[0] + 3.4, (a[1] + b[1]) / 2] : [(a[0] + b[0]) / 2, a[1] - 3.4];
+    const from = i ? OW_LANDS[i - 1].town : 'hollow', road = GIZMO_ROADS.find(function (r) { return r[0] === from && r[1] === L.town; }), pts = gizmoPts(from, L.town, road && road[2]);
+    let best = 0, c = pts[0];
+    for (let k = 0; k + 1 < pts.length; k++) { const len = Math.abs(pts[k + 1][0] - pts[k][0]) + Math.abs(pts[k + 1][1] - pts[k][1]); if (len > best) { best = len; c = [(pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2 - 3.4]; } }
     return '<path class="gm-cave" d="M' + (c[0] - 1.9) + ',' + (c[1] + 1.5) + ' A1.9,1.9 0 0 1 ' + (c[0] + 1.9) + ',' + (c[1] + 1.5) + 'Z"><title>Cave on ' + escHtml(OW_MAPS[L.routeIn].name) + '</title></path>';
   }).join('');
-  const sk = GIZMO_NODES.summit, pk = GIZMO_NODES.peak;
-  line.push('<polyline class="gm-road" points="' + sk[0] + ',' + sk[1] + ' ' + pk[0] + ',' + pk[1] + '"/>');
   const nodes = towns.concat(['peak']).map(function (id) {
-    const p = GIZMO_NODES[id], open = id === 'peak' ? seen('peak') : seen(id), name = id === 'peak' ? 'Silver Peak' : OW_MAPS[id].name;
+    const p = GIZMO_NODES[id], open = seen(id), name = id === 'peak' ? 'Silver Peak' : OW_MAPS[id].name;
     const tap = open && id !== 'peak' ? ' onclick="gizmoTravel(\'' + id + '\')" style="cursor:pointer"' : '';
     return '<g' + tap + '><rect class="gm-town' + (open ? '' : ' gm-dim') + '" x="' + (p[0] - 3) + '" y="' + (p[1] - 3) + '" width="6" height="6" rx="0.8"/>' + (open ? '<text class="gm-name" x="' + p[0] + '" y="' + (p[1] + 7.5) + '" text-anchor="middle">' + escHtml(name) + '</text>' : '<text class="gm-name gm-dimtxt" x="' + p[0] + '" y="' + (p[1] + 1.2) + '" text-anchor="middle">?</text>') + '</g>';
   }).join('');
@@ -107,7 +115,7 @@ function gizmoMapHtml() {
   const rows = owTowns().filter(function (id) { return o.seen.indexOf(id) !== -1; }).map(function (id) {
     return '<div class="gizmo-row"><div><b>' + escHtml(OW_MAPS[id].name) + '</b></div>' + (id === o.map ? '<span class="d">You are here</span>' : '<button type="button" class="claim-btn" onclick="gizmoTravel(\'' + id + '\')">Go</button>') + '</div>';
   }).join('');
-  return '<svg class="gm-map" viewBox="0 0 94 94" role="img" aria-label="Town map. The red dot is you.">' + gizmoTerrain() + '<text class="gm-label" x="4" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="90">THE FIRST JOURNEY</text>' + line.join('') + caves + nodes + dot + '</svg>' +
+  return '<svg class="gm-map" viewBox="0 0 120 94" role="img" aria-label="Town map. The red dot is you.">' + gizmoTerrain() + '<text class="gm-label" x="86" y="9">BEYOND THE PEAK</text><text class="gm-label" x="4" y="92">THE FIRST JOURNEY</text>' + line.join('') + caves + nodes + dot + '</svg>' +
     '<p class="d" style="margin:6px 0">Tap a town you have visited to travel there. The red dot is you.</p>' + rows;
 }
 // Stands the hero at the town's start (the road into town), exactly as if they had walked there.

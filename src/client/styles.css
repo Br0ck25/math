@@ -954,6 +954,7 @@ body.trivia .math-only { display: none; }
 .gm-tree { fill: #3f9a5c; stroke: #2a6e40; stroke-width: 0.4; }
 .gm-peak { fill: #d6b98c; stroke: #6b4a22; stroke-width: 0.5; stroke-linejoin: round; }
 .gm-hill { fill: #d6a066; stroke: #8a5a2b; stroke-width: 0.5; stroke-linejoin: round; }
+.gm-road.gm-far { stroke-dasharray: 3 2; opacity: 0.8; }
 .gm-road { fill: none; stroke: #f1e7b6; stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
 .gm-town { fill: #f97316; stroke: #7c2d12; stroke-width: 0.9; }
 .gm-town.gm-dim { fill: #94a3b8; stroke: #475569; }

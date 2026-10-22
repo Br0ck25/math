@@ -1196,14 +1196,14 @@ test('routes are filled in different ways: a wood, a rocky pass, a flower meadow
   assert.deepEqual(r, { themes: 'meadow,open,rocky,stony,wood', rocks: true, wood: true, meadow: true, plans: 8 });
 });
 
-test('the land is a web with towns of different sizes: nine link roads (three cross a river by a bridge), towns from 18 to 30 tall, and the tall ones have a second district of closed houses', async () => {
+test('the land is a web with towns of different sizes: eleven link roads (three cross a river by a bridge), towns from 18 to 30 tall, and the tall ones have a second district of closed houses', async () => {
   const r = await ev(() => {
     const hs = owTowns().filter((t) => t !== OW_START.map).map((t) => OW_MAPS[t].rows.length), tall = owTowns().filter((t) => OW_MAPS[t].rows.length >= 26);
     const exits = {}; owTowns().forEach((t) => { exits[t] = OW_MAPS[t].warps.length; });
     return { links: OW_LINKS.length, built: OW_LINKS.every((d) => !!OW_MAPS[d.id]), rivers: OW_LINKS.filter((d) => d.river && /B/.test(OW_MAPS[d.id].rows.join('')) && /~/.test(OW_MAPS[d.id].rows.join(''))).length, min: Math.min(...hs), max: Math.max(...hs), tall: tall.length >= 3,
       closed: tall.every((t) => OW_MAPS[t].rows.some((row, y) => y > 12 && /WWW/.test(row) && !/D/.test(row))), moreExits: owTowns().filter((t) => OW_MAPS[t].warps.some((w) => /^link-/.test(w.to))).length };
   });
-  assert.deepEqual(r, { links: 9, built: true, rivers: 3, min: 18, max: 30, tall: true, closed: true, moreExits: 13 });
+  assert.deepEqual(r, { links: 11, built: true, rivers: 3, min: 18, max: 30, tall: true, closed: true, moreExits: 15 });
 });
 
 test('routes are of different lengths (24 to 36 tall): the way back, the start and every door that lands on a route follow its bottom edge', async () => {
